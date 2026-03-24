@@ -1,0 +1,25 @@
+{
+  "name": "司法書士 案件管理",
+  "short_name": "案件管理",
+  "description": "不動産登記・商業法人登記 案件管理システム",
+  "start_url": "./legal-case-manager.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#0f4c8a",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
