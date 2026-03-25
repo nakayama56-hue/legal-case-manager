@@ -1279,14 +1279,10 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
   .task-table-wrap colgroup col:nth-child(3) { width: 14%; }
   .task-table-wrap colgroup col:nth-child(4) { width: 22%; }
   /* 案件テーブルのmin-widthを無効化 */
-  #case-table { min-width: 0 !important; table-layout: fixed; width: 100%; }
+  #case-table { min-width: 0 !important; }
+  #case-table colgroup col:nth-child(2) { width: 85px !important; }
+  #case-table colgroup col:nth-child(4) { width: 0 !important; }
   #case-tbody td { padding: 6px 6px; font-size: 12px; }
-  /* スマホでの案件名列は残り幅全部 */
-  #case-table td.col-case-name { min-width: 0; max-width: 0; }
-  #case-table th:nth-child(2), #case-table td:nth-child(2) { width: 90px; }
-  #case-table th:nth-child(4), #case-table td:nth-child(4) { width: 95px; }
-  #case-table th:nth-child(10), #case-table td:nth-child(10) { width: 75px; }
-  #case-table th:nth-child(11), #case-table td:nth-child(11) { width: 44px; }
 }
 @media (max-width: 480px) {
   .cal-day { min-height: 36px; padding: 1px 2px; }
@@ -1467,7 +1463,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.4</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1597,7 +1593,20 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             <button class="btn btn-primary" onclick="openCaseModal(null)">＋ 新規案件</button>
           </div>
           <div class="table-wrap">
-            <table id="case-table">
+            <table id="case-table" style="table-layout:fixed;width:100%;min-width:600px">
+              <colgroup>
+                <col style="width:32px">
+                <col style="width:100px">
+                <col><!-- 案件名：残り全幅 -->
+                <col class="hide-mobile" style="width:130px">
+                <col class="hide-mobile" style="width:80px">
+                <col class="hide-mobile" style="width:120px">
+                <col class="hide-mobile" style="width:120px">
+                <col class="hide-mobile" style="width:90px">
+                <col class="hide-mobile" style="width:90px">
+                <col style="width:90px">
+                <col style="width:48px">
+              </colgroup>
               <thead>
                 <tr>
                   <th style="width:32px"></th>
@@ -2884,7 +2893,7 @@ function renderCaseTable() {
         <button onclick="togglePin('${c.id}')" title="${c.pinned?'ピンを外す':'ピン留め'}" style="background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:0;opacity:${c.pinned?'1':'0.25'}">${c.pinned?'📌':'📌'}</button>
       </td>
       <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0"><strong>${escHtml(c.case_num||'')}</strong></td>
-      <td class="col-case-name" title="${escHtml(c.case_name)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0">
+      <td class="col-case-name" title="${escHtml(c.case_name)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
         ${escHtml(c.case_name)}
         ${incompleteTasks > 0 ? `<span class="badge badge-進行中" style="margin-left:4px;font-size:10px">${incompleteTasks}件</span>` : ''}
       </td>
