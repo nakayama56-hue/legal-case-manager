@@ -1279,8 +1279,13 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
   .task-table-wrap colgroup col:nth-child(3) { width: 14%; }
   .task-table-wrap colgroup col:nth-child(4) { width: 22%; }
   /* 案件テーブルのmin-widthを無効化 */
-  #case-table { min-width: 0 !important; }
+  #case-table { min-width: 0 !important; table-layout: fixed; width: 100%; }
+  #case-table colgroup { display: table-column-group; }
   #case-tbody td { padding: 6px 6px; font-size: 12px; }
+  /* スマホでの案件番号・案件名列幅 */
+  #case-table th:nth-child(2), #case-table td:nth-child(2) { width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #case-table th:nth-child(10), #case-table td:nth-child(10) { width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #case-table th:nth-child(11), #case-table td:nth-child(11) { width: 44px; }
 }
 @media (max-width: 480px) {
   .cal-day { min-height: 36px; padding: 1px 2px; }
@@ -1461,7 +1466,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.2</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1591,20 +1596,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             <button class="btn btn-primary" onclick="openCaseModal(null)">＋ 新規案件</button>
           </div>
           <div class="table-wrap">
-            <table id="case-table" style="table-layout:fixed;width:100%">
-              <colgroup>
-                <col style="width:32px">
-                <col style="width:95px">
-                <col><!-- 案件名：残り -->
-                <col class="hide-mobile" style="width:95px">
-                <col class="hide-mobile" style="width:65px">
-                <col class="hide-mobile" style="width:95px">
-                <col class="hide-mobile" style="width:105px">
-                <col class="hide-mobile" style="width:85px">
-                <col class="hide-mobile" style="width:85px">
-                <col style="width:85px">
-                <col style="width:48px">
-              </colgroup>
+            <table id="case-table">
               <thead>
                 <tr>
                   <th style="width:32px"></th>
