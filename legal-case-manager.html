@@ -1461,7 +1461,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.1</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2279,6 +2279,18 @@ function init() {
   try { initAppearance(); } catch(e) {}
   try { renderClientShortcutButtons(); } catch(e) {}
   showView('cases');
+
+  // 起動時にショートカットをクラウドからバックグラウンドで取得
+  setTimeout(async () => {
+    try {
+      const res = await fetch(GAS_URL + '?t=' + Date.now());
+      const json = await res.json();
+      if (json.ok && json.data && json.data.shortcuts) {
+        localStorage.setItem('client_shortcuts', JSON.stringify(json.data.shortcuts));
+        renderClientShortcutButtons();
+      }
+    } catch(e) { /* サイレント失敗 */ }
+  }, 1000);
 }
 
 /* =====================================================
