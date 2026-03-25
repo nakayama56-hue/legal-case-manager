@@ -1461,7 +1461,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.7</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1591,18 +1591,18 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             <button class="btn btn-primary" onclick="openCaseModal(null)">＋ 新規案件</button>
           </div>
           <div class="table-wrap">
-            <table id="case-table" style="table-layout:fixed;width:100%;min-width:860px">
+            <table id="case-table" style="table-layout:auto;width:100%;min-width:860px">
               <colgroup>
                 <col style="width:32px">
-                <col style="width:100px">
-                <col style="width:200px">
-                <col style="width:130px">
-                <col style="width:80px">
-                <col style="width:130px">
-                <col style="width:110px">
-                <col style="width:90px">
-                <col style="width:90px">
-                <col style="width:90px">
+                <col>
+                <col style="max-width:220px">
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
                 <col style="width:48px">
               </colgroup>
               <thead>
@@ -2891,7 +2891,7 @@ function renderCaseTable() {
         <button onclick="togglePin('${c.id}')" title="${c.pinned?'ピンを外す':'ピン留め'}" style="background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:0;opacity:${c.pinned?'1':'0.25'}">${c.pinned?'📌':'📌'}</button>
       </td>
       <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0"><strong>${escHtml(c.case_num||'')}</strong></td>
-      <td class="col-case-name" title="${escHtml(c.case_name)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+      <td class="col-case-name" title="${escHtml(c.case_name)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">
         ${escHtml(c.case_name)}
         ${incompleteTasks > 0 ? `<span class="badge badge-進行中" style="margin-left:4px;font-size:10px">${incompleteTasks}件</span>` : ''}
       </td>
