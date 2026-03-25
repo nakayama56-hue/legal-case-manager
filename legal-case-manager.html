@@ -1461,7 +1461,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.4</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3325,18 +3325,44 @@ function renderClientShortcutButtons() {
       draggable="true"
       data-index="${i}"
       data-name="${escHtml(s)}"
+      data-color="${color}"
       onclick="filterByClient('${escHtml(s)}')"
       id="sc-btn-${i}"
       ondragstart="scDragStart(event)"
       ondragover="scDragOver(event)"
       ondrop="scDrop(event)"
       ondragend="scDragEnd(event)"
-      style="padding:6px 14px;border-radius:999px;border:2px solid ${color};background:var(--bg-secondary);
-      color:${color};font-size:12px;font-weight:700;cursor:grab;transition:all 0.15s;white-space:nowrap;user-select:none"
-      onmouseover="if(!this.classList.contains('sc-active')){this.style.background='${color}';this.style.color='#fff'}"
-      onmouseout="if(!this.classList.contains('sc-active')){this.style.background='var(--bg-secondary)';this.style.color='${color}'}"
+      style="padding:6px 14px;border-radius:999px;border:2px solid ${color};background:var(--bg-secondary);color:${color};font-size:12px;font-weight:700;cursor:grab;transition:all 0.15s;white-space:nowrap;user-select:none"
       >${escHtml(s)}</button>`;
   }).join('');
+
+  // ホバーはCSSイベントで管理
+  container.querySelectorAll('[id^="sc-btn-"]').forEach(btn => {
+    const color = btn.dataset.color;
+    btn.addEventListener('mouseenter', () => {
+      if (!btn.classList.contains('sc-active')) {
+        btn.style.background = color;
+        btn.style.color = '#fff';
+      }
+    });
+    btn.addEventListener('mouseleave', () => {
+      if (!btn.classList.contains('sc-active')) {
+        btn.style.background = 'var(--bg-secondary)';
+        btn.style.color = color;
+      }
+    });
+  });
+
+  // アクティブ状態を反映
+  if (activeClientFilter) {
+    container.querySelectorAll('[id^="sc-btn-"]').forEach(btn => {
+      if (btn.dataset.name === activeClientFilter) {
+        btn.classList.add('sc-active');
+        btn.style.background = btn.dataset.color;
+        btn.style.color = '#fff';
+      }
+    });
+  }
 }
 
 let scDragIdx = null;
@@ -3370,22 +3396,20 @@ let activeClientFilter = '';
 function filterByClient(name) {
   const btns = document.querySelectorAll('[id^="sc-btn-"]');
   if (activeClientFilter === name) {
-    // 同じボタンを再度押したら解除
     activeClientFilter = '';
     btns.forEach(b => {
       b.classList.remove('sc-active');
       b.style.background = 'var(--bg-secondary)';
+      b.style.color = b.dataset.color;
     });
     document.getElementById('case-search').value = '';
   } else {
     activeClientFilter = name;
     btns.forEach(b => {
-      const isActive = b.textContent.trim() === name;
+      const isActive = b.dataset.name === name;
       b.classList.toggle('sc-active', isActive);
-      if (!isActive) {
-        // reset non-active buttons color from their border color
-        b.style.background = 'var(--bg-secondary)';
-      }
+      b.style.background = isActive ? b.dataset.color : 'var(--bg-secondary)';
+      b.style.color = isActive ? '#fff' : b.dataset.color;
     });
     document.getElementById('case-search').value = name;
   }
