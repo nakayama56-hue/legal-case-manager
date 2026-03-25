@@ -1461,7 +1461,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.9</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3309,16 +3309,52 @@ function renderClientShortcutButtons() {
     container.innerHTML = '<span style="font-size:11px;color:var(--text-muted)">設定からショートカットボタンを登録できます</span>';
     return;
   }
+  const colors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444'];
   container.innerHTML = shortcuts.map((s, i) => {
-    const colors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444'];
     const color = colors[i % colors.length];
-    return `<button onclick="filterByClient('${escHtml(s)}')" id="sc-btn-${i}"
+    return `<button
+      draggable="true"
+      data-index="${i}"
+      data-name="${escHtml(s)}"
+      onclick="filterByClient('${escHtml(s)}')"
+      id="sc-btn-${i}"
+      ondragstart="scDragStart(event)"
+      ondragover="scDragOver(event)"
+      ondrop="scDrop(event)"
+      ondragend="scDragEnd(event)"
       style="padding:6px 14px;border-radius:999px;border:2px solid ${color};background:var(--bg-secondary);
-      color:${color};font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;white-space:nowrap"
-      onmouseover="this.style.background='${color}';this.style.color='#fff'"
+      color:${color};font-size:12px;font-weight:700;cursor:grab;transition:all 0.15s;white-space:nowrap;user-select:none"
+      onmouseover="if(!this.classList.contains('sc-active')){this.style.background='${color}';this.style.color='#fff'}"
       onmouseout="if(!this.classList.contains('sc-active')){this.style.background='var(--bg-secondary)';this.style.color='${color}'}"
       >${escHtml(s)}</button>`;
   }).join('');
+}
+
+let scDragIdx = null;
+function scDragStart(e) {
+  scDragIdx = parseInt(e.currentTarget.dataset.index);
+  e.currentTarget.style.opacity = '0.5';
+}
+function scDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.style.transform = 'scale(1.1)';
+}
+function scDragEnd(e) {
+  e.currentTarget.style.opacity = '1';
+  document.querySelectorAll('[id^="sc-btn-"]').forEach(b => b.style.transform = '');
+}
+function scDrop(e) {
+  e.preventDefault();
+  const toIdx = parseInt(e.currentTarget.dataset.index);
+  if (scDragIdx === null || scDragIdx === toIdx) return;
+  const shortcuts = loadClientShortcuts().filter(s => s);
+  const moved = shortcuts.splice(scDragIdx, 1)[0];
+  shortcuts.splice(toIdx, 0, moved);
+  // 5件になるよう空文字で埋める
+  while (shortcuts.length < 5) shortcuts.push('');
+  localStorage.setItem('client_shortcuts', JSON.stringify(shortcuts));
+  renderClientShortcutButtons();
+  scDragIdx = null;
 }
 
 let activeClientFilter = '';
@@ -5820,11 +5856,12 @@ function setCloudBtnDisabled(disabled) {
 
 /** クラウドへ保存。silent=true のときトーストを省略 */
 async function cloudSave(silent) {
-  clearTimeout(autoSaveTimer); // 手動保存時はタイマーをリセット
+  clearTimeout(autoSaveTimer);
   setCloudStatus('busy', '保存中…');
   setCloudBtnDisabled(true);
   try {
-    const payload = { cases, tasks, savedAt: new Date().toISOString() };
+    const shortcuts = loadClientShortcuts();
+    const payload = { cases, tasks, shortcuts, savedAt: new Date().toISOString() };
     const res = await fetch(GAS_URL, {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -5859,9 +5896,13 @@ async function cloudLoad() {
       toast('クラウドにデータがまだありません', 'error');
       return;
     }
-    const { cases: c, tasks: t, savedAt } = json.data;
+    const { cases: c, tasks: t, shortcuts: sc, savedAt } = json.data;
     if (c) cases = c;
     if (t) tasks  = t;
+    if (sc) {
+      localStorage.setItem('client_shortcuts', JSON.stringify(sc));
+      renderClientShortcutButtons();
+    }
     // クラウドから読み込んだ時は自動保存をトリガーしない
     localStorage.setItem('cases_v1', JSON.stringify(cases));
     localStorage.setItem('tasks_v1', JSON.stringify(tasks));
