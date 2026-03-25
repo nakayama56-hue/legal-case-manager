@@ -1274,10 +1274,10 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
   #task-tbody td { padding: 5px 3px; font-size: 11px; }
   #task-tbody .btn-xs { padding: 2px 3px; font-size: 10px; margin: 0 1px; }
   #task-tbody strong { font-size: 11px; }
-  .task-table-wrap colgroup col:nth-child(1) { width: 36%; }
-  .task-table-wrap colgroup col:nth-child(2) { width: 28%; }
-  .task-table-wrap colgroup col:nth-child(3) { width: 14%; }
-  .task-table-wrap colgroup col:nth-child(4) { width: 22%; }
+  .task-table-wrap colgroup col:nth-child(1) { width: 50%; }
+  .task-table-wrap colgroup col:nth-child(2) { width: 30%; }
+  .task-table-wrap colgroup col:nth-child(3) { width: 20%; }
+  .task-table-wrap colgroup col:nth-child(4) { width: 0; }
   /* 案件テーブル：スマホでも横スクロールで全列表示 */
   #case-table { min-width: 860px !important; }
   #case-tbody td { padding: 6px 6px; font-size: 11px; }
@@ -1461,7 +1461,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.5</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1535,14 +1535,14 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
                   <col style="width:36%">
                   <col style="width:28%">
                   <col style="width:14%">
-                  <col style="width:22%">
+                  <col style="width:22%" class="hide-mobile">
                 </colgroup>
                 <thead>
                   <tr>
                     <th class="sortable" onclick="setTaskSort('name',this)">タスク名</th>
                     <th class="sortable" onclick="setTaskSort('case_name',this)">案件名</th>
                     <th class="sortable" onclick="setTaskSort('deadline',this)">期限</th>
-                    <th>操作</th>
+                    <th class="hide-mobile">操作</th>
                   </tr>
                 </thead>
                 <tbody id="task-tbody"></tbody>
@@ -3591,7 +3591,7 @@ function renderTaskTable() {
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0" title="${escHtml(tk.name)}"><strong>${escHtml(tk.name)}</strong></td>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0" title="${c ? escHtml(c.case_name) : ''}">${c ? escHtml(c.case_name) : '—'}</td>
       <td style="white-space:nowrap;font-size:11px">${deadlineBadge(tk.deadline, tk.status)}</td>
-      <td style="white-space:nowrap" onclick="event.stopPropagation()">
+      <td class="hide-mobile" style="white-space:nowrap" onclick="event.stopPropagation()">
         <button class="btn btn-success btn-xs" onclick="quickComplete('${tk.id}')">完了</button>
         <button class="btn btn-secondary btn-xs" onclick="openTaskModal('${tk.id}','${tk.case_id}',null)">編集</button>
         <button class="btn btn-danger btn-xs" onclick="confirmAction('このタスクを削除しますか？', () => deleteTask('${tk.id}'))">削除</button>
