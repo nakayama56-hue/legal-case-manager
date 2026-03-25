@@ -1271,13 +1271,13 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
 @media (max-width: 600px) { .delivery-grid { grid-template-columns: 1fr; } }
 @media (max-width: 768px) {
   /* タスク一覧をコンパクトに */
-  #task-tbody td { padding: 5px 4px; font-size: 11px; }
-  #task-tbody .btn-xs { padding: 2px 3px; font-size: 10px; }
+  #task-tbody td { padding: 5px 3px; font-size: 11px; }
+  #task-tbody .btn-xs { padding: 2px 3px; font-size: 10px; margin: 0 1px; }
   #task-tbody strong { font-size: 11px; }
   .task-table-wrap colgroup col:nth-child(1) { width: 36%; }
-  .task-table-wrap colgroup col:nth-child(2) { width: 30%; }
+  .task-table-wrap colgroup col:nth-child(2) { width: 28%; }
   .task-table-wrap colgroup col:nth-child(3) { width: 14%; }
-  .task-table-wrap colgroup col:nth-child(4) { width: 20%; }
+  .task-table-wrap colgroup col:nth-child(4) { width: 22%; }
   /* 案件テーブルのmin-widthを無効化 */
   #case-table { min-width: 0 !important; }
   #case-tbody td { padding: 6px 6px; font-size: 12px; }
@@ -1461,7 +1461,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.0</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1532,10 +1532,10 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             <div class="table-wrap task-table-wrap">
               <table style="table-layout:fixed;width:100%">
                 <colgroup>
-                  <col style="width:38%">
-                  <col style="width:32%">
-                  <col style="width:13%">
-                  <col style="width:17%">
+                  <col style="width:36%">
+                  <col style="width:28%">
+                  <col style="width:14%">
+                  <col style="width:22%">
                 </colgroup>
                 <thead>
                   <tr>
@@ -1594,30 +1594,30 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             <table id="case-table" style="table-layout:fixed;width:100%">
               <colgroup>
                 <col style="width:32px">
-                <col style="width:18%">
-                <col><!-- 案件名：残り全部 -->
-                <col class="hide-mobile" style="width:12%">
-                <col class="hide-mobile" style="width:8%">
-                <col class="hide-mobile" style="width:12%">
-                <col class="hide-mobile" style="width:14%">
-                <col class="hide-mobile" style="width:10%">
-                <col class="hide-mobile" style="width:10%">
-                <col style="width:90px">
-                <col style="width:60px">
+                <col style="width:95px">
+                <col><!-- 案件名：残り -->
+                <col class="hide-mobile" style="width:95px">
+                <col class="hide-mobile" style="width:65px">
+                <col class="hide-mobile" style="width:95px">
+                <col class="hide-mobile" style="width:105px">
+                <col class="hide-mobile" style="width:85px">
+                <col class="hide-mobile" style="width:85px">
+                <col style="width:85px">
+                <col style="width:48px">
               </colgroup>
               <thead>
                 <tr>
                   <th style="width:32px"></th>
                   <th class="sortable" onclick="setCaseSort('case_num',this)">案件番号</th>
                   <th class="sortable" onclick="setCaseSort('case_name',this)">案件名</th>
-                  <th class="sortable hide-mobile" onclick="setCaseSort('client_name',this)">依頼者名</th>
+                  <th class="sortable hide-mobile" onclick="setCaseSort('client_name',this)">依頼者</th>
                   <th class="sortable hide-mobile" onclick="setCaseSort('category',this)">区分</th>
                   <th class="sortable hide-mobile" onclick="setCaseSort('type',this)">種別</th>
                   <th class="hide-mobile">管轄法務局</th>
                   <th class="sortable hide-mobile" onclick="setCaseSort('shinsei_date',this)">申請日</th>
-                  <th class="sortable hide-mobile" onclick="setCaseSort('shinsei_yotei',this)">完了予定日</th>
-                  <th class="sortable" onclick="setCaseSort('status',this)">ステータス</th>
-                  <th style="width:60px">操作</th>
+                  <th class="sortable hide-mobile" onclick="setCaseSort('shinsei_yotei',this)">完了予定</th>
+                  <th class="sortable" onclick="setCaseSort('status',this)">ST</th>
+                  <th style="width:48px"></th>
                 </tr>
               </thead>
               <tbody id="case-tbody"></tbody>
