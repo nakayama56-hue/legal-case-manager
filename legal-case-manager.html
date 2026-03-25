@@ -1461,7 +1461,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.1.9</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2983,18 +2983,13 @@ function renderCaseDetail(caseId) {
       </div>
 
       <!-- Memo -->
-      ${c.memo ? `
       <div class="info-card">
         <div class="info-card-header">📝 備考・メモ</div>
-        <div style="padding:12px 14px;font-size:12px;color:var(--text-secondary);white-space:pre-wrap">${escHtml(c.memo)}</div>
-      </div>` : ''}
-
-      ${c.hoteisozoku ? `
-      <div class="info-card">
-        <div style="padding:10px 14px;font-size:13px;font-weight:700;color:#0369a1">
-          ✅ 法定相続情報一覧図の取得あり
+        <div style="padding:12px 14px;font-size:12px;color:var(--text-secondary);white-space:pre-wrap">${escHtml(c.memo||'')}</div>
+        <div style="padding:6px 14px 10px;font-size:13px;font-weight:700;color:${c.hoteisozoku?'#0369a1':'var(--text-muted)'}">
+          ${c.hoteisozoku ? '✅' : '☐'} 法定相続情報一覧図の取得${c.hoteisozoku?'あり':'なし'}
         </div>
-      </div>` : ''}
+      </div>
 
       <!-- 登記事項証明書 -->
       ${(c.touki_list && c.touki_list.length > 0) ? `
