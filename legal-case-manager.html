@@ -1461,7 +1461,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.8</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1570,6 +1570,10 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
               <option value="不動産登記">🏠 不動産登記</option>
               <option value="商業・法人登記">🏢 商業・法人登記</option>
             </select>
+              <option value="">区分（全て）</option>
+              <option value="不動産登記">🏠 不動産登記</option>
+              <option value="商業・法人登記">🏢 商業・法人登記</option>
+            </select>
             <select class="filter-select" id="case-filter-status" onchange="if(this.value==='完了'){document.getElementById('case-show-completed').checked=true;}renderCaseTable()" style="min-width:80px">
               <option value="">ST（全て）</option>
               <option>新規受付</option><option>書類待ち</option>
@@ -1590,6 +1594,8 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             </label>
             <button class="btn btn-primary" onclick="openCaseModal(null)">＋ 新規案件</button>
           </div>
+          <!-- 依頼者ショートカットボタン -->
+          <div id="client-shortcuts" style="padding:8px 14px;border-bottom:1px solid var(--border-color);display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:44px"></div>
           <div class="table-wrap">
             <table id="case-table" style="table-layout:auto;width:100%;min-width:860px">
               <colgroup>
@@ -1655,6 +1661,14 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div id="view-settings" class="view">
 
         <!-- Cloud sync status -->
+        <div class="section-title">👤 依頼者ショートカットボタン</div>
+        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">案件一覧の検索バー下に表示されるショートカットボタンを最大5つ登録できます。依頼者名を入力してください。</div>
+          <div id="shortcut-inputs" style="display:flex;flex-direction:column;gap:8px">
+          </div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="saveClientShortcuts()">💾 保存</button>
+        </div>
+
         <div class="section-title">☁ クラウド同期（Google スプレッドシート）</div>
         <div class="cloud-status-bar">
           <div class="cloud-status-dot" id="cloud-dot"></div>
@@ -2267,6 +2281,7 @@ function init() {
   try { updateNavBadges(); } catch(e) {}
   try { updateBottomNavBadges(); } catch(e) {}
   try { initAppearance(); } catch(e) {}
+  try { renderClientShortcutButtons(); } catch(e) {}
   showView('cases');
 }
 
@@ -2367,7 +2382,7 @@ function showView(name) {
 
   if (name === 'cases') { renderCaseTable(); renderCalendar(); renderTaskTable(); }
   else if (name === 'case-detail') { renderCaseDetail(currentDetailCaseId); renderDetailCalendar(currentDetailCaseId); }
-  else if (name === 'settings') renderSnapshotList();
+  else if (name === 'settings') { renderSnapshotList(); renderShortcutInputs(); }
 }
 
 /* =====================================================
@@ -3256,6 +3271,80 @@ function renderCaseSelectList() {
 function selectCaseForTask(caseId) {
   closeCaseSelectModal();
   setTimeout(() => openTaskModal(null, caseId, null), 200);
+}
+
+/* =====================================================
+   依頼者ショートカットボタン
+   ===================================================== */
+function loadClientShortcuts() {
+  try {
+    return JSON.parse(localStorage.getItem('client_shortcuts') || '["","","","",""]');
+  } catch(e) { return ['','','','','']; }
+}
+
+function saveClientShortcuts() {
+  const inputs = document.querySelectorAll('.shortcut-name-input');
+  const shortcuts = [...inputs].map(i => i.value.trim());
+  localStorage.setItem('client_shortcuts', JSON.stringify(shortcuts));
+  renderClientShortcutButtons();
+  toast('ショートカットボタンを保存しました');
+}
+
+function renderShortcutInputs() {
+  const container = document.getElementById('shortcut-inputs');
+  if (!container) return;
+  const shortcuts = loadClientShortcuts();
+  container.innerHTML = shortcuts.map((s, i) => `
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;color:var(--text-muted);width:20px;flex-shrink:0">${i+1}.</span>
+      <input type="text" class="form-control shortcut-name-input" value="${escHtml(s)}" placeholder="依頼者名を入力" style="flex:1">
+    </div>`).join('');
+}
+
+function renderClientShortcutButtons() {
+  const container = document.getElementById('client-shortcuts');
+  if (!container) return;
+  const shortcuts = loadClientShortcuts().filter(s => s);
+  if (shortcuts.length === 0) {
+    container.innerHTML = '<span style="font-size:11px;color:var(--text-muted)">設定からショートカットボタンを登録できます</span>';
+    return;
+  }
+  container.innerHTML = shortcuts.map((s, i) => {
+    const colors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444'];
+    const color = colors[i % colors.length];
+    return `<button onclick="filterByClient('${escHtml(s)}')" id="sc-btn-${i}"
+      style="padding:6px 14px;border-radius:999px;border:2px solid ${color};background:var(--bg-secondary);
+      color:${color};font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s;white-space:nowrap"
+      onmouseover="this.style.background='${color}';this.style.color='#fff'"
+      onmouseout="if(!this.classList.contains('sc-active')){this.style.background='var(--bg-secondary)';this.style.color='${color}'}"
+      >${escHtml(s)}</button>`;
+  }).join('');
+}
+
+let activeClientFilter = '';
+function filterByClient(name) {
+  const btns = document.querySelectorAll('[id^="sc-btn-"]');
+  if (activeClientFilter === name) {
+    // 同じボタンを再度押したら解除
+    activeClientFilter = '';
+    btns.forEach(b => {
+      b.classList.remove('sc-active');
+      b.style.background = 'var(--bg-secondary)';
+    });
+    document.getElementById('case-search').value = '';
+  } else {
+    activeClientFilter = name;
+    btns.forEach(b => {
+      const isActive = b.textContent.trim() === name;
+      b.classList.toggle('sc-active', isActive);
+      if (!isActive) {
+        // reset non-active buttons color from their border color
+        b.style.background = 'var(--bg-secondary)';
+      }
+    });
+    document.getElementById('case-search').value = name;
+  }
+  renderCaseTable();
 }
 
 function togglePin(caseId) {
