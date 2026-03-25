@@ -1278,11 +1278,9 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
   .task-table-wrap colgroup col:nth-child(2) { width: 28%; }
   .task-table-wrap colgroup col:nth-child(3) { width: 14%; }
   .task-table-wrap colgroup col:nth-child(4) { width: 22%; }
-  /* 案件テーブルのmin-widthを無効化 */
-  #case-table { min-width: 0 !important; }
-  #case-table colgroup col:nth-child(2) { width: 85px !important; }
-  #case-table colgroup col:nth-child(4) { width: 0 !important; }
-  #case-tbody td { padding: 6px 6px; font-size: 12px; }
+  /* 案件テーブル：スマホでも横スクロールで全列表示 */
+  #case-table { min-width: 860px !important; }
+  #case-tbody td { padding: 6px 6px; font-size: 11px; }
 }
 @media (max-width: 480px) {
   .cal-day { min-height: 36px; padding: 1px 2px; }
@@ -1463,7 +1461,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.5</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.2.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1593,17 +1591,17 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             <button class="btn btn-primary" onclick="openCaseModal(null)">＋ 新規案件</button>
           </div>
           <div class="table-wrap">
-            <table id="case-table" style="table-layout:fixed;width:100%;min-width:600px">
+            <table id="case-table" style="table-layout:fixed;width:100%;min-width:860px">
               <colgroup>
                 <col style="width:32px">
                 <col style="width:100px">
-                <col><!-- 案件名：残り全幅 -->
-                <col class="hide-mobile" style="width:130px">
-                <col class="hide-mobile" style="width:80px">
-                <col class="hide-mobile" style="width:120px">
-                <col class="hide-mobile" style="width:120px">
-                <col class="hide-mobile" style="width:90px">
-                <col class="hide-mobile" style="width:90px">
+                <col style="min-width:150px;width:auto">
+                <col style="width:130px">
+                <col style="width:80px">
+                <col style="width:130px">
+                <col style="width:110px">
+                <col style="width:90px">
+                <col style="width:90px">
                 <col style="width:90px">
                 <col style="width:48px">
               </colgroup>
@@ -1612,14 +1610,14 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
                   <th style="width:32px"></th>
                   <th class="sortable" onclick="setCaseSort('case_num',this)">案件番号</th>
                   <th class="sortable" onclick="setCaseSort('case_name',this)">案件名</th>
-                  <th class="sortable hide-mobile" onclick="setCaseSort('client_name',this)">依頼者</th>
-                  <th class="sortable hide-mobile" onclick="setCaseSort('category',this)">区分</th>
-                  <th class="sortable hide-mobile" onclick="setCaseSort('type',this)">種別</th>
-                  <th class="hide-mobile">管轄法務局</th>
-                  <th class="sortable hide-mobile" onclick="setCaseSort('shinsei_date',this)">申請日</th>
-                  <th class="sortable hide-mobile" onclick="setCaseSort('shinsei_yotei',this)">完了予定</th>
+                  <th class="sortable" onclick="setCaseSort('client_name',this)">依頼者</th>
+                  <th class="sortable" onclick="setCaseSort('category',this)">区分</th>
+                  <th class="sortable" onclick="setCaseSort('type',this)">種別</th>
+                  <th>管轄法務局</th>
+                  <th class="sortable" onclick="setCaseSort('shinsei_date',this)">申請日</th>
+                  <th class="sortable" onclick="setCaseSort('shinsei_yotei',this)">完了予定</th>
                   <th class="sortable" onclick="setCaseSort('status',this)">ST</th>
-                  <th style="width:48px"></th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="case-tbody"></tbody>
@@ -2881,7 +2879,7 @@ function renderCaseTable() {
 
   const tbody = document.getElementById('case-tbody');
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="12" class="table-empty">該当する案件がありません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="table-empty">該当する案件がありません</td></tr>';
     return;
   }
 
@@ -2897,16 +2895,16 @@ function renderCaseTable() {
         ${escHtml(c.case_name)}
         ${incompleteTasks > 0 ? `<span class="badge badge-進行中" style="margin-left:4px;font-size:10px">${incompleteTasks}件</span>` : ''}
       </td>
-      <td class="hide-mobile" style="white-space:nowrap">
+      <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
         ${c.label
           ? `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${LABEL_COLORS[c.label]?.bg};border:1px solid ${LABEL_COLORS[c.label]?.border};color:${LABEL_COLORS[c.label]?.dot}">${escHtml(c.client_name||'')}</span>`
           : escHtml(c.client_name||'')}
       </td>
-      <td class="hide-mobile" style="white-space:nowrap"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${c.category==='商業・法人登記'?'#fef3c7':'#dbeafe'};color:${c.category==='商業・法人登記'?'#92400e':'#1e40af'}">${c.category==='商業・法人登記'?'🏢 商業':'🏠 不動産'}</span></td>
-      <td class="hide-mobile"><span class="badge">${escHtml(c.type||'')}</span></td>
-      <td class="hide-mobile" style="white-space:nowrap">${escHtml(((c.legal_bureaus&&c.legal_bureaus.length>0)?c.legal_bureaus:[c.legal_bureau||'']).filter(b=>b).join('、')||'—')}</td>
-      <td class="hide-mobile" style="white-space:nowrap;font-size:12px">${escHtml((c.shinsei_dates&&c.shinsei_dates[0]?.shinsei)||'—')}</td>
-      <td class="hide-mobile" style="white-space:nowrap;font-size:12px">${escHtml((c.shinsei_dates&&c.shinsei_dates[0]?.yotei)||'—')}</td>
+      <td style="white-space:nowrap"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${c.category==='商業・法人登記'?'#fef3c7':'#dbeafe'};color:${c.category==='商業・法人登記'?'#92400e':'#1e40af'}">${c.category==='商業・法人登記'?'🏢 商業':'🏠 不動産'}</span></td>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="badge">${escHtml(c.type||'')}</span></td>
+      <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(((c.legal_bureaus&&c.legal_bureaus.length>0)?c.legal_bureaus:[c.legal_bureau||'']).filter(b=>b).join('、')||'—')}</td>
+      <td style="white-space:nowrap;font-size:12px">${escHtml((c.shinsei_dates&&c.shinsei_dates[0]?.shinsei)||'—')}</td>
+      <td style="white-space:nowrap;font-size:12px">${escHtml((c.shinsei_dates&&c.shinsei_dates[0]?.yotei)||'—')}</td>
       <td style="white-space:nowrap">${statusBadge(c.status)}</td>
       <td style="white-space:nowrap" onclick="event.stopPropagation()">
         <button class="btn btn-secondary btn-xs" onclick="duplicateCase('${c.id}')" title="この案件を複製">複製</button>
