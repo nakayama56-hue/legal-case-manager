@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.7</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2280,20 +2280,10 @@ function initAppearance() {
   if (darkMode) document.body.classList.add('dark-mode');
   if (!hoverSidebar) toggleHoverSidebar(false);
 
-  // カレンダー初期表示設定
+  // カレンダー初期表示設定（変数宣言後に適用するためinit()末尾で処理）
+  // トグルの状態だけ反映
   const calHiddenDefault = localStorage.getItem('cal_hidden_workspace') === '1';
   const detailCalHiddenDefault = localStorage.getItem('cal_hidden_detail') === '1';
-  if (calHiddenDefault) {
-    calHidden = true;
-    const wrap = document.getElementById('case-calendar-wrap');
-    const btn = document.querySelector('[onclick="toggleCalendar()"]');
-    if (wrap) wrap.style.display = 'none';
-    if (btn) btn.textContent = 'カレンダーを表示';
-  }
-  if (detailCalHiddenDefault) {
-    detailCalHidden = true;
-  }
-  // トグルの状態を反映
   const calToggle = document.getElementById('toggle-cal-hidden');
   const detailCalToggle = document.getElementById('toggle-detail-cal-hidden');
   if (calToggle) calToggle.checked = calHiddenDefault;
@@ -2381,6 +2371,18 @@ function init() {
   try { initAppearance(); } catch(e) {}
   try { renderClientShortcutButtons(); } catch(e) {}
   showView('cases');
+
+  // カレンダーのデフォルト非表示設定を適用（変数宣言後）
+  if (localStorage.getItem('cal_hidden_workspace') === '1') {
+    calHidden = true;
+    const wrap = document.getElementById('case-calendar-wrap');
+    const btn = document.querySelector('[onclick="toggleCalendar()"]');
+    if (wrap) wrap.style.display = 'none';
+    if (btn) btn.textContent = 'カレンダーを表示';
+  }
+  if (localStorage.getItem('cal_hidden_detail') === '1') {
+    detailCalHidden = true;
+  }
 
   // 起動時にショートカットをクラウドからバックグラウンドで取得
   setTimeout(async () => {
@@ -2698,7 +2700,7 @@ function renderDetailCalendar(caseId, flash) {
 }
 function calMoveDetail(dir){detailCalMonth+=dir;if(detailCalMonth>11){detailCalMonth=0;detailCalYear++;}if(detailCalMonth<0){detailCalMonth=11;detailCalYear--;}renderDetailCalendar();}
 function calGoTodayDetail(){detailCalYear=new Date().getFullYear();detailCalMonth=new Date().getMonth();renderDetailCalendar(null,true);}
-function toggleDetailCalendar(){detailCalHidden=!detailCalHidden;const el=document.getElementById('detail-calendar-wrap'),btn=document.querySelector('[onclick="toggleDetailCalendar()"]');if(el)el.style.display=detailCalHidden?'none':'';if(btn)btn.textContent=detailCalHidden?'カレンダーを表示':'カレンダーを隠す';}
+function toggleDetailCalendar(){detailCalHidden=!detailCalHidden;const el=document.getElementById('detail-calendar-wrap'),btn=document.querySelector('[onclick="toggleDetailCalendar()"]');if(el)el.style.display=detailCalHidden?'none':'block';if(btn)btn.textContent=detailCalHidden?'カレンダーを表示':'カレンダーを隠す';}
 
 function renderTaskCalendar(flash) {
   renderCalendarBase('task-calendar','task-cal-label',taskCalYear,taskCalMonth,()=>{
@@ -2883,7 +2885,7 @@ function toggleCalendar() {
   calHidden = !calHidden;
   const wrap = document.getElementById('case-calendar-wrap');
   const btn  = document.querySelector('[onclick="toggleCalendar()"]');
-  if (wrap) wrap.style.display = calHidden ? 'none' : '';
+  if (wrap) wrap.style.display = calHidden ? 'none' : 'block';
   if (btn)  btn.textContent = calHidden ? 'カレンダーを表示' : 'カレンダーを隠す';
 }
 
@@ -2896,6 +2898,11 @@ function showCaseDetail(id) {
     const btn = document.querySelector('[onclick="toggleDetailCalendar()"]');
     if (wrap) wrap.style.display = 'none';
     if (btn) btn.textContent = 'カレンダーを表示';
+  } else {
+    const wrap = document.getElementById('detail-calendar-wrap');
+    const btn = document.querySelector('[onclick="toggleDetailCalendar()"]');
+    if (wrap) wrap.style.display = 'block';
+    if (btn) btn.textContent = 'カレンダーを隠す';
   }
 }
 
