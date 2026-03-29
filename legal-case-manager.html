@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.6</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1735,18 +1735,30 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
         <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px">
           <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">簡易印刷で出力する項目を選択してください</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            ${[
-              ['print-item-location',  '不動産所在地 / 商号・本店'],
-              ['print-item-category',  '区分・種別'],
-              ['print-item-bureau',    '管轄法務局'],
-              ['print-item-received',  '受付日'],
-              ['print-item-shinsei',   '申請日・完了予定日'],
-              ['print-item-memo',      '備考・メモ'],
-            ].map(([id, label]) => `
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
-              <input type="checkbox" id="${id}" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
-              ${label}
-            </label>`).join('')}
+              <input type="checkbox" id="print-item-location" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
+              不動産所在地 / 商号・本店
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
+              <input type="checkbox" id="print-item-category" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
+              区分・種別
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
+              <input type="checkbox" id="print-item-bureau" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
+              管轄法務局
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
+              <input type="checkbox" id="print-item-received" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
+              受付日
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
+              <input type="checkbox" id="print-item-shinsei" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
+              申請日・完了予定日
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
+              <input type="checkbox" id="print-item-memo" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
+              備考・メモ
+            </label>
           </div>
         </div>
 
@@ -2273,7 +2285,7 @@ function initAppearance() {
   const detailCalHiddenDefault = localStorage.getItem('cal_hidden_detail') === '1';
   if (calHiddenDefault) {
     calHidden = true;
-    const wrap = document.getElementById('calendar-wrap');
+    const wrap = document.getElementById('case-calendar-wrap');
     const btn = document.querySelector('[onclick="toggleCalendar()"]');
     if (wrap) wrap.style.display = 'none';
     if (btn) btn.textContent = 'カレンダーを表示';
@@ -2686,7 +2698,7 @@ function renderDetailCalendar(caseId, flash) {
 }
 function calMoveDetail(dir){detailCalMonth+=dir;if(detailCalMonth>11){detailCalMonth=0;detailCalYear++;}if(detailCalMonth<0){detailCalMonth=11;detailCalYear--;}renderDetailCalendar();}
 function calGoTodayDetail(){detailCalYear=new Date().getFullYear();detailCalMonth=new Date().getMonth();renderDetailCalendar(null,true);}
-function toggleDetailCalendar(){detailCalHidden=!detailCalHidden;const el=document.getElementById('detail-calendar'),btn=document.querySelector('[onclick="toggleDetailCalendar()"]');if(el)el.style.display=detailCalHidden?'none':'';if(btn)btn.textContent=detailCalHidden?'カレンダーを表示':'カレンダーを隠す';}
+function toggleDetailCalendar(){detailCalHidden=!detailCalHidden;const el=document.getElementById('detail-calendar-wrap'),btn=document.querySelector('[onclick="toggleDetailCalendar()"]');if(el)el.style.display=detailCalHidden?'none':'';if(btn)btn.textContent=detailCalHidden?'カレンダーを表示':'カレンダーを隠す';}
 
 function renderTaskCalendar(flash) {
   renderCalendarBase('task-calendar','task-cal-label',taskCalYear,taskCalMonth,()=>{
@@ -2869,7 +2881,7 @@ function calGoToday() {
 
 function toggleCalendar() {
   calHidden = !calHidden;
-  const wrap = document.getElementById('case-calendar');
+  const wrap = document.getElementById('case-calendar-wrap');
   const btn  = document.querySelector('[onclick="toggleCalendar()"]');
   if (wrap) wrap.style.display = calHidden ? 'none' : '';
   if (btn)  btn.textContent = calHidden ? 'カレンダーを表示' : 'カレンダーを隠す';
@@ -2878,6 +2890,13 @@ function toggleCalendar() {
 function showCaseDetail(id) {
   currentDetailCaseId = id;
   showView('case-detail');
+  // 案件詳細カレンダーのデフォルト非表示設定を適用
+  if (detailCalHidden) {
+    const wrap = document.getElementById('detail-calendar-wrap');
+    const btn = document.querySelector('[onclick="toggleDetailCalendar()"]');
+    if (wrap) wrap.style.display = 'none';
+    if (btn) btn.textContent = 'カレンダーを表示';
+  }
 }
 
 function renderCaseTable() {
