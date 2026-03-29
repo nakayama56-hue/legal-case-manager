@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.8</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5304,6 +5304,13 @@ function addShinseiRow(r, idx) {
           </div>
         </div>
       </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">追跡番号</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input class="form-control sh-tracking" type="text" placeholder="例：1234567890123" value="${escHtml(r?.tracking||'')}" style="flex:1" inputmode="numeric">
+          <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="shTrack(this)">📦 追跡</button>
+        </div>
+      </div>
     </div>`;
   list.appendChild(div);
   renumberShinseiRows();
@@ -5327,6 +5334,7 @@ function readShinseiRows() {
     shinsei:  (row.querySelector('.sh-shinsei')?.value  || '').trim(),
     yotei:    (row.querySelector('.sh-yotei')?.value    || '').trim(),
     kanryo:   (row.querySelector('.sh-kanryo')?.value   || '').trim(),
+    tracking: (row.querySelector('.sh-tracking')?.value || '').trim(),
   })).filter(r => r.kankatsu || r.shinsei || r.yotei || r.kanryo);
 }
 
@@ -5334,11 +5342,18 @@ function renderShinseiSection(c) {
   const rows = c.shinsei_dates || [];
   if (rows.length === 0) return '';
   const items = rows.map(r => `
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;padding:8px 12px;border:1px solid var(--border-color);border-radius:var(--radius-sm);margin-bottom:6px;background:var(--bg-primary);font-size:12px">
-      <div><span style="font-size:10px;color:var(--text-muted)">管轄</span><div style="font-weight:700">${escHtml(r.kankatsu||'—')}</div></div>
-      <div><span style="font-size:10px;color:var(--text-muted)">申請日</span><div>${escHtml(r.shinsei||'—')}</div></div>
-      <div><span style="font-size:10px;color:var(--text-muted)">完了予定日</span><div>${escHtml(r.yotei||'—')}</div></div>
-      <div><span style="font-size:10px;color:var(--text-muted)">完了日</span><div>${escHtml(r.kanryo||'—')}</div></div>
+    <div style="padding:8px 12px;border:1px solid var(--border-color);border-radius:var(--radius-sm);margin-bottom:6px;background:var(--bg-primary);font-size:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:${r.tracking?'6px':'0'}">
+        <div><span style="font-size:10px;color:var(--text-muted)">管轄</span><div style="font-weight:700">${escHtml(r.kankatsu||'—')}</div></div>
+        <div><span style="font-size:10px;color:var(--text-muted)">申請日</span><div>${escHtml(r.shinsei||'—')}</div></div>
+        <div><span style="font-size:10px;color:var(--text-muted)">完了予定日</span><div>${escHtml(r.yotei||'—')}</div></div>
+        <div><span style="font-size:10px;color:var(--text-muted)">完了日</span><div>${escHtml(r.kanryo||'—')}</div></div>
+      </div>
+      ${r.tracking ? `<div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;color:var(--text-muted)">追跡：${escHtml(r.tracking)}</span>
+        <a href="https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${encodeURIComponent(r.tracking)}&searchKind=S002&locale=ja" target="_blank"
+          style="font-size:11px;color:#0369a1;text-decoration:none;padding:1px 6px;border:1px solid #0369a1;border-radius:4px">📦 追跡</a>
+      </div>` : ''}
     </div>`).join('');
   return `
     <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-bottom:16px;overflow:hidden">
@@ -5460,6 +5475,14 @@ function readDeliveryRows() {
     handover: (row.querySelector('.dv-handover')?.value || '').trim(),
     memo:     (row.querySelector('.dv-memo')?.value     || '').trim(),
   })).filter(d => d.name || d.address || d.docs);
+}
+
+/** 管轄別申請日の追跡番号で追跡ページを開く */
+function shTrack(btn) {
+  const item = btn.closest('.shinsei-item');
+  const num = (item.querySelector('.sh-tracking')?.value || '').replace(/\s/g, '');
+  if (!num) { toast('追跡番号を入力してください', 'error'); return; }
+  window.open(`https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${num}&searchKind=S002&locale=ja`, '_blank');
 }
 
 /** 送付方法変更で手渡し日・追跡番号を切替 */
