@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.7</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5375,7 +5375,7 @@ function addDeliveryRow(d, idx) {
       </div>
       <div class="form-group">
         <label class="form-label">送付方法</label>
-        <select class="form-control dv-method">
+        <select class="form-control dv-method" onchange="dvMethodChange(this)">
           <option ${(d?.method||'郵送')==='郵送'?'selected':''}>郵送</option>
           <option ${d?.method==='書留'?'selected':''}>書留</option>
           <option ${d?.method==='速達'?'selected':''}>速達</option>
@@ -5410,6 +5410,23 @@ function addDeliveryRow(d, idx) {
           </div>
         </div>
       </div>
+      <div class="form-group" style="grid-column:1/-1;display:${(d?.method==='手渡し')?'block':'none'}" data-handover>
+        <label class="form-label">手渡し日</label>
+        <div style="display:flex;gap:4px;align-items:center">
+          <input class="form-control dv-handover" type="text" placeholder="例：2026-04-20" value="${escHtml(d?.handover||'')}" style="flex:1">
+          <div style="position:relative;flex-shrink:0">
+            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー">📅</button>
+            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
+          </div>
+        </div>
+      </div>
+      <div class="form-group" style="grid-column:1/-1;display:${(d?.method==='手渡し')?'none':'block'}" data-tracking>
+        <label class="form-label">追跡番号</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input class="form-control dv-tracking" type="text" placeholder="例：1234567890123" value="${escHtml(d?.tracking||'')}" style="flex:1" inputmode="numeric">
+          <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="dvTrack(this)">📦 追跡</button>
+        </div>
+      </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">メモ</label>
         <input class="form-control dv-memo" placeholder="例：受取確認済み" value="${escHtml(d?.memo||'')}">
@@ -5437,10 +5454,30 @@ function readDeliveryRows() {
     method:  (row.querySelector('.dv-method')?.value  || '').trim(),
     zip:     (row.querySelector('.dv-zip')?.value     || '').trim(),
     address: (row.querySelector('.dv-address')?.value || '').trim(),
-    docs:    (row.querySelector('.dv-docs')?.value     || '').trim(),
-    date:    (row.querySelector('.dv-date')?.value     || '').trim(),
-    memo:    (row.querySelector('.dv-memo')?.value     || '').trim(),
+    docs:     (row.querySelector('.dv-docs')?.value     || '').trim(),
+    date:     (row.querySelector('.dv-date')?.value     || '').trim(),
+    tracking: (row.querySelector('.dv-tracking')?.value || '').trim(),
+    handover: (row.querySelector('.dv-handover')?.value || '').trim(),
+    memo:     (row.querySelector('.dv-memo')?.value     || '').trim(),
   })).filter(d => d.name || d.address || d.docs);
+}
+
+/** 送付方法変更で手渡し日・追跡番号を切替 */
+function dvMethodChange(sel) {
+  const item = sel.closest('.delivery-item');
+  const isHandover = sel.value === '手渡し';
+  const handoverEl = item.querySelector('[data-handover]');
+  const trackingEl = item.querySelector('[data-tracking]');
+  if (handoverEl) handoverEl.style.display = isHandover ? 'block' : 'none';
+  if (trackingEl) trackingEl.style.display = isHandover ? 'none' : 'block';
+}
+
+/** 追跡番号で日本郵便追跡ページを開く */
+function dvTrack(btn) {
+  const item = btn.closest('.delivery-item');
+  const num = (item.querySelector('.dv-tracking')?.value || '').replace(/\s/g, '');
+  if (!num) { toast('追跡番号を入力してください', 'error'); return; }
+  window.open(`https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${num}&searchKind=S002&locale=ja`, '_blank');
 }
 
 /** 郵便番号→住所検索（zipcloud API） */
@@ -5483,13 +5520,19 @@ function renderDeliverySection(c) {
 
   const rows = deliveries.map((d, i) => `
     <div style="border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;background:var(--bg-primary);font-size:12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
         <span style="font-weight:700;color:var(--text-primary)">📬 ${escHtml(d.name||'送付先'+(i+1))}</span>
         <span style="font-size:11px;padding:1px 6px;border-radius:4px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">${escHtml(d.method||'郵送')}</span>
-        ${d.date ? `<span style="font-size:11px;color:var(--text-muted)">📅 ${escHtml(d.date)}</span>` : ''}
+        ${d.date ? `<span style="font-size:11px;color:var(--text-muted)">📅 送付：${escHtml(d.date)}</span>` : ''}
+        ${d.handover ? `<span style="font-size:11px;color:#0369a1;font-weight:600">🤝 手渡し：${escHtml(d.handover)}</span>` : ''}
       </div>
       ${d.address ? `<div style="color:var(--text-secondary);margin-bottom:4px">📍 ${d.zip ? `〒${escHtml(d.zip)} ` : ''}${escHtml(d.address)}</div>` : ''}
       ${d.docs    ? `<div style="color:var(--text-secondary);margin-bottom:4px">📄 ${escHtml(d.docs)}</div>` : ''}
+      ${d.tracking ? `<div style="margin-bottom:4px;display:flex;align-items:center;gap:6px">
+        <span style="color:var(--text-muted);font-size:11px">追跡番号：${escHtml(d.tracking)}</span>
+        <a href="https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${encodeURIComponent(d.tracking)}&searchKind=S002&locale=ja" target="_blank"
+          style="font-size:11px;color:#0369a1;text-decoration:none;padding:1px 6px;border:1px solid #0369a1;border-radius:4px">📦 追跡</a>
+      </div>` : ''}
       ${d.memo    ? `<div style="color:var(--text-muted);font-size:11px">${escHtml(d.memo)}</div>` : ''}
     </div>`).join('');
 
