@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.5</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1706,6 +1706,47 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
               <input type="checkbox" id="toggle-dark-mode" onchange="toggleDarkMode(this.checked)">
               <span class="toggle-slider"></span>
             </label>
+          </div>
+          <div style="border-top:1px solid var(--border-color)"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary)">ワークスペースのカレンダーを最初から隠す</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">起動時にワークスペースのカレンダーを非表示にする</div>
+            </div>
+            <label class="toggle-switch" style="flex-shrink:0">
+              <input type="checkbox" id="toggle-cal-hidden" onchange="saveCalSetting('workspace', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div style="border-top:1px solid var(--border-color)"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary)">案件詳細のカレンダーを最初から隠す</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">案件詳細を開いたときカレンダーを非表示にする</div>
+            </div>
+            <label class="toggle-switch" style="flex-shrink:0">
+              <input type="checkbox" id="toggle-detail-cal-hidden" onchange="saveCalSetting('detail', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="section-title">🖨 簡易印刷の項目設定</div>
+        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">簡易印刷で出力する項目を選択してください</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            ${[
+              ['print-item-location',  '不動産所在地 / 商号・本店'],
+              ['print-item-category',  '区分・種別'],
+              ['print-item-bureau',    '管轄法務局'],
+              ['print-item-received',  '受付日'],
+              ['print-item-shinsei',   '申請日・完了予定日'],
+              ['print-item-memo',      '備考・メモ'],
+            ].map(([id, label]) => `
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
+              <input type="checkbox" id="${id}" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
+              ${label}
+            </label>`).join('')}
           </div>
         </div>
 
@@ -2192,6 +2233,26 @@ function toggleHoverSidebar(enabled) {
   localStorage.setItem('sidebar_hover', enabled ? '1' : '0');
 }
 
+function saveCalSetting(type, hidden) {
+  localStorage.setItem('cal_hidden_' + type, hidden ? '1' : '0');
+}
+
+function savePrintSetting() {
+  const items = ['location','category','bureau','received','shinsei','memo'];
+  const settings = {};
+  items.forEach(k => {
+    const el = document.getElementById('print-item-' + k);
+    if (el) settings[k] = el.checked;
+  });
+  localStorage.setItem('print_settings', JSON.stringify(settings));
+}
+
+function loadPrintSettings() {
+  try {
+    return JSON.parse(localStorage.getItem('print_settings') || '{}');
+  } catch(e) { return {}; }
+}
+
 function toggleDarkMode(enabled) {
   document.body.classList.toggle('dark-mode', enabled);
   localStorage.setItem('dark_mode', enabled ? '1' : '0');
@@ -2206,6 +2267,32 @@ function initAppearance() {
   if (hsToggle) hsToggle.checked = hoverSidebar;
   if (darkMode) document.body.classList.add('dark-mode');
   if (!hoverSidebar) toggleHoverSidebar(false);
+
+  // カレンダー初期表示設定
+  const calHiddenDefault = localStorage.getItem('cal_hidden_workspace') === '1';
+  const detailCalHiddenDefault = localStorage.getItem('cal_hidden_detail') === '1';
+  if (calHiddenDefault) {
+    calHidden = true;
+    const wrap = document.getElementById('calendar-wrap');
+    const btn = document.querySelector('[onclick="toggleCalendar()"]');
+    if (wrap) wrap.style.display = 'none';
+    if (btn) btn.textContent = 'カレンダーを表示';
+  }
+  if (detailCalHiddenDefault) {
+    detailCalHidden = true;
+  }
+  // トグルの状態を反映
+  const calToggle = document.getElementById('toggle-cal-hidden');
+  const detailCalToggle = document.getElementById('toggle-detail-cal-hidden');
+  if (calToggle) calToggle.checked = calHiddenDefault;
+  if (detailCalToggle) detailCalToggle.checked = detailCalHiddenDefault;
+
+  // 印刷設定の読み込み
+  const ps = loadPrintSettings();
+  ['location','category','bureau','received','shinsei','memo'].forEach(k => {
+    const el = document.getElementById('print-item-' + k);
+    if (el && ps[k] !== undefined) el.checked = ps[k];
+  });
 }
 
 function init() {
@@ -2393,7 +2480,7 @@ function showView(name) {
 
   if (name === 'cases') { renderCaseTable(); renderCalendar(); renderTaskTable(); }
   else if (name === 'case-detail') { renderCaseDetail(currentDetailCaseId); renderDetailCalendar(currentDetailCaseId); }
-  else if (name === 'settings') { renderSnapshotList(); renderShortcutInputs(); }
+  else if (name === 'settings') { renderSnapshotList(); renderShortcutInputs(); initAppearance(); }
 }
 
 /* =====================================================
@@ -4000,11 +4087,14 @@ function printCaseSimple(caseId) {
     ? c.contacts[0].name || c.client_name || ''
     : c.client_name || '';
 
+  const ps = loadPrintSettings();
+  const show = (key) => ps[key] !== false; // デフォルトtrue
+
   const basicInfo = c.category === '商業・法人登記'
-    ? row('商号・法人名', escHtml(c.company_name||'')) +
+    ? (show('location') ? row('商号・法人名', escHtml(c.company_name||'')) +
       row('本店所在地', escHtml(c.honten||'')) +
-      (c.corp_num ? row('会社法人等番号', escHtml(c.corp_num)) : '')
-    : row('不動産所在地', escHtml(c.location||''));
+      (c.corp_num ? row('会社法人等番号', escHtml(c.corp_num)) : '') : '')
+    : (show('location') ? row('不動産所在地', escHtml(c.location||'')) : '');
 
   const html = `<!DOCTYPE html>
 <html lang="ja"><head><meta charset="utf-8">
@@ -4028,13 +4118,13 @@ function printCaseSimple(caseId) {
   ${clientName ? `<div class="client-name">${escHtml(clientName)}</div>` : '<div style="border-bottom:3px solid #111;margin-bottom:14px"></div>'}
   <table class="info-table">
     ${basicInfo}
-    ${row('区分', c.category === '商業・法人登記' ? '商業・法人登記' : '不動産登記')}
-    ${row('種別', escHtml(c.type||''))}
-    ${row('管轄法務局', escHtml(bureaus.filter(b=>b).join('、')||'—'))}
-    ${row('受付日', escHtml(formatDate(c.received_date)||'—'))}
-    ${c.shinsei_dates && c.shinsei_dates[0]?.shinsei ? row('申請日', escHtml(c.shinsei_dates[0].shinsei)) : ''}
-    ${c.shinsei_dates && c.shinsei_dates[0]?.yotei   ? row('完了予定日', escHtml(c.shinsei_dates[0].yotei)) : ''}
-    ${c.memo ? row('備考・メモ', escHtml(c.memo)) : ''}
+    ${show('category') ? row('区分', c.category === '商業・法人登記' ? '商業・法人登記' : '不動産登記') : ''}
+    ${show('category') ? row('種別', escHtml(c.type||'')) : ''}
+    ${show('bureau') ? row('管轄法務局', escHtml(bureaus.filter(b=>b).join('、')||'—')) : ''}
+    ${show('received') ? row('受付日', escHtml(formatDate(c.received_date)||'—')) : ''}
+    ${show('shinsei') && c.shinsei_dates && c.shinsei_dates[0]?.shinsei ? row('申請日', escHtml(c.shinsei_dates[0].shinsei)) : ''}
+    ${show('shinsei') && c.shinsei_dates && c.shinsei_dates[0]?.yotei ? row('完了予定日', escHtml(c.shinsei_dates[0].yotei)) : ''}
+    ${show('memo') && c.memo ? row('備考・メモ', escHtml(c.memo)) : ''}
   </table>
   <div class="print-date">印刷日：${new Date().toLocaleDateString('ja-JP')}</div>
   <div style="margin-top:12px;font-size:8pt;color:#aaa;text-align:center">※ ヘッダー・フッターを消す場合は印刷設定で「ヘッダーとフッター」をオフにしてください</div>
