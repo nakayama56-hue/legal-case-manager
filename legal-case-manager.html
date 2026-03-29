@@ -1275,14 +1275,12 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
 @media (max-width: 768px) {
   /* タスク一覧をコンパクトに */
   #task-tbody td { padding: 5px 3px; font-size: 11px; }
-  #task-tbody td:first-child { padding: 5px 2px 5px 4px; }
   #task-tbody .btn-xs { padding: 2px 3px; font-size: 10px; margin: 0 1px; }
   #task-tbody strong { font-size: 11px; }
-  .task-table-wrap colgroup col:nth-child(1) { width: 32px; }
-  .task-table-wrap colgroup col:nth-child(2) { width: 46%; }
-  .task-table-wrap colgroup col:nth-child(3) { width: 32%; }
-  .task-table-wrap colgroup col:nth-child(4) { width: 18%; }
-  .task-table-wrap colgroup col:nth-child(5) { width: 0; }
+  .task-table-wrap colgroup col:nth-child(1) { width: 46%; }
+  .task-table-wrap colgroup col:nth-child(2) { width: 32%; }
+  .task-table-wrap colgroup col:nth-child(3) { width: 22%; }
+  .task-table-wrap colgroup col:nth-child(4) { width: 0; }
   /* 案件テーブル：スマホでも横スクロールで全列表示 */
   #case-table { min-width: 860px !important; }
   #case-tbody td { padding: 6px 6px; font-size: 11px; }
@@ -1466,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.2</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1537,15 +1535,13 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             <div class="table-wrap task-table-wrap">
               <table style="table-layout:fixed;width:100%">
                 <colgroup>
-                  <col style="width:36px">
-                  <col style="width:36%">
+                  <col style="width:38%">
                   <col style="width:28%">
                   <col style="width:14%">
-                  <col style="width:22%" class="hide-mobile">
+                  <col style="width:20%" class="hide-mobile">
                 </colgroup>
                 <thead>
                   <tr>
-                    <th></th>
                     <th class="sortable" onclick="setTaskSort('name',this)">タスク名</th>
                     <th class="sortable" onclick="setTaskSort('case_name',this)">案件名</th>
                     <th class="sortable" onclick="setTaskSort('deadline',this)">期限</th>
@@ -3606,7 +3602,7 @@ function renderTaskTable() {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="table-empty">該当するタスクがありません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="table-empty">該当するタスクがありません</td></tr>';
     return;
   }
 
@@ -3616,15 +3612,15 @@ function renderTaskTable() {
                    : tk.deadline === t ? 'row-today' : '';
     const isDone = tk.status === '完了';
     return `<tr class="${rowClass}" onclick="openCaseDetailFromTask('${tk.id}')">
-      <td style="text-align:center;padding:4px;width:36px" onclick="event.stopPropagation()">
-        <button onclick="quickComplete('${tk.id}')" title="${isDone?'完了済み':'完了にする'}"
-          style="width:28px;height:28px;border-radius:50%;border:2px solid ${isDone?'#10b981':'#9ca3af'};background:${isDone?'#10b981':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0"
-          onmouseover="if(!${isDone})this.style.borderColor='#10b981'"
-          onmouseout="if(!${isDone})this.style.borderColor='#9ca3af'">
-          ${isDone?'<span style="color:#fff;font-size:14px;line-height:1">✓</span>':''}
-        </button>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;${isDone?'text-decoration:line-through;color:var(--text-muted)':''}" title="${escHtml(tk.name)}">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0">
+          <button onclick="event.stopPropagation();quickComplete('${tk.id}')" title="${isDone?'完了済み':'完了にする'}"
+            style="width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid ${isDone?'#10b981':'#9ca3af'};background:${isDone?'#10b981':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;padding:0">
+            ${isDone?'<span style="color:#fff;font-size:11px;line-height:1">✓</span>':''}
+          </button>
+          <strong style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(tk.name)}</strong>
+        </div>
       </td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;${isDone?'text-decoration:line-through;color:var(--text-muted)':''}" title="${escHtml(tk.name)}"><strong>${escHtml(tk.name)}</strong></td>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0" title="${c ? escHtml(c.case_name) : ''}">${c ? escHtml(c.case_name) : '—'}</td>
       <td style="white-space:nowrap;font-size:11px">${deadlineBadge(tk.deadline, tk.status)}</td>
       <td class="hide-mobile" style="white-space:nowrap" onclick="event.stopPropagation()">
