@@ -1250,6 +1250,9 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
 .shinsei-grid {
   display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px;
 }
+.shinsei-grid .form-group { min-width: 0; overflow: hidden; }
+.shinsei-grid .form-group > div { min-width: 0; }
+.shinsei-grid .form-control { min-width: 0; width: 100%; }
 @media (max-width: 700px) { .shinsei-grid { grid-template-columns: 1fr 1fr; } }
 
 /* =====================================================
@@ -1461,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.6</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.3.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
