@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.4</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3687,7 +3687,7 @@ function renderLedger(c) {
       <td class="del-cell">
         <button onclick="deleteLedgerRow('${cid}','${r.id}')" title="削除" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button>
       </td>
-      <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||'')}" placeholder="No." onchange="updateLedgerField('${cid}','${r.id}','row_no',this.value)"></td>
+      <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||'')}" onchange="updateLedgerField('${cid}','${r.id}','row_no',this.value)"></td>
       <td style="width:60px;max-width:60px"><input style="width:100%;text-align:center" value="${escHtml(r.jutaku_num||'')}" placeholder="" onchange="updateLedgerField('${cid}','${r.id}','jutaku_num',this.value)"></td>
       <td style="width:120px;max-width:120px"><input style="width:100%;text-align:center" value="${escHtml(r.kankatsu||'')}" placeholder="" onchange="updateLedgerField('${cid}','${r.id}','kankatsu',this.value)"></td>
       <td style="min-width:200px"><input style="width:100%;text-align:center" value="${escHtml(r.mokuteki||'')}" placeholder="" onchange="updateLedgerField('${cid}','${r.id}','mokuteki',this.value)"></td>
@@ -3709,7 +3709,7 @@ function renderLedger(c) {
       <td class="del-cell">
         <button onclick="deleteLedgerLowerRow('${cid}','${r.id}')" title="削除" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button>
       </td>
-      <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||'')}" placeholder="No." onchange="updateLedgerLowerField('${cid}','${r.id}','row_no',this.value)"></td>
+      <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||'')}" onchange="updateLedgerLowerField('${cid}','${r.id}','row_no',this.value)"></td>
       <td style="min-width:90px"><input style="width:100%;text-align:center" value="${escHtml(kenri[0]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',0,this.value)"></td>
       <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(kenri[1]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',1,this.value)"></td>
       <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(kenri[2]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',2,this.value)"></td>
