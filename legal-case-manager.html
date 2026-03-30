@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.5.4</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.5.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2249,6 +2249,19 @@ function toggleHoverSidebar(enabled) {
 
 function saveCalSetting(type, hidden) {
   localStorage.setItem('cal_hidden_' + type, hidden ? '1' : '0');
+  if (type === 'workspace') {
+    calHidden = hidden;
+    const cal = document.getElementById('case-calendar');
+    const btn = document.querySelector('[onclick="toggleCalendar()"]');
+    if (cal) cal.style.display = calHidden ? 'none' : '';
+    if (btn) btn.textContent = calHidden ? 'カレンダーを表示' : 'カレンダーを隠す';
+  } else if (type === 'detail') {
+    detailCalHidden = hidden;
+    const cal = document.getElementById('detail-calendar');
+    const btn = document.querySelector('[onclick="toggleDetailCalendar()"]');
+    if (cal) cal.style.display = detailCalHidden ? 'none' : '';
+    if (btn) btn.textContent = detailCalHidden ? 'カレンダーを表示' : 'カレンダーを隠す';
+  }
 }
 
 function savePrintSetting() {
