@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.4.9</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.5.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2686,6 +2686,9 @@ function renderCalendarBase(containerId, labelId, year, month, eventsFn, flashTo
 }
 
 function renderDetailCalendar(caseId, flash) {
+  const el = document.getElementById('detail-calendar');
+  if (el) el.style.display = detailCalHidden ? 'none' : 'block';
+  if (detailCalHidden) return;
   const c=cases.find(c=>c.id===(caseId||currentDetailCaseId));
   renderCalendarBase('detail-calendar','detail-cal-label',detailCalYear,detailCalMonth,()=>{
     const ev={}, add=(date,type,tag,label,onclick)=>{if(!date)return;if(!ev[date])ev[date]=[];ev[date].push({type,tag,label,onclick});};
@@ -2700,7 +2703,14 @@ function renderDetailCalendar(caseId, flash) {
 }
 function calMoveDetail(dir){detailCalMonth+=dir;if(detailCalMonth>11){detailCalMonth=0;detailCalYear++;}if(detailCalMonth<0){detailCalMonth=11;detailCalYear--;}renderDetailCalendar();}
 function calGoTodayDetail(){detailCalYear=new Date().getFullYear();detailCalMonth=new Date().getMonth();renderDetailCalendar(null,true);}
-function toggleDetailCalendar(){detailCalHidden=!detailCalHidden;const el=document.getElementById('detail-calendar'),btn=document.querySelector('[onclick="toggleDetailCalendar()"]');if(el)el.style.display=detailCalHidden?'none':'block';if(btn)btn.textContent=detailCalHidden?'カレンダーを表示':'カレンダーを隠す';}
+function toggleDetailCalendar(){
+  detailCalHidden=!detailCalHidden;
+  const el=document.getElementById('detail-calendar');
+  const btn=document.querySelector('[onclick="toggleDetailCalendar()"]');
+  if(el)el.style.display=detailCalHidden?'none':'block';
+  if(btn)btn.textContent=detailCalHidden?'カレンダーを表示':'カレンダーを隠す';
+  if(!detailCalHidden)renderDetailCalendar();
+}
 
 function renderTaskCalendar(flash) {
   renderCalendarBase('task-calendar','task-cal-label',taskCalYear,taskCalMonth,()=>{
@@ -2734,6 +2744,8 @@ function renderCalendar() {
   const lbl = document.getElementById('cal-label');
   if (!el || !lbl) return;
   lbl.textContent = `${calYear}年${calMonth+1}月`;
+  // 非表示設定を維持
+  if (calHidden) { el.style.display = 'none'; return; }
 
   const dows = ['日','月','火','水','木','金','土'];
   const first = new Date(calYear, calMonth, 1).getDay();
@@ -2887,21 +2899,14 @@ function toggleCalendar() {
   const btn = document.querySelector('[onclick="toggleCalendar()"]');
   if (cal) cal.style.display = calHidden ? 'none' : 'block';
   if (btn) btn.textContent = calHidden ? 'カレンダーを表示' : 'カレンダーを隠す';
+  if (!calHidden) renderCalendar();
 }
 
 function showCaseDetail(id) {
   currentDetailCaseId = id;
   showView('case-detail');
-  // 案件詳細カレンダーのデフォルト非表示設定を適用
-  const cal = document.getElementById('detail-calendar');
   const btn = document.querySelector('[onclick="toggleDetailCalendar()"]');
-  if (detailCalHidden) {
-    if (cal) cal.style.display = 'none';
-    if (btn) btn.textContent = 'カレンダーを表示';
-  } else {
-    if (cal) cal.style.display = 'block';
-    if (btn) btn.textContent = 'カレンダーを隠す';
-  }
+  if (btn) btn.textContent = detailCalHidden ? 'カレンダーを表示' : 'カレンダーを隠す';
 }
 
 function renderCaseTable() {
