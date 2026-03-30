@@ -1,7 +1,7 @@
 {
-  "name": "司法書士 案件管理",
-  "short_name": "案件管理",
-  "description": "不動産登記・商業法人登記 案件管理システム",
+  "name": "CaseFlow",
+  "short_name": "CaseFlow",
+  "description": "CaseFlow - 案件管理システム",
   "start_url": "./legal-case-manager.html",
   "display": "standalone",
   "orientation": "any",
