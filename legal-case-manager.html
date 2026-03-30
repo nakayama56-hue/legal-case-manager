@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.5.0</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.5.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2177,6 +2177,8 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
    ===================================================== */
 let cases = [];
 let tasks = [];
+let calHidden = false;
+let detailCalHidden = false;
 let taskQFCurrent = 'all';
 let currentCaseId = null; // for editing case
 let currentTaskId = null; // for editing task
@@ -2607,7 +2609,7 @@ function setTaskSort(key, thEl) {
 /* =====================================================
    詳細・タスクカレンダー共通
    ===================================================== */
-let detailCalYear=new Date().getFullYear(), detailCalMonth=new Date().getMonth(), detailCalHidden=false;
+let detailCalYear=new Date().getFullYear(), detailCalMonth=new Date().getMonth();
 let taskCalYear=new Date().getFullYear(),   taskCalMonth=new Date().getMonth(),   taskCalHidden=false;
 
 // 日本の祝日データ（固定祝日＋ハッピーマンデー計算）
@@ -2737,7 +2739,6 @@ function autoSetClientLabel(name) {
    ===================================================== */
 let calYear  = new Date().getFullYear();
 let calMonth = new Date().getMonth();
-let calHidden = false;
 
 function renderCalendar() {
   const el = document.getElementById('case-calendar');
