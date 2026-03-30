@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>司法書士 不動産登記・商業法人登記</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.5.3</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.5.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2282,14 +2282,15 @@ function initAppearance() {
   if (darkMode) document.body.classList.add('dark-mode');
   if (!hoverSidebar) toggleHoverSidebar(false);
 
-  // カレンダー初期表示設定（変数宣言後に適用するためinit()末尾で処理）
-  // トグルの状態だけ反映
-  const calHiddenDefault = localStorage.getItem('cal_hidden_workspace') === '1';
-  const detailCalHiddenDefault = localStorage.getItem('cal_hidden_detail') === '1';
+  // カレンダー非表示フラグをlocalStorageから読み込む
+  calHidden = localStorage.getItem('cal_hidden_workspace') === '1';
+  detailCalHidden = localStorage.getItem('cal_hidden_detail') === '1';
+
+  // トグルの状態を反映
   const calToggle = document.getElementById('toggle-cal-hidden');
   const detailCalToggle = document.getElementById('toggle-detail-cal-hidden');
-  if (calToggle) calToggle.checked = calHiddenDefault;
-  if (detailCalToggle) detailCalToggle.checked = detailCalHiddenDefault;
+  if (calToggle) calToggle.checked = calHidden;
+  if (detailCalToggle) detailCalToggle.checked = detailCalHidden;
 
   // 印刷設定の読み込み
   const ps = loadPrintSettings();
@@ -2373,18 +2374,6 @@ function init() {
   try { initAppearance(); } catch(e) {}
   try { renderClientShortcutButtons(); } catch(e) {}
   showView('cases');
-
-  // カレンダーのデフォルト非表示設定を適用（変数宣言後）
-  if (localStorage.getItem('cal_hidden_workspace') === '1') {
-    calHidden = true;
-    const cal = document.getElementById('case-calendar');
-    const btn = document.querySelector('[onclick="toggleCalendar()"]');
-    if (cal) cal.style.display = 'none';
-    if (btn) btn.textContent = 'カレンダーを表示';
-  }
-  if (localStorage.getItem('cal_hidden_detail') === '1') {
-    detailCalHidden = true;
-  }
 
   // 起動時にショートカットをクラウドからバックグラウンドで取得
   setTimeout(async () => {
