@@ -1464,7 +1464,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.5.6</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.5.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2715,7 +2715,11 @@ function renderDetailCalendar(caseId, flash) {
     const ev={}, add=(date,type,tag,label,onclick)=>{if(!date)return;if(!ev[date])ev[date]=[];ev[date].push({type,tag,label,onclick});};
     if(c){
       if(c.status !== '完了') {
-        (c.shinsei_dates||[]).forEach(s=>{add(s.shinsei,'shinsei','申',c.case_name,`showCaseDetail('${c.id}')`);add(s.yotei,'yotei','予',c.case_name,`showCaseDetail('${c.id}')`);});
+        (c.shinsei_dates||[]).forEach(s=>{
+          if(s.kanryo) return; // 完了日が入力済みならスキップ
+          add(s.shinsei,'shinsei','申',c.case_name,`showCaseDetail('${c.id}')`);
+          add(s.yotei,'yotei','予',c.case_name,`showCaseDetail('${c.id()}')`);
+        });
       }
       tasks.filter(t=>t.case_id===c.id&&t.status!=='完了').forEach(t=>{add(t.deadline,'task-deadline','期',t.name,`openTaskModal('${t.id}','${t.case_id}',null)`);add(t.next_action_date,'task-next','次',t.name,`openTaskModal('${t.id}','${t.case_id}',null)`);});
     }
@@ -2782,6 +2786,7 @@ function renderCalendar() {
   cases.forEach(c => {
     if (c.status === '完了') return;
     (c.shinsei_dates || []).forEach((s, si) => {
+      if (s.kanryo) return; // 完了日が入力済みならスキップ
       add(s.shinsei, 'shinsei', '申', c.case_name, `showCaseDetail('${c.id}')`,
         `case|${c.id}|${si}|shinsei`);
       add(s.yotei, 'yotei', '予', c.case_name, `showCaseDetail('${c.id}')`,
