@@ -1487,7 +1487,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.7.0</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.7.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2426,23 +2426,21 @@ function initAppearance() {
   if (dmToggle) dmToggle.checked = darkMode;
   if (hsToggle) hsToggle.checked = hoverSidebar;
   if (darkMode) document.body.classList.add('dark-mode');
+  else document.body.classList.remove('dark-mode');
   if (!hoverSidebar) toggleHoverSidebar(false);
+  else toggleHoverSidebar(true);
 
-  // カレンダー非表示フラグをlocalStorageから読み込む
-  calHidden = localStorage.getItem('cal_hidden_workspace') === '1';
-  detailCalHidden = localStorage.getItem('cal_hidden_detail') === '1';
-
-  // トグルの状態を反映
+  // カレンダーフラグはinit()時のみ設定済み。ここではトグルUIだけ反映
   const calToggle = document.getElementById('toggle-cal-hidden');
   const detailCalToggle = document.getElementById('toggle-detail-cal-hidden');
-  if (calToggle) calToggle.checked = calHidden;
-  if (detailCalToggle) detailCalToggle.checked = detailCalHidden;
+  if (calToggle) calToggle.checked = localStorage.getItem('cal_hidden_workspace') === '1';
+  if (detailCalToggle) detailCalToggle.checked = localStorage.getItem('cal_hidden_detail') === '1';
 
-  // 印刷設定の読み込み
+  // 印刷設定の読み込み（未保存時はデフォルトtrue）
   const ps = loadPrintSettings();
   ['casename','client','location','category','bureau','received','shinsei','memo'].forEach(k => {
     const el = document.getElementById('print-item-' + k);
-    if (el && ps[k] !== undefined) el.checked = ps[k];
+    if (el) el.checked = ps[k] !== false;
   });
 }
 
@@ -2517,7 +2515,7 @@ function init() {
   localStorage.setItem('app_initialized', '1');
   try { updateNavBadges(); } catch(e) {}
   try { updateBottomNavBadges(); } catch(e) {}
-  try { initAppearance(); } catch(e) {}
+  try { initAppearance(); } catch(e) { console.error('initAppearance error:', e); }
   try { renderClientShortcutButtons(); } catch(e) {}
   showView('cases');
 
