@@ -1487,7 +1487,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.7.2</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.7.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1580,12 +1580,8 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
         <!-- 案件一覧 -->
         <div style="margin-top:24px">
         <div class="quick-filters">
-          <button class="qf-btn" onclick="applyCaseQF('all', this)">すべて</button>
-          <button class="qf-btn" onclick="applyCaseQF('書類待ち', this)">書類待ち</button>
-          <button class="qf-btn" onclick="applyCaseQF('連絡待ち', this)">連絡待ち</button>
-          <button class="qf-btn" onclick="applyCaseQF('申請中', this)">申請中</button>
-          <button class="qf-btn" onclick="applyCaseQF('補正対応中', this)">補正対応中</button>
-          <button class="qf-btn" onclick="applyCaseQF('完了', this)">完了</button>
+          <button class="qf-btn active" onclick="applyCaseQF('all', this)">すべて</button>
+          <button class="qf-btn" onclick="applyCaseQF('保留', this)">🔖 保留</button>
         </div>
         <div class="table-container">
           <div class="table-toolbar">
@@ -1598,9 +1594,8 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             </select>
             <select class="filter-select" id="case-filter-status" onchange="if(this.value==='完了'){document.getElementById('case-show-completed').checked=true;}caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="min-width:80px">
               <option value="">ST（全て）</option>
-              <option>新規受付</option><option>書類待ち</option>
-              <option>連絡待ち</option><option>申請中</option>
-              <option>補正対応中</option><option>完了</option><option>保留</option>
+              <option value="保留">🔖 保留</option>
+              <option value="完了">✅ 完了</option>
             </select>
             <select class="filter-select" id="case-filter-type" onchange="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="min-width:80px">
               <option value="">種別（全て）</option>
@@ -1954,12 +1949,10 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             <div id="f-bureaus-list"></div>
             <button type="button" class="contact-add-btn" style="margin-top:4px" onclick="addBureauRow()">＋ 法務局を追加</button>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="display:none">
             <label class="form-label">案件ステータス</label>
             <select class="form-control" id="f-case-status">
-              <option>新規受付</option><option>書類待ち</option>
-              <option>連絡待ち</option><option>申請中</option>
-              <option>補正対応中</option><option>完了</option><option>保留</option>
+              <option value="">通常</option><option>完了</option><option>保留</option>
             </select>
           </div>
         </div>
@@ -2314,13 +2307,8 @@ function renderCaseTiles() {
   const showCompleted = document.getElementById('case-show-completed')?.checked ?? false;
 
   const STATUS_COLORS = {
-    '新規受付': {bg:'#dbeafe',color:'#1e40af'},
-    '書類待ち': {bg:'#fef9c3',color:'#854d0e'},
-    '連絡待ち': {bg:'#ffedd5',color:'#9a3412'},
-    '申請中':   {bg:'#dcfce7',color:'#166534'},
-    '補正対応中':{bg:'#fce7f3',color:'#9d174d'},
-    '完了':     {bg:'#f0fdf4',color:'#166534'},
-    '保留':     {bg:'#f1f5f9',color:'#475569'},
+    '保留': {bg:'#fef9c3',color:'#854d0e'},
+    '完了': {bg:'#dcfce7',color:'#166534'},
   };
 
   let filtered = cases.filter(c => {
@@ -2352,12 +2340,12 @@ function renderCaseTiles() {
   };
 
   grid.innerHTML = filtered.map(c => {
-    const sc = STATUS_COLORS[c.status] || {bg:'#f1f5f9',color:'#475569'};
+    const sc = STATUS_COLORS[c.status] || null;
     const bureaus = (c.legal_bureaus||[]).filter(Boolean);
     const shinsei = (c.shinsei_dates||[]).find(s => s.shinsei);
     return `<div class="case-tile-card" onclick="showCaseDetail('${c.id}')">
-      <div class="tile-header" style="border-top: 4px solid ${sc.color}">
-        <span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status||'')}</span>
+      <div class="tile-header" style="border-top: 4px solid ${sc ? sc.color : 'var(--border-color)'}">
+        ${sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '<span></span>'}
         <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
           ${c.label ? `<span class="tile-label">${escHtml(c.label)}</span>` : ''}
           ${c.pinned ? '<span class="tile-pin">📌</span>' : ''}
@@ -2557,10 +2545,14 @@ function loadFromStorage() {
   try {
     cases = JSON.parse(localStorage.getItem('cases_v1') || '[]');
     tasks = JSON.parse(localStorage.getItem('tasks_v1') || '[]');
-    // 廃止ステータスを移行
+    // 廃止ステータスを移行（保留・完了以外は空に）
     let migrated = false;
+    const validStatuses = ['完了', '保留', ''];
     cases.forEach(c => {
-      if (c.status === '申請準備中') { c.status = '申請中'; migrated = true; }
+      if (!validStatuses.includes(c.status || '')) {
+        c.status = '';
+        migrated = true;
+      }
     });
     if (migrated) localStorage.setItem('cases_v1', JSON.stringify(cases));
   } catch(e) {
@@ -3192,7 +3184,7 @@ function renderCaseTable() {
 
   tbody.innerHTML = filtered.map(c => {
     const incompleteTasks = tasks.filter(t => t.case_id === c.id && t.status !== '完了').length;
-    const rowClass = c.status === '補正対応中' ? 'row-overdue' : '';
+    const rowClass = '';
     return `<tr class="${rowClass}${c.pinned ? ' row-pinned' : ''}" onclick="openCaseDetail('${c.id}')">
       <td style="text-align:center;padding:4px" onclick="event.stopPropagation()">
         <button onclick="togglePin('${c.id}')" title="${c.pinned?'ピンを外す':'ピン留め'}" style="background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:0;opacity:${c.pinned?'1':'0.25'}">${c.pinned?'📌':'📌'}</button>
@@ -3212,7 +3204,10 @@ function renderCaseTable() {
       <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(((c.legal_bureaus&&c.legal_bureaus.length>0)?c.legal_bureaus:[c.legal_bureau||'']).filter(b=>b).join('、')||'—')}</td>
       <td style="white-space:nowrap;font-size:12px">${escHtml((c.shinsei_dates&&c.shinsei_dates[0]?.shinsei)||'—')}</td>
       <td style="white-space:nowrap;font-size:12px">${escHtml((c.shinsei_dates&&c.shinsei_dates[0]?.yotei)||'—')}</td>
-      <td style="white-space:nowrap">${statusBadge(c.status)}</td>
+      <td style="white-space:nowrap">
+        ${c.status === '保留' ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#fef9c3;color:#854d0e;border:1px solid #fde047">🔖 保留</span>` : ''}
+        ${c.status === '完了' ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#166534;border:1px solid #86efac">✅ 完了</span>` : ''}
+      </td>
       <td style="white-space:nowrap" onclick="event.stopPropagation()">
         <button class="btn btn-secondary btn-xs" onclick="duplicateCase('${c.id}')" title="この案件を複製">複製</button>
       </td>
@@ -3248,13 +3243,10 @@ function renderCaseDetail(caseId) {
     <!-- Header -->
     <div class="case-detail-header">
       <div class="case-detail-main">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <div class="case-detail-title">${escHtml(c.case_name)}</div>
-          <select onchange="quickChangeStatus('${c.id}', this.value); applyStatusColor(this)" style="${statusSelectStyle(c.status)};font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;border:2px solid;cursor:pointer;outline:none">
-            ${['新規受付','書類待ち','連絡待ち','申請中','補正対応中','完了','保留'].map(s =>
-              `<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`
-            ).join('')}
-          </select>
+          ${c.status === '保留' ? `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#fef9c3;color:#854d0e;border:1px solid #fde047">🔖 保留中</span>` : ''}
+          ${c.status === '完了' ? `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#dcfce7;color:#166534;border:1px solid #86efac">✅ 完了</span>` : ''}
         </div>
         <div class="case-detail-sub">
           ${c.label ? `<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:${LABEL_COLORS[c.label]?.bg};border:1px solid ${LABEL_COLORS[c.label]?.border};color:${LABEL_COLORS[c.label]?.dot};font-weight:700">● ${LABEL_COLORS[c.label]?.name||c.label}</span>` : ''}
@@ -3262,7 +3254,15 @@ function renderCaseDetail(caseId) {
           <span>🏷 ${escHtml(c.type||'')}</span>
         </div>
       </div>
-      <div class="flex-row">
+      <div class="flex-row" style="flex-wrap:wrap;gap:6px">
+        <button class="btn btn-sm no-print" onclick="setCaseStatus('${c.id}','保留')"
+          style="${c.status==='保留'?'background:#fef08a;color:#854d0e;border-color:#fde047;':''}">
+          🔖 ${c.status==='保留'?'保留解除':'保留'}
+        </button>
+        <button class="btn btn-sm no-print" onclick="setCaseStatus('${c.id}','完了')"
+          style="${c.status==='完了'?'background:#86efac;color:#166534;border-color:#4ade80;':''}">
+          ✅ ${c.status==='完了'?'完了解除':'完了'}
+        </button>
         <button class="btn btn-secondary btn-sm no-print" onclick="openCaseModal('${c.id}')">✏ 編集</button>
         <button class="btn btn-secondary btn-sm no-print" onclick="printCaseSimple('${c.id}')">🖨 簡易印刷</button>
         <button class="btn btn-secondary btn-sm no-print" onclick="printCaseDetail('${c.id}')">🖨 印刷</button>
@@ -3710,6 +3710,25 @@ function togglePin(caseId) {
   saveToStorage();
   caseViewMode === 'tile' ? renderCaseTiles() : renderCaseTable();
   toast(c.pinned ? '📌 ピン留めしました' : 'ピンを外しました');
+}
+
+function setCaseStatus(caseId, newStatus) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  // 同じステータスなら解除（通常に戻す）
+  if (c.status === newStatus) {
+    c.status = '';
+    saveToStorage();
+    renderCaseDetail(caseId);
+    caseViewMode === 'tile' ? renderCaseTiles() : renderCaseTable();
+    toast(`「${newStatus}」を解除しました`);
+  } else {
+    c.status = newStatus;
+    saveToStorage();
+    renderCaseDetail(caseId);
+    caseViewMode === 'tile' ? renderCaseTiles() : renderCaseTable();
+    toast(`「${newStatus}」にしました`);
+  }
 }
 
 function quickChangeStatus(caseId, newStatus) {
@@ -5303,7 +5322,8 @@ function saveCase() {
     touki_list: readToukiRows(),
     legal_bureaus: readBureauRows(),
     legal_bureau: readBureauRows()[0] || '', // 後方互換
-    status: document.getElementById('f-case-status').value,
+    // ステータスはボタンで管理するため編集フォームからは更新しない
+    // （既存のステータスを保持）
     contacts,
     deliveries: readDeliveryRows(),
     shinsei_dates: readShinseiRows(),
