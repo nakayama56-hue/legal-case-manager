@@ -1481,7 +1481,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.0</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2617,16 +2617,31 @@ function showView(name) {
   updateBottomNav(name);
 
   if (name === 'cases') {
-    renderCaseTable();
     renderCalendar();
     renderTaskTable();
-    // ビューモードを初期化
-    setCaseViewMode(caseViewMode);
     // カレンダー非表示設定を適用
     const cal = document.getElementById('case-calendar');
     const btn = document.querySelector('[onclick="toggleCalendar()"]');
     if (cal) cal.style.display = calHidden ? 'none' : '';
     if (btn) btn.textContent = calHidden ? 'カレンダーを表示' : 'カレンダーを隠す';
+    // ビューモードUIを切替してから描画
+    const listWrap = document.getElementById('case-list-wrap');
+    const tileWrap = document.getElementById('case-tile-wrap');
+    const btnList  = document.getElementById('btn-view-list');
+    const btnTile  = document.getElementById('btn-view-tile');
+    if (caseViewMode === 'tile') {
+      if (listWrap) listWrap.style.display = 'none';
+      if (tileWrap) tileWrap.style.display = 'block';
+      if (btnList)  { btnList.style.background = 'var(--bg-secondary)'; btnList.style.color = 'var(--text-muted)'; }
+      if (btnTile)  { btnTile.style.background = 'var(--color-primary)'; btnTile.style.color = '#fff'; }
+      renderCaseTiles();
+    } else {
+      if (listWrap) listWrap.style.display = '';
+      if (tileWrap) tileWrap.style.display = 'none';
+      if (btnList)  { btnList.style.background = 'var(--color-primary)'; btnList.style.color = '#fff'; }
+      if (btnTile)  { btnTile.style.background = 'var(--bg-secondary)'; btnTile.style.color = 'var(--text-muted)'; }
+      renderCaseTable();
+    }
   }
   else if (name === 'case-detail') {
     renderCaseDetail(currentDetailCaseId);
