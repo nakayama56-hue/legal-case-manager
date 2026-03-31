@@ -1487,7 +1487,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.7</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2309,7 +2309,7 @@ function renderCaseTiles() {
   const fStatus   = document.getElementById('case-filter-status')?.value || '';
   const fType     = document.getElementById('case-filter-type')?.value || '';
   const fCategory = document.getElementById('case-filter-category')?.value || '';
-  const showCompleted = document.getElementById('case-show-completed')?.checked;
+  const showCompleted = document.getElementById('case-show-completed')?.checked ?? false;
 
   const STATUS_COLORS = {
     '新規受付': {bg:'#dbeafe',color:'#1e40af'},
