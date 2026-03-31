@@ -1487,7 +1487,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.8</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1590,19 +1590,19 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
         <div class="table-container">
           <div class="table-toolbar">
             <span style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0">案件一覧</span>
-            <input type="text" class="search-input" id="case-search" placeholder="🔍 案件名・依頼者・種別・法務局・所在地・メモ等で検索..." oninput="renderCaseTable()">
-            <select class="filter-select" id="case-filter-category" onchange="renderCaseTable()" style="min-width:80px">
+            <input type="text" class="search-input" id="case-search" placeholder="🔍 案件名・依頼者・種別・法務局・所在地・メモ等で検索..." oninput="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()">
+            <select class="filter-select" id="case-filter-category" onchange="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="min-width:80px">
               <option value="">区分（全て）</option>
               <option value="不動産登記">🏠 不動産登記</option>
               <option value="商業・法人登記">🏢 商業・法人登記</option>
             </select>
-            <select class="filter-select" id="case-filter-status" onchange="if(this.value==='完了'){document.getElementById('case-show-completed').checked=true;}renderCaseTable()" style="min-width:80px">
+            <select class="filter-select" id="case-filter-status" onchange="if(this.value==='完了'){document.getElementById('case-show-completed').checked=true;}caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="min-width:80px">
               <option value="">ST（全て）</option>
               <option>新規受付</option><option>書類待ち</option>
               <option>連絡待ち</option><option>申請中</option>
               <option>補正対応中</option><option>完了</option><option>保留</option>
             </select>
-            <select class="filter-select" id="case-filter-type" onchange="renderCaseTable()" style="min-width:80px">
+            <select class="filter-select" id="case-filter-type" onchange="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="min-width:80px">
               <option value="">種別（全て）</option>
               <option>所有権移転（売買）</option><option>所有権移転（相続）</option>
               <option>所有権移転（贈与）</option><option>抵当権設定</option><option>根抵当権設定</option>
@@ -1611,7 +1611,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             </select>
             <select class="filter-select" id="case-sort" style="display:none"></select>
             <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;white-space:nowrap">
-              <input type="checkbox" id="case-show-completed" onchange="renderCaseTable()" style="cursor:pointer">
+              <input type="checkbox" id="case-show-completed" onchange="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="cursor:pointer">
               完了済みも含む
             </label>
             <button class="btn btn-primary" onclick="openCaseModal(null)">＋ 新規案件</button>
