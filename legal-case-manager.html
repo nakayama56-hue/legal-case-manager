@@ -1487,7 +1487,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.5</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3962,125 +3962,121 @@ function renderLedger(c) {
   const lower = c.ledger_lower || [];
   const isCorporate = c.category === '商業・法人登記';
 
-  // 上段テーブル（グループごとに区切り線）
-  let prevGroup = null;
-  const upperRows = rows.map((r, i) => {
-    const isNewGroup = r.group && r.group !== prevGroup && prevGroup !== null;
-    prevGroup = r.group || null;
-    // row_noが空なら自動付番（グループ内連番）
-    const groupRows = rows.filter(x => (x.group||'') === (r.group||''));
-    const autoNo = String(groupRows.indexOf(r) + 1);
-    const displayNo = r.row_no || autoNo;
-    const sep = isNewGroup ? `<tr><td colspan="11" style="padding:0;height:10px;background:var(--bg-secondary);border:none"></td></tr>` : '';
-    return sep + `
-    <tr>
-      <td class="del-cell">
-        <button onclick="deleteLedgerRow('${cid}','${r.id}')" title="削除" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button>
-      </td>
-      <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||autoNo)}" oninput="updateLedgerField('${cid}','${r.id}','row_no',this.value)"></td>
-      <td style="width:60px;max-width:60px"><input style="width:100%;text-align:center" value="${escHtml(r.jutaku_num||'')}" placeholder="" onchange="updateLedgerField('${cid}','${r.id}','jutaku_num',this.value)"></td>
-      <td style="width:120px;max-width:120px"><input style="width:100%;text-align:center" value="${escHtml(r.kankatsu||'')}" placeholder="" onchange="updateLedgerField('${cid}','${r.id}','kankatsu',this.value)"></td>
-      <td style="min-width:200px"><input style="width:100%;text-align:center" value="${escHtml(r.mokuteki||'')}" placeholder="" onchange="updateLedgerField('${cid}','${r.id}','mokuteki',this.value)"></td>
-      <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(r.gen_in||'')}" placeholder="" onchange="updateLedgerField('${cid}','${r.id}','gen_in',this.value)"></td>
-      <td class="money-cell" style="min-width:110px"><input value="${escHtml(r.kazei||'')}" placeholder="" oninput="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','kazei',this.value)" inputmode="numeric" style="width:100%;text-align:right"></td>
-      <td style="width:28px;text-align:center;vertical-align:middle"><input type="checkbox" ${r.kazei_checked?'checked':''} onchange="updateLedgerField('${cid}','${r.id}','kazei_checked',this.checked)" style="cursor:pointer;width:14px;height:14px"></td>
-      <td class="money-cell" style="min-width:100px"><input value="${escHtml(r.menkyo||'')}" placeholder="" oninput="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','menkyo',this.value)" inputmode="numeric" style="width:100%;text-align:right"></td>
-      <td style="width:28px;text-align:center;vertical-align:middle"><input type="checkbox" ${r.menkyo_checked?'checked':''} onchange="updateLedgerField('${cid}','${r.id}','menkyo_checked',this.checked)" style="cursor:pointer;width:14px;height:14px"></td>
-      <td style="width:32px;text-align:center;padding:2px"><button onclick="duplicateLedgerRow('${cid}','${r.id}')" title="複製" style="width:24px;height:24px;font-size:13px;padding:0;line-height:1;border:1px solid #93c5fd;background:#eff6ff;border-radius:4px;cursor:pointer;color:#1d4ed8">⧉</button></td>
-    </tr>`;
-  }).join('');
+  // グループIDの一覧を取得（上段・下段のgroupをマージ）
+  const allGroups = [];
+  const seenGroups = new Set();
+  [...rows, ...lower].forEach(r => {
+    const g = r.group || '__default__';
+    if (!seenGroups.has(g)) { seenGroups.add(g); allGroups.push(g); }
+  });
+  if (allGroups.length === 0) allGroups.push('__default__');
 
-  // 下段テーブル（グループ区切り対応）
-  let prevGroupL = null;
-  const lowerRows = lower.map((r, i) => {
-    const isNewGroup = r.group && r.group !== prevGroupL && prevGroupL !== null;
-    prevGroupL = r.group || null;
-    const groupRows = lower.filter(x => (x.group||'') === (r.group||''));
-    const autoNo = String(groupRows.indexOf(r) + 1);
-    const kenri   = r.kenri   || ['','','',''];
-    const gimu    = r.gimu    || ['','','',''];
-    const fudosan = r.fudosan || ['','','','',''];
-    const sep = isNewGroup ? `<tr><td colspan="16" style="padding:0;height:10px;background:var(--bg-secondary);border:none"></td></tr>` : '';
-    return sep + `
-    <tr>
-      <td class="del-cell">
-        <button onclick="deleteLedgerLowerRow('${cid}','${r.id}')" title="削除" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button>
-      </td>
-      <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||autoNo)}" oninput="updateLedgerLowerField('${cid}','${r.id}','row_no',this.value)"></td>
-      <td style="min-width:90px"><input style="width:100%;text-align:center" value="${escHtml(kenri[0]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',0,this.value)"></td>
-      <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(kenri[1]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',1,this.value)"></td>
-      <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(kenri[2]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',2,this.value)"></td>
-      <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(kenri[3]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',3,this.value)"></td>
-      <td style="min-width:90px"><input style="width:100%;text-align:center" value="${escHtml(gimu[0]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',0,this.value)"></td>
-      <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(gimu[1]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',1,this.value)"></td>
-      <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(gimu[2]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',2,this.value)"></td>
-      <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(gimu[3]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',3,this.value)"></td>
-      <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(fudosan[0]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','fudosan',0,this.value)"></td>
-      <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(fudosan[1]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','fudosan',1,this.value)"></td>
-      <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(fudosan[2]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','fudosan',2,this.value)"></td>
-      <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(fudosan[3]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','fudosan',3,this.value)"></td>
-      <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(fudosan[4]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','fudosan',4,this.value)"></td>
-      <td style="width:32px;text-align:center;padding:2px"><button onclick="duplicateLedgerLowerRow('${cid}','${r.id}')" title="複製" style="width:24px;height:24px;font-size:13px;padding:0;line-height:1;border:1px solid #93c5fd;background:#eff6ff;border-radius:4px;cursor:pointer;color:#1d4ed8">⧉</button></td>
-    </tr>`;
-  }).join('');
+  const theadUpper = `<thead><tr>
+    <th style="width:28px"></th>
+    <th style="width:32px">No.</th>
+    <th style="width:60px;max-width:60px;text-align:center">受託番号</th>
+    <th style="width:120px;max-width:120px;text-align:center">管轄</th>
+    <th style="min-width:200px;text-align:center">登記の目的</th>
+    <th style="min-width:80px;text-align:center">登記原因</th>
+    <th style="min-width:110px;text-align:center">課税価格</th>
+    <th style="width:28px;text-align:center" title="チェック済">✓</th>
+    <th style="min-width:100px;text-align:center">登録免許税</th>
+    <th style="width:28px;text-align:center" title="チェック済">✓</th>
+    <th style="width:32px"></th>
+  </tr></thead>`;
 
-  const emptyMsg  = '<tr><td colspan="9" style="padding:16px;text-align:center;color:#9ca3af;font-size:12px">「＋ 行を追加」で入力欄を追加してください</td></tr>';
-  const emptyMsgL = '<tr><td colspan="15" style="padding:16px;text-align:center;color:#9ca3af;font-size:12px">「＋ 行を追加」で入力欄を追加してください</td></tr>';
+  const theadLower = `<thead><tr>
+    <th style="width:28px"></th>
+    <th style="width:32px">No.</th>
+    <th colspan="4" style="min-width:310px">権利者／申請人</th>
+    <th colspan="4" style="min-width:310px">義務者</th>
+    <th colspan="5" style="min-width:390px">不動産</th>
+    <th style="width:32px"></th>
+  </tr></thead>`;
+
+  const groupSections = allGroups.map((gid, gi) => {
+    const gRows = rows.filter(r => (r.group||'__default__') === gid);
+    const gLower = lower.filter(r => (r.group||'__default__') === gid);
+
+    const upperRowsHtml = gRows.map((r) => {
+      const groupRows = gRows;
+      const autoNo = String(groupRows.indexOf(r) + 1);
+      return `<tr>
+        <td class="del-cell"><button onclick="deleteLedgerRow('${cid}','${r.id}')" title="削除" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button></td>
+        <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||autoNo)}" oninput="updateLedgerField('${cid}','${r.id}','row_no',this.value)"></td>
+        <td style="width:60px;max-width:60px"><input style="width:100%;text-align:center" value="${escHtml(r.jutaku_num||'')}" onchange="updateLedgerField('${cid}','${r.id}','jutaku_num',this.value)"></td>
+        <td style="width:120px;max-width:120px"><input style="width:100%;text-align:center" value="${escHtml(r.kankatsu||'')}" onchange="updateLedgerField('${cid}','${r.id}','kankatsu',this.value)"></td>
+        <td style="min-width:200px"><input style="width:100%;text-align:center" value="${escHtml(r.mokuteki||'')}" onchange="updateLedgerField('${cid}','${r.id}','mokuteki',this.value)"></td>
+        <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(r.gen_in||'')}" onchange="updateLedgerField('${cid}','${r.id}','gen_in',this.value)"></td>
+        <td class="money-cell" style="min-width:110px"><input value="${escHtml(r.kazei||'')}" oninput="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','kazei',this.value)" inputmode="numeric" style="width:100%;text-align:right"></td>
+        <td style="width:28px;text-align:center;vertical-align:middle"><input type="checkbox" ${r.kazei_checked?'checked':''} onchange="updateLedgerField('${cid}','${r.id}','kazei_checked',this.checked)" style="cursor:pointer;width:14px;height:14px"></td>
+        <td class="money-cell" style="min-width:100px"><input value="${escHtml(r.menkyo||'')}" oninput="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','menkyo',this.value)" inputmode="numeric" style="width:100%;text-align:right"></td>
+        <td style="width:28px;text-align:center;vertical-align:middle"><input type="checkbox" ${r.menkyo_checked?'checked':''} onchange="updateLedgerField('${cid}','${r.id}','menkyo_checked',this.checked)" style="cursor:pointer;width:14px;height:14px"></td>
+        <td style="width:32px;text-align:center;padding:2px"><button onclick="duplicateLedgerRow('${cid}','${r.id}')" title="複製" style="width:24px;height:24px;font-size:13px;padding:0;line-height:1;border:1px solid #93c5fd;background:#eff6ff;border-radius:4px;cursor:pointer;color:#1d4ed8">⧉</button></td>
+      </tr>`;
+    }).join('');
+
+    const lowerRowsHtml = !isCorporate ? gLower.map((r) => {
+      const autoNo = String(gLower.indexOf(r) + 1);
+      const kenri   = r.kenri   || ['','','',''];
+      const gimu    = r.gimu    || ['','','',''];
+      const fudosan = r.fudosan || ['','','','',''];
+      return `<tr>
+        <td class="del-cell"><button onclick="deleteLedgerLowerRow('${cid}','${r.id}')" title="削除" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button></td>
+        <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||autoNo)}" oninput="updateLedgerLowerField('${cid}','${r.id}','row_no',this.value)"></td>
+        <td style="min-width:90px"><input style="width:100%;text-align:center" value="${escHtml(kenri[0]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',0,this.value)"></td>
+        <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(kenri[1]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',1,this.value)"></td>
+        <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(kenri[2]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',2,this.value)"></td>
+        <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(kenri[3]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',3,this.value)"></td>
+        <td style="min-width:90px"><input style="width:100%;text-align:center" value="${escHtml(gimu[0]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',0,this.value)"></td>
+        <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(gimu[1]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',1,this.value)"></td>
+        <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(gimu[2]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',2,this.value)"></td>
+        <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(gimu[3]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',3,this.value)"></td>
+        <td style="min-width:90px"><input style="width:100%;text-align:center" value="${escHtml(fudosan[0]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','fudosan',0,this.value)"></td>
+        <td style="min-width:80px"><input style="width:100%;text-align:center" value="${escHtml(fudosan[1]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','fudosan',1,this.value)"></td>
+        <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(fudosan[2]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','fudosan',2,this.value)"></td>
+        <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(fudosan[3]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','fudosan',3,this.value)"></td>
+        <td style="min-width:70px"><input style="width:100%;text-align:center" value="${escHtml(fudosan[4]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','fudosan',4,this.value)"></td>
+        <td style="width:32px;text-align:center;padding:2px"><button onclick="duplicateLedgerLowerRow('${cid}','${r.id}')" title="複製" style="width:24px;height:24px;font-size:13px;padding:0;line-height:1;border:1px solid #93c5fd;background:#eff6ff;border-radius:4px;cursor:pointer;color:#1d4ed8">⧉</button></td>
+      </tr>`;
+    }).join('') : '';
+
+    const emptyUpper = `<tr><td colspan="11" style="padding:10px;text-align:center;color:#9ca3af;font-size:12px">行がありません</td></tr>`;
+    const emptyLower = `<tr><td colspan="16" style="padding:10px;text-align:center;color:#9ca3af;font-size:12px">行がありません</td></tr>`;
+
+    return `
+    <div class="ledger-section${gi > 0 ? '' : ''}" style="${gi > 0 ? 'margin-top:16px;border-top:3px solid var(--border-color);padding-top:12px' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted)">📋 段 ${gi+1}</span>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:2px;display:flex;align-items:center;justify-content:space-between">
+        <span>上段（登記情報）</span>
+        <button class="btn btn-secondary btn-xs" onclick="addLedgerRow('${cid}','${gid}')">＋ 行を追加</button>
+      </div>
+      <div class="ledger-wrap">
+        <table class="ledger-table">${theadUpper}<tbody>${upperRowsHtml||emptyUpper}</tbody></table>
+      </div>
+      ${!isCorporate ? `
+      <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-top:6px;margin-bottom:2px;display:flex;align-items:center;justify-content:space-between">
+        <span>下段（当事者・不動産）</span>
+        <button class="btn btn-secondary btn-xs" onclick="addLedgerLowerRow('${cid}','${gid}')">＋ 行を追加</button>
+      </div>
+      <div class="ledger-wrap">
+        <table class="ledger-table ledger-lower-table">${theadLower}<tbody>${lowerRowsHtml||emptyLower}</tbody></table>
+      </div>` : ''}
+    </div>`;
+  }).join('');
 
   return `
     <div class="ledger-section">
       <div class="ledger-section-header">
-        <span>📒 受付台帳（上段）</span>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-secondary btn-xs" onclick="addLedgerRow('${cid}')">＋ 行を追加</button>
-          <button class="btn btn-primary btn-xs" onclick="addLedgerGroup('${cid}')">＋ 段を追加</button>
-        </div>
+        <span>📒 受付台帳</span>
+        <button class="btn btn-primary btn-xs" onclick="addLedgerGroup('${cid}')">＋ 段を追加</button>
       </div>
-      <div class="ledger-wrap">
-        <table class="ledger-table">
-          <thead>
-            <tr>
-              <th style="width:28px"></th>
-              <th style="width:32px">No.</th>
-              <th style="width:60px;max-width:60px;text-align:center">受託番号</th>
-              <th style="width:120px;max-width:120px;text-align:center">管轄</th>
-              <th style="min-width:200px;text-align:center">登記の目的</th>
-              <th style="min-width:80px;text-align:center">登記原因</th>
-              <th style="min-width:110px;text-align:center">課税価格</th>
-              <th style="width:28px;text-align:center" title="チェック済">✓</th>
-              <th style="min-width:100px;text-align:center">登録免許税</th>
-              <th style="width:28px;text-align:center" title="チェック済">✓</th>
-              <th style="width:32px"></th>
-            </tr>
-          </thead>
-          <tbody>${rows.length > 0 ? upperRows : emptyMsg}</tbody>
-        </table>
-      </div>
+      ${rows.length === 0 && lower.length === 0
+        ? `<div style="padding:16px;text-align:center;color:#9ca3af;font-size:12px">「＋ 段を追加」で入力欄を追加してください</div>`
+        : groupSections}
     </div>
-
-    ${!isCorporate ? `
-    <div class="ledger-section" style="margin-top:8px">
-      <div class="ledger-section-header">
-        <span>📒 受付台帳（下段：当事者・不動産）</span>
-        <button class="btn btn-secondary btn-xs" onclick="addLedgerLowerRow('${cid}')">＋ 行を追加</button>
-      </div>
-      <div class="ledger-wrap">
-        <table class="ledger-table ledger-lower-table">
-          <thead>
-            <tr>
-              <th style="width:28px"></th>
-              <th style="width:32px">No.</th>
-              <th colspan="4" style="min-width:310px">権利者／申請人</th>
-              <th colspan="4" style="min-width:310px">義務者</th>
-              <th colspan="5" style="min-width:390px">不動産</th>
-              <th style="width:32px"></th>
-            </tr>
-          </thead>
-          <tbody>${lower.length > 0 ? lowerRows : emptyMsgL}</tbody>
-        </table>
-      </div>
-    </div>` : ''}
-
     ${!isCorporate ? renderPropertyList(c) : ''}`;
 }
 
@@ -4212,39 +4208,34 @@ function duplicateLedgerLowerRow(caseId, rowId) {
   refreshLedgerSection(caseId);
 }
 
-function addLedgerRow(caseId) {
+/** 指定グループの上段に1行追加 */
+function addLedgerRow(caseId, groupId) {
   const c = cases.find(c => c.id === caseId);
   if (!c) return;
   if (!c.ledger) c.ledger = [];
-  // 最後のグループIDを引き継ぐ
-  const lastGroup = c.ledger.length > 0 ? c.ledger[c.ledger.length-1].group : genId();
-  // そのグループ内の行数＋1をNo.に
-  const groupRows = c.ledger.filter(r => r.group === lastGroup);
+  // groupIdが指定されていなければ最後のグループ
+  const gid = groupId || (c.ledger.length > 0 ? c.ledger[c.ledger.length-1].group : genId());
+  const groupRows = c.ledger.filter(r => r.group === gid);
   const rowNo = String(groupRows.length + 1);
-  const newRow = newLedgerRow(lastGroup, rowNo);
-  c.ledger.push(newRow);
-  if (!c.ledger_lower) c.ledger_lower = [];
-  // 下段も同グループに追加
-  const lowerGroupRows = c.ledger_lower.filter(r => r.group === lastGroup);
-  const lowerRowNo = String(lowerGroupRows.length + 1);
-  c.ledger_lower.push(newLedgerLowerRow(lastGroup, lowerRowNo));
+  c.ledger.push(newLedgerRow(gid, rowNo));
   saveToStorage();
   refreshLedgerSection(caseId);
 }
 
-function addLedgerLowerRow(caseId) {
+/** 指定グループの下段に1行追加 */
+function addLedgerLowerRow(caseId, groupId) {
   const c = cases.find(c => c.id === caseId);
   if (!c) return;
   if (!c.ledger_lower) c.ledger_lower = [];
-  const lastGroup = c.ledger_lower.length > 0 ? c.ledger_lower[c.ledger_lower.length-1].group : genId();
-  const groupRows = c.ledger_lower.filter(r => r.group === lastGroup);
+  const gid = groupId || (c.ledger_lower.length > 0 ? c.ledger_lower[c.ledger_lower.length-1].group : genId());
+  const groupRows = c.ledger_lower.filter(r => r.group === gid);
   const rowNo = String(groupRows.length + 1);
-  c.ledger_lower.push(newLedgerLowerRow(lastGroup, rowNo));
+  c.ledger_lower.push(newLedgerLowerRow(gid, rowNo));
   saveToStorage();
   refreshLedgerSection(caseId);
 }
 
-/** 新しい管轄段（上段＋下段セット）を追加 */
+/** 新しいグループ（段）を追加 */
 function addLedgerGroup(caseId) {
   const c = cases.find(c => c.id === caseId);
   if (!c) return;
@@ -4252,7 +4243,6 @@ function addLedgerGroup(caseId) {
   if (!c.ledger_lower) c.ledger_lower = [];
   const gid = genId();
   c.ledger.push(newLedgerRow(gid, '1'));
-  c.ledger_lower.push(newLedgerLowerRow(gid, '1'));
   saveToStorage();
   refreshLedgerSection(caseId);
 }
