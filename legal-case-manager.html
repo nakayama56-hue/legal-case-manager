@@ -407,6 +407,13 @@ body {
 }
 .cal-event.shinsei      { background: #dbeafe; color: #1e40af; }
 .cal-event.yotei        { background: #ffedd5; color: #9a3412; }
+.cal-event.kanryo       { background: #dcfce7; color: #166534; }
+.cal-event.received     { background: #f0fdf4; color: #15803d; }
+.cal-event.delivery     { background: #fef9c3; color: #854d0e; }
+.cal-event.handover     { background: #fce7f3; color: #9d174d; }
+.cal-event.doc-date     { background: #e0f2fe; color: #0369a1; }
+.cal-event.invoice-date { background: #ede9fe; color: #6d28d9; }
+.cal-event.interview    { background: #ccfbf1; color: #0f766e; }
 .cal-event.task-deadline{ background: #fee2e2; color: #991b1b; }
 .cal-event.task-next    { background: #ede9fe; color: #5b21b6; }
 .cal-event[draggable]   { cursor: grab; }
@@ -1487,7 +1494,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.7.3</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.7.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1669,10 +1676,18 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
               <button class="btn btn-secondary btn-xs" onclick="calMoveDetail(1)">▶</button>
               <button class="btn btn-secondary btn-xs" onclick="calGoTodayDetail()">今日</button>
             </div>
-            <div style="display:flex;gap:12px;font-size:11px;color:var(--text-secondary);align-items:center">
-              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#3b82f6;display:inline-block"></span>申請日</span>
-              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#f97316;display:inline-block"></span>完了予定日</span>
-              <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#dc2626;display:inline-block"></span>タスク期限</span>
+            <div style="display:flex;gap:6px;font-size:10px;color:var(--text-secondary);align-items:center;flex-wrap:wrap">
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;display:inline-block"></span>申請日</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block"></span>完了予定</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block"></span>完了日</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#15803d;display:inline-block"></span>受付日</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#fbbf24;display:inline-block"></span>送付日</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#ec4899;display:inline-block"></span>手渡し</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#0ea5e9;display:inline-block"></span>証明書</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#8b5cf6;display:inline-block"></span>請求</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block"></span>期限</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#7c3aed;display:inline-block"></span>次回対応</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#0d9488;display:inline-block"></span>面談</span>
               <button class="btn btn-secondary btn-xs" onclick="toggleDetailCalendar()">カレンダーを隠す</button>
             </div>
           </div>
@@ -2842,21 +2857,60 @@ function renderDetailCalendar(caseId, flash) {
   const el = document.getElementById('detail-calendar');
   if (el) el.style.display = detailCalHidden ? 'none' : '';
   if (detailCalHidden) return;
-  const c=cases.find(c=>c.id===(caseId||currentDetailCaseId));
+  const c = cases.find(c => c.id === (caseId || currentDetailCaseId));
   renderCalendarBase('detail-calendar','detail-cal-label',detailCalYear,detailCalMonth,()=>{
-    const ev={}, add=(date,type,tag,label,onclick)=>{if(!date)return;if(!ev[date])ev[date]=[];ev[date].push({type,tag,label,onclick});};
-    if(c){
-      if(c.status !== '完了') {
-        (c.shinsei_dates||[]).forEach(s=>{
-          if(s.kanryo) return; // 完了日が入力済みならスキップ
-          add(s.shinsei,'shinsei','申',c.case_name,`showCaseDetail('${c.id}')`);
-          add(s.yotei,'yotei','予',c.case_name,`showCaseDetail('${c.id()}')`);
-        });
-      }
-      tasks.filter(t=>t.case_id===c.id&&t.status!=='完了').forEach(t=>{add(t.deadline,'task-deadline','期',t.name,`openTaskModal('${t.id}','${t.case_id}',null)`);add(t.next_action_date,'task-next','次',t.name,`openTaskModal('${t.id}','${t.case_id}',null)`);});
+    const ev = {};
+    const add = (date, type, tag, label, onclick) => {
+      if (!date) return;
+      const d = date.slice(0, 10); // 日付部分のみ
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+      if (!ev[d]) ev[d] = [];
+      ev[d].push({type, tag, label: label || '', onclick: onclick || ''});
+    };
+    if (c) {
+      // 受付日
+      add(c.received_date, 'received', '受', '受付日');
+
+      // 管轄別申請日・完了予定日・完了日
+      (c.shinsei_dates || []).forEach(s => {
+        const label = s.kankatsu || '管轄';
+        add(s.shinsei, 'shinsei', '申', label);
+        add(s.yotei,   'yotei',   '予', label);
+        add(s.kanryo,  'kanryo',  '完', label);
+      });
+
+      // 書類送付日・手渡し日
+      (c.deliveries || []).forEach(d => {
+        const label = d.name || '送付先';
+        add(d.date,     'delivery', '送', label);
+        add(d.handover, 'handover', '渡', label);
+      });
+
+      // 証明書取得日
+      (c.documents || []).forEach(doc => {
+        add(doc.date, 'doc-date', '証', doc.name || '証明書');
+      });
+
+      // 請求日
+      (c.invoices || []).forEach(inv => {
+        add(inv.date, 'invoice-date', '請', inv.to || '請求');
+      });
+      // 旧形式の請求
+      if (c.invoice_date) add(c.invoice_date, 'invoice-date', '請', c.invoice_to || '請求');
+
+      // 面談日時
+      (c.interviews || []).forEach(iv => {
+        if (iv.datetime) add(iv.datetime.slice(0, 10), 'interview', '面', iv.party || '面談');
+      });
+
+      // タスク期限・次回対応日
+      tasks.filter(t => t.case_id === c.id && t.status !== '完了').forEach(t => {
+        add(t.deadline,         'task-deadline', '期', t.name, `openTaskModal('${t.id}','${t.case_id}',null)`);
+        add(t.next_action_date, 'task-next',     '次', t.name, `openTaskModal('${t.id}','${t.case_id}',null)`);
+      });
     }
     return ev;
-  },flash);
+  }, flash);
 }
 function calMoveDetail(dir){detailCalMonth+=dir;if(detailCalMonth>11){detailCalMonth=0;detailCalYear++;}if(detailCalMonth<0){detailCalMonth=11;detailCalYear--;}renderDetailCalendar();}
 function calGoTodayDetail(){detailCalYear=new Date().getFullYear();detailCalMonth=new Date().getMonth();renderDetailCalendar(null,true);}
