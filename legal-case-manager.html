@@ -1283,6 +1283,23 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
   .task-table-wrap colgroup col:nth-child(4) { width: 0; }
   /* 案件テーブル：スマホでも横スクロールで全列表示 */
   #case-table { min-width: 860px !important; }
+
+  .case-tile-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+    position: relative;
+  }
+  .case-tile-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .case-tile-card .tile-pin { position:absolute;top:10px;right:10px;font-size:14px;color:#f59e0b; }
+  .case-tile-card .tile-status { display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;margin-bottom:6px; }
+  .case-tile-card .tile-name { font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:4px;line-height:1.4;word-break:break-all; }
+  .case-tile-card .tile-client { font-size:12px;color:var(--text-secondary);margin-bottom:6px; }
+  .case-tile-card .tile-meta { font-size:11px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:4px 10px; }
+  .case-tile-card .tile-label { display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;background:var(--bg-secondary);color:var(--text-muted);margin-bottom:4px; }
   #case-tbody td { padding: 6px 6px; font-size: 11px; }
 }
 @media (max-width: 480px) {
@@ -1464,7 +1481,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.5.9</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1592,10 +1609,13 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
               完了済みも含む
             </label>
             <button class="btn btn-primary" onclick="openCaseModal(null)">＋ 新規案件</button>
-          </div>
+            <div style="display:flex;border:1px solid var(--border-color);border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0">
+              <button id="btn-view-list" onclick="setCaseViewMode('list')" title="リスト表示" style="padding:5px 9px;border:none;background:var(--color-primary);color:#fff;cursor:pointer;font-size:14px">☰</button>
+              <button id="btn-view-tile" onclick="setCaseViewMode('tile')" title="タイル表示" style="padding:5px 9px;border:none;background:var(--bg-secondary);color:var(--text-muted);cursor:pointer;font-size:14px">⊞</button>
+            </div>
           <!-- 依頼者ショートカットボタン -->
           <div id="client-shortcuts" style="padding:8px 14px;border-bottom:1px solid var(--border-color);display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:44px"></div>
-          <div class="table-wrap">
+          <div class="table-wrap" id="case-list-wrap">
             <table id="case-table" style="table-layout:auto;width:100%;min-width:860px">
               <colgroup>
                 <col style="width:32px">
@@ -1627,6 +1647,9 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
               </thead>
               <tbody id="case-tbody"></tbody>
             </table>
+          </div>
+          <div id="case-tile-wrap" style="display:none;padding:12px;display:none">
+            <div id="case-tile-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px"></div>
           </div>
         </div>
         </div>
@@ -1736,6 +1759,14 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
           <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">簡易印刷で出力する項目を選択してください</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
+              <input type="checkbox" id="print-item-casename" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
+              案件名
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
+              <input type="checkbox" id="print-item-client" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
+              依頼者名
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
               <input type="checkbox" id="print-item-location" checked onchange="savePrintSetting()" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)">
               不動産所在地 / 商号・本店
             </label>
@@ -1782,12 +1813,6 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             <div class="desc">CSVファイルから案件データを読み込みます</div>
             <input type="file" id="import-file" accept=".csv,.json" style="display:none" onchange="importData(this)">
             <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">インポート</button>
-          </div>
-          <div class="data-card">
-            <div class="icon">🔄</div>
-            <div class="label">サンプルデータ再読込</div>
-            <div class="desc">サンプルデータを再度読み込みます（既存データはクリアされます）</div>
-
           </div>
           <div class="data-card">
             <div class="icon">🗑</div>
@@ -2179,6 +2204,7 @@ let cases = [];
 let tasks = [];
 let calHidden = false;
 let detailCalHidden = false;
+let caseViewMode = localStorage.getItem('case_view_mode') || 'list';
 let taskQFCurrent = 'all';
 let currentCaseId = null; // for editing case
 let currentTaskId = null; // for editing task
@@ -2247,25 +2273,119 @@ function toggleHoverSidebar(enabled) {
   localStorage.setItem('sidebar_hover', enabled ? '1' : '0');
 }
 
+function setCaseViewMode(mode) {
+  caseViewMode = mode;
+  localStorage.setItem('case_view_mode', mode);
+  const listWrap = document.getElementById('case-list-wrap');
+  const tileWrap = document.getElementById('case-tile-wrap');
+  const btnList  = document.getElementById('btn-view-list');
+  const btnTile  = document.getElementById('btn-view-tile');
+  if (mode === 'tile') {
+    if (listWrap) listWrap.style.display = 'none';
+    if (tileWrap) tileWrap.style.display = 'block';
+    if (btnList)  { btnList.style.background = 'var(--bg-secondary)'; btnList.style.color = 'var(--text-muted)'; }
+    if (btnTile)  { btnTile.style.background = 'var(--color-primary)'; btnTile.style.color = '#fff'; }
+    renderCaseTiles();
+  } else {
+    if (listWrap) listWrap.style.display = '';
+    if (tileWrap) tileWrap.style.display = 'none';
+    if (btnList)  { btnList.style.background = 'var(--color-primary)'; btnList.style.color = '#fff'; }
+    if (btnTile)  { btnTile.style.background = 'var(--bg-secondary)'; btnTile.style.color = 'var(--text-muted)'; }
+    renderCaseTable();
+  }
+}
+
+function renderCaseTiles() {
+  const grid = document.getElementById('case-tile-grid');
+  if (!grid) return;
+  const search = (document.getElementById('case-search')?.value || '').toLowerCase();
+  const fStatus   = document.getElementById('case-filter-status')?.value || '';
+  const fType     = document.getElementById('case-filter-type')?.value || '';
+  const fCategory = document.getElementById('case-filter-category')?.value || '';
+  const showCompleted = document.getElementById('case-show-completed')?.checked;
+
+  const STATUS_COLORS = {
+    '新規受付': {bg:'#dbeafe',color:'#1e40af'},
+    '書類待ち': {bg:'#fef9c3',color:'#854d0e'},
+    '連絡待ち': {bg:'#ffedd5',color:'#9a3412'},
+    '申請中':   {bg:'#dcfce7',color:'#166534'},
+    '補正対応中':{bg:'#fce7f3',color:'#9d174d'},
+    '完了':     {bg:'#f0fdf4',color:'#166534'},
+    '保留':     {bg:'#f1f5f9',color:'#475569'},
+  };
+
+  let filtered = cases.filter(c => {
+    if (!showCompleted && c.status === '完了') return false;
+    if (fStatus   && c.status   !== fStatus)   return false;
+    if (fCategory && c.category !== fCategory) return false;
+    if (fType     && c.type     !== fType)     return false;
+    if (activeClientFilter && !((c.client_name||'').includes(activeClientFilter) ||
+        (c.contacts||[]).some(ct => (ct.name||'').includes(activeClientFilter)))) return false;
+    if (search) {
+      const hay = [c.case_name,c.case_num,c.client_name,c.type,c.status,c.location,
+        c.company_name,c.memo,(c.legal_bureaus||[]).join('')].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  // ピン留めを先頭に
+  filtered.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-size:13px">該当する案件がありません</div>';
+    return;
+  }
+
+  const clientName = (c) => {
+    if (c.contacts && c.contacts.length > 0 && c.contacts[0].name) return c.contacts[0].name;
+    return c.client_name || '';
+  };
+
+  grid.innerHTML = filtered.map(c => {
+    const sc = STATUS_COLORS[c.status] || {bg:'#f1f5f9',color:'#475569'};
+    const bureaus = (c.legal_bureaus||[]).filter(Boolean);
+    const shinsei = (c.shinsei_dates||[]).find(s => s.shinsei);
+    return `<div class="case-tile-card" onclick="showCaseDetail('${c.id}')">
+      ${c.pinned ? '<span class="tile-pin">📌</span>' : ''}
+      <span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status||'')}</span>
+      ${c.label ? `<span class="tile-label">${escHtml(c.label)}</span>` : ''}
+      <div class="tile-name">${escHtml(c.case_name||'—')}</div>
+      ${clientName(c) ? `<div class="tile-client">👤 ${escHtml(clientName(c))}</div>` : ''}
+      <div class="tile-meta">
+        ${c.category ? `<span>${c.category === '商業・法人登記' ? '🏢' : '🏠'} ${escHtml(c.type||c.category)}</span>` : ''}
+        ${bureaus.length ? `<span>🏛 ${escHtml(bureaus[0])}</span>` : ''}
+        ${shinsei ? `<span>📅 申請：${escHtml(shinsei.shinsei)}</span>` : ''}
+        ${c.received_date ? `<span>受付：${escHtml(formatDate(c.received_date))}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
 function saveCalSetting(type, hidden) {
   localStorage.setItem('cal_hidden_' + type, hidden ? '1' : '0');
   if (type === 'workspace') {
     calHidden = hidden;
     const cal = document.getElementById('case-calendar');
     const btn = document.querySelector('[onclick="toggleCalendar()"]');
+    const tog = document.getElementById('toggle-cal-hidden');
     if (cal) cal.style.display = calHidden ? 'none' : '';
     if (btn) btn.textContent = calHidden ? 'カレンダーを表示' : 'カレンダーを隠す';
+    if (tog) tog.checked = hidden;
   } else if (type === 'detail') {
     detailCalHidden = hidden;
     const cal = document.getElementById('detail-calendar');
     const btn = document.querySelector('[onclick="toggleDetailCalendar()"]');
+    const tog = document.getElementById('toggle-detail-cal-hidden');
     if (cal) cal.style.display = detailCalHidden ? 'none' : '';
     if (btn) btn.textContent = detailCalHidden ? 'カレンダーを表示' : 'カレンダーを隠す';
+    if (tog) tog.checked = hidden;
   }
 }
 
 function savePrintSetting() {
-  const items = ['location','category','bureau','received','shinsei','memo'];
+  const items = ['casename','client','location','category','bureau','received','shinsei','memo'];
   const settings = {};
   items.forEach(k => {
     const el = document.getElementById('print-item-' + k);
@@ -2307,7 +2427,7 @@ function initAppearance() {
 
   // 印刷設定の読み込み
   const ps = loadPrintSettings();
-  ['location','category','bureau','received','shinsei','memo'].forEach(k => {
+  ['casename','client','location','category','bureau','received','shinsei','memo'].forEach(k => {
     const el = document.getElementById('print-item-' + k);
     if (el && ps[k] !== undefined) el.checked = ps[k];
   });
@@ -2500,6 +2620,8 @@ function showView(name) {
     renderCaseTable();
     renderCalendar();
     renderTaskTable();
+    // ビューモードを初期化
+    setCaseViewMode(caseViewMode);
     // カレンダー非表示設定を適用
     const cal = document.getElementById('case-calendar');
     const btn = document.querySelector('[onclick="toggleCalendar()"]');
@@ -2936,6 +3058,7 @@ function showCaseDetail(id) {
 
 function renderCaseTable() {
   if (!document.getElementById('case-search')) return;
+  if (caseViewMode === 'tile') { renderCaseTiles(); return; }
   const search = document.getElementById('case-search').value.toLowerCase();
   const fStatus   = document.getElementById('case-filter-status').value;
   const fType     = document.getElementById('case-filter-type').value;
@@ -4171,8 +4294,8 @@ function printCaseSimple(caseId) {
 </style>
 </head><body>
   <div class="case-num">案件番号：${escHtml(c.case_num||'—')}</div>
-  <div class="case-name">${escHtml(c.case_name)}</div>
-  ${clientName ? `<div class="client-name">${escHtml(clientName)}</div>` : '<div style="border-bottom:3px solid #111;margin-bottom:14px"></div>'}
+  ${show('casename') ? `<div class="case-name">${escHtml(c.case_name)}</div>` : ''}
+  ${show('client') && clientName ? `<div class="client-name">${escHtml(clientName)}</div>` : (show('casename') ? '<div style="border-bottom:3px solid #111;margin-bottom:14px"></div>' : '')}
   <table class="info-table">
     ${basicInfo}
     ${show('category') ? row('区分', c.category === '商業・法人登記' ? '商業・法人登記' : '不動産登記') : ''}
