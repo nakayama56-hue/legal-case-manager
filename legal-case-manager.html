@@ -1287,20 +1287,25 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
   .case-tile-card {
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 12px 14px;
+    border-radius: 10px;
+    padding: 0;
     cursor: pointer;
     transition: box-shadow 0.15s, transform 0.15s;
     position: relative;
-    border-left: 4px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
   }
-  .case-tile-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-  .case-tile-card .tile-pin { position:absolute;top:10px;right:10px;font-size:14px;color:#f59e0b; }
-  .case-tile-card .tile-status { display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;margin-bottom:6px; }
-  .case-tile-card .tile-name { font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:4px;line-height:1.4;word-break:break-all; }
-  .case-tile-card .tile-client { font-size:12px;color:var(--text-secondary);margin-bottom:6px; }
-  .case-tile-card .tile-meta { font-size:11px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:4px 10px; }
-  .case-tile-card .tile-label { display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;background:var(--bg-secondary);color:var(--text-muted);margin-bottom:4px; }
+  .case-tile-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.15); transform: translateY(-2px); }
+  .case-tile-card .tile-header { padding: 10px 12px 8px; border-bottom: 1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .case-tile-card .tile-body { padding: 10px 12px; flex:1; }
+  .case-tile-card .tile-footer { padding: 7px 12px; background: var(--bg-secondary); border-top: 1px solid var(--border-color); font-size:10px; color:var(--text-muted); display:flex; flex-wrap:wrap; gap:4px 10px; }
+  .case-tile-card .tile-pin { font-size:13px; color:#f59e0b; }
+  .case-tile-card .tile-status { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+  .case-tile-card .tile-name { font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:4px; line-height:1.4; word-break:break-all; }
+  .case-tile-card .tile-client { font-size:12px; color:var(--text-secondary); display:flex; align-items:center; gap:4px; }
+  .case-tile-card .tile-label { display:inline-block; font-size:10px; padding:1px 6px; border-radius:4px; background:var(--bg-secondary); color:var(--text-muted); }
   #case-tbody td { padding: 6px 6px; font-size: 11px; }
 }
 @media (max-width: 480px) {
@@ -1482,7 +1487,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.3</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.6.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2348,17 +2353,23 @@ function renderCaseTiles() {
     const sc = STATUS_COLORS[c.status] || {bg:'#f1f5f9',color:'#475569'};
     const bureaus = (c.legal_bureaus||[]).filter(Boolean);
     const shinsei = (c.shinsei_dates||[]).find(s => s.shinsei);
-    return `<div class="case-tile-card" onclick="showCaseDetail('${c.id}')" style="border-left:4px solid ${sc.color}">
-      ${c.pinned ? '<span class="tile-pin">📌</span>' : ''}
-      <span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status||'')}</span>
-      ${c.label ? `<span class="tile-label">${escHtml(c.label)}</span>` : ''}
-      <div class="tile-name">${escHtml(c.case_name||'—')}</div>
-      ${clientName(c) ? `<div class="tile-client">👤 ${escHtml(clientName(c))}</div>` : ''}
-      <div class="tile-meta">
+    return `<div class="case-tile-card" onclick="showCaseDetail('${c.id}')">
+      <div class="tile-header" style="border-top: 4px solid ${sc.color}">
+        <span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status||'')}</span>
+        <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+          ${c.label ? `<span class="tile-label">${escHtml(c.label)}</span>` : ''}
+          ${c.pinned ? '<span class="tile-pin">📌</span>' : ''}
+        </div>
+      </div>
+      <div class="tile-body">
+        <div class="tile-name">${escHtml(c.case_name||'—')}</div>
+        ${clientName(c) ? `<div class="tile-client">👤 ${escHtml(clientName(c))}</div>` : ''}
+      </div>
+      <div class="tile-footer">
         ${c.category ? `<span>${c.category === '商業・法人登記' ? '🏢' : '🏠'} ${escHtml(c.type||c.category)}</span>` : ''}
         ${bureaus.length ? `<span>🏛 ${escHtml(bureaus[0])}</span>` : ''}
-        ${shinsei ? `<span>📅 申請：${escHtml(shinsei.shinsei)}</span>` : ''}
-        ${c.received_date ? `<span>受付：${escHtml(formatDate(c.received_date))}</span>` : ''}
+        ${shinsei ? `<span>📅 ${escHtml(shinsei.shinsei)}</span>` : ''}
+        ${c.received_date ? `<span>受付 ${escHtml(formatDate(c.received_date))}</span>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -2516,8 +2527,12 @@ function init() {
       const res = await fetch(GAS_URL + '?t=' + Date.now());
       const json = await res.json();
       if (json.ok && json.data && json.data.shortcuts) {
-        localStorage.setItem('client_shortcuts', JSON.stringify(json.data.shortcuts));
-        renderClientShortcutButtons();
+        const sc = json.data.shortcuts;
+        // 空でない場合のみ上書き（ローカルのショートカットを消さない）
+        if (Array.isArray(sc) && sc.some(s => s)) {
+          localStorage.setItem('client_shortcuts', JSON.stringify(sc));
+          renderClientShortcutButtons();
+        }
       }
     } catch(e) { /* サイレント失敗 */ }
   }, 1000);
