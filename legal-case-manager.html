@@ -1494,7 +1494,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.7.5</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.7.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2493,7 +2493,7 @@ function init() {
     toast('クラウドからデータを読み込んでいます…', 'info');
     setTimeout(async () => {
       try {
-        const res  = await fetch(GAS_URL + '?t=' + Date.now(), {mode:'cors', redirect:'follow'});
+        const res  = await fetch(GAS_URL + '?t=' + Date.now());
         const json = await res.json();
         if (json.ok && json.data && json.data.cases && json.data.cases.length > 0) {
           cases = json.data.cases;
@@ -2530,7 +2530,7 @@ function init() {
   // 起動時にショートカットをクラウドからバックグラウンドで取得
   setTimeout(async () => {
     try {
-      const res = await fetch(GAS_URL + '?t=' + Date.now(), {mode:'cors', redirect:'follow'});
+      const res = await fetch(GAS_URL + '?t=' + Date.now());
       const json = await res.json();
       if (json.ok && json.data && json.data.shortcuts) {
         const sc = json.data.shortcuts;
@@ -6408,8 +6408,6 @@ async function cloudSave(silent) {
     const payload = { cases, tasks, shortcuts, savedAt: new Date().toISOString() };
     const res = await fetch(GAS_URL, {
       method: 'POST',
-      mode: 'cors',
-      redirect: 'follow',
       body: JSON.stringify(payload),
     });
     const json = await res.json();
@@ -6434,7 +6432,7 @@ async function cloudLoad() {
   setCloudStatus('busy', '読込中…');
   setCloudBtnDisabled(true);
   try {
-    const res  = await fetch(GAS_URL + '?t=' + Date.now(), {mode:'cors', redirect:'follow'});
+    const res  = await fetch(GAS_URL + '?t=' + Date.now());
     const json = await res.json();
     if (!json.ok) throw new Error(json.error || '不明なエラー');
     if (!json.data) {
@@ -6473,7 +6471,7 @@ async function cloudLoad() {
 async function cloudCheck() {
   setCloudStatus('busy', '接続確認中…');
   try {
-    const res  = await fetch(GAS_URL + '?t=' + Date.now(), {mode:'cors', redirect:'follow'});
+    const res  = await fetch(GAS_URL + '?t=' + Date.now());
     const json = await res.json();
     if (json.ok) {
       const saved = json.data?.savedAt
