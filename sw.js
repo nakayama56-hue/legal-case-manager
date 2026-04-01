@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legal-case-manager-202603312342';
+const CACHE_NAME = 'legal-case-manager-202604010252';
 const ASSETS = [
   './legal-case-manager.html',
   './manifest.json',
@@ -28,8 +28,11 @@ self.addEventListener('activate', event => {
 
 // オフライン対応：キャッシュ優先、なければネットワーク
 self.addEventListener('fetch', event => {
-  // GASへのリクエストはキャッシュしない
-  if (event.request.url.includes('script.google.com')) return;
+  // GASへのリクエスト（リダイレクト先含む）はキャッシュしない
+  const url = event.request.url;
+  if (url.includes('script.google.com') ||
+      url.includes('script.googleusercontent.com') ||
+      url.includes('googleapis.com')) return;
 
   event.respondWith(
     caches.match(event.request).then(cached => {
