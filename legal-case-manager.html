@@ -1494,7 +1494,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.7.6</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.7.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -6372,6 +6372,8 @@ const AUTO_SAVE_DELAY = 3000; // 3秒後に自動保存
 /** データ変更後に呼ぶ。3秒デバウンスでクラウド自動保存 */
 function scheduleAutoSave() {
   clearTimeout(autoSaveTimer);
+  // casesが空のときは自動保存しない（誤上書き防止）
+  if (!cases || cases.length === 0) return;
   setCloudStatus('busy', '入力待機中… 3秒後に自動保存します');
   autoSaveTimer = setTimeout(() => {
     cloudSave(true); // silent=true でトーストを控えめに
@@ -6401,6 +6403,11 @@ function setCloudBtnDisabled(disabled) {
 /** クラウドへ保存。silent=true のときトーストを省略 */
 async function cloudSave(silent) {
   clearTimeout(autoSaveTimer);
+  // casesが空のときは保存しない（誤上書き防止）
+  if (!cases || cases.length === 0) {
+    if (!silent) toast('案件データがありません。保存をスキップしました', 'error');
+    return;
+  }
   setCloudStatus('busy', '保存中…');
   setCloudBtnDisabled(true);
   try {
