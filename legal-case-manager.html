@@ -1336,6 +1336,48 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
 /* =====================================================
    面談記録
    ===================================================== */
+
+/* メモカード */
+.memo-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.memo-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.memo-card-date {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.memo-card-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+.memo-card-edit-area {
+  width: 100%;
+  font-size: 12px;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
 .interview-section {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -1494,7 +1536,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.8.3</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.8.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2335,7 +2377,7 @@ function renderCaseTiles() {
         (c.contacts||[]).some(ct => (ct.name||'').includes(activeClientFilter)))) return false;
     if (search) {
       const hay = [c.case_name,c.case_num,c.client_name,c.type,c.status,c.location,
-        c.company_name,c.memo,(c.legal_bureaus||[]).join('')].join(' ').toLowerCase();
+        c.company_name,(c.memos||[]).map(m=>m.text).join(' '),(c.legal_bureaus||[]).join('')].join(' ').toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
@@ -2567,6 +2609,14 @@ function loadFromStorage() {
       if (!validStatuses.includes(c.status || '')) {
         c.status = '';
         migrated = true;
+      }
+      // memo文字列→memos配列に移行
+      if (!c.memos && c.memo) {
+        c.memos = [{ id: genId(), date: c.received_date || c.created_at || '', text: c.memo }];
+        c.memo = '';
+        migrated = true;
+      } else if (!c.memos) {
+        c.memos = [];
       }
     });
     if (migrated) localStorage.setItem('cases_v1', JSON.stringify(cases));
@@ -3137,7 +3187,7 @@ function renderCaseTable() {
       const bureaus = (c.legal_bureaus && c.legal_bureaus.length > 0) ? c.legal_bureaus : (c.legal_bureau ? [c.legal_bureau] : []);
       const hay = [
         c.case_num, c.case_name, c.client_name, c.type,
-        c.location, bureaus.join(' '), c.status,
+        c.location, bureaus.join(' '), c.status, (c.memos||[]).map(m=>m.text).join(' '),
         c.memo,
         c.company_name, c.honten, c.corp_num,
         ...(c.contacts || []).map(ct => {
@@ -3345,8 +3395,13 @@ function renderCaseDetail(caseId) {
 
       <!-- Memo -->
       <div class="info-card">
-        <div class="info-card-header">📝 備考・メモ</div>
-        <div style="padding:12px 14px;font-size:12px;color:var(--text-secondary);white-space:pre-wrap">${escHtml(c.memo||'')}</div>
+        <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
+          <span>📝 備考・メモ</span>
+          <button class="btn btn-primary btn-xs no-print" onclick="addMemoItem('${c.id}')">＋ 追加</button>
+        </div>
+        <div id="memo-list-${c.id}" style="padding:8px 12px">
+          ${renderMemoList(c)}
+        </div>
         ${c.hoteisozoku ? `
         <div style="padding:6px 14px 10px;font-size:13px;font-weight:700;color:#0369a1">
           ✅ 法定相続情報一覧図の取得あり
@@ -3764,6 +3819,107 @@ function togglePin(caseId) {
   saveToStorage();
   caseViewMode === 'tile' ? renderCaseTiles() : renderCaseTable();
   toast(c.pinned ? '📌 ピン留めしました' : 'ピンを外しました');
+}
+
+/** メモ一覧をHTMLで返す */
+function renderMemoList(c) {
+  // 旧形式(c.memo文字列)を移行
+  if (!c.memos) {
+    c.memos = c.memo ? [{ id: genId(), date: c.received_date || today(), text: c.memo }] : [];
+    c.memo = '';
+  }
+  if (c.memos.length === 0) {
+    return '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">メモはありません</div>';
+  }
+  return c.memos.map((m, i) => `
+    <div class="memo-card" id="memo-card-${m.id}">
+      <div class="memo-card-header">
+        <span class="memo-card-date">${formatDate(m.date) || m.date || '日付なし'}</span>
+        <button class="btn btn-secondary btn-xs no-print" onclick="editMemoItem('${c.id}','${m.id}')" style="margin-left:auto">✏ 編集</button>
+        <button class="btn btn-xs no-print" onclick="deleteMemoItem('${c.id}','${m.id}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#dc2626">✕</button>
+      </div>
+      <div class="memo-card-text" id="memo-text-${m.id}">${escHtml(m.text||'')}</div>
+    </div>
+  `).join('');
+}
+
+/** メモ追加 */
+function addMemoItem(caseId) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  if (!c.memos) {
+    c.memos = c.memo ? [{ id: genId(), date: c.received_date || today(), text: c.memo }] : [];
+    c.memo = '';
+  }
+  const newMemo = { id: genId(), date: today(), text: '' };
+  c.memos.push(newMemo);
+  saveToStorage();
+  // メモリストを再描画
+  const el = document.getElementById(`memo-list-${caseId}`);
+  if (el) el.innerHTML = renderMemoList(c);
+  // 新しいメモを即座に編集モードに
+  editMemoItem(caseId, newMemo.id);
+}
+
+/** メモ編集（インライン） */
+function editMemoItem(caseId, memoId) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  const m = (c.memos||[]).find(m => m.id === memoId);
+  if (!m) return;
+  const card = document.getElementById(`memo-card-${memoId}`);
+  if (!card) return;
+
+  card.innerHTML = `
+    <div class="memo-card-header">
+      <input type="date" value="${m.date||today()}" id="memo-date-edit-${memoId}"
+        style="font-size:11px;border:1px solid var(--border-color);border-radius:4px;padding:2px 6px;background:var(--bg-primary);color:var(--text-primary)">
+      <button class="btn btn-primary btn-xs no-print" onclick="saveMemoItem('${caseId}','${memoId}')" style="margin-left:auto">💾 保存</button>
+      <button class="btn btn-secondary btn-xs no-print" onclick="cancelMemoEdit('${caseId}','${memoId}')">キャンセル</button>
+    </div>
+    <textarea class="memo-card-edit-area" id="memo-text-edit-${memoId}">${escHtml(m.text||'')}</textarea>
+  `;
+  document.getElementById(`memo-text-edit-${memoId}`)?.focus();
+}
+
+/** メモ保存 */
+function saveMemoItem(caseId, memoId) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  const m = (c.memos||[]).find(m => m.id === memoId);
+  if (!m) return;
+  m.date = document.getElementById(`memo-date-edit-${memoId}`)?.value || today();
+  m.text = document.getElementById(`memo-text-edit-${memoId}`)?.value || '';
+  saveToStorage();
+  const el = document.getElementById(`memo-list-${caseId}`);
+  if (el) el.innerHTML = renderMemoList(c);
+  toast('メモを保存しました');
+}
+
+/** メモ編集キャンセル */
+function cancelMemoEdit(caseId, memoId) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  // 空のメモは削除
+  const idx = (c.memos||[]).findIndex(m => m.id === memoId);
+  if (idx !== -1 && !c.memos[idx].text) {
+    c.memos.splice(idx, 1);
+    saveToStorage();
+  }
+  const el = document.getElementById(`memo-list-${caseId}`);
+  if (el) el.innerHTML = renderMemoList(c);
+}
+
+/** メモ削除 */
+function deleteMemoItem(caseId, memoId) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  if (!confirm('このメモを削除しますか？')) return;
+  c.memos = (c.memos||[]).filter(m => m.id !== memoId);
+  saveToStorage();
+  const el = document.getElementById(`memo-list-${caseId}`);
+  if (el) el.innerHTML = renderMemoList(c);
+  toast('メモを削除しました');
 }
 
 function setCaseStatus(caseId, newStatus) {
