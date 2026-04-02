@@ -1536,7 +1536,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.8.5</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.8.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2404,7 +2404,7 @@ function renderCaseTiles() {
       <div class="tile-header" style="border-top: 4px solid ${sc ? sc.color : 'var(--border-color)'}">
         ${sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '<span></span>'}
         <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
-          ${c.label ? `<span class="tile-label">${escHtml(c.label)}</span>` : ''}
+          ${c.label && LABEL_COLORS[c.label] ? `<span class="tile-label" style="background:${LABEL_COLORS[c.label].bg};border:1px solid ${LABEL_COLORS[c.label].border};color:${LABEL_COLORS[c.label].dot}">● ${LABEL_COLORS[c.label].name}</span>` : ''}
           ${c.pinned ? '<span class="tile-pin">📌</span>' : ''}
         </div>
       </div>
@@ -4595,9 +4595,9 @@ function printCaseSimple(caseId) {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { padding: 20mm 18mm; font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; color: #111; }
   .case-num { font-size: 11pt; color: #555; margin-bottom: 10px; }
-  .header-row { display: flex; align-items: baseline; gap: 24px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 3px solid #111; flex-wrap: wrap; }
-  .case-name { font-size: 56pt; font-weight: 700; line-height: 1.2; }
-  .client-name { font-size: 44pt; font-weight: 700; color: #333; white-space: nowrap; }
+  .header-row { display: flex; align-items: baseline; gap: 20px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 3px solid #111; flex-wrap: wrap; }
+  .case-name { font-size: 36pt; font-weight: 700; line-height: 1.2; }
+  .client-name { font-size: 28pt; font-weight: 700; color: #333; }
   .info-table { width: 100%; border-collapse: collapse; font-size: 14pt; margin-top: 16px; }
   .info-table th { width: 38%; background: #f0f0f0; padding: 10px 14px; text-align: left; font-weight: 700; border: 1px solid #ccc; vertical-align: top; }
   .info-table td { padding: 10px 14px; border: 1px solid #ccc; vertical-align: top; line-height: 1.6; }
