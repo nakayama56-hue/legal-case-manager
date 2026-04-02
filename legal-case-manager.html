@@ -1536,7 +1536,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.8.6</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.8.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2404,7 +2404,7 @@ function renderCaseTiles() {
       <div class="tile-header" style="border-top: 4px solid ${sc ? sc.color : 'var(--border-color)'}">
         ${sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '<span></span>'}
         <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
-          ${c.label && LABEL_COLORS[c.label] ? `<span class="tile-label" style="background:${LABEL_COLORS[c.label].bg};border:1px solid ${LABEL_COLORS[c.label].border};color:${LABEL_COLORS[c.label].dot}">● ${LABEL_COLORS[c.label].name}</span>` : ''}
+          ${c.label && LABEL_COLORS[c.label] ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${LABEL_COLORS[c.label].dot};flex-shrink:0"></span>` : ''}
           ${c.pinned ? '<span class="tile-pin">📌</span>' : ''}
         </div>
       </div>
