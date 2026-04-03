@@ -1536,7 +1536,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.8.8</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.8.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2067,10 +2067,6 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
           <div class="form-group full">
             <label class="form-label">📦 Dropboxフォルダ URL</label>
             <input class="form-control" id="f-dropbox-url" type="url" placeholder="https://www.dropbox.com/home/...">
-          </div>
-          <div class="form-group full">
-            <label class="form-label">💻 Macローカルフォルダ パス</label>
-            <input class="form-control" id="f-local-path" type="text" placeholder="file:///Users/yourname/Documents/案件/...">
           </div>
           <div class="form-group full">
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-primary)">
@@ -3382,7 +3378,6 @@ function renderCaseDetail(caseId) {
         <button class="btn btn-secondary btn-sm no-print" onclick="printCaseSimple('${c.id}')">🖨 簡易印刷</button>
         <button class="btn btn-secondary btn-sm no-print" onclick="printCaseDetail('${c.id}')">🖨 印刷</button>
         ${c.dropboxUrl ? `<a href="${escHtml(c.dropboxUrl)}" target="_blank" rel="noopener" class="btn btn-sm no-print" style="background:#0061ff;color:#fff;border-color:#0061ff;text-decoration:none">📦 Dropboxで開く</a>` : ''}
-        ${c.localPath ? `<a href="${escHtml(c.localPath)}" class="btn btn-sm no-print" style="background:#1d4ed8;color:#fff;border-color:#1d4ed8;text-decoration:none">💻 このMacで開く</a>` : ''}
       </div>
     </div>
 
@@ -4941,7 +4936,6 @@ function openCaseModal(caseId, scrollTo) {
   document.getElementById('f-case-type-text').value = '';
   document.getElementById('f-hoteisozoku').checked = false;
   document.getElementById('f-dropbox-url').value = '';
-  document.getElementById('f-local-path').value = '';
   onCaseCategoryChange('不動産登記');
   // ラベルリセット
   const radios = document.querySelectorAll('input[name="case-label"]');
@@ -4998,7 +4992,6 @@ function openCaseModal(caseId, scrollTo) {
     document.getElementById('f-received-date').value = c.received_date || '';
     document.getElementById('f-memo').value = c.memo || '';
     document.getElementById('f-dropbox-url').value = c.dropboxUrl || '';
-    document.getElementById('f-local-path').value = c.localPath || '';
     document.getElementById('f-hoteisozoku').checked = c.hoteisozoku || false;
 
     // Load contacts — migrate legacy fields if contacts array is empty
@@ -5565,7 +5558,6 @@ function saveCase() {
     received_date:    document.getElementById('f-received-date').value,
     memo:        document.getElementById('f-memo').value.trim(),
     dropboxUrl:  document.getElementById('f-dropbox-url').value.trim(),
-    localPath:   document.getElementById('f-local-path').value.trim(),
     hoteisozoku: document.getElementById('f-hoteisozoku').checked,
   };
 
