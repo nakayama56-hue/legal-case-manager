@@ -1571,7 +1571,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.2</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -6786,7 +6786,8 @@ async function cloudSave(silent) {
   setCloudBtnDisabled(true);
   try {
     const shortcuts = loadClientShortcuts();
-    const payload = { cases, tasks, shortcuts, savedAt: new Date().toISOString() };
+    const teikei = loadTeikei();
+    const payload = { cases, tasks, shortcuts, teikei, savedAt: new Date().toISOString() };
     const res = await fetch(GAS_URL, {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -6821,12 +6822,15 @@ async function cloudLoad() {
       toast('クラウドにデータがまだありません', 'error');
       return;
     }
-    const { cases: c, tasks: t, shortcuts: sc, savedAt } = json.data;
+    const { cases: c, tasks: t, shortcuts: sc, teikei: tk, savedAt } = json.data;
     if (c) cases = c;
     if (t) tasks  = t;
     if (sc && Array.isArray(sc) && sc.some(s => s)) {
       localStorage.setItem('client_shortcuts', JSON.stringify(sc));
       renderClientShortcutButtons();
+    }
+    if (tk && typeof tk === 'object') {
+      localStorage.setItem('teikei_v1', JSON.stringify(tk));
     }
     // クラウドから読み込んだ時は自動保存をトリガーしない
     localStorage.setItem('cases_v1', JSON.stringify(cases));
