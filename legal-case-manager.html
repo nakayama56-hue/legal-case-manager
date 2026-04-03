@@ -1571,7 +1571,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.1</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2573,6 +2573,8 @@ function init() {
   if (cases.length === 0 && !localStorage.getItem('app_initialized')) {
     // まずUIを表示してからクラウド自動読込を試みる
     localStorage.setItem('app_initialized', '1');
+    calHidden = localStorage.getItem('cal_hidden_workspace') === '1';
+    detailCalHidden = localStorage.getItem('cal_hidden_detail') === '1';
     try { updateNavBadges(); } catch(e) {}
     try { updateBottomNavBadges(); } catch(e) {}
     try { initAppearance(); } catch(e) {}
@@ -2609,6 +2611,9 @@ function init() {
     return;
   }
   localStorage.setItem('app_initialized', '1');
+  // カレンダー非表示フラグをlocalStorageから読み込む（起動時）
+  calHidden = localStorage.getItem('cal_hidden_workspace') === '1';
+  detailCalHidden = localStorage.getItem('cal_hidden_detail') === '1';
   try { updateNavBadges(); } catch(e) {}
   try { updateBottomNavBadges(); } catch(e) {}
   try { initAppearance(); } catch(e) { console.error('initAppearance error:', e); }
