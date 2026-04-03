@@ -1378,6 +1378,41 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
   line-height: 1.6;
 }
 
+
+/* 定型文ピッカー */
+.teikei-picker {
+  position: fixed;
+  z-index: 9999;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  min-width: 220px;
+  max-width: 320px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+.teikei-picker-header {
+  padding: 8px 14px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 4px;
+}
+.teikei-item {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.teikei-item:hover { background: var(--bg-secondary); }
+.teikei-empty { padding: 10px 14px; font-size: 12px; color: var(--text-muted); }
+
 .interview-section {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -1536,7 +1571,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.0</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1811,6 +1846,13 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
               <span class="toggle-slider"></span>
             </label>
           </div>
+        </div>
+
+        <div class="section-title">📋 定型文管理</div>
+        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">受付台帳の「登記の目的」「登記原因」入力欄でダブルクリックすると定型文を選択できます</div>
+          <div id="teikei-settings-body"></div>
+          <button class="btn btn-secondary btn-xs" onclick="resetTeikeiDefaults()" style="margin-top:8px">↩ デフォルトに戻す</button>
         </div>
 
         <div class="section-title">🖨 簡易印刷の項目設定</div>
@@ -2719,7 +2761,7 @@ function showView(name) {
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.getElementById('main')?.scrollTo({ top: 0, behavior: 'instant' });
   }
-  else if (name === 'settings') { renderSnapshotList(); renderShortcutInputs(); initAppearance(); }
+  else if (name === 'settings') { renderSnapshotList(); renderShortcutInputs(); initAppearance(); renderTeikeiSettings(); }
 }
 
 /* =====================================================
@@ -3933,6 +3975,160 @@ function deleteMemoItem(caseId, memoId) {
   toast('メモを削除しました');
 }
 
+/* =====================================================
+   定型文管理
+   ===================================================== */
+const TEIKEI_DEFAULTS = {
+  'mokuteki': [
+    '所有権移転','所有権保存','所有権抹消','抵当権設定','抵当権抹消',
+    '根抵当権設定','根抵当権抹消','住所変更','氏名変更','地目変更',
+    '分筆','合筆','建物表題登記','滅失登記',
+    '取締役の変更','代表取締役の変更','監査役の変更','目的変更',
+    '商号変更','本店移転','増資','解散','清算人選任','清算結了',
+  ],
+  'gen_in': [
+    '相続','遺贈','売買','贈与','財産分与','共有物分割',
+    '令和　年　月　日金銭消費貸借同日設定',
+    '令和　年　月　日弁済',
+    '令和　年　月　日住所移転',
+    '令和　年　月　日氏名変更',
+  ],
+};
+
+function loadTeikei() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('teikei_v1') || 'null');
+    if (saved) return saved;
+  } catch(e) {}
+  // デフォルト値をコピーして返す
+  return JSON.parse(JSON.stringify(TEIKEI_DEFAULTS));
+}
+
+function saveTeikei(data) {
+  localStorage.setItem('teikei_v1', JSON.stringify(data));
+}
+
+let teikeiPickerTarget = null; // {el, field}
+
+function showTeikeiPicker(inputEl, field) {
+  closeTeikeiPicker();
+  const data = loadTeikei();
+  const items = data[field] || [];
+  if (items.length === 0) return;
+
+  const picker = document.createElement('div');
+  picker.className = 'teikei-picker';
+  picker.id = 'teikei-picker';
+
+  const fieldName = field === 'mokuteki' ? '登記の目的' : '登記原因';
+  picker.innerHTML = `<div class="teikei-picker-header">📋 ${fieldName} の定型文</div>`;
+
+  if (items.length === 0) {
+    picker.innerHTML += `<div class="teikei-empty">定型文がありません</div>`;
+  } else {
+    items.forEach(text => {
+      const item = document.createElement('div');
+      item.className = 'teikei-item';
+      item.textContent = text;
+      item.onclick = () => {
+        inputEl.value = text;
+        inputEl.dispatchEvent(new Event('change'));
+        closeTeikeiPicker();
+        inputEl.focus();
+      };
+      picker.appendChild(item);
+    });
+  }
+
+  // 位置計算
+  const rect = inputEl.getBoundingClientRect();
+  picker.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+  picker.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 340) + 'px';
+
+  document.body.appendChild(picker);
+  teikeiPickerTarget = inputEl;
+
+  // 外クリックで閉じる
+  setTimeout(() => {
+    document.addEventListener('click', closeTeikeiPickerOutside, true);
+  }, 100);
+}
+
+function closeTeikeiPickerOutside(e) {
+  const picker = document.getElementById('teikei-picker');
+  if (picker && !picker.contains(e.target) && e.target !== teikeiPickerTarget) {
+    closeTeikeiPicker();
+  }
+}
+
+function closeTeikeiPicker() {
+  const picker = document.getElementById('teikei-picker');
+  if (picker) picker.remove();
+  document.removeEventListener('click', closeTeikeiPickerOutside, true);
+  teikeiPickerTarget = null;
+}
+
+/* 定型文設定画面の描画 */
+function renderTeikeiSettings() {
+  const container = document.getElementById('teikei-settings-body');
+  if (!container) return;
+  const data = loadTeikei();
+
+  const renderCategory = (field, label) => {
+    const items = data[field] || [];
+    return `
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px">📋 ${label}</div>
+        <div id="teikei-list-${field}">
+          ${items.map((t, i) => `
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <input type="text" value="${escHtml(t)}" class="form-control" style="font-size:12px;padding:4px 8px"
+                onchange="updateTeikeiItem('${field}',${i},this.value)">
+              <button class="btn btn-xs" onclick="deleteTeikeiItem('${field}',${i})"
+                style="background:#fff0f0;border:1px solid #fca5a5;color:#dc2626;flex-shrink:0">✕</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addTeikeiItem('${field}')">＋ 追加</button>
+      </div>
+    `;
+  };
+
+  container.innerHTML =
+    renderCategory('mokuteki', '登記の目的') +
+    renderCategory('gen_in', '登記原因');
+}
+
+function addTeikeiItem(field) {
+  const data = loadTeikei();
+  if (!data[field]) data[field] = [];
+  data[field].push('');
+  saveTeikei(data);
+  renderTeikeiSettings();
+}
+
+function updateTeikeiItem(field, idx, value) {
+  const data = loadTeikei();
+  if (!data[field]) return;
+  data[field][idx] = value.trim();
+  saveTeikei(data);
+}
+
+function deleteTeikeiItem(field, idx) {
+  const data = loadTeikei();
+  if (!data[field]) return;
+  data[field].splice(idx, 1);
+  saveTeikei(data);
+  renderTeikeiSettings();
+}
+
+function resetTeikeiDefaults() {
+  if (!confirm('デフォルトの定型文に戻しますか？')) return;
+  saveTeikei(JSON.parse(JSON.stringify(TEIKEI_DEFAULTS)));
+  renderTeikeiSettings();
+  toast('定型文をデフォルトに戻しました');
+}
+
 function setCaseStatus(caseId, newStatus) {
   const c = cases.find(c => c.id === caseId);
   if (!c) return;
@@ -4251,8 +4447,8 @@ function renderLedger(c) {
         <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||autoNo)}" oninput="updateLedgerField('${cid}','${r.id}','row_no',this.value)"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(r.jutaku_num||'')}" onchange="updateLedgerField('${cid}','${r.id}','jutaku_num',this.value)"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(r.kankatsu||'')}" onchange="updateLedgerField('${cid}','${r.id}','kankatsu',this.value)"></td>
-        <td><input style="width:100%;text-align:center" value="${escHtml(r.mokuteki||'')}" onchange="updateLedgerField('${cid}','${r.id}','mokuteki',this.value)"></td>
-        <td><input style="width:100%;text-align:center" value="${escHtml(r.gen_in||'')}" onchange="updateLedgerField('${cid}','${r.id}','gen_in',this.value)"></td>
+        <td><input style="width:100%;text-align:center" value="${escHtml(r.mokuteki||'')}" onchange="updateLedgerField('${cid}','${r.id}','mokuteki',this.value)" ondblclick="showTeikeiPicker(this,'mokuteki')" title="ダブルクリックで定型文"></td>
+        <td><input style="width:100%;text-align:center" value="${escHtml(r.gen_in||'')}" onchange="updateLedgerField('${cid}','${r.id}','gen_in',this.value)" ondblclick="showTeikeiPicker(this,'gen_in')" title="ダブルクリックで定型文"></td>
         <td class="money-cell"><input value="${escHtml(r.kazei||'')}" oninput="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','kazei',this.value)" inputmode="numeric" style="width:100%;text-align:right"></td>
         <td style="text-align:center;vertical-align:middle"><input type="checkbox" ${r.kazei_checked?'checked':''} onchange="updateLedgerField('${cid}','${r.id}','kazei_checked',this.checked)" style="cursor:pointer;width:14px;height:14px"></td>
         <td class="money-cell"><input value="${escHtml(r.menkyo||'')}" oninput="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','menkyo',this.value)" inputmode="numeric" style="width:100%;text-align:right"></td>
