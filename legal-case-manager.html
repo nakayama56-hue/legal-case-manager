@@ -1536,7 +1536,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.8.9</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3390,9 +3390,12 @@ function renderCaseDetail(caseId) {
       <div class="info-card">
         <div class="info-card-header">📋 案件基本情報</div>
         <div class="info-rows">
+          ${infoRow('依頼者名', escHtml(c.client_name||'—'))}
           ${c.category === '商業・法人登記'
-            ? `${infoRow('商号・法人名', c.company_name)}${infoRow('本店所在地', c.honten)}${c.corp_num?infoRow('会社法人等番号', escHtml(c.corp_num)):''}` 
-            : infoRow('不動産所在地', c.location)}
+            ? `${infoRow('商号・法人名', escHtml(c.company_name||''))}${infoRow('本店所在地', escHtml(c.honten||''))}${c.corp_num?infoRow('会社法人等番号', escHtml(c.corp_num)):''}` 
+            : infoRow('不動産所在地', escHtml(c.location||''))}
+          ${infoRow('区分', escHtml(c.category||''))}
+          ${infoRow('種別', escHtml(c.type||''))}
           ${infoRow('管轄法務局', (() => {
             const bs = (c.legal_bureaus && c.legal_bureaus.length > 0) ? c.legal_bureaus : (c.legal_bureau ? [c.legal_bureau] : []);
             return bs.filter(b=>b).join('、') || '—';
