@@ -1412,6 +1412,8 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
 }
 .teikei-item:hover { background: var(--bg-secondary); }
 .teikei-empty { padding: 10px 14px; font-size: 12px; color: var(--text-muted); }
+.teikei-dnd-item.teikei-dnd-over { outline: 2px dashed var(--color-primary); border-radius: 4px; background: var(--bg-secondary); }
+.teikei-dnd-handle:active { cursor: grabbing; }
 
 .interview-section {
   background: var(--bg-secondary);
@@ -1571,7 +1573,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.4</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1663,6 +1665,17 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
 
         <!-- 案件一覧 -->
         <div style="margin-top:24px">
+        <!-- 期限アラートバナー -->
+        <div id="deadline-alert-banner" style="display:none;margin-bottom:10px">
+          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;display:flex;align-items:flex-start;gap:10px">
+            <span style="font-size:15px;flex-shrink:0;line-height:1.5">⚠️</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:#991b1b;margin-bottom:4px" id="alert-banner-title"></div>
+              <div style="font-size:12px;color:#b91c1c;line-height:1.7" id="alert-banner-body"></div>
+            </div>
+            <button onclick="dismissDeadlineAlert()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#9ca3af;flex-shrink:0;padding:0;line-height:1">✕</button>
+          </div>
+        </div>
         <div class="quick-filters">
           <button class="qf-btn active" onclick="applyCaseQF('all', this)">すべて</button>
           <button class="qf-btn" onclick="applyCaseQF('保留', this)">🔖 保留</button>
@@ -1670,7 +1683,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
         <div class="table-container">
           <div class="table-toolbar">
             <span style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0">案件一覧</span>
-            <input type="text" class="search-input" id="case-search" placeholder="🔍 案件名・依頼者・種別・法務局・所在地・メモ等で検索..." oninput="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()">
+            <input type="text" class="search-input" id="case-search" placeholder="🔍 案件名・依頼者・タスク・メモ・電話・メール等で全文検索..." oninput="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()">
             <select class="filter-select" id="case-filter-category" onchange="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="min-width:80px">
               <option value="">区分（全て）</option>
               <option value="不動産登記">🏠 不動産登記</option>
@@ -2423,9 +2436,34 @@ function renderCaseTiles() {
     if (activeClientFilter && !((c.client_name||'').includes(activeClientFilter) ||
         (c.contacts||[]).some(ct => (ct.name||'').includes(activeClientFilter)))) return false;
     if (search) {
-      const hay = [c.case_name,c.case_num,c.client_name,c.type,c.status,c.location,
-        c.company_name,(c.memos||[]).map(m=>m.text).join(' '),(c.legal_bureaus||[]).join('')].join(' ').toLowerCase();
-      if (!hay.includes(search)) return false;
+      const cTasks = tasks.filter(tk => tk.case_id === c.id);
+      const bureaus = (c.legal_bureaus && c.legal_bureaus.length > 0)
+        ? c.legal_bureaus : (c.legal_bureau ? [c.legal_bureau] : []);
+      const hay = [
+        c.case_num, c.case_name, c.client_name, c.type,
+        c.location, bureaus.join(' '), c.status,
+        (c.memos||[]).map(m=>m.text).join(' '), c.memo,
+        c.company_name, c.honten, c.corp_num,
+        ...(c.contacts||[]).map(ct => {
+          const tels   = ct.tels   || (ct.tel   ? [{number:ct.tel}]   : []);
+          const faxes  = ct.faxes  || (ct.fax   ? [ct.fax]            : []);
+          const emails = ct.emails || (ct.email ? [ct.email]           : []);
+          return [
+            ct.name, ct.furigana, ct.role, ct.note,
+            ...tels.map(t => t.number||''),
+            ...faxes,
+            ...emails,
+          ].join(' ');
+        }),
+        ...(c.ledger||[]).map(r => [r.mokuteki, r.gen_in, r.kankatsu].join(' ')),
+        ...cTasks.map(tk => [tk.name, tk.type||'', tk.memo||''].join(' ')),
+        ...(c.interviews||[]).map(iv => [iv.content||'', iv.partner||'', iv.note||''].join(' ')),
+        ...(c.documents||[]).map(doc => [doc.name||'', doc.memo||''].join(' ')),
+        ...(c.shinsei_dates||[]).map(s => s.label||''),
+      ].join(' ').toLowerCase();
+      const searchNorm = search.replace(/[-ー\s]/g, '');
+      const hayNorm    = hay.replace(/[-ー\s]/g, '');
+      if (!hay.includes(search) && !(searchNorm && hayNorm.includes(searchNorm))) return false;
     }
     return true;
   });
@@ -2597,6 +2635,7 @@ function init() {
           renderCaseTable();
           renderCalendar();
           renderTaskTable();
+          try { checkDeadlineAlert(); } catch(e) {}
           const saved = json.data.savedAt ? `（${new Date(json.data.savedAt).toLocaleString('ja-JP')}）` : '';
           toast('クラウドからデータを読み込みました' + saved);
         } else {
@@ -2620,6 +2659,7 @@ function init() {
   try { initAppearance(); } catch(e) { console.error('initAppearance error:', e); }
   try { renderClientShortcutButtons(); } catch(e) {}
   showView('cases');
+  try { checkDeadlineAlert(); } catch(e) { console.warn('alert error', e); }
 
   // 起動時にショートカットをクラウドからバックグラウンドで取得
   setTimeout(async () => {
@@ -4075,7 +4115,7 @@ function closeTeikeiPicker() {
   teikeiPickerTarget = null;
 }
 
-/* 定型文設定画面の描画 */
+/* 定型文設定画面の描画（DnD対応版） */
 function renderTeikeiSettings() {
   const container = document.getElementById('teikei-settings-body');
   if (!container) return;
@@ -4086,9 +4126,12 @@ function renderTeikeiSettings() {
     return `
       <div style="margin-bottom:16px">
         <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px">📋 ${label}</div>
-        <div id="teikei-list-${field}">
+        <div id="teikei-list-${field}" data-field="${field}" class="teikei-dnd-list">
           ${items.map((t, i) => `
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <div class="teikei-dnd-item" draggable="true" data-idx="${i}" data-field="${field}"
+              style="display:flex;align-items:center;gap:6px;margin-bottom:4px;cursor:default">
+              <span class="teikei-dnd-handle" title="ドラッグして並び替え"
+                style="cursor:grab;color:var(--text-muted);font-size:14px;flex-shrink:0;user-select:none;padding:0 2px">⠿</span>
               <input type="text" value="${escHtml(t)}" class="form-control" style="font-size:12px;padding:4px 8px"
                 onchange="updateTeikeiItem('${field}',${i},this.value)">
               <button class="btn btn-xs" onclick="deleteTeikeiItem('${field}',${i})"
@@ -4104,7 +4147,51 @@ function renderTeikeiSettings() {
   container.innerHTML =
     renderCategory('mokuteki', '登記の目的') +
     renderCategory('gen_in', '登記原因');
+
+  // DnD初期化
+  ['mokuteki','gen_in'].forEach(field => {
+    initTeikeiDnD(document.getElementById('teikei-list-' + field), field);
+  });
 }
+
+function initTeikeiDnD(listEl, field) {
+  if (!listEl) return;
+  let dragSrc = null;
+
+  listEl.querySelectorAll('.teikei-dnd-item').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragSrc = item;
+      item.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      item.style.opacity = '';
+      listEl.querySelectorAll('.teikei-dnd-item').forEach(i => i.classList.remove('teikei-dnd-over'));
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      listEl.querySelectorAll('.teikei-dnd-item').forEach(i => i.classList.remove('teikei-dnd-over'));
+      if (item !== dragSrc) item.classList.add('teikei-dnd-over');
+    });
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragSrc || dragSrc === item) return;
+      item.classList.remove('teikei-dnd-over');
+      // インデックス取得して配列並び替え
+      const fromIdx = parseInt(dragSrc.dataset.idx);
+      const toIdx   = parseInt(item.dataset.idx);
+      const data = loadTeikei();
+      if (!data[field]) return;
+      const arr = data[field];
+      const moved = arr.splice(fromIdx, 1)[0];
+      arr.splice(toIdx, 0, moved);
+      saveTeikei(data);
+      renderTeikeiSettings();
+    });
+  });
+}
+
 
 function addTeikeiItem(field) {
   const data = loadTeikei();
@@ -4127,6 +4214,69 @@ function deleteTeikeiItem(field, idx) {
   data[field].splice(idx, 1);
   saveTeikei(data);
   renderTeikeiSettings();
+}
+
+/* =====================================================
+   期限アラートバナー
+   ===================================================== */
+function _alertDismissKey() {
+  // 今日の日付をキーにして、日付が変わったら再表示する
+  return today();
+}
+
+function checkDeadlineAlert() {
+  const banner = document.getElementById('deadline-alert-banner');
+  if (!banner) return;
+
+  // 今日すでに閉じていたら表示しない
+  if (localStorage.getItem('alert_dismissed_' + _alertDismissKey()) === '1') return;
+
+  const t = today();
+  const overdueTasks = tasks.filter(tk =>
+    tk.deadline && tk.deadline < t && tk.status !== '完了'
+  );
+  const todayTasks = tasks.filter(tk =>
+    tk.deadline === t && tk.status !== '完了'
+  );
+  const overdueYotei = cases.filter(c =>
+    c.status !== '完了' &&
+    (c.shinsei_dates||[]).some(s => s.yotei && s.yotei < t && !s.kanryo)
+  );
+
+  const totalCount = overdueTasks.length + todayTasks.length + overdueYotei.length;
+  if (totalCount === 0) { banner.style.display = 'none'; return; }
+
+  const parts = [];
+  if (overdueTasks.length)  parts.push(`期限切れタスク ${overdueTasks.length}件`);
+  if (todayTasks.length)    parts.push(`本日期限タスク ${todayTasks.length}件`);
+  if (overdueYotei.length)  parts.push(`完了予定日超過の案件 ${overdueYotei.length}件`);
+
+  document.getElementById('alert-banner-title').textContent = '要確認：' + parts.join('・');
+
+  const items = [
+    ...overdueTasks.map(tk => {
+      const c = cases.find(c => c.id === tk.case_id);
+      return `⚠ ${c ? escHtml(c.case_name) : '?'} ／ ${escHtml(tk.name)}（期限：${tk.deadline}）`;
+    }),
+    ...todayTasks.map(tk => {
+      const c = cases.find(c => c.id === tk.case_id);
+      return `🔔 ${c ? escHtml(c.case_name) : '?'} ／ ${escHtml(tk.name)}（今日が期限）`;
+    }),
+    ...overdueYotei.map(c => {
+      const s = (c.shinsei_dates||[]).find(s => s.yotei && s.yotei < t && !s.kanryo);
+      return `📋 ${escHtml(c.case_name)}（完了予定：${s?.yotei}）`;
+    }),
+  ].slice(0, 6);
+
+  const more = totalCount > 6 ? `<br><span style="color:#9ca3af">…他 ${totalCount - 6}件</span>` : '';
+  document.getElementById('alert-banner-body').innerHTML = items.join('<br>') + more;
+  banner.style.display = 'block';
+}
+
+function dismissDeadlineAlert() {
+  const banner = document.getElementById('deadline-alert-banner');
+  if (banner) banner.style.display = 'none';
+  localStorage.setItem('alert_dismissed_' + _alertDismissKey(), '1');
 }
 
 function resetTeikeiDefaults() {
