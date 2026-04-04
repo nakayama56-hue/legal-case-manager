@@ -1571,7 +1571,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.3</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1691,7 +1691,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             <select class="filter-select" id="case-sort" style="display:none"></select>
             <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);cursor:pointer;white-space:nowrap">
               <input type="checkbox" id="case-show-completed" onchange="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="cursor:pointer">
-              完了済みも含む
+              完了分・保留を含む
             </label>
             <button class="btn btn-primary" onclick="openCaseModal(null)">＋ 新規案件</button>
             <div style="display:flex;border:1px solid var(--border-color);border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0">
@@ -2416,6 +2416,7 @@ function renderCaseTiles() {
 
   let filtered = cases.filter(c => {
     if (!showCompleted && c.status === '完了') return false;
+    if (!showCompleted && c.status === '保留') return false;
     if (fStatus   && c.status   !== fStatus)   return false;
     if (fCategory && c.category !== fCategory) return false;
     if (fType     && c.type     !== fType)     return false;
@@ -2860,9 +2861,9 @@ function applyCaseQF(status, btn) {
   } else {
     document.getElementById('case-filter-status').value = '';
   }
-  // 完了フィルター選択時は自動でチェックON
+  // 完了・保留フィルター選択時は自動でチェックON
   const cb = document.getElementById('case-show-completed');
-  if (cb && caseQFStatus === '完了') cb.checked = true;
+  if (cb && (caseQFStatus === '完了' || caseQFStatus === '保留')) cb.checked = true;
   renderCaseTable();
 }
 
@@ -3237,6 +3238,7 @@ function renderCaseTable() {
     if (fCategory && c.category !== fCategory) return false;
     if (fType     && c.type     !== fType)     return false;
     if (!showCompleted && c.status === '完了' && fStatus !== '完了')  return false;
+    if (!showCompleted && c.status === '保留' && fStatus !== '保留')  return false;
     if (search) {
       const bureaus = (c.legal_bureaus && c.legal_bureaus.length > 0) ? c.legal_bureaus : (c.legal_bureau ? [c.legal_bureau] : []);
       const hay = [
