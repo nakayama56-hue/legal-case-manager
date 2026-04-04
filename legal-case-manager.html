@@ -6136,7 +6136,10 @@ function exportJSON() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `案件管理バックアップ_${today()}.json`;
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  a.download = `案件管理バックアップ_${ts}.json`;
   a.click();
   URL.revokeObjectURL(url);
   toast('JSONバックアップを保存しました', 'success');
