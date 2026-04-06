@@ -1573,7 +1573,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 4.0.0</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 4.0.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4530,13 +4530,14 @@ function renderTaskTable() {
     // Waitingタスクは特別表示
     if (tk.type === 'waiting_flag') {
       return `<tr style="background:#f0fdf4;cursor:pointer" onclick="showCaseDetail('${tk.case_id}')">
-        <td colspan="4" style="padding:6px 10px">
+        <td colspan="3" style="padding:6px 10px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:13px">⏳</span>
             <strong style="color:#166534;font-size:12px">Waiting</strong>
             <span style="font-size:12px;color:var(--text-secondary)">${c ? escHtml(c.case_name) : '—'}</span>
           </div>
         </td>
+        <td class="hide-mobile"></td>
       </tr>`;
     }
 
