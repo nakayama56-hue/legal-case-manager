@@ -1573,7 +1573,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.7</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 3.9.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3463,6 +3463,13 @@ function renderCaseDetail(caseId) {
           style="${c.status==='完了'?'background:#86efac;color:#166534;border-color:#4ade80;':''}">
           ✅ ${c.status==='完了'?'完了解除':'完了'}
         </button>
+        ${(() => {
+          const wt = tasks.find(t => t.case_id === c.id && t.type === 'waiting_flag');
+          return `<button class="btn btn-sm no-print" onclick="toggleWaiting('${c.id}')"
+            style="${wt ? 'background:#fde68a;color:#92400e;border-color:#f59e0b;font-weight:700;' : ''}">
+            ⏳ ${wt ? 'Waiting解除' : 'Waiting'}
+          </button>`;
+        })()}
         <button class="btn btn-secondary btn-sm no-print" onclick="openCaseModal('${c.id}')">✏ 編集</button>
         <button class="btn btn-secondary btn-sm no-print" onclick="printCaseSimple('${c.id}')">🖨 簡易印刷</button>
         <button class="btn btn-secondary btn-sm no-print" onclick="printCaseDetail('${c.id}')">🖨 印刷</button>
@@ -4286,6 +4293,36 @@ function resetTeikeiDefaults() {
   toast('定型文をデフォルトに戻しました');
 }
 
+/** Waitingフラグのオン/オフ */
+function toggleWaiting(caseId) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  const existing = tasks.findIndex(t => t.case_id === caseId && t.type === 'waiting_flag');
+  if (existing !== -1) {
+    // オフ：Waitingタスクを削除
+    tasks.splice(existing, 1);
+    toast('Waitingを解除しました');
+  } else {
+    // オン：Waitingタスクを追加
+    tasks.unshift({
+      id: genId(),
+      created_at: today(),
+      name: 'Waiting',
+      case_id: caseId,
+      type: 'waiting_flag',
+      status: '未着手',
+      detail: '',
+      deadline: '',
+      next_action_date: '',
+      memo: '',
+    });
+    toast('Waitingを設定しました');
+  }
+  saveToStorage();
+  renderCaseDetail(caseId);
+  renderTaskTable();
+}
+
 function setCaseStatus(caseId, newStatus) {
   const c = cases.find(c => c.id === caseId);
   if (!c) return;
@@ -4429,6 +4466,10 @@ function renderTaskTable() {
   }
 
   filtered.sort((a, b) => {
+    // Waitingフラグは常に最上部
+    if (a.type === 'waiting_flag' && b.type !== 'waiting_flag') return -1;
+    if (a.type !== 'waiting_flag' && b.type === 'waiting_flag') return 1;
+
     const t = today();
     let av, bv;
 
@@ -4485,6 +4526,23 @@ function renderTaskTable() {
 
   tbody.innerHTML = filtered.map(tk => {
     const c = cases.find(c => c.id === tk.case_id);
+
+    // Waitingタスクは特別表示
+    if (tk.type === 'waiting_flag') {
+      return `<tr style="background:#fffbeb;cursor:pointer" onclick="showCaseDetail('${tk.case_id}')">
+        <td colspan="3" style="padding:6px 10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:13px">⏳</span>
+            <strong style="color:#92400e;font-size:12px">Waiting</strong>
+            <span style="font-size:12px;color:var(--text-secondary)">${c ? escHtml(c.case_name) : '—'}</span>
+          </div>
+        </td>
+        <td class="hide-mobile" style="white-space:nowrap" onclick="event.stopPropagation()">
+          <button class="btn btn-xs" onclick="toggleWaiting('${tk.case_id}')" style="background:#fde68a;border:1px solid #f59e0b;color:#92400e">解除</button>
+        </td>
+      </tr>`;
+    }
+
     const rowClass = tk.status !== '完了' && tk.deadline && tk.deadline < t ? 'row-overdue'
                    : tk.deadline === t ? 'row-today' : '';
     const isDone = tk.status === '完了';
