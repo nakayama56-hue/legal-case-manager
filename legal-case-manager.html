@@ -1573,7 +1573,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only">⚖</div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 4.0.2</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 4.0.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1618,7 +1618,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
               <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;display:inline-block;flex-shrink:0"></span>申請日</span>
               <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block;flex-shrink:0"></span>完了予定</span>
               <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;flex-shrink:0"></span>期限</span>
-              <button class="btn btn-secondary btn-xs" onclick="toggleCalendar()">カレンダーを隠す</button>
+              <a href="https://nakayama56-hue.github.io/zen-koku/%E5%85%A8%E5%9B%BD%E7%99%BB%E8%A8%98%E5%AE%8C%E4%BA%86%E4%BA%88%E5%AE%9A%E6%97%A5%E4%B8%80%E8%A6%A7.html" target="_blank" rel="noopener" class="btn btn-secondary btn-xs" style="text-decoration:none">📅 登記完了予定日</a>
             </div>
           </div>
           <div id="case-calendar"></div>
@@ -1834,17 +1834,6 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
             </div>
             <label class="toggle-switch" style="flex-shrink:0">
               <input type="checkbox" id="toggle-dark-mode" onchange="toggleDarkMode(this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div style="border-top:1px solid var(--border-color)"></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary)">Dashboardのカレンダーを最初から隠す</div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">起動時にDashboardのカレンダーを非表示にする</div>
-            </div>
-            <label class="toggle-switch" style="flex-shrink:0">
-              <input type="checkbox" id="toggle-cal-hidden" onchange="saveCalSetting('workspace', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
