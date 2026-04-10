@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legal-case-manager-202604100402';
+const CACHE_NAME = 'legal-case-manager-202604100406';
 const ASSETS = [
   './legal-case-manager.html',
   './manifest.json',
