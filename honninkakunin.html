@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>本人確認記録</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+
+  /* ===== ツールバー ===== */
+  .toolbar {
+    position: sticky;
+    top: 0;
+    background: #1f2937;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .toolbar h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    margin-right: auto;
+  }
+  .toolbar button {
+    background: #374151;
+    color: white;
+    border: 1px solid #4b5563;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .toolbar button:hover { background: #4b5563; }
+  .toolbar button.primary { background: #2563eb; border-color: #2563eb; }
+  .toolbar button.primary:hover { background: #1d4ed8; }
+  .toolbar button.danger { background: #991b1b; border-color: #991b1b; }
+  .toolbar button.danger:hover { background: #7f1d1d; }
+  .toolbar .mode-switch {
+    display: flex;
+    background: #111827;
+    border-radius: 4px;
+    padding: 2px;
+  }
+  .toolbar .mode-switch button {
+    border: none;
+    background: transparent;
+    padding: 4px 12px;
+  }
+  .toolbar .mode-switch button.active { background: #2563eb; }
+
+  /* ===== メインコンテナ ===== */
+  .container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 20px;
+  }
+
+  /* ========== 入力モード ========== */
+  body.mode-input .print-view { display: none; }
+  body.mode-print .input-view { display: none; }
+
+  .input-view .section {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .input-view .section h2 {
+    margin: 0 0 16px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e40af;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #dbeafe;
+  }
+  .input-view .field-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 12px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  .input-view .field-row.vertical {
+    grid-template-columns: 1fr;
+  }
+  .input-view label {
+    font-size: 13px;
+    color: #374151;
+    font-weight: 500;
+  }
+  .input-view input[type="text"],
+  .input-view input[type="number"],
+  .input-view input[type="tel"],
+  .input-view input[type="date"],
+  .input-view input[type="time"],
+  .input-view select,
+  .input-view textarea {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .input-view input:focus, .input-view select:focus, .input-view textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px #dbeafe;
+  }
+  .input-view textarea { resize: vertical; min-height: 60px; }
+  .input-view .date-group {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .input-view .date-group input { width: 70px; }
+  .input-view .date-group select { width: 80px; }
+  .input-view .date-group .unit { font-size: 12px; color: #6b7280; }
+  .input-view .date-group button {
+    background: #e5e7eb;
+    border: 1px solid #d1d5db;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .input-view .date-group button:hover { background: #d1d5db; }
+  .input-view .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .input-view .checkbox-grid label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .input-view .checkbox-grid label:hover { background: #f3f4f6; }
+  .input-view .checkbox-grid input[type="checkbox"] {
+    cursor: pointer;
+  }
+  .input-view .radio-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .input-view .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .input-view .inline-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .input-view .zip-lookup {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .input-view .zip-lookup input { width: 100px; }
+  .input-view .zip-lookup button {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .input-view .zip-lookup button:hover { background: #059669; }
+
+  .save-status {
+    font-size: 12px;
+    color: #10b981;
+    margin-left: 10px;
+  }
+
+  /* ===== 印刷プレビュー＆印刷共通CSS ===== */
+  .print-view {
+    background: white;
+    width: 190mm;
+    padding: 8mm;
+    margin: 16px auto;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    font-family: "Yu Gothic", "YuGothic", "Hiragino Kaku Gothic ProN", "MS PGothic", sans-serif;
+    font-size: 8.5pt;
+    color: #000;
+    box-sizing: border-box;
+    line-height: 1.4;
+  }
+  /* ヘッダー */
+  .print-view .pv-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 3px;
+  }
+  .print-view .pv-title {
+    font-size: 16pt;
+    font-weight: bold;
+    letter-spacing: 3px;
+  }
+  .print-view .pv-subtitle { font-size: 8.5pt; margin-left: 6px; }
+  .print-view .pv-date { font-size: 8.5pt; }
+  .print-view .pv-meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5pt;
+    border-bottom: 1px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 6px;
+  }
+  /* セクション見出し */
+  .print-view .pv-section {
+    margin-bottom: 8px;
+    break-inside: avoid;
+  }
+  .print-view .pv-section-title {
+    background: #1f2937;
+    color: white;
+    font-size: 8pt;
+    font-weight: bold;
+    padding: 2px 6px;
+    margin-bottom: 0;
+    letter-spacing: 1px;
+  }
+  /* テーブル共通 */
+  .print-view table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+    table-layout: fixed;
+  }
+  .print-view td {
+    border: 0.5px solid #333;
+    padding: 2px 4px;
+    vertical-align: middle;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+  .print-view .td-label {
+    background: #f3f4f6;
+    font-weight: 600;
+    font-size: 7.5pt;
+    text-align: center;
+    white-space: nowrap;
+    word-break: keep-all;
+  }
+  .print-view .td-head {
+    background: #e5e7eb;
+    font-weight: 700;
+    font-size: 7.5pt;
+    text-align: center;
+  }
+  .print-view .cb { font-family: "MS Gothic","Yu Gothic",monospace; }
+  .print-view .cb.checked::before { content: "☑"; }
+  .print-view .cb:not(.checked)::before { content: "☐"; }
+  .print-view .dbl-border-bottom { border-bottom: 3px double #000 !important; }
+  .print-view .dbl-border-top { border-top: 3px double #000 !important; }
+  .print-view .pv-footer {
+    text-align: right;
+    font-size: 7pt;
+    color: #666;
+    margin-top: 4px;
+  }
+  /* 注記 */
+  .print-view .pv-notes {
+    font-size: 6.5pt;
+    color: #333;
+    line-height: 1.5;
+    padding: 3px 4px;
+    border: 0.5px solid #333;
+    border-top: 3px double #000;
+    margin-top: 0;
+  }
+  /* 印刷CSS：プレビューと同じ見た目を維持 */
+  @media print {
+    @page { size: A4 portrait; margin: 0; }
+    html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
+    .toolbar, .input-view { display: none !important; }
+    body.mode-input .print-view, body.mode-print .print-view { display: block !important; }
+    .print-view {
+      /* width・padding・fontはプレビューと同値を維持 */
+      margin: 0 auto !important;
+      box-shadow: none !important;
+      background: white !important;
+      transform: none !important;
+      transform-origin: unset !important;
+    }
+    .print-view .pv-section { break-inside: avoid; }
+    .print-view .pv-section-title { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .print-view .td-label { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .print-view .td-head { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body class="mode-input">
+
+<div class="toolbar">
+  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.0.9</span></h1>
+  <div class="mode-switch">
+    <button id="btn-mode-input" class="active" onclick="setMode('input')">入力</button>
+    <button id="btn-mode-print" onclick="setMode('print')">様式プレビュー</button>
+  </div>
+  <div id="dai-toggle-controls" style="display:none;">
+    <button id="btn-dai-toggle" onclick="toggleDai()"
+      style="background:#374151; color:white; border:1px solid #4b5563; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:13px;">
+      👤 代理人を表示
+    </button>
+  </div>
+  <div id="zoom-controls" style="display:none; align-items:center; gap:6px; background:#111827; border-radius:4px; padding:2px 8px;">
+    <button onclick="changeZoom(-10)" style="background:none;border:none;color:white;font-size:16px;cursor:pointer;padding:0 2px;">－</button>
+    <span id="zoom-label" style="color:white;font-size:13px;min-width:38px;text-align:center;">100%</span>
+    <button onclick="changeZoom(+10)" style="background:none;border:none;color:white;font-size:16px;cursor:pointer;padding:0 2px;">＋</button>
+    <button onclick="resetZoom()" style="background:#374151;border:1px solid #4b5563;color:white;font-size:11px;padding:3px 8px;border-radius:3px;cursor:pointer;margin-left:2px;">リセット</button>
+  </div>
+  <button onclick="saveData()">💾 保存</button>
+  <button onclick="exportBackup()" style="background:#065f46;border-color:#065f46">📤 バックアップ</button>
+  <button onclick="document.getElementById('import-file').click()" style="background:#1e40af;border-color:#1e40af">📥 復元</button>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importBackup(this)">
+  <button class="primary" onclick="setMode('print'); setTimeout(()=>{ const pv=document.getElementById('print-view'); const savedZoom=currentZoom; pv.style.transform='none'; window.print(); setTimeout(()=>{ currentZoom=savedZoom; applyZoom(); },500); },200)">🖨️ 印刷</button>
+  <button class="danger" onclick="clearAll()">🗑️ クリア</button>
+  <span id="save-status" class="save-status"></span>
+</div>
+
+<!-- =================== 入力モード =================== -->
+<div class="container input-view">
+
+  <!-- 上部メタ -->
+  <div class="section">
+    <h2>基本情報</h2>
+    <div class="field-row">
+      <label>取引種別</label>
+      <div class="radio-group">
+        <label><input type="checkbox" id="meta_tokutei" /> 特定取引</label>
+        <label><input type="checkbox" id="meta_not_tokutei" /> 特定取引以外</label>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>管理番号</label>
+      <input type="text" id="meta_kanri_no" />
+    </div>
+    <div class="field-row">
+      <label>作成日</label>
+      <div class="date-group">
+        令和 <input type="number" id="meta_sakusei_y" min="1" max="99" /> 年
+        <input type="number" id="meta_sakusei_m" min="1" max="12" /> 月
+        <input type="number" id="meta_sakusei_d" min="1" max="31" /> 日
+        <button onclick="setTodayReiwa('meta_sakusei')">今日</button>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>本人確認日</label>
+      <div class="date-group">
+        令和 <input type="number" id="meta_kakunin_y" min="1" max="99" /> 年
+        <input type="number" id="meta_kakunin_m" min="1" max="12" /> 月
+        <input type="number" id="meta_kakunin_d" min="1" max="31" /> 日
+        <button onclick="setTodayReiwa('meta_kakunin')">今日</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 依頼者（本人） -->
+  <div class="section">
+    <h2>依頼者（本人）</h2>
+    <div class="field-row">
+      <label>種別</label>
+      <div class="radio-group">
+        <label><input type="radio" name="irai_type" value="natural" checked onchange="toggleIraiType()"> 自然人</label>
+        <label><input type="radio" name="irai_type" value="juridical" onchange="toggleIraiType()"> 法人</label>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>フリガナ</label>
+      <input type="text" id="irai_kana" placeholder="カタカナ" />
+    </div>
+    <div class="field-row">
+      <label>氏名／商号名称</label>
+      <input type="text" id="irai_name" />
+    </div>
+    <div class="field-row">
+      <label>面識</label>
+      <div class="radio-group">
+        <label><input type="radio" name="irai_menshiki" value="yes"> 有</label>
+        <label><input type="radio" name="irai_menshiki" value="no"> 無</label>
+      </div>
+    </div>
+    <div class="field-row vertical">
+      <label>住所（本店所在地）</label>
+      <div class="zip-lookup">
+        〒<input type="text" id="irai_zip" maxlength="8" placeholder="123-4567" />
+        <button onclick="lookupZip('irai_zip','irai_addr')">郵便番号から住所取得</button>
+      </div>
+      <input type="text" id="irai_addr" />
+    </div>
+    <div class="field-row">
+      <label id="irai_bd_label">生年月日</label>
+      <div class="date-group">
+        <select id="irai_bd_era">
+          <option>大正</option><option>昭和</option><option selected>平成</option><option>令和</option><option>西暦</option>
+        </select>
+        <input type="number" id="irai_bd_y" />年
+        <input type="number" id="irai_bd_m" min="1" max="12" />月
+        <input type="number" id="irai_bd_d" min="1" max="31" />日
+      </div>
+    </div>
+    <div class="field-row">
+      <label>電話番号</label>
+      <input type="tel" id="irai_tel" placeholder="例：0263-XX-XXXX" style="width:200px" />
+    </div>
+    <div class="field-row">
+      <label>メールアドレス</label>
+      <div class="inline-row">
+        <input type="text" id="irai_mail" style="flex:1" />
+        <label><input type="checkbox" id="irai_mail_none" /> 本人のみが利用するメールアドレスなし</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 依頼者の確認方法 -->
+  <div class="section">
+    <h2>依頼者 確認方法</h2>
+    <div class="field-row">
+      <label>前回確認</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="irai_km_prev" /> 前回確認あり</label>
+        <div class="date-group">
+          令和 <input type="number" id="irai_km_prev_y" min="1" max="99" style="width:60px"/>年
+          <input type="number" id="irai_km_prev_m" min="1" max="12" style="width:50px"/>月
+          <input type="number" id="irai_km_prev_d" min="1" max="31" style="width:50px"/>日
+          管理番号 <input type="text" id="irai_km_prev_no" style="width:120px" />
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>面談（対面）</label>
+      <label><input type="checkbox" id="irai_km_mendan" /> 面談による</label>
+    </div>
+    <div class="field-row">
+      <label>　面談 日時</label>
+      <div class="date-group">
+        令和 <input type="number" id="irai_km_mendan_y" min="1" max="99" style="width:60px"/>年
+        <input type="number" id="irai_km_mendan_m" min="1" max="12" style="width:50px"/>月
+        <input type="number" id="irai_km_mendan_d" min="1" max="31" style="width:50px"/>日
+        <input type="number" id="irai_km_mendan_hh" min="0" max="23" style="width:70px"/>時
+        <input type="number" id="irai_km_mendan_mm" min="0" max="59" style="width:70px"/>分
+      </div>
+    </div>
+    <div class="field-row">
+      <label>　面談 場所</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="irai_km_place_office" /> 事務所</label>
+        <label><input type="checkbox" id="irai_km_place_other" /> その他</label>
+        <input type="text" id="irai_km_place_other_txt" placeholder="具体的な場所" list="place-suggestions" style="flex:1" />
+      </div>
+    </div>
+    <div class="field-row">
+      <label>その他（非対面）</label>
+      <label><input type="checkbox" id="irai_km_mail" /> 非対面による</label>
+    </div>
+    <div class="field-row">
+      <label>　犯収法に基づく</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="irai_km_mail_shoryu" /> 該当</label>
+        <div class="date-group">
+          令和 <input type="number" id="irai_km_hanzai_y" min="1" max="99" style="width:60px"/>年
+          <input type="number" id="irai_km_hanzai_m" min="1" max="12" style="width:50px"/>月
+          <input type="number" id="irai_km_hanzai_d" min="1" max="31" style="width:50px"/>日
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>　職責に基づく</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="irai_km_mail_kanni" /> 該当</label>
+        <div class="date-group">
+          令和 <input type="number" id="irai_km_shokuseki_y" min="1" max="99" style="width:60px"/>年
+          <input type="number" id="irai_km_shokuseki_m" min="1" max="12" style="width:50px"/>月
+          <input type="number" id="irai_km_shokuseki_d" min="1" max="31" style="width:50px"/>日
+        </div>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>　確認の補強</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="irai_km_mail_honnin" /> 本人限定受取郵便</label>
+        <label><input type="checkbox" id="irai_km_tel" /> 電話</label>
+        <input type="tel" id="irai_km_tel_no" placeholder="電話番号" style="width:180px" />
+        <label><input type="checkbox" id="irai_km_mail_other" /> オンライン面談</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 依頼者の確認書類 -->
+  <div class="section">
+    <h2>依頼者 確認書類</h2>
+    <div class="field-row">
+      <label>写しの有無</label>
+      <label><input type="checkbox" id="irai_doc_copy" /> 写しあり</label>
+    </div>
+    <div class="field-row vertical" id="irai_doc_juridical" style="display:none">
+      <label>法人の場合</label>
+      <div class="checkbox-grid">
+        <label><input type="checkbox" id="irai_doc_j_touki" /> 登記事項証明書</label>
+        <label><input type="checkbox" id="irai_doc_j_inkan" /> 法人代表者の印鑑証明書</label>
+        <label><input type="checkbox" id="irai_doc_j_other" /> その他</label>
+        <input type="text" id="irai_doc_j_other_txt" placeholder="その他詳細" />
+      </div>
+    </div>
+    <div class="field-row vertical" id="irai_doc_natural">
+      <label>自然人の場合</label>
+      <div style="font-size:12px; color:#555; margin-bottom:4px;">1) 顔写真付き書類</div>
+      <div class="checkbox-grid">
+        <label><input type="checkbox" id="irai_doc_n_unten" /> 運転免許証</label>
+        <label><input type="checkbox" id="irai_doc_n_juki" /> 運転経歴証明書（注1）</label>
+        <label><input type="checkbox" id="irai_doc_n_kojin" /> 個人番号カード（注2）</label>
+        <label><input type="checkbox" id="irai_doc_n_ryoken" /> 旅券</label>
+        <label><input type="checkbox" id="irai_doc_n_zairyu" /> 在留カード</label>
+        <label><input type="checkbox" id="irai_doc_n_tokuei" /> 特別永住者証明書</label>
+      </div>
+      <div style="font-size:12px; color:#555; margin:6px 0 4px;">2) 健康・年金・障害等</div>
+      <div class="checkbox-grid">
+        <label><input type="checkbox" id="irai_doc_n_kenko" /> 健康保険証（注3）</label>
+        <label><input type="checkbox" id="irai_doc_n_kaigo" /> 介護保険被保険者証</label>
+        <label><input type="checkbox" id="irai_doc_n_kokumin" /> 国民年金手帳（注4）</label>
+        <label><input type="checkbox" id="irai_doc_n_shintai" /> 身体障害者手帳</label>
+        <label><input type="checkbox" id="irai_doc_n_seishin" /> 精神障害者保健福祉手帳</label>
+        <label><input type="checkbox" id="irai_doc_n_ryoiku" /> 療育手帳</label>
+      </div>
+      <div style="font-size:12px; color:#555; margin:6px 0 4px;">3) 印鑑・住民関係</div>
+      <div class="checkbox-grid">
+        <label><input type="checkbox" id="irai_doc_n_inkan3" /> 印鑑証明書（実印押印委任状）</label>
+        <label><input type="checkbox" id="irai_doc_n_jumin" /> 住民票</label>
+        <label><input type="checkbox" id="irai_doc_n_koseki" /> 戸籍の附票</label>
+      </div>
+      <div style="font-size:12px; color:#555; margin:6px 0 4px;">4) その他</div>
+      <div class="checkbox-grid">
+        <label><input type="checkbox" id="irai_doc_n_other" /> その他犯収法施行規則に規定する書類</label>
+        <input type="text" id="irai_doc_n_other_txt" placeholder="詳細" />
+      </div>
+      <div class="inline-row" style="margin-top:8px">
+        <label><input type="checkbox" id="irai_doc_n_photo_y" /> 顔写真付</label>
+        <label><input type="checkbox" id="irai_doc_n_photo_n" /> 顔写真無</label>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>発行者</label>
+      <input type="text" id="irai_doc_issuer" />
+    </div>
+    <div class="field-row">
+      <label>発行年月日</label>
+      <div class="date-group">
+        令和 <input type="number" id="irai_doc_issue_y" min="1" max="99" />年
+        <input type="number" id="irai_doc_issue_m" min="1" max="12" />月
+        <input type="number" id="irai_doc_issue_d" min="1" max="31" />日
+      </div>
+    </div>
+    <div class="field-row">
+      <label>記号番号</label>
+      <input type="text" id="irai_doc_number" />
+    </div>
+    <div class="field-row">
+      <label>有効期限</label>
+      <div class="date-group">
+        令和 <input type="number" id="irai_doc_exp_y" min="1" max="99" />年
+        <input type="number" id="irai_doc_exp_m" min="1" max="12" />月
+        <input type="number" id="irai_doc_exp_d" min="1" max="31" />日まで
+      </div>
+    </div>
+    <div class="field-row">
+      <label>面談日外に資料を受領した年月日</label>
+      <div class="inline-row">
+        <div class="date-group">
+          <input type="number" id="irai_doc_recv_y" min="1900" max="2100" style="width:60px" />年
+          <input type="number" id="irai_doc_recv_m" min="1" max="12" />月
+          <input type="number" id="irai_doc_recv_d" min="1" max="31" />日
+        </div>
+        <label><input type="checkbox" id="irai_doc_recv_mail" /> 郵便</label>
+        <label><input type="checkbox" id="irai_doc_recv_mail2" /> その他</label>
+        <input type="text" id="irai_doc_recv_other" placeholder="その他詳細" style="flex:1" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 代理人・取引担当者 -->
+  <div class="section">
+    <h2>代理人・取引担当者（いる場合のみ）</h2>
+    <div class="field-row">
+      <label>フリガナ</label>
+      <input type="text" id="dai_kana" placeholder="カタカナ" />
+    </div>
+    <div class="field-row">
+      <label>氏名</label>
+      <input type="text" id="dai_name" />
+    </div>
+    <div class="field-row">
+      <label>面識</label>
+      <div class="radio-group">
+        <label><input type="radio" name="dai_menshiki" value="yes"> 有</label>
+        <label><input type="radio" name="dai_menshiki" value="no"> 無</label>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>依頼者との関係</label>
+      <input type="text" id="dai_relation" />
+    </div>
+    <div class="field-row vertical">
+      <label>住所</label>
+      <div class="zip-lookup">
+        〒<input type="text" id="dai_zip" maxlength="8" placeholder="123-4567" />
+        <button onclick="lookupZip('dai_zip','dai_addr')">郵便番号から住所取得</button>
+      </div>
+      <input type="text" id="dai_addr" />
+    </div>
+    <div class="field-row">
+      <label>生年月日</label>
+      <div class="date-group">
+        <select id="dai_bd_era">
+          <option>大正</option><option>昭和</option><option selected>平成</option><option>令和</option><option>西暦</option>
+        </select>
+        <input type="number" id="dai_bd_y" />年
+        <input type="number" id="dai_bd_m" min="1" max="12" />月
+        <input type="number" id="dai_bd_d" min="1" max="31" />日
+      </div>
+    </div>
+    <div class="field-row">
+      <label>電話番号</label>
+      <input type="tel" id="dai_tel" placeholder="例：0263-XX-XXXX" style="width:200px" />
+    </div>
+    <div class="field-row">
+      <label>メールアドレス</label>
+      <div class="inline-row">
+        <input type="text" id="dai_mail" style="flex:1" />
+        <label><input type="checkbox" id="dai_mail_none" /> 本人のみが利用するメールアドレスなし</label>
+      </div>
+    </div>
+    <!-- 代理人 確認方法 -->
+    <div class="field-row">
+      <label>前回確認</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="dai_km_prev" /> 前回確認あり</label>
+        <span class="date-group">
+          <input type="number" id="dai_km_prev_y" min="1" max="99" style="width:50px"/>年
+          <input type="number" id="dai_km_prev_m" min="1" max="12" style="width:50px"/>月
+          <input type="number" id="dai_km_prev_d" min="1" max="31" style="width:50px"/>日
+          管理番号 <input type="text" id="dai_km_prev_no" style="width:120px" />
+        </span>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>面談（対面）</label>
+      <label><input type="checkbox" id="dai_km_mendan" /> 面談による</label>
+    </div>
+    <div class="field-row">
+      <label>面談 日時</label>
+      <div class="date-group">
+        <input type="number" id="dai_km_mendan_y" min="1" max="99" />年
+        <input type="number" id="dai_km_mendan_m" min="1" max="12" />月
+        <input type="number" id="dai_km_mendan_d" min="1" max="31" />日
+        <input type="number" id="dai_km_mendan_hh" min="0" max="23" />時
+        <input type="number" id="dai_km_mendan_mm" min="0" max="59" />分
+      </div>
+    </div>
+    <div class="field-row">
+      <label>面談 場所</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="dai_km_place_office" /> 事務所</label>
+        <label><input type="checkbox" id="dai_km_place_other" /> その他</label>
+        <input type="text" id="dai_km_place_other_txt" placeholder="具体的な場所" list="place-suggestions" style="flex:1" />
+      </div>
+    </div>
+    <div class="field-row">
+      <label>その他（非対面）</label>
+      <label><input type="checkbox" id="dai_km_mail" /> 非対面による</label>
+    </div>
+    <div class="field-row">
+      <label>犯収法に基づく</label>
+      <div class="inline-row" style="flex-wrap:wrap; gap:6px;">
+        <label><input type="checkbox" id="dai_km_hanzai" /> 該当</label>
+        送付年月日: <input type="number" id="dai_km_hanzai_y" style="width:50px" placeholder="年"/>年
+        <input type="number" id="dai_km_hanzai_m" min="1" max="12" style="width:50px"/>月
+        <input type="number" id="dai_km_hanzai_d" min="1" max="31" style="width:50px"/>日
+      </div>
+    </div>
+    <div class="field-row">
+      <label>職責に基づく</label>
+      <div class="inline-row" style="flex-wrap:wrap; gap:6px;">
+        <label><input type="checkbox" id="dai_km_shokuseki" /> 該当</label>
+        送付年月日: <input type="number" id="dai_km_shokuseki_y" style="width:50px" placeholder="年"/>年
+        <input type="number" id="dai_km_shokuseki_m" min="1" max="12" style="width:50px"/>月
+        <input type="number" id="dai_km_shokuseki_d" min="1" max="31" style="width:50px"/>日
+      </div>
+    </div>
+    <div class="field-row">
+      <label>確認の補強</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="dai_km_honnin" /> 本人限定受取郵便</label>
+        <label><input type="checkbox" id="dai_km_tel" /> 電話</label>
+        <input type="tel" id="dai_km_tel_no" placeholder="電話番号" style="width:180px" />
+        <label><input type="checkbox" id="dai_km_online" /> オンライン面談</label>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>依頼者が法人の場合</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="dai_auth_gyomu" /> 業務権限証書</label>
+        <label><input type="checkbox" id="dai_auth_inin" /> 代表者からの委任状</label>
+        <label><input type="checkbox" id="dai_auth_other" /> その他</label>
+        <input type="text" id="dai_auth_other_txt" style="flex:1" />
+      </div>
+    </div>
+    <div class="field-row">
+      <label>写しの有無</label>
+      <label><input type="checkbox" id="dai_doc_copy" /> 写しあり</label>
+    </div>
+    <div class="field-row vertical">
+      <label>代理人 確認書類</label>
+      <div class="checkbox-grid">
+        <label><input type="checkbox" id="dai_doc_unten" /> 運転免許証</label>
+        <label><input type="checkbox" id="dai_doc_reki" /> 運転経歴証明書（注1）</label>
+        <label><input type="checkbox" id="dai_doc_kojin" /> 個人番号カード（注2）</label>
+        <label><input type="checkbox" id="dai_doc_ryoken" /> 旅券</label>
+        <label><input type="checkbox" id="dai_doc_zairyu" /> 在留カード</label>
+        <label><input type="checkbox" id="dai_doc_tokuei" /> 特別永住者証明書</label>
+        <label><input type="checkbox" id="dai_doc_kenko" /> 健康保険証（注3）</label>
+        <label><input type="checkbox" id="dai_doc_kaigo" /> 介護保険被保険者証</label>
+        <label><input type="checkbox" id="dai_doc_kokumin" /> 国民年金手帳（注4）</label>
+        <label><input type="checkbox" id="dai_doc_shintai" /> 身体障害者手帳</label>
+        <label><input type="checkbox" id="dai_doc_seishin" /> 精神障害者保健福祉手帳</label>
+        <label><input type="checkbox" id="dai_doc_ryoiku" /> 療育手帳</label>
+        <label><input type="checkbox" id="dai_doc_inkan" /> 印鑑証明書（実印押印委任状）</label>
+        <label><input type="checkbox" id="dai_doc_jumin" /> 住民票</label>
+        <label><input type="checkbox" id="dai_doc_koseki" /> 戸籍の附票</label>
+        <label><input type="checkbox" id="dai_doc_other" /> その他犯収法施行規則に規定する書類</label>
+      </div>
+      <div class="inline-row" style="margin-top:6px">
+        <label><input type="checkbox" id="dai_doc_photo_y" /> 顔写真付</label>
+        <label><input type="checkbox" id="dai_doc_photo_n" /> 顔写真無</label>
+      </div>
+      <input type="text" id="dai_doc_other_txt" placeholder="その他詳細" style="margin-top:6px" />
+    </div>
+    <div class="field-row">
+      <label>発行者</label>
+      <input type="text" id="dai_doc_issuer" />
+    </div>
+    <div class="field-row">
+      <label>発行年月日</label>
+      <div class="date-group">
+        <input type="number" id="dai_doc_issue_y" min="1900" max="2100" style="width:70px"/>年
+        <input type="number" id="dai_doc_issue_m" min="1" max="12" />月
+        <input type="number" id="dai_doc_issue_d" min="1" max="31" />日
+      </div>
+    </div>
+    <div class="field-row">
+      <label>記号番号</label>
+      <input type="text" id="dai_doc_number" />
+    </div>
+    <div class="field-row">
+      <label>有効期限</label>
+      <div class="date-group">
+        <input type="number" id="dai_doc_exp_y" min="1900" max="2100" style="width:70px"/>年
+        <input type="number" id="dai_doc_exp_m" min="1" max="12" />月
+        <input type="number" id="dai_doc_exp_d" min="1" max="31" />日まで
+      </div>
+    </div>
+    <div class="field-row">
+      <label>面談日外受領</label>
+      <div class="inline-row">
+        <div class="date-group">
+          <input type="number" id="dai_doc_recv_y" min="1900" max="2100" style="width:70px"/>年
+          <input type="number" id="dai_doc_recv_m" min="1" max="12" />月
+          <input type="number" id="dai_doc_recv_d" min="1" max="31" />日
+        </div>
+        <label><input type="checkbox" id="dai_doc_recv_mail" /> 郵便</label>
+        <label><input type="checkbox" id="dai_doc_recv_other_cb" /> その他</label>
+        <input type="text" id="dai_doc_recv_other" placeholder="その他内容" style="flex:1" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 受託事務 -->
+  <div class="section">
+    <h2>受託事務</h2>
+    <div class="field-row">
+      <label>不動産売買</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="juku_fudosan" /> 不動産売買</label>
+        <label><input type="checkbox" id="juku_fudosan_bessi" /> 別紙のとおり</label>
+        <label><input type="checkbox" id="juku_fudosan_other" /> その他</label>
+        <input type="text" id="juku_fudosan_place" placeholder="所在" style="flex:1" />
+      </div>
+    </div>
+    <div class="field-row vertical">
+      <label>法人</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="juku_houjin" /> 法人</label>
+        <label><input type="checkbox" id="juku_houjin_setsuritsu" /> 設立</label>
+        <label><input type="checkbox" id="juku_houjin_teikan" /> 定款変更</label>
+        <input type="text" id="juku_houjin_teikan_txt" placeholder="定款変更内容" style="width:120px" />
+        <label><input type="checkbox" id="juku_houjin_yakuin" /> 役員等変更</label>
+        <label><input type="checkbox" id="juku_houjin_saihen" /> 企業再編</label>
+        <input type="text" id="juku_houjin_saihen_txt" placeholder="企業再編内容" style="width:120px" />
+        <label><input type="checkbox" id="juku_houjin_other" /> その他</label>
+        <input type="text" id="juku_houjin_other_txt" placeholder="その他内容" style="width:120px" />
+      </div>
+    </div>
+    <div class="field-row">
+      <label>財産管理・処分</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="juku_zaisan" /> 財産管理・処分（価額200万円以下を除く）</label>
+        <input type="text" id="juku_zaisan_txt" placeholder="内容" style="flex:1" />
+      </div>
+    </div>
+    <div class="field-row">
+      <label>代理等にかかる財産の価額</label>
+      <div class="inline-row">
+        金 <input type="number" id="juku_kingaku" style="width:140px" /> 円
+        <label><input type="checkbox" id="juku_keiyaku_yes" /> 契約書 有</label>
+        <label><input type="checkbox" id="juku_keiyaku_no" /> 無</label>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>財産移転 移転元・移転先</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="juku_iten_bessi" /> 別紙契約書のとおり</label>
+        <label><input type="checkbox" id="juku_iten_tokki" /> 特記事項欄記載のとおり</label>
+      </div>
+    </div>
+    <div class="field-row">
+      <label>上記以外の場合</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="juku_igai_inin" /> 別紙委任状のとおり</label>
+        <label><input type="checkbox" id="juku_igai_other" /> その他</label>
+        <input type="text" id="juku_igai_other_txt" style="flex:1" />
+      </div>
+    </div>
+    <div class="field-row">
+      <label>意思確認 行った日</label>
+      <div class="date-group">
+        令和 <input type="number" id="juku_ishi_y" min="1" max="99" />年
+        <input type="number" id="juku_ishi_m" min="1" max="12" />月
+        <input type="number" id="juku_ishi_d" min="1" max="31" />日
+      </div>
+    </div>
+    <div class="field-row">
+      <label>意思確認 方法</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="juku_ishi_mendan" /> 面談</label>
+        <label><input type="checkbox" id="juku_ishi_tel" /> 電話(自宅・勤務先・携帯)</label>
+        <label><input type="checkbox" id="juku_ishi_other" /> その他</label>
+        <input type="text" id="juku_ishi_other_txt" style="flex:1" />
+      </div>
+    </div>
+    <div class="field-row">
+      <label>意思確認 対象者</label>
+      <div class="inline-row">
+        <label><input type="checkbox" id="juku_ishi_taisho_irai" /> 依頼者</label>
+        <label><input type="checkbox" id="juku_ishi_taisho_dai" /> 代理人等</label>
+        <input type="text" id="juku_ishi_taisho_txt" placeholder="詳細" style="flex:1" />
+      </div>
+    </div>
+    <div class="field-row">
+      <label>事件受託番号</label>
+      <div class="inline-row">
+        令 <input type="text" id="juku_jiken_no_8" maxlength="2" style="width:50px" placeholder="◯◯" />
+        ー <input type="text" id="juku_jiken_no_27" maxlength="3" style="width:55px" placeholder="◯◯◯" />
+      </div>
+    </div>
+    <div class="field-row">
+      <label>代理等を行った日</label>
+      <div class="date-group">
+        令和 <input type="number" id="juku_dairi_y" min="1" max="99" />年
+        <input type="number" id="juku_dairi_m" min="1" max="12" />月
+        <input type="number" id="juku_dairi_d" min="1" max="31" />日
+      </div>
+    </div>
+    <div class="field-row">
+      <label>手続等が終了した日</label>
+      <div class="date-group">
+        令和 <input type="number" id="juku_shuryo_y" min="1" max="99" />年
+        <input type="number" id="juku_shuryo_m" min="1" max="12" />月
+        <input type="number" id="juku_shuryo_d" min="1" max="31" />日
+      </div>
+    </div>
+  </div>
+
+  <!-- 特記事項 -->
+  <div class="section">
+    <h2>特記事項</h2>
+    <textarea id="tokki" rows="4" style="width:100%"></textarea>
+  </div>
+
+</div>
+
+<!-- =================== 印刷モード =================== -->
+<div class="print-view" id="print-view">
+
+  <!-- ヘッダー -->
+  <div class="pv-title-row">
+    <div>
+      <span class="pv-title">確認記録</span>
+      <span class="pv-subtitle">（<span class="cb" id="p_meta_tokutei"></span>特定取引　<span class="cb" id="p_meta_not_tokutei"></span>特定取引以外）</span>
+    </div>
+    <div class="pv-date">令和 <span id="p_meta_sakusei_y"></span> 年 <span id="p_meta_sakusei_m"></span> 月 <span id="p_meta_sakusei_d"></span> 日作成　（10年間保存）</div>
+  </div>
+  <div class="pv-meta-row">
+    <span>管理番号（<span id="p_meta_kanri_no"></span>）</span>
+    <span>作成者　中山吾郎</span>
+  </div>
+
+  <!-- ① 本人確認日 -->
+  <div class="pv-section">
+    <div class="pv-section-title">本人確認日</div>
+    <table><colgroup><col style="width:30%"><col style="width:70%"></colgroup>
+      <tr>
+        <td class="td-label">確認日</td>
+        <td>令和 <span id="p_meta_kakunin_y"></span> 年 <span id="p_meta_kakunin_m"></span> 月 <span id="p_meta_kakunin_d"></span> 日　　確認者：司法書士　中山吾郎</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ② 依頼者（本人） -->
+  <div class="pv-section">
+    <div class="pv-section-title">依頼者（本人）</div>
+    <table><colgroup><col style="width:20%"><col style="width:80%"></colgroup>
+      <tr>
+        <td class="td-label">氏名（商号名称）</td>
+        <td>（フリガナ）<span id="p_irai_kana"></span>　　<span id="p_irai_name"></span>　　面識：<span class="cb" id="p_irai_menshiki_y"></span>有　<span class="cb" id="p_irai_menshiki_n"></span>無</td>
+      </tr>
+      <tr>
+        <td class="td-label">住所（本店所在地）</td>
+        <td><span id="p_irai_addr"></span></td>
+      </tr>
+      <tr>
+        <td class="td-label">生年月日（法人設立日）</td>
+        <td><span id="p_irai_bd"></span></td>
+      </tr>
+      <tr>
+        <td class="td-label">電話番号</td>
+        <td><span id="p_irai_tel"></span></td>
+      </tr>
+      <tr>
+        <td class="td-label">メールアドレス</td>
+        <td><span id="p_irai_mail"></span>　<span class="cb" id="p_irai_mail_none"></span>本人のみが利用するメールアドレスなし</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ③ 依頼者 確認方法 -->
+  <div class="pv-section">
+    <div class="pv-section-title">依頼者　確認方法</div>
+    <table><colgroup><col style="width:20%"><col style="width:80%"></colgroup>
+      <tr>
+        <td class="td-label">前回確認</td>
+        <td><span class="cb" id="p_irai_km_prev"></span>前回確認あり　令和 <span id="p_irai_km_prev_y"></span> 年 <span id="p_irai_km_prev_m"></span> 月 <span id="p_irai_km_prev_d"></span> 日　管理番号（<span id="p_irai_km_prev_no"></span>）</td>
+      </tr>
+      <tr>
+        <td class="td-label">面談（対面）</td>
+        <td>
+          <span class="cb" id="p_irai_km_mendan"></span>面談　
+          令和 <span id="p_irai_km_mendan_y"></span> 年 <span id="p_irai_km_mendan_m"></span> 月 <span id="p_irai_km_mendan_d"></span> 日　<span id="p_irai_km_mendan_hh"></span> 時 <span id="p_irai_km_mendan_mm"></span> 分<br>
+          場所：<span class="cb" id="p_irai_km_place_office"></span>事務所　<span class="cb" id="p_irai_km_place_other"></span>その他（<span id="p_irai_km_place_other_txt"></span>）
+        </td>
+      </tr>
+      <tr>
+        <td class="td-label">その他（非対面）</td>
+        <td>
+          <span class="cb" id="p_irai_km_mail"></span>非対面<br>
+          <span class="cb" id="p_irai_km_mail_shoryu"></span>犯収法に基づく　本人確認書類の原本又は写し（自然人の場合２種類）の送付を受け、かつ、本人確認書類記載の住所、本店・主たる事務所又は支店等宛に取引関係文書を書留・転送不要郵便で送付した（令和<span id="p_irai_km_hanzai_y"></span>年<span id="p_irai_km_hanzai_m"></span>月<span id="p_irai_km_hanzai_d"></span>日）<br>
+          <span class="cb" id="p_irai_km_mail_kanni"></span>職責に基づく　本人確認書類の原本又は写しの送付を受け、かつ、本人確認書類記載の住所、本店・主たる事務所又は支店等宛に転送不要扱いの（簡易）書留郵便等により文書を送付した（令和<span id="p_irai_km_shokuseki_y"></span>年<span id="p_irai_km_shokuseki_m"></span>月<span id="p_irai_km_shokuseki_d"></span>日）
+        </td>
+      </tr>
+      <tr>
+        <td class="td-label">確認の補強</td>
+        <td><span class="cb" id="p_irai_km_mail_honnin"></span>本人限定受取郵便　<span class="cb" id="p_irai_km_tel"></span>電話（<span id="p_irai_km_tel_no"></span>）　<span class="cb" id="p_irai_km_mail_other"></span>オンライン面談</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ④ 依頼者 確認書類 -->
+  <div class="pv-section">
+    <div class="pv-section-title">依頼者　確認書類　<span class="cb" id="p_irai_doc_copy"></span>写し有</div>
+    <table><colgroup><col style="width:20%"><col style="width:80%"></colgroup>
+      <tr>
+        <td class="td-label">法人の場合</td>
+        <td><span class="cb" id="p_irai_doc_j_touki"></span>登記事項証明書　<span class="cb" id="p_irai_doc_j_inkan"></span>法人代表者の印鑑証明書　<span class="cb" id="p_irai_doc_j_other"></span>その他（<span id="p_irai_doc_j_other_txt"></span>）</td>
+      </tr>
+      <tr>
+        <td class="td-label" rowspan="4">自然人の場合</td>
+        <td>１）<span class="cb" id="p_irai_doc_n_unten"></span>運転免許証　<span class="cb" id="p_irai_doc_n_juki"></span>運転経歴証明書（注1）　<span class="cb" id="p_irai_doc_n_kojin"></span>個人番号カード（注2）　<span class="cb" id="p_irai_doc_n_ryoken"></span>旅券　<span class="cb" id="p_irai_doc_n_zairyu"></span>在留カード　<span class="cb" id="p_irai_doc_n_tokuei"></span>特別永住者証明書</td>
+      </tr>
+      <tr>
+        <td>２）<span class="cb" id="p_irai_doc_n_kenko"></span>健康保険証（注3）　<span class="cb" id="p_irai_doc_n_kaigo"></span>介護保険被保険者証　<span class="cb" id="p_irai_doc_n_kokumin"></span>国民年金手帳（注4）　<span class="cb" id="p_irai_doc_n_shintai"></span>身体障害者手帳　<span class="cb" id="p_irai_doc_n_seishin"></span>精神障害者保健福祉手帳　<span class="cb" id="p_irai_doc_n_ryoiku"></span>療育手帳</td>
+      </tr>
+      <tr>
+        <td>３）<span class="cb" id="p_irai_doc_n_inkan3"></span>印鑑証明書（実印押印委任状）　<span class="cb" id="p_irai_doc_n_jumin"></span>住民票　<span class="cb" id="p_irai_doc_n_koseki"></span>戸籍の附票</td>
+      </tr>
+      <tr>
+        <td>４）<span class="cb" id="p_irai_doc_n_other"></span>その他犯収法施行規則に規定する書類（<span id="p_irai_doc_n_other_txt"></span>）　<span class="cb" id="p_irai_doc_n_photo_y"></span>顔写真付　<span class="cb" id="p_irai_doc_n_photo_n"></span>顔写真無</td>
+      </tr>
+      <tr>
+        <td class="td-label">発行者 / 発行年月日</td>
+        <td><span id="p_irai_doc_issuer"></span>　　令和 <span id="p_irai_doc_issue_y"></span> 年 <span id="p_irai_doc_issue_m"></span> 月 <span id="p_irai_doc_issue_d"></span> 日</td>
+      </tr>
+      <tr>
+        <td class="td-label">記号番号 / 有効期限</td>
+        <td><span id="p_irai_doc_number"></span>　　令和 <span id="p_irai_doc_exp_y"></span> 年 <span id="p_irai_doc_exp_m"></span> 月 <span id="p_irai_doc_exp_d"></span> 日まで</td>
+      </tr>
+      <tr class="dbl-border-bottom">
+        <td class="td-label dbl-border-bottom">面談日外受領</td>
+        <td class="dbl-border-bottom">令和 <span id="p_irai_doc_recv_y"></span> 年 <span id="p_irai_doc_recv_m"></span> 月 <span id="p_irai_doc_recv_d"></span> 日　<span class="cb" id="p_irai_doc_recv_mail"></span>郵便　<span class="cb" id="p_irai_doc_recv_mail2"></span>その他（<span id="p_irai_doc_recv_other"></span>）</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ⑤ 代理人・取引担当者 -->
+  <div class="pv-section pv-dai-section" id="pv_dai_1">
+    <div class="pv-section-title">代理人・取引担当者</div>
+    <table><colgroup><col style="width:20%"><col style="width:80%"></colgroup>
+      <tr>
+        <td class="td-label">氏名</td>
+        <td>（フリガナ）<span id="p_dai_kana"></span>　　<span id="p_dai_name"></span>　　面識：<span class="cb" id="p_dai_menshiki_y"></span>有　<span class="cb" id="p_dai_menshiki_n"></span>無　　依頼者との関係：<span id="p_dai_relation"></span></td>
+      </tr>
+      <tr>
+        <td class="td-label">住所</td>
+        <td><span id="p_dai_addr"></span></td>
+      </tr>
+      <tr>
+        <td class="td-label">生年月日</td>
+        <td><span id="p_dai_bd"></span></td>
+      </tr>
+      <tr>
+        <td class="td-label">電話番号</td>
+        <td><span id="p_dai_tel"></span></td>
+      </tr>
+      <tr>
+        <td class="td-label">メールアドレス</td>
+        <td><span id="p_dai_mail"></span>　<span class="cb" id="p_dai_mail_none"></span>本人のみが利用するメールアドレスなし</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ⑥ 代理人 確認方法 -->
+  <div class="pv-section pv-dai-section" id="pv_dai_2">
+    <div class="pv-section-title">代理人　確認方法</div>
+    <table><colgroup><col style="width:20%"><col style="width:80%"></colgroup>
+      <tr>
+        <td class="td-label">前回確認</td>
+        <td><span class="cb" id="p_dai_km_prev"></span>前回確認あり　令和 <span id="p_dai_km_prev_y"></span> 年 <span id="p_dai_km_prev_m"></span> 月 <span id="p_dai_km_prev_d"></span> 日　管理番号（<span id="p_dai_km_prev_no"></span>）</td>
+      </tr>
+      <tr>
+        <td class="td-label">面談（対面）</td>
+        <td>
+          <span class="cb" id="p_dai_km_mendan"></span>面談　
+          令和 <span id="p_dai_km_mendan_y"></span> 年 <span id="p_dai_km_mendan_m"></span> 月 <span id="p_dai_km_mendan_d"></span> 日　<span id="p_dai_km_mendan_hh"></span> 時 <span id="p_dai_km_mendan_mm"></span> 分<br>
+          場所：<span class="cb" id="p_dai_km_place_office"></span>事務所　<span class="cb" id="p_dai_km_place_other"></span>その他（<span id="p_dai_km_place_other_txt"></span>）
+        </td>
+      </tr>
+      <tr>
+        <td class="td-label">その他（非対面）</td>
+        <td>
+          <span class="cb" id="p_dai_km_mail"></span>非対面<br>
+          <span class="cb" id="p_dai_km_hanzai"></span>犯収法に基づく　本人確認書類の原本又は写し（２種類）の送付を受け、かつ、本人確認書類記載の住所宛に取引関係文書を書留・転送不要郵便で送付した（令和<span id="p_dai_km_hanzai_y"></span>年<span id="p_dai_km_hanzai_m"></span>月<span id="p_dai_km_hanzai_d"></span>日）<br>
+          <span class="cb" id="p_dai_km_shokuseki"></span>職責に基づく　本人確認書類の原本又は写しの送付を受け、かつ、本人確認書類記載の住所宛に転送不要扱いの（簡易）書留郵便等により文書を送付した（令和<span id="p_dai_km_shokuseki_y"></span>年<span id="p_dai_km_shokuseki_m"></span>月<span id="p_dai_km_shokuseki_d"></span>日）
+        </td>
+      </tr>
+      <tr>
+        <td class="td-label">確認の補強</td>
+        <td><span class="cb" id="p_dai_km_honnin"></span>本人限定受取郵便　<span class="cb" id="p_dai_km_tel"></span>電話（<span id="p_dai_km_tel_no"></span>）　<span class="cb" id="p_dai_km_online"></span>オンライン面談</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ⑦ 代理人 確認書類 -->
+  <div class="pv-section pv-dai-section" id="pv_dai_3">
+    <div class="pv-section-title">代理人　確認書類　<span class="cb" id="p_dai_doc_copy"></span>写し有</div>
+    <table><colgroup><col style="width:20%"><col style="width:80%"></colgroup>
+      <tr>
+        <td class="td-label">依頼者が法人の場合</td>
+        <td><span class="cb" id="p_dai_auth_gyomu"></span>業務権限証書　<span class="cb" id="p_dai_auth_inin"></span>代表者からの委任状　<span class="cb" id="p_dai_auth_other"></span>その他（<span id="p_dai_auth_other_txt"></span>）</td>
+      </tr>
+      <tr>
+        <td class="td-label" rowspan="4">代理人・取引担当者</td>
+        <td>１）<span class="cb" id="p_dai_doc_unten"></span>運転免許証　<span class="cb" id="p_dai_doc_reki"></span>運転経歴証明書（注1）　<span class="cb" id="p_dai_doc_kojin"></span>個人番号カード（注2）　<span class="cb" id="p_dai_doc_ryoken"></span>旅券　<span class="cb" id="p_dai_doc_zairyu"></span>在留カード　<span class="cb" id="p_dai_doc_tokuei"></span>特別永住者証明書</td>
+      </tr>
+      <tr>
+        <td>２）<span class="cb" id="p_dai_doc_kenko"></span>健康保険証（注3）　<span class="cb" id="p_dai_doc_kaigo"></span>介護保険被保険者証　<span class="cb" id="p_dai_doc_kokumin"></span>国民年金手帳（注4）　<span class="cb" id="p_dai_doc_shintai"></span>身体障害者手帳　<span class="cb" id="p_dai_doc_seishin"></span>精神障害者保健福祉手帳　<span class="cb" id="p_dai_doc_ryoiku"></span>療育手帳</td>
+      </tr>
+      <tr>
+        <td>３）<span class="cb" id="p_dai_doc_inkan"></span>印鑑証明書（実印押印委任状）　<span class="cb" id="p_dai_doc_jumin"></span>住民票　<span class="cb" id="p_dai_doc_koseki"></span>戸籍の附票</td>
+      </tr>
+      <tr>
+        <td>４）<span class="cb" id="p_dai_doc_other"></span>その他犯収法施行規則に規定する書類（<span id="p_dai_doc_other_txt"></span>）　<span class="cb" id="p_dai_doc_photo_y"></span>顔写真付　<span class="cb" id="p_dai_doc_photo_n"></span>顔写真無</td>
+      </tr>
+      <tr>
+        <td class="td-label">発行者 / 発行年月日</td>
+        <td><span id="p_dai_doc_issuer"></span>　　令和 <span id="p_dai_doc_issue_y"></span> 年 <span id="p_dai_doc_issue_m"></span> 月 <span id="p_dai_doc_issue_d"></span> 日</td>
+      </tr>
+      <tr>
+        <td class="td-label">記号番号 / 有効期限</td>
+        <td><span id="p_dai_doc_number"></span>　　令和 <span id="p_dai_doc_exp_y"></span> 年 <span id="p_dai_doc_exp_m"></span> 月 <span id="p_dai_doc_exp_d"></span> 日まで</td>
+      </tr>
+      <tr>
+        <td class="td-label dbl-border-bottom">面談日外受領</td>
+        <td class="dbl-border-bottom">令和 <span id="p_dai_doc_recv_y"></span> 年 <span id="p_dai_doc_recv_m"></span> 月 <span id="p_dai_doc_recv_d"></span> 日　<span class="cb" id="p_dai_doc_recv_mail"></span>郵便　<span class="cb" id="p_dai_doc_recv_other_cb"></span>その他（<span id="p_dai_doc_recv_other"></span>）</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ⑧ 受託事務 -->
+  <div class="pv-section">
+    <div class="pv-section-title">受託事務</div>
+    <table><colgroup><col style="width:25%"><col style="width:75%"></colgroup>
+      <tr>
+        <td class="td-head" colspan="2">特定取引の場合</td>
+      </tr>
+      <tr>
+        <td class="td-label">不動産売買</td>
+        <td><span class="cb" id="p_juku_fudosan"></span>不動産売買　所在：<span class="cb" id="p_juku_fudosan_bessi"></span>別紙のとおり　<span class="cb" id="p_juku_fudosan_other"></span>（<span id="p_juku_fudosan_place"></span>）</td>
+      </tr>
+      <tr>
+        <td class="td-label">法人</td>
+        <td><span class="cb" id="p_juku_houjin"></span>法人（<span class="cb" id="p_juku_houjin_setsuritsu"></span>設立　<span class="cb" id="p_juku_houjin_teikan"></span>定款変更（<span id="p_juku_houjin_teikan_txt"></span>）　<span class="cb" id="p_juku_houjin_yakuin"></span>役員等変更　<span class="cb" id="p_juku_houjin_saihen"></span>企業再編（<span id="p_juku_houjin_saihen_txt"></span>）　<span class="cb" id="p_juku_houjin_other"></span>（<span id="p_juku_houjin_other_txt"></span>））</td>
+      </tr>
+      <tr>
+        <td class="td-label">財産管理・処分</td>
+        <td><span class="cb" id="p_juku_zaisan"></span>財産管理・処分　価額200万円以下を除く（<span id="p_juku_zaisan_txt"></span>）</td>
+      </tr>
+      <tr>
+        <td class="td-label">代理等にかかる財産の価額</td>
+        <td>金 <span id="p_juku_kingaku"></span> 円　　<span class="cb" id="p_juku_keiyaku_yes"></span>契約書　有　<span class="cb" id="p_juku_keiyaku_no"></span>無</td>
+      </tr>
+      <tr>
+        <td class="td-label">財産移転</td>
+        <td><span class="cb" id="p_juku_iten_bessi"></span>別紙契約書のとおり　<span class="cb" id="p_juku_iten_tokki"></span>特記事項欄記載のとおり</td>
+      </tr>
+      <tr>
+        <td class="td-head" colspan="2">上記以外の場合</td>
+      </tr>
+      <tr>
+        <td class="td-label">委任状等</td>
+        <td><span class="cb" id="p_juku_igai_inin"></span>別紙委任状のとおり　<span class="cb" id="p_juku_igai_other"></span>その他（<span id="p_juku_igai_other_txt"></span>）</td>
+      </tr>
+      <tr>
+        <td class="td-head" colspan="2">意思確認</td>
+      </tr>
+      <tr>
+        <td class="td-label">行った日 / 方法</td>
+        <td>令和 <span id="p_juku_ishi_y"></span> 年 <span id="p_juku_ishi_m"></span> 月 <span id="p_juku_ishi_d"></span> 日　　<span class="cb" id="p_juku_ishi_mendan"></span>面談　<span class="cb" id="p_juku_ishi_tel"></span>電話（自宅・勤務先・携帯）　<span class="cb" id="p_juku_ishi_other"></span>（<span id="p_juku_ishi_other_txt"></span>）</td>
+      </tr>
+      <tr>
+        <td class="td-label">対象者</td>
+        <td><span class="cb" id="p_juku_ishi_taisho_irai"></span>依頼者　<span class="cb" id="p_juku_ishi_taisho_dai"></span>代理人等（<span id="p_juku_ishi_taisho_txt"></span>）</td>
+      </tr>
+      <tr>
+        <td class="td-label">事件受託番号</td>
+        <td>令 <span id="p_juku_jiken_no_8"></span>ー<span id="p_juku_jiken_no_27"></span></td>
+      </tr>
+      <tr>
+        <td class="td-label">代理等を行った日</td>
+        <td>令和 <span id="p_juku_dairi_y"></span> 年 <span id="p_juku_dairi_m"></span> 月 <span id="p_juku_dairi_d"></span> 日</td>
+      </tr>
+      <tr>
+        <td class="td-label">手続等が終了した日</td>
+        <td>令和 <span id="p_juku_shuryo_y"></span> 年 <span id="p_juku_shuryo_m"></span> 月 <span id="p_juku_shuryo_d"></span> 日</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ⑨ 特記事項 -->
+  <div class="pv-section">
+    <div class="pv-section-title dbl-border-top" style="border-top:3px double #000;">特記事項</div>
+    <table><colgroup><col style="width:100%"></colgroup>
+      <tr>
+        <td style="min-height:40mm; vertical-align:top; padding:4px 6px;"><span id="p_tokki" style="white-space:pre-wrap;"></span></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 注記 -->
+  <div class="pv-notes">
+    （注1）交付年月日が平成24（2012）年４月１日以降のもの。　（注2）裏面の写しは作成しない。また、個人番号は記載しない。　（注3）写しの保険者番号及び被保険者等記号・番号は塗抹する。また、保険者番号及び被保険者等記号・番号は記載しない。　（注4）写しの基礎年金番号は塗抹する。また、基礎年金番号は記載しない。
+  </div>
+
+  <div class="pv-footer">20250728</div>
+</div>
+<script>
+// ============= フィールド一覧 =============
+const fields = [
+  // チェックボックス
+  ...['meta_tokutei','meta_not_tokutei',
+    'irai_km_prev','irai_km_mendan','irai_km_place_office','irai_km_place_other','irai_km_tel','irai_km_mail',
+    'irai_km_mail_shoryu','irai_km_mail_kanni','irai_km_mail_honnin','irai_km_mail_notensou','irai_km_mail_other',
+    'irai_doc_copy',
+    'irai_doc_j_touki','irai_doc_j_inkan','irai_doc_j_other',
+    'irai_doc_n_unten','irai_doc_n_juki','irai_doc_n_kojin','irai_doc_n_ryoken','irai_doc_n_zairyu','irai_doc_n_tokuei',
+    'irai_doc_n_kenko','irai_doc_n_kaigo','irai_doc_n_kokumin','irai_doc_n_shintai','irai_doc_n_seishin','irai_doc_n_ryoiku',
+    'irai_doc_n_inkan3','irai_doc_n_jumin','irai_doc_n_koseki','irai_doc_n_other',
+    'irai_doc_n_photo_y','irai_doc_n_photo_n',
+    'irai_doc_recv_mail','irai_doc_recv_mail2','irai_mail_none',
+    'dai_mail_none',
+    'dai_km_prev','dai_km_mendan','dai_km_place_office','dai_km_place_other','dai_km_mail','dai_km_hanzai','dai_km_shokuseki','dai_km_honnin','dai_km_tel','dai_km_online',
+    'dai_auth_gyomu','dai_auth_inin','dai_auth_other',
+    'dai_doc_unten','dai_doc_reki','dai_doc_kojin','dai_doc_ryoken','dai_doc_zairyu','dai_doc_tokuei','dai_doc_kenko','dai_doc_kaigo','dai_doc_kokumin','dai_doc_shintai','dai_doc_seishin','dai_doc_ryoiku','dai_doc_inkan','dai_doc_jumin','dai_doc_koseki','dai_doc_other','dai_doc_photo_y','dai_doc_photo_n','dai_doc_copy','dai_doc_recv_mail','dai_doc_recv_other_cb',
+    'juku_fudosan','juku_fudosan_bessi','juku_fudosan_other','juku_houjin','juku_houjin_setsuritsu','juku_houjin_teikan','juku_houjin_yakuin','juku_houjin_saihen','juku_houjin_other','juku_zaisan','juku_keiyaku_yes','juku_keiyaku_no','juku_iten_bessi','juku_iten_tokki','juku_igai_inin','juku_igai_other','juku_ishi_mendan','juku_ishi_tel','juku_ishi_other','juku_ishi_taisho_irai','juku_ishi_taisho_dai'
+  ].map(id=>({id, type:'checkbox'})),
+
+  // テキスト系
+  ...['meta_kanri_no','meta_sakuseisha','meta_kakuninsha',
+      'irai_kana','irai_name','irai_zip','irai_addr','irai_tel','irai_mail',
+      'irai_km_prev_no','irai_km_place_other_txt','irai_km_tel_no','irai_km_mail_to','irai_km_mail_other_txt',
+      'irai_doc_j_other_txt','irai_doc_n_other_txt','irai_doc_issuer','irai_doc_number','irai_doc_recv_other',
+      'dai_kana','dai_name','dai_relation','dai_zip','dai_addr','dai_tel','dai_mail','dai_km_note',
+      'dai_auth_other_txt','dai_doc_other_txt','dai_doc_issuer','dai_doc_number',
+      'juku_fudosan_place','juku_kingaku','juku_zaisan_txt','juku_houjin_teikan_txt','juku_houjin_saihen_txt','juku_houjin_other_txt','juku_houjin_teikan_txt','juku_houjin_saihen_txt','juku_houjin_other_txt','juku_igai_other_txt','juku_ishi_other_txt','juku_ishi_taisho_txt','juku_jiken_no_8','juku_jiken_no_27',
+      'tokki'
+  ].map(id=>({id, type:'text'})),
+
+  // 数値・日付系（すべて type="number"）
+  ...['meta_sakusei_y','meta_sakusei_m','meta_sakusei_d',
+      'meta_kakunin_y','meta_kakunin_m','meta_kakunin_d',
+      'irai_bd_y','irai_bd_m','irai_bd_d',
+      'irai_km_prev_y','irai_km_prev_m','irai_km_prev_d',
+      'irai_km_mendan_y','irai_km_mendan_m','irai_km_mendan_d','irai_km_mendan_hh','irai_km_mendan_mm',
+      'irai_km_tel_y','irai_km_tel_m','irai_km_tel_d','irai_km_tel_hh','irai_km_tel_mm',
+      'irai_km_mail_y','irai_km_mail_m','irai_km_mail_d',
+      'irai_doc_issue_y','irai_doc_issue_m','irai_doc_issue_d',
+      'irai_doc_exp_y','irai_doc_exp_m','irai_doc_exp_d',
+      'irai_doc_recv_y','irai_doc_recv_m','irai_doc_recv_d',
+      'dai_bd_y','dai_bd_m','dai_bd_d',
+      'dai_doc_exp_y','dai_doc_exp_m','dai_doc_exp_d',
+      'juku_ishi_y','juku_ishi_m','juku_ishi_d',
+      'juku_dairi_y','juku_dairi_m','juku_dairi_d',
+      'juku_shuryo_y','juku_shuryo_m','juku_shuryo_d'
+  ].map(id=>({id, type:'text'})),
+
+  // select
+  {id:'irai_bd_era', type:'text'},
+  {id:'dai_bd_era', type:'text'},
+
+  // ラジオ
+  {id:'irai_type', type:'radio', name:'irai_type'},
+  {id:'irai_menshiki', type:'radio', name:'irai_menshiki'},
+  {id:'dai_menshiki', type:'radio', name:'dai_menshiki'}
+];
+
+// ============= モード切替 =============
+let currentZoom = 100;
+
+function setMode(mode) {
+  document.body.className = 'mode-' + mode;
+  document.getElementById('btn-mode-input').classList.toggle('active', mode==='input');
+  document.getElementById('btn-mode-print').classList.toggle('active', mode==='print');
+  document.getElementById('zoom-controls').style.display = (mode==='print') ? 'flex' : 'none';
+  document.getElementById('dai-toggle-controls').style.display = (mode==='print') ? 'block' : 'none';
+  if (mode === 'print') {
+    renderPrintView();
+    // 代理人入力があるか自動判定して初期表示を決める
+    const hasDai = ['dai_name','dai_kana','dai_addr','dai_tel'].some(id => {
+      const el = document.getElementById(id);
+      return el && el.value.trim() !== '';
+    });
+    daiVisible = hasDai;
+    document.querySelectorAll('.pv-dai-section').forEach(s => s.style.display = daiVisible ? 'block' : 'none');
+    document.getElementById('btn-dai-toggle').textContent = daiVisible ? '👤 代理人を非表示' : '👤 代理人を表示';
+    applyZoom();
+  }
+}
+
+let daiVisible = false;
+
+function toggleDai() {
+  daiVisible = !daiVisible;
+  const sections = document.querySelectorAll('.pv-dai-section');
+  sections.forEach(s => s.style.display = daiVisible ? 'block' : 'none');
+  document.getElementById('btn-dai-toggle').textContent = daiVisible ? '👤 代理人を非表示' : '👤 代理人を表示';
+}
+
+// renderPrintView後に代理人表示状態を反映
+const _origRenderPrintView = window.renderPrintView;
+
+function applyZoom() {
+  const pv = document.getElementById('print-view');
+  if (!pv) return;
+  pv.style.transform = `scale(${currentZoom / 100})`;
+  pv.style.transformOrigin = 'top center';
+  // コンテナの高さをズーム後の実際の高さに合わせる
+  const scaled = pv.scrollHeight * (currentZoom / 100);
+  pv.parentElement.style.minHeight = scaled + 'px';
+  document.getElementById('zoom-label').textContent = currentZoom + '%';
+}
+
+function changeZoom(delta) {
+  currentZoom = Math.min(200, Math.max(30, currentZoom + delta));
+  applyZoom();
+}
+
+function resetZoom() {
+  currentZoom = 100;
+  applyZoom();
+}
+
+// ============= 自然人/法人切替 =============
+function toggleIraiType() {
+  const t = document.querySelector('input[name="irai_type"]:checked').value;
+  document.getElementById('irai_doc_juridical').style.display = (t==='juridical') ? 'block' : 'none';
+  document.getElementById('irai_doc_natural').style.display = (t==='natural') ? 'block' : 'none';
+  document.getElementById('irai_bd_label').textContent = (t==='juridical') ? '法人設立日' : '生年月日';
+}
+
+// ============= 令和日付設定 =============
+function setTodayReiwa(prefix) {
+  const now = new Date();
+  const reiwaY = now.getFullYear() - 2018;
+  document.getElementById(prefix+'_y').value = reiwaY;
+  document.getElementById(prefix+'_m').value = now.getMonth()+1;
+  document.getElementById(prefix+'_d').value = now.getDate();
+}
+
+// ============= 郵便番号検索 =============
+async function lookupZip(zipId, addrId) {
+  const zip = document.getElementById(zipId).value.replace(/[^0-9]/g,'');
+  if (zip.length !== 7) { alert('7桁の郵便番号を入力してください'); return; }
+  try {
+    const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`);
+    const data = await res.json();
+    if (data.results && data.results[0]) {
+      const r = data.results[0];
+      document.getElementById(addrId).value = r.address1 + r.address2 + r.address3;
+    } else {
+      alert('該当する住所が見つかりません');
+    }
+  } catch(e) {
+    alert('住所取得に失敗しました: ' + e.message);
+  }
+}
+
+// ============= localStorage保存・復元 =============
+const STORAGE_KEY = 'honnin_kakunin_record_v1';
+
+function saveData() {
+  const data = {};
+  // すべての input/textarea/select の値を保存
+  document.querySelectorAll('.input-view input, .input-view textarea, .input-view select').forEach(el => {
+    if (el.type === 'checkbox' || el.type === 'radio') {
+      if (el.id) data[el.id] = el.checked;
+      else if (el.name) data[el.name+':'+el.value] = el.checked;
+    } else {
+      if (el.id) data[el.id] = el.value;
+    }
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  const s = document.getElementById('save-status');
+  s.textContent = '✓ 保存しました ' + new Date().toLocaleTimeString();
+  setTimeout(()=>{ s.textContent = ''; }, 3000);
+}
+
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    document.querySelectorAll('.input-view input, .input-view textarea, .input-view select').forEach(el => {
+      if (el.type === 'checkbox') {
+        if (el.id && el.id in data) el.checked = data[el.id];
+      } else if (el.type === 'radio') {
+        const key = el.name + ':' + el.value;
+        if (key in data) el.checked = data[key];
+      } else {
+        if (el.id && el.id in data) el.value = data[el.id];
+      }
+    });
+    toggleIraiType();
+  } catch(e) { console.error(e); }
+}
+
+function clearAll() {
+  if (!confirm('すべての入力をクリアしますか?')) return;
+  document.querySelectorAll('.input-view input, .input-view textarea, .input-view select').forEach(el => {
+    if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+    else el.value = '';
+  });
+  document.querySelector('input[name="irai_type"][value="natural"]').checked = true;
+  localStorage.removeItem(STORAGE_KEY);
+  toggleIraiType();
+}
+
+// 自動保存（30秒毎）
+setInterval(saveData, 30000);
+
+function exportBackup() {
+  saveData();
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) { alert('保存データがありません'); return; }
+  const ts = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+  const blob = new Blob([raw], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `本人確認記録_バックアップ_${ts}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (typeof data !== 'object') throw new Error('不正なデータ形式です');
+      if (!confirm('現在の入力内容をバックアップデータで上書きしますか？')) return;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      loadData();
+      const s = document.getElementById('save-status');
+      s.textContent = '✓ 復元しました';
+      setTimeout(()=>{ s.textContent = ''; }, 3000);
+    } catch(err) {
+      alert('復元に失敗しました: ' + err.message);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ============= 印刷ビュー反映 =============
+function setCb(id, checked) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('checked', !!checked);
+}
+function setTx(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val || '';
+}
+
+function renderPrintView() {
+  const g = id => document.getElementById(id);
+  const v = id => (g(id) ? g(id).value : '');
+  const c = id => (g(id) ? g(id).checked : false);
+
+  // チェックボックス
+  [
+    'meta_tokutei','meta_not_tokutei',
+    'irai_km_prev','irai_km_mendan','irai_km_place_office','irai_km_place_other',
+    'irai_km_mail','irai_km_mail_shoryu','irai_km_mail_kanni',
+    'irai_km_mail_honnin','irai_km_mail_other','irai_km_tel',
+    'irai_doc_copy',
+    'irai_doc_j_touki','irai_doc_j_inkan','irai_doc_j_other',
+    'irai_doc_n_unten','irai_doc_n_juki','irai_doc_n_kojin',
+    'irai_doc_n_ryoken','irai_doc_n_zairyu','irai_doc_n_tokuei',
+    'irai_doc_n_kenko','irai_doc_n_kaigo','irai_doc_n_kokumin',
+    'irai_doc_n_shintai','irai_doc_n_seishin','irai_doc_n_ryoiku',
+    'irai_doc_n_inkan3','irai_doc_n_jumin','irai_doc_n_koseki','irai_doc_n_other',
+    'irai_doc_n_photo_y','irai_doc_n_photo_n',
+    'irai_doc_recv_mail','irai_doc_recv_mail2','irai_mail_none',
+    'dai_km_prev','dai_km_mendan','dai_km_place_office','dai_km_place_other',
+    'dai_km_mail','dai_km_hanzai','dai_km_shokuseki','dai_km_honnin','dai_km_tel','dai_km_online',
+    'dai_mail_none',
+    'dai_auth_gyomu','dai_auth_inin','dai_auth_other',
+    'dai_doc_copy',
+    'dai_doc_unten','dai_doc_reki','dai_doc_kojin','dai_doc_ryoken','dai_doc_zairyu','dai_doc_tokuei',
+    'dai_doc_kenko','dai_doc_kaigo','dai_doc_kokumin','dai_doc_shintai','dai_doc_seishin','dai_doc_ryoiku',
+    'dai_doc_inkan','dai_doc_jumin','dai_doc_koseki','dai_doc_other',
+    'dai_doc_photo_y','dai_doc_photo_n',
+    'dai_doc_recv_mail','dai_doc_recv_other_cb',
+    'juku_fudosan','juku_fudosan_bessi','juku_fudosan_other',
+    'juku_houjin','juku_houjin_setsuritsu','juku_houjin_teikan','juku_houjin_yakuin','juku_houjin_saihen','juku_houjin_other',
+    'juku_zaisan','juku_keiyaku_yes','juku_keiyaku_no',
+    'juku_iten_bessi','juku_iten_tokki',
+    'juku_igai_inin','juku_igai_other',
+    'juku_ishi_mendan','juku_ishi_tel','juku_ishi_other',
+    'juku_ishi_taisho_irai','juku_ishi_taisho_dai',
+  ].forEach(id => setCb('p_'+id, c(id)));
+
+  // 面識ラジオ
+  const im = document.querySelector('input[name="irai_menshiki"]:checked');
+  setCb('p_irai_menshiki_y', im && im.value==='yes');
+  setCb('p_irai_menshiki_n', im && im.value==='no');
+  const dm = document.querySelector('input[name="dai_menshiki"]:checked');
+  setCb('p_dai_menshiki_y', dm && dm.value==='yes');
+  setCb('p_dai_menshiki_n', dm && dm.value==='no');
+
+  // テキスト・数値（全ID）
+  [
+    'meta_kanri_no','meta_sakuseisha','meta_kakuninsha',
+    'meta_sakusei_y','meta_sakusei_m','meta_sakusei_d',
+    'meta_kakunin_y','meta_kakunin_m','meta_kakunin_d',
+    'irai_kana','irai_name','irai_addr','irai_tel','irai_mail',
+    'irai_km_prev_y','irai_km_prev_m','irai_km_prev_d','irai_km_prev_no',
+    'irai_km_mendan_y','irai_km_mendan_m','irai_km_mendan_d','irai_km_mendan_hh','irai_km_mendan_mm',
+    'irai_km_place_other_txt','irai_km_tel_no',
+    'irai_km_hanzai_y','irai_km_hanzai_m','irai_km_hanzai_d',
+    'irai_km_shokuseki_y','irai_km_shokuseki_m','irai_km_shokuseki_d',
+    'irai_doc_j_other_txt','irai_doc_n_other_txt',
+    'irai_doc_issuer',
+    'irai_doc_issue_y','irai_doc_issue_m','irai_doc_issue_d',
+    'irai_doc_number',
+    'irai_doc_exp_y','irai_doc_exp_m','irai_doc_exp_d',
+    'irai_doc_recv_y','irai_doc_recv_m','irai_doc_recv_d','irai_doc_recv_other',
+    'dai_kana','dai_name','dai_relation','dai_addr','dai_tel','dai_mail',
+    'dai_km_prev_no',
+    'dai_km_prev_y','dai_km_prev_m','dai_km_prev_d',
+    'dai_km_mendan_y','dai_km_mendan_m','dai_km_mendan_d','dai_km_mendan_hh','dai_km_mendan_mm',
+    'dai_km_place_other_txt','dai_km_tel_no',
+    'dai_km_hanzai_y','dai_km_hanzai_m','dai_km_hanzai_d',
+    'dai_km_shokuseki_y','dai_km_shokuseki_m','dai_km_shokuseki_d',
+    'dai_auth_other_txt','dai_doc_other_txt',
+    'dai_doc_issuer',
+    'dai_doc_issue_y','dai_doc_issue_m','dai_doc_issue_d',
+    'dai_doc_number',
+    'dai_doc_exp_y','dai_doc_exp_m','dai_doc_exp_d',
+    'dai_doc_recv_y','dai_doc_recv_m','dai_doc_recv_d','dai_doc_recv_other',
+    'juku_fudosan_place','juku_kingaku','juku_zaisan_txt','juku_houjin_teikan_txt','juku_houjin_saihen_txt','juku_houjin_other_txt',
+    'juku_igai_other_txt',
+    'juku_ishi_y','juku_ishi_m','juku_ishi_d','juku_ishi_other_txt','juku_ishi_taisho_txt',
+    'juku_jiken_no_8','juku_jiken_no_27',
+    'juku_dairi_y','juku_dairi_m','juku_dairi_d',
+    'juku_shuryo_y','juku_shuryo_m','juku_shuryo_d',
+    'tokki',
+  ].forEach(id => setTx('p_'+id, v(id)));
+
+  // 生年月日（元号+年月日を合成）
+  const ibEra = v('irai_bd_era'), ibY = v('irai_bd_y'), ibM = v('irai_bd_m'), ibD = v('irai_bd_d');
+  setTx('p_irai_bd', (ibY||ibM||ibD) ? `${ibEra} ${ibY}年 ${ibM}月 ${ibD}日` : '');
+  const dbEra = v('dai_bd_era'), dbY = v('dai_bd_y'), dbM = v('dai_bd_m'), dbD = v('dai_bd_d');
+  setTx('p_dai_bd', (dbY||dbM||dbD) ? `${dbEra} ${dbY}年 ${dbM}月 ${dbD}日` : '');
+
+  // 値が空のspanを含む括弧に全角スペースを補完
+  // （<span>空</span>）→ （<span> </span>）のようにspanにスペースを入れる
+  document.querySelectorAll('.print-view span[id^="p_"]').forEach(el => {
+    if (el.textContent === '') el.textContent = '　';
+  });
+}
+
+// ============= 初期化 =============
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+  toggleIraiType();
+
+  // URLパラメータから連絡先情報を自動入力
+  const params = new URLSearchParams(window.location.search);
+  const name = params.get('name');
+  const kana = params.get('kana');
+  const tel  = params.get('tel');
+  const mail = params.get('mail');
+  if (name) { const el = document.getElementById('irai_name'); if(el) el.value = name; }
+  if (kana) { const el = document.getElementById('irai_kana'); if(el) el.value = kana; }
+  if (tel)  { const el = document.getElementById('irai_tel');  if(el) el.value = tel; }
+  if (mail) { const el = document.getElementById('irai_mail'); if(el) el.value = mail; }
+});
+</script>
+<datalist id="place-suggestions">
+  <option value="依頼者自宅">
+  <option value="依頼者勤務先">
+  <option value="事務所">
+  <option value="病院">
+  <option value="施設">
+</datalist>
+</body>
+</html>
