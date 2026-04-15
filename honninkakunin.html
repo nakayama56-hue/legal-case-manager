@@ -1572,7 +1572,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const mail     = params.get('mail');
   const caseName = params.get('case_name');
   const location = params.get('location');
-  const contacts = params.get('contacts');
+  const contacts  = params.get('contacts');
+  const deliveriesParam = params.get('deliveries');
 
   if (name) { const el = document.getElementById('irai_name'); if(el) el.value = name; }
   if (kana) { const el = document.getElementById('irai_kana'); if(el) el.value = kana; }
@@ -1580,9 +1581,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mail) { const el = document.getElementById('irai_mail'); if(el) el.value = mail; }
 
   // 案件情報パネルを表示
-  if (caseName || location || contacts) {
+  if (caseName || location || contacts || deliveriesParam) {
     let allContacts = [];
-    try { allContacts = contacts ? JSON.parse(contacts) : []; } catch(e) {}
+    let allDeliveries = [];
+    try { allContacts  = contacts       ? JSON.parse(contacts)       : []; } catch(e) {}
+    try { allDeliveries = deliveriesParam ? JSON.parse(deliveriesParam) : []; } catch(e) {}
 
     const panel = document.createElement('div');
     panel.id = 'case-info-panel';
@@ -1607,6 +1610,20 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>` : ''}
           ${ct.mail ? `<div>✉ ${escH(ct.mail)}</div>` : ''}
           ${ct.address ? `<div style="color:#9ca3af;font-size:11px;margin-top:2px">📝 ${escH(ct.address)}</div>` : ''}
+        </div>`;
+      });
+    }
+
+    if (allDeliveries.length > 0) {
+      html += `<div style="color:#9ca3af;margin-bottom:6px;border-top:1px solid #374151;padding-top:8px">📬 書類送付先</div>`;
+      allDeliveries.forEach(d => {
+        html += `<div style="background:#374151;border-radius:6px;padding:8px;margin-bottom:6px">
+          ${d.name    ? `<div style="font-weight:700;margin-bottom:3px">${escH(d.name)}</div>` : ''}
+          ${d.zip     ? `<div style="color:#9ca3af;font-size:11px">〒${escH(d.zip)}</div>` : ''}
+          ${d.address ? `<div style="margin-top:2px">
+            📍 ${escH(d.address)}
+            <button onclick="fillField('irai_addr','${d.address.replace(/'/g,"\\'")}');fillField('irai_zip','${(d.zip||'').replace(/'/g,"\\'")}')" style="margin-left:6px;background:#2563eb;border:none;color:white;padding:1px 6px;border-radius:3px;cursor:pointer;font-size:10px">入力</button>
+          </div>` : ''}
         </div>`;
       });
     }
