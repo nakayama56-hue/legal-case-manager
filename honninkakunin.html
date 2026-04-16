@@ -305,6 +305,7 @@
     @page { size: A4 portrait; margin: 0; }
     html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
     .toolbar, .input-view { display: none !important; }
+    #case-info-panel { display: none !important; }
     body.mode-input .print-view, body.mode-print .print-view { display: block !important; }
     .print-view {
       /* width・padding・fontはプレビューと同値を維持 */
@@ -324,7 +325,7 @@
 <body class="mode-input">
 
 <div class="toolbar">
-  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.0.9</span></h1>
+  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.1.0</span></h1>
   <div class="mode-switch">
     <button id="btn-mode-input" class="active" onclick="setMode('input')">入力</button>
     <button id="btn-mode-print" onclick="setMode('print')">様式プレビュー</button>
@@ -889,8 +890,8 @@
     <div class="field-row">
       <label>事件受託番号</label>
       <div class="inline-row">
-        令 <input type="text" id="juku_jiken_no_8" maxlength="2" style="width:50px" placeholder="◯◯" />
-        ー <input type="text" id="juku_jiken_no_27" maxlength="3" style="width:55px" placeholder="◯◯◯" />
+        令 <input type="text" id="juku_jiken_no_8" maxlength="10" style="width:150px" placeholder="◯◯" />
+        ー <input type="text" id="juku_jiken_no_27" maxlength="20" style="width:165px" placeholder="◯◯◯" />
       </div>
     </div>
     <div class="field-row">
