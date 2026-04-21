@@ -307,9 +307,9 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
     <div class="sec">
       <div class="sec-head"><div class="sec-lbl">👤 送付先</div></div>
       <label>氏名</label>
-      <input type="text" id="recipientName" placeholder="例：茅野　稔">
+      <input type="text" id="recipientName" placeholder="例：山田　太郎">
       <label>件名（遺産分割協議の依頼人名・被相続人名など）</label>
-      <input type="text" id="subjectLine" placeholder="例：茅野瑛様の遺産分割協議手続きに伴う書類の送付およびご返送のお願い">
+      <input type="text" id="subjectLine" placeholder="例：〇〇手続きに伴う書類の送付およびご返送のお願い">
     </div>
 
     <!-- 挨拶文 -->
@@ -374,15 +374,15 @@ const DEFAULT_RET_DOCS = [
 ];
 
 const DEFAULT_GREETING = '拝啓、ますますご清栄のこととお慶び申し上げます。';
-const DEFAULT_BODY = 'さて、当職は茅野稔様からのご依頼を受け、被相続人・茅野瑛様の遺産分割協議手続きを承っております。つきましては、本手続きに必要となる下記の書類を送付いたしましたので、内容をご確認の上、ご対応くださいますようお願い申し上げます。ご多忙の折、誠に恐縮ではございますが、何卒よろしくお願い申し上げます。';
+const DEFAULT_BODY = 'さて、当職はご依頼を受け、手続きを承っております。つきましては、本手続きに必要となる下記の書類を送付いたしましたので、内容をご確認の上、ご対応くださいますようお願い申し上げます。ご多忙の折、誠に恐縮ではございますが、何卒よろしくお願い申し上げます。';
 
 let sendDocs = [], retDocs = [], nextId = 10;
 let currentFont = "'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro', sans-serif";
 
 function init() {
   document.getElementById('sendDate').value = '2026-03-24';
-  document.getElementById('recipientName').value = '茅野　稔';
-  document.getElementById('subjectLine').value = '遺産分割協議手続きに伴う書類の送付およびご返送のお願い';
+  document.getElementById('recipientName').value = '';
+  document.getElementById('subjectLine').value = '';
   document.getElementById('greetingText').value = DEFAULT_GREETING;
   document.getElementById('bodyText').value = DEFAULT_BODY;
 
@@ -559,7 +559,7 @@ function resetAll() {
   if (!confirm('初期値（Wordファイルの内容）に戻しますか？')) return;
   sendDocs = DEFAULT_SEND_DOCS.map((d,i) => ({ ...d, id: i+1 }));
   retDocs  = DEFAULT_RET_DOCS.map((t,i) => ({ id: 100+i, text: t }));
-  document.getElementById('recipientName').value = '茅野　稔';
+  document.getElementById('recipientName').value = '';
   document.getElementById('sendDate').value      = '2026-03-24';
   document.getElementById('subjectLine').value   = '遺産分割協議手続きに伴う書類の送付およびご返送のお願い';
   document.getElementById('greetingText').value  = DEFAULT_GREETING;
