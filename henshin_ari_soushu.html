@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>書類送付案内 作成アプリ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600&family=Noto+Sans+JP:wght@300;400;500;600&display=swap');
+
+:root {
+  --navy:     #152540;
+  --navy-dk:  #0d1a2e;
+  --blue:     #1e56a0;
+  --blue-mid: #3b7dd8;
+  --blue-lt:  #cfe0f8;
+  --blue-xlt: #eef5ff;
+  --ink:      #182030;
+  --ink-mid:  #3a4a60;
+  --ink-lt:   #6b7c92;
+  --border:   #c0d0e4;
+  --bg:       #dce6f2;
+  --panel:    #f2f6fc;
+  --white:    #ffffff;
+  --teal:     #0b6e87;
+  --red:      #b83030;
+  --red-lt:   #fdf0f0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+/* ── HEADER ── */
+.app-header {
+  background: var(--navy-dk); color: #dde8f8;
+  height: 50px; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+}
+.h-left  { display: flex; align-items: center; gap: 12px; }
+.h-badge {
+  width: 30px; height: 30px; background: var(--blue);
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.h-title { font-family: 'Noto Serif JP', serif; font-size: 15px; font-weight: 600; letter-spacing: 0.06em; }
+.h-ver   { font-size: 10px; color: #6a8fb8; margin-top: 1px; }
+.h-div   { width: 1px; height: 24px; background: rgba(255,255,255,0.12); }
+.h-office { font-size: 11px; color: #7a9cc8; letter-spacing: 0.06em; }
+
+/* ── LAYOUT ── */
+.main-layout { display: grid; grid-template-columns: 420px 1fr; min-height: calc(100vh - 50px); }
+
+/* ── FORM PANEL ── */
+.form-panel {
+  background: var(--panel); border-right: 1px solid var(--border);
+  padding: 20px 18px 28px;
+  overflow-y: auto; max-height: calc(100vh - 50px);
+}
+.sec { margin-top: 18px; }
+.sec:first-child { margin-top: 0; }
+.sec-head {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--blue-xlt); border: 1px solid var(--blue-lt);
+  border-radius: 5px; padding: 5px 10px; margin-bottom: 11px;
+}
+.sec-lbl { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--blue); letter-spacing: 0.1em; text-transform: uppercase; }
+
+label { display: block; font-size: 11px; font-weight: 500; color: var(--ink-mid); margin-bottom: 3px; }
+
+input[type="text"], input[type="date"], input[type="number"], textarea {
+  width: 100%; padding: 7px 10px;
+  border: 1px solid var(--border); border-radius: 5px;
+  background: var(--white); font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px; color: var(--ink); margin-bottom: 10px;
+  transition: border-color .15s, box-shadow .15s;
+}
+textarea { resize: vertical; line-height: 1.8; min-height: 72px; }
+input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(30,86,160,0.1); }
+
+/* ── フォント選択 ── */
+.font-btns { display: flex; flex-wrap: wrap; gap: 5px; }
+.font-btn {
+  font-size: 11px; padding: 4px 10px;
+  border: 1px solid var(--border); border-radius: 11px;
+  background: var(--white); cursor: pointer; color: var(--ink-mid);
+  transition: all .12s;
+}
+.font-btn:hover { border-color: var(--blue-mid); color: var(--blue); background: var(--blue-xlt); }
+.font-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+/* ── 送付書類リスト ── */
+.doc-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+.doc-item {
+  display: grid; grid-template-columns: 1fr 74px auto 26px;
+  gap: 5px; align-items: center;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 5px; padding: 5px 6px;
+}
+.doc-item input[type="text"] { margin-bottom: 0; font-size: 12px; padding: 5px 7px; }
+.cnt-wrap { display: flex; align-items: center; gap: 3px; }
+.cnt-wrap input { text-align: center; padding: 5px 3px; width: 100%; margin-bottom: 0; font-size: 12px; }
+.unit { font-size: 11px; color: var(--ink-lt); white-space: nowrap; }
+.note-chk {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 11px; color: var(--ink-mid); cursor: pointer;
+  white-space: nowrap; user-select: none;
+}
+.note-chk input { width: auto; margin-bottom: 0; padding: 0; accent-color: var(--blue); }
+.doc-rm {
+  background: none; border: none; cursor: pointer;
+  color: #bbb; font-size: 16px; padding: 1px 3px;
+  border-radius: 3px; line-height: 1; transition: color .12s, background .12s;
+}
+.doc-rm:hover { color: var(--red); background: var(--red-lt); }
+
+.btn-add-doc {
+  width: 100%; padding: 6px;
+  border: 1px dashed var(--blue-mid); border-radius: 5px;
+  background: none; color: var(--blue);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 12px;
+  cursor: pointer; transition: background .12s;
+}
+.btn-add-doc:hover { background: var(--blue-xlt); }
+
+/* 返送書類リスト */
+.ret-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+.ret-item {
+  display: grid; grid-template-columns: 1fr 26px;
+  gap: 5px; align-items: center;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 5px; padding: 5px 6px;
+}
+.ret-item input[type="text"] { margin-bottom: 0; font-size: 12px; padding: 5px 7px; }
+
+/* ── ボタン ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 15px; border-radius: 5px; border: none;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .14s; white-space: nowrap;
+}
+.btn-blue  { background: var(--blue); color: white; }
+.btn-blue:hover  { background: #163d7a; }
+.btn-teal  { background: var(--teal); color: white; }
+.btn-teal:hover  { background: #084f63; }
+.btn-ghost { background: var(--white); color: var(--ink-mid); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--blue-xlt); border-color: var(--blue-mid); color: var(--blue); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+.action-bar { margin-top: 18px; display: flex; flex-direction: column; gap: 7px; }
+.action-bar .btn { width: 100%; justify-content: center; font-size: 13px; padding: 9px; }
+
+/* ── PREVIEW ── */
+.preview-panel {
+  background: #c8d6e8; padding: 32px 36px;
+  overflow-y: auto; display: flex; flex-direction: column; align-items: center;
+}
+.preview-lbl { font-size: 10px; color: #7090b0; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+
+/* ── DOCUMENT ── */
+.document {
+  background: white; width: 596px; min-height: 842px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.2);
+  color: #111;
+  display: flex; flex-direction: column;
+}
+
+/* タイトルブロック：太線2本で挟む */
+.doc-hbar {
+  padding: 32px 52px 20px;
+  border-top: 3px solid #111;
+  border-bottom: 1px solid #111;
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+.doc-title {
+  font-size: 19px; font-weight: 600;
+  letter-spacing: 0.44em; margin-right: -0.44em;
+}
+.doc-hbar-date {
+  font-size: 12px; color: #333;
+  font-weight: 400;
+  letter-spacing: 0.04em; white-space: nowrap;
+}
+
+/* 本文エリア */
+.doc-main { padding: 26px 52px 40px; flex: 1; }
+
+/* 宛名（左上）＋送付元（右上）横並び */
+.doc-meta-row {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; margin-bottom: 24px; gap: 12px;
+}
+.doc-rcpt-block { flex: 1; }
+.doc-rcpt-addr {
+  font-size: 11px; color: #444; line-height: 1.8; margin-bottom: 4px;
+}
+.doc-rcpt-name {
+  font-size: 18px; font-weight: 600; letter-spacing: 0.04em;
+  line-height: 1.5; padding-bottom: 5px;
+  border-bottom: 1px solid #555; display: inline-block;
+}
+.doc-sender-block {
+  text-align: right; flex-shrink: 0;
+  font-size: 13.5px; line-height: 2.0; color: #222;
+  padding-top: 6em;
+}
+
+/* 件名 */
+.doc-subject {
+  font-size: 15px; font-weight: 600;
+  text-align: center; letter-spacing: 0.08em;
+  margin-bottom: 18px; padding: 8px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+/* 本文 */
+.doc-body-block { margin-bottom: 4px; }
+.doc-greeting { font-size: 14px; line-height: 2.0; text-indent: 1em; margin-bottom: 4px; }
+.doc-body-txt { font-size: 14px; line-height: 2.0; text-indent: 1em; }
+.doc-closing  { font-size: 14px; text-align: right; line-height: 2; margin: 10px 0 18px; }
+
+/* 送付書類 */
+.doc-section { border-top: 1.5px solid #111; padding-top: 12px; margin-bottom: 14px; }
+.doc-section-title {
+  font-size: 14px; font-weight: 600; letter-spacing: 0.06em;
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.doc-section-title::after {
+  content: ''; flex: 1; height: 1px; background: #bbb;
+}
+.doc-attach-row { display: flex; align-items: baseline; font-size: 13.5px; line-height: 1.9; margin-bottom: 2px; }
+.dan      { min-width: 20px; flex-shrink: 0; }
+.dnm      { flex: 1; padding-right: 4px; }
+.dct      { white-space: nowrap; }
+.doc-note { font-size: 12px; color: #555; margin-left: 20px; line-height: 1.7; margin-bottom: 6px; }
+
+/* 返送書類 */
+.doc-return-intro { font-size: 13.5px; line-height: 1.9; margin-bottom: 8px; color: #333; }
+.doc-return-row { display: flex; align-items: baseline; font-size: 13.5px; line-height: 1.9; margin-bottom: 2px; }
+.ret-bullet { min-width: 14px; flex-shrink: 0; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 26px; right: 26px;
+  background: var(--navy); color: #ddeeff;
+  padding: 9px 18px; border-radius: 6px;
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.28);
+  opacity: 0; transform: translateY(8px);
+  transition: all .22s; pointer-events: none; z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── PRINT ── */
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  body { background: white !important; }
+  .app-header, .form-panel, .preview-lbl { display: none !important; }
+  .main-layout { display: block !important; }
+  .preview-panel { background: white !important; padding: 0 !important; }
+  .document { box-shadow: none !important; width: 100% !important; min-height: auto !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="h-left">
+    <div class="h-badge">📄</div>
+    <div>
+      <div class="h-title">書類送付案内　作成</div>
+      <div class="h-ver">ver.1.0.1</div>
+    </div>
+    <div class="h-div"></div>
+    <div class="h-office">中山司法書士事務所</div>
+  </div>
+  <button class="btn btn-teal" onclick="window.print()">🖨 印刷 / PDF</button>
+</header>
+
+<div class="main-layout">
+
+  <div class="form-panel">
+
+    <!-- 日付 -->
+    <div class="sec">
+      <div class="sec-head"><div class="sec-lbl">📅 日付</div></div>
+      <label>送付日</label>
+      <input type="date" id="sendDate">
+    </div>
+
+    <!-- フォント -->
+    <div class="sec">
+      <div class="sec-head"><div class="sec-lbl">🔤 フォント</div></div>
+      <div class="font-btns" id="fontBtns">
+        <button class="font-btn" data-font="'Noto Serif JP', serif" onclick="setFont(this)">Noto Serif JP</button>
+        <button class="font-btn" data-font="'Noto Sans JP', sans-serif" onclick="setFont(this)">Noto Sans JP</button>
+        <button class="font-btn active" data-font="'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro', sans-serif" onclick="setFont(this)">ヒラギノ角ゴ Pro</button>
+        <button class="font-btn" data-font="'Yu Mincho', 'YuMincho', '游明朝', serif" onclick="setFont(this)">游明朝</button>
+        <button class="font-btn" data-font="'Yu Gothic', 'YuGothic', '游ゴシック', sans-serif" onclick="setFont(this)">游ゴシック</button>
+        <button class="font-btn" data-font="'MS Mincho', 'ＭＳ 明朝', serif" onclick="setFont(this)">MS明朝</button>
+      </div>
+    </div>
+
+    <!-- 送付先 -->
+    <div class="sec">
+      <div class="sec-head"><div class="sec-lbl">👤 送付先</div></div>
+      <label>氏名</label>
+      <input type="text" id="recipientName" placeholder="例：茅野　稔">
+      <label>件名（遺産分割協議の依頼人名・被相続人名など）</label>
+      <input type="text" id="subjectLine" placeholder="例：茅野瑛様の遺産分割協議手続きに伴う書類の送付およびご返送のお願い">
+    </div>
+
+    <!-- 挨拶文 -->
+    <div class="sec">
+      <div class="sec-head"><div class="sec-lbl">✍️ 挨拶文</div></div>
+      <label>頭語・挨拶</label>
+      <textarea id="greetingText" rows="2"></textarea>
+      <label>本文</label>
+      <textarea id="bodyText" rows="3"></textarea>
+    </div>
+
+    <!-- 送付書類 -->
+    <div class="sec">
+      <div class="sec-head">
+        <div class="sec-lbl">📎 送付書類</div>
+        <button class="btn btn-ghost btn-sm" onclick="addSendDoc()">＋ 追加</button>
+      </div>
+      <div class="doc-list" id="sendDocList"></div>
+    </div>
+
+    <!-- 返送書類 -->
+    <div class="sec">
+      <div class="sec-head">
+        <div class="sec-lbl">↩️ 返送書類</div>
+        <button class="btn btn-ghost btn-sm" onclick="addRetDoc()">＋ 追加</button>
+      </div>
+      <div class="ret-list" id="retDocList"></div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-teal" onclick="window.print()">🖨　印刷 / PDFに保存</button>
+      <button class="btn btn-ghost" onclick="resetAll()">🔄　初期値に戻す</button>
+    </div>
+
+  </div>
+
+  <div class="preview-panel">
+    <div class="preview-lbl">印刷プレビュー</div>
+    <div class="document" id="docPreview"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── 初期データ（Wordファイルの内容） ──
+const DEFAULT_SEND_DOCS = [
+  { id: 1, name: '遺産分割協議書', count: 1, note: '日付とご住所、ご氏名をご記入いただき、２箇所、鮮明に押印（ご実印）をお願いいたします。' },
+  { id: 2, name: '委任状（斉藤恵様）', count: 1, note: '日付とご住所、ご氏名（ふりがな）をご記入いただき、２箇所、鮮明に押印をお願いいたします。' },
+];
+
+const DEFAULT_RET_DOCS = [
+  '上記委任状（署名・捺印済のもの）：１通',
+  '上記遺産分割協議書（署名・捺印済のもの）：１通',
+  '斉藤恵様の身分証の写し（運転免許証、マイナンバーカードなどいずれか１点）',
+  '相続人の皆様全員の戸籍謄本または抄本：１通（発行時期の制限はございません）',
+  '相続人の皆様全員の印鑑証明書：１通（発行時期の制限はございません）',
+  '斉藤恵様の住民票：１通（発行時期の制限はございません）',
+  '斉藤瑛様の戸籍の附票除票（本籍記載あり）：１通（発行時期の制限はございません）',
+  '令和８年度土地の固定資産評価証明書：１通',
+];
+
+const DEFAULT_GREETING = '拝啓、ますますご清栄のこととお慶び申し上げます。';
+const DEFAULT_BODY = 'さて、当職は茅野稔様からのご依頼を受け、被相続人・茅野瑛様の遺産分割協議手続きを承っております。つきましては、本手続きに必要となる下記の書類を送付いたしましたので、内容をご確認の上、ご対応くださいますようお願い申し上げます。ご多忙の折、誠に恐縮ではございますが、何卒よろしくお願い申し上げます。';
+
+let sendDocs = [], retDocs = [], nextId = 10;
+let currentFont = "'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro', sans-serif";
+
+function init() {
+  document.getElementById('sendDate').value = '2026-03-24';
+  document.getElementById('recipientName').value = '茅野　稔';
+  document.getElementById('subjectLine').value = '遺産分割協議手続きに伴う書類の送付およびご返送のお願い';
+  document.getElementById('greetingText').value = DEFAULT_GREETING;
+  document.getElementById('bodyText').value = DEFAULT_BODY;
+
+  sendDocs = DEFAULT_SEND_DOCS.map((d,i) => ({ ...d, id: i+1 }));
+  retDocs  = DEFAULT_RET_DOCS.map((t,i) => ({ id: 100+i, text: t }));
+
+  ['sendDate','recipientName','subjectLine','greetingText','bodyText'].forEach(id =>
+    document.getElementById(id).addEventListener('input', renderPreview));
+
+  renderSendList();
+  renderRetList();
+  renderPreview();
+}
+
+// ── フォント ──
+function setFont(btn) {
+  document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFont = btn.dataset.font;
+  renderPreview();
+}
+
+// ── 送付書類 ──
+function addSendDoc() {
+  sendDocs.push({ id: nextId++, name: '', count: 1, note: '' });
+  renderSendList(); renderPreview();
+}
+function removeSendDoc(id) {
+  sendDocs = sendDocs.filter(d => d.id !== id);
+  renderSendList(); renderPreview();
+}
+function updateSendDoc(id, field, val) {
+  const d = sendDocs.find(x => x.id === id);
+  if (!d) return;
+  if (field === 'count') d.count = parseInt(val) || 1;
+  else d[field] = val;
+  renderPreview();
+}
+function renderSendList() {
+  const el = document.getElementById('sendDocList');
+  el.innerHTML = '';
+  sendDocs.forEach(item => {
+    const d = document.createElement('div');
+    d.style.cssText = 'background:var(--white);border:1px solid var(--border);border-radius:5px;padding:6px;margin-bottom:6px;';
+    d.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 74px 26px;gap:5px;align-items:center;margin-bottom:4px;">
+        <input type="text" value="${escHtml(item.name)}" placeholder="書類名"
+          style="margin-bottom:0;font-size:12px;padding:5px 7px;"
+          oninput="updateSendDoc(${item.id},'name',this.value)">
+        <div class="cnt-wrap">
+          <input type="number" min="1" max="99" value="${item.count}"
+            style="margin-bottom:0;font-size:12px;"
+            oninput="updateSendDoc(${item.id},'count',this.value)">
+          <span class="unit">通</span>
+        </div>
+        <button class="doc-rm" onclick="removeSendDoc(${item.id})">×</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <span style="font-size:10px;color:var(--ink-lt);white-space:nowrap;">※注記：</span>
+        <input type="text" value="${escHtml(item.note)}" placeholder="押印・記入の注意など（任意）"
+          style="margin-bottom:0;font-size:11px;padding:4px 7px;color:var(--ink-mid);"
+          oninput="updateSendDoc(${item.id},'note',this.value)">
+      </div>`;
+    el.appendChild(d);
+  });
+}
+
+// ── 返送書類 ──
+function addRetDoc() {
+  retDocs.push({ id: nextId++, text: '' });
+  renderRetList(); renderPreview();
+}
+function removeRetDoc(id) {
+  retDocs = retDocs.filter(d => d.id !== id);
+  renderRetList(); renderPreview();
+}
+function updateRetDoc(id, val) {
+  const d = retDocs.find(x => x.id === id);
+  if (d) { d.text = val; renderPreview(); }
+}
+function renderRetList() {
+  const el = document.getElementById('retDocList');
+  el.innerHTML = '';
+  retDocs.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'ret-item';
+    d.innerHTML = `
+      <input type="text" value="${escHtml(item.text)}" placeholder="返送書類"
+        style="margin-bottom:0;font-size:12px;padding:5px 7px;"
+        oninput="updateRetDoc(${item.id},this.value)">
+      <button class="doc-rm" onclick="removeRetDoc(${item.id})">×</button>`;
+    el.appendChild(d);
+  });
+}
+
+// ── プレビュー ──
+function renderPreview() {
+  const dateVal  = document.getElementById('sendDate').value;
+  const name     = document.getElementById('recipientName').value.trim() || '　　　　　　';
+  const subject  = document.getElementById('subjectLine').value.trim() || '　';
+  const greeting = document.getElementById('greetingText').value.trim();
+  const bodyTxt  = document.getElementById('bodyText').value.trim();
+  const dateStr  = dateVal ? formatDate(dateVal) : '　　年　月　日';
+
+  // 送付書類HTML
+  let sendHtml = '';
+  if (!sendDocs.length) {
+    sendHtml = '<div style="color:#aaa;font-size:12px;font-style:italic;">（書類が未入力です）</div>';
+  } else {
+    sendDocs.forEach((item, idx) => {
+      const nameStr = escHtml(item.name || '（書類名未入力）');
+      const noteStr = item.note ? `<div class="doc-note">※${escHtml(item.note)}</div>` : '';
+      sendHtml += `<div class="doc-attach-row">
+        <span class="dan">${idx+1}．</span>
+        <span class="dnm">${nameStr}</span>
+        <span class="dct">${item.count}　通</span>
+      </div>${noteStr}`;
+    });
+  }
+
+  // 返送書類HTML
+  let retHtml = '';
+  if (!retDocs.length) {
+    retHtml = '<div style="color:#aaa;font-size:12px;font-style:italic;">（書類が未入力です）</div>';
+  } else {
+    retDocs.forEach(item => {
+      retHtml += `<div class="doc-return-row">
+        <span class="ret-bullet">・</span>
+        <span>${escHtml(item.text || '（未入力）')}</span>
+      </div>`;
+    });
+  }
+
+  const returnIntro = '恐れ入りますが、以下の書類がすべて揃いましたら、同封のレターパックで当事務所までご送付いただけますと幸いです。';
+
+  document.getElementById('docPreview').innerHTML = `
+    <div class="doc-hbar" style="font-family:${currentFont};">
+      <div class="doc-title" style="font-family:${currentFont};">書　類　送　付　案　内</div>
+      <div class="doc-hbar-date" style="font-family:${currentFont};">${escHtml(dateStr)}</div>
+    </div>
+    <div class="doc-main" style="font-family:${currentFont};">
+      <div class="doc-meta-row">
+        <div class="doc-rcpt-block">
+          <div class="doc-rcpt-name" style="font-family:${currentFont};">${escHtml(name)}　様</div>
+        </div>
+        <div class="doc-sender-block" style="font-family:${currentFont};">
+          東京都板橋区高島平３－１０－１２－５０５<br>
+          中山司法書士事務所　司法書士　中山吾郎<br>
+          電話　０３－５９９７－５３５６
+        </div>
+      </div>
+      <div class="doc-subject" style="font-family:${currentFont};">${escHtml(subject)}</div>
+      <div class="doc-body-block">
+        <div class="doc-greeting" style="font-family:${currentFont};">${escHtml(greeting)}</div>
+        <div class="doc-body-txt" style="font-family:${currentFont};">${escHtml(bodyTxt)}</div>
+      </div>
+      <div class="doc-closing" style="font-family:${currentFont};">敬　具</div>
+
+      <div class="doc-section">
+        <div class="doc-section-title" style="font-family:${currentFont};">１．送付書類の内容</div>
+        ${sendHtml}
+      </div>
+
+      <div class="doc-section">
+        <div class="doc-section-title" style="font-family:${currentFont};">２．ご返送いただく書類</div>
+        <div class="doc-return-intro" style="font-family:${currentFont};">${returnIntro}</div>
+        ${retHtml}
+      </div>
+    </div>`;
+}
+
+// ── リセット ──
+function resetAll() {
+  if (!confirm('初期値（Wordファイルの内容）に戻しますか？')) return;
+  sendDocs = DEFAULT_SEND_DOCS.map((d,i) => ({ ...d, id: i+1 }));
+  retDocs  = DEFAULT_RET_DOCS.map((t,i) => ({ id: 100+i, text: t }));
+  document.getElementById('recipientName').value = '茅野　稔';
+  document.getElementById('sendDate').value      = '2026-03-24';
+  document.getElementById('subjectLine').value   = '遺産分割協議手続きに伴う書類の送付およびご返送のお願い';
+  document.getElementById('greetingText').value  = DEFAULT_GREETING;
+  document.getElementById('bodyText').value      = DEFAULT_BODY;
+  renderSendList(); renderRetList(); renderPreview();
+  showToast('初期値に戻しました');
+}
+
+// ── ユーティリティ ──
+function formatDate(val) {
+  const d=new Date(val+'T00:00:00'), y=d.getFullYear(), m=d.getMonth()+1, dy=d.getDate();
+  const w = y>=2019?`令和${y-2018}年`:y>=1989?`平成${y-1988}年`:`${y}年`;
+  return `${w}${m}月${dy}日`;
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg, type) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background = type==='warn' ? '#8b3a1a' : 'var(--navy)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+init();
+
+// URLパラメータから氏名を自動入力
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const name = params.get('name');
+  if (name) {
+    const el = document.getElementById('recipientName');
+    if (el) {
+      el.value = name;
+      el.dispatchEvent(new Event('input'));
+    }
+  }
+})();
+</script>
+</body>
+</html>
