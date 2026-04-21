@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>書類送付案内 作成アプリ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600&family=Noto+Sans+JP:wght@300;400;500;600&display=swap');
+
+:root {
+  --navy:     #152540;
+  --navy-dk:  #0d1a2e;
+  --blue:     #1e56a0;
+  --blue-mid: #3b7dd8;
+  --blue-lt:  #cfe0f8;
+  --blue-xlt: #eef5ff;
+  --ink:      #182030;
+  --ink-mid:  #3a4a60;
+  --ink-lt:   #6b7c92;
+  --border:   #c0d0e4;
+  --bg:       #dce6f2;
+  --panel:    #f2f6fc;
+  --white:    #ffffff;
+  --teal:     #0b6e87;
+  --red:      #b83030;
+  --red-lt:   #fdf0f0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+/* ── HEADER ── */
+.app-header {
+  background: var(--navy-dk); color: #dde8f8;
+  height: 50px; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+}
+.h-left  { display: flex; align-items: center; gap: 12px; }
+.h-badge {
+  width: 30px; height: 30px; background: var(--blue);
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.h-title { font-family: 'Noto Serif JP', serif; font-size: 15px; font-weight: 600; letter-spacing: 0.06em; }
+.h-ver   { font-size: 10px; color: #6a8fb8; margin-top: 1px; }
+.h-div   { width: 1px; height: 24px; background: rgba(255,255,255,0.12); }
+.h-office { font-size: 11px; color: #7a9cc8; letter-spacing: 0.06em; }
+
+/* ── LAYOUT ── */
+.main-layout { display: grid; grid-template-columns: 420px 1fr; min-height: calc(100vh - 50px); }
+
+/* ── FORM PANEL ── */
+.form-panel {
+  background: var(--panel); border-right: 1px solid var(--border);
+  padding: 20px 18px 28px;
+  overflow-y: auto; max-height: calc(100vh - 50px);
+}
+.sec { margin-top: 18px; }
+.sec:first-child { margin-top: 0; }
+.sec-head {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--blue-xlt); border: 1px solid var(--blue-lt);
+  border-radius: 5px; padding: 5px 10px; margin-bottom: 11px;
+}
+.sec-lbl { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--blue); letter-spacing: 0.1em; text-transform: uppercase; }
+
+label { display: block; font-size: 11px; font-weight: 500; color: var(--ink-mid); margin-bottom: 3px; }
+
+input[type="text"], input[type="date"], input[type="number"] {
+  width: 100%; padding: 7px 10px;
+  border: 1px solid var(--border); border-radius: 5px;
+  background: var(--white); font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px; color: var(--ink); margin-bottom: 10px;
+  transition: border-color .15s, box-shadow .15s;
+}
+input:focus { outline: none; border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(30,86,160,0.1); }
+
+/* ── フォント選択 ── */
+.font-btns { display: flex; flex-wrap: wrap; gap: 5px; }
+.font-btn {
+  font-size: 11px; padding: 4px 10px;
+  border: 1px solid var(--border); border-radius: 11px;
+  background: var(--white); cursor: pointer; color: var(--ink-mid);
+  transition: all .12s;
+}
+.font-btn:hover { border-color: var(--blue-mid); color: var(--blue); background: var(--blue-xlt); }
+.font-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+/* ── 添付書類 ── */
+.doc-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+.doc-item {
+  display: grid; grid-template-columns: 1fr 74px auto 26px;
+  gap: 5px; align-items: center;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 5px; padding: 5px 6px;
+}
+.doc-item input[type="text"] { margin-bottom: 0; font-size: 12px; padding: 5px 7px; }
+.cnt-wrap { display: flex; align-items: center; gap: 3px; }
+.cnt-wrap input { text-align: center; padding: 5px 3px; width: 100%; margin-bottom: 0; font-size: 12px; }
+.unit { font-size: 11px; color: var(--ink-lt); white-space: nowrap; }
+.issiki-chk {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 11px; color: var(--ink-mid); cursor: pointer;
+  white-space: nowrap; user-select: none;
+}
+.issiki-chk input { width: auto; margin-bottom: 0; padding: 0; accent-color: var(--blue); }
+.doc-rm {
+  background: none; border: none; cursor: pointer;
+  color: #bbb; font-size: 16px; padding: 1px 3px;
+  border-radius: 3px; line-height: 1; transition: color .12s, background .12s;
+}
+.doc-rm:hover { color: var(--red); background: var(--red-lt); }
+
+.btn-add-doc {
+  width: 100%; padding: 6px;
+  border: 1px dashed var(--blue-mid); border-radius: 5px;
+  background: none; color: var(--blue);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 12px;
+  cursor: pointer; transition: background .12s;
+}
+.btn-add-doc:hover { background: var(--blue-xlt); }
+
+/* ── プリセットバー ── */
+.preset-bar { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; min-height: 26px; }
+.p-tag {
+  font-size: 11px; padding: 3px 10px;
+  border: 1px solid var(--border); border-radius: 11px;
+  background: var(--white); cursor: pointer; color: var(--ink-mid);
+  transition: all .12s; white-space: nowrap; max-width: 190px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.p-tag:hover { border-color: var(--blue-mid); color: var(--blue); background: var(--blue-xlt); }
+.p-empty { font-size: 11px; color: var(--ink-lt); font-style: italic; line-height: 26px; }
+
+/* ── テンプレート ── */
+.save-row { display: grid; grid-template-columns: 1fr auto; gap: 7px; align-items: center; }
+.save-row input { margin-bottom: 0; }
+.saved-panel {
+  margin-top: 8px; background: var(--blue-xlt);
+  border: 1px solid var(--blue-lt); border-radius: 6px; padding: 10px 12px;
+}
+.saved-panel h3 { font-size: 11px; font-weight: 600; color: var(--blue); margin-bottom: 7px; }
+.saved-list { display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; }
+.s-item {
+  display: flex; align-items: center; font-size: 12px;
+  padding: 5px 8px; background: var(--white);
+  border: 1px solid var(--border); border-radius: 4px; cursor: pointer; transition: all .1s;
+}
+.s-item:hover { border-color: var(--blue-mid); background: var(--blue-xlt); }
+.s-item .sname { flex: 1; }
+.s-item .sdate { color: #999; font-size: 10px; margin: 0 6px; }
+.s-item .sdel  { background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; padding: 0 2px; transition: color .1s; }
+.s-item .sdel:hover { color: var(--red); }
+
+/* ── ボタン ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 15px; border-radius: 5px; border: none;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .14s; white-space: nowrap;
+}
+.btn-blue  { background: var(--blue); color: white; }
+.btn-blue:hover  { background: #163d7a; }
+.btn-teal  { background: var(--teal); color: white; }
+.btn-teal:hover  { background: #084f63; }
+.btn-ghost { background: var(--white); color: var(--ink-mid); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--blue-xlt); border-color: var(--blue-mid); color: var(--blue); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+.action-bar { margin-top: 18px; display: flex; flex-direction: column; gap: 7px; }
+.action-bar .btn { width: 100%; justify-content: center; font-size: 13px; padding: 9px; }
+
+/* ── PREVIEW ── */
+.preview-panel {
+  background: #c8d6e8; padding: 32px 36px;
+  overflow-y: auto; display: flex; flex-direction: column; align-items: center;
+}
+.preview-lbl { font-size: 10px; color: #7090b0; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+
+/* ── DOCUMENT ── */
+.document {
+  background: white; width: 596px; min-height: 842px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.2);
+  font-family: var(--doc-font, 'Noto Serif JP', serif); color: #111;
+  display: flex; flex-direction: column;
+}
+
+/* タイトルブロック：太線2本で挟む */
+.doc-hbar {
+  padding: 42px 62px 26px;
+  border-top: 3px solid #111;
+  border-bottom: 1px solid #111;
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+.doc-title {
+  font-size: 21px; font-weight: 600;
+  letter-spacing: 0.44em; margin-right: -0.44em;
+  font-family: var(--doc-font, 'Noto Serif JP', serif); color: #111;
+}
+.doc-hbar-date {
+  font-size: 13px; color: #333;
+  font-family: var(--doc-font, 'Noto Sans JP', sans-serif); font-weight: 400;
+  letter-spacing: 0.04em; white-space: nowrap;
+}
+
+/* 本文エリア */
+.doc-main { padding: 36px 62px 52px; flex: 1; }
+
+/* 宛名（左上）＋送付元（右上）横並び */
+.doc-meta-row {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; margin-bottom: 32px; gap: 12px;
+}
+.doc-rcpt-name {
+  font-size: 19px; font-weight: 600; letter-spacing: 0.04em;
+  line-height: 1.5; padding-bottom: 5px;
+  border-bottom: 1px solid #555; display: inline-block;
+}
+.doc-sender-block {
+  text-align: right; flex-shrink: 0;
+  font-family: var(--doc-font, 'Noto Sans JP', sans-serif);
+  font-size: 13px; line-height: 2.1; color: #222;
+  padding-top: 2.4em;
+}
+
+/* 本文 */
+.doc-body-block { margin-bottom: 4px; }
+.doc-greeting { font-size: 13.5px; line-height: 2.2; text-indent: 1em; }
+.doc-body-txt { font-size: 13.5px; line-height: 2.2; text-indent: 1em; }
+.doc-closing  { font-size: 13.5px; text-align: right; line-height: 2; margin-bottom: 22px; }
+
+/* 添付書類 */
+.doc-attach-block { border-top: 2px solid #111; padding-top: 14px; }
+.doc-attach-title {
+  font-size: 13.5px; font-weight: 600; letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.doc-attach-title::after {
+  content: ''; flex: 1; height: 1px; background: #bbb;
+}
+.doc-attach-row { display: flex; align-items: baseline; font-size: 13.5px; line-height: 1.9; margin-bottom: 2px; }
+.dan      { min-width: 20px; flex-shrink: 0; }
+.dnm      { padding-right: 4px; }
+.dct      { white-space: nowrap; flex: 1; }
+.dct-issiki { white-space: nowrap; padding-left: 4px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(8,18,36,0.52);
+  z-index: 500; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white; border-radius: 10px;
+  width: 460px; max-height: 78vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;
+}
+.modal-head {
+  background: var(--navy); color: #ddeeff;
+  padding: 13px 18px; font-size: 13px; font-weight: 600; letter-spacing: 0.05em;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-x { background: none; border: none; color: #88aacc; font-size: 20px; cursor: pointer; line-height: 1; padding: 0 2px; }
+.modal-x:hover { color: white; }
+.modal-body { padding: 16px 18px; overflow-y: auto; flex: 1; }
+.modal-foot { padding: 11px 18px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+.modal-foot input { margin-bottom: 0; flex: 1; }
+
+.pm-list { display: flex; flex-direction: column; gap: 5px; }
+.pm-item {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--blue-xlt); border: 1px solid var(--blue-lt);
+  border-radius: 5px; padding: 7px 10px; font-size: 12px; color: var(--ink);
+}
+.pm-item span { flex: 1; }
+.pm-del { background: none; border: none; color: #bbb; font-size: 15px; cursor: pointer; padding: 0 2px; line-height: 1; border-radius: 3px; transition: color .12s; }
+.pm-del:hover { color: var(--red); }
+.pm-empty { font-size: 12px; color: var(--ink-lt); font-style: italic; padding: 4px 2px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 26px; right: 26px;
+  background: var(--navy); color: #ddeeff;
+  padding: 9px 18px; border-radius: 6px;
+  font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.28);
+  opacity: 0; transform: translateY(8px);
+  transition: all .22s; pointer-events: none; z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── PRINT ── */
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  body { background: white !important; }
+  .app-header, .form-panel, .preview-lbl, .modal-overlay { display: none !important; }
+  .main-layout { display: block !important; }
+  .preview-panel { background: white !important; padding: 0 !important; }
+  .document { box-shadow: none !important; width: 100% !important; min-height: auto !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="h-left">
+    <div class="h-badge">📄</div>
+    <div>
+      <div class="h-title">書類送付案内　作成</div>
+      <div class="h-ver">ver.1.1.1</div>
+    </div>
+    <div class="h-div"></div>
+    <div class="h-office">中山司法書士事務所</div>
+  </div>
+  <button class="btn btn-teal" onclick="window.print()">🖨 印刷 / PDF</button>
+</header>
+
+<div class="main-layout">
+
+  <div class="form-panel">
+
+    <!-- 日付 -->
+    <div class="sec">
+      <div class="sec-head"><div class="sec-lbl">📅 日付</div></div>
+      <label>送付日</label>
+      <input type="date" id="sendDate">
+    </div>
+
+    <!-- フォント -->
+    <div class="sec">
+      <div class="sec-head"><div class="sec-lbl">🔤 フォント</div></div>
+      <div class="font-btns" id="fontBtns">
+        <button class="font-btn" data-font="'Noto Serif JP', serif" onclick="setFont(this)">Noto Serif JP</button>
+        <button class="font-btn" data-font="'Noto Sans JP', sans-serif" onclick="setFont(this)">Noto Sans JP</button>
+        <button class="font-btn active" data-font="'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro', sans-serif" onclick="setFont(this)">ヒラギノ角ゴ Pro</button>
+        <button class="font-btn" data-font="'Yu Mincho', 'YuMincho', '游明朝', serif" onclick="setFont(this)">游明朝</button>
+        <button class="font-btn" data-font="'Yu Gothic', 'YuGothic', '游ゴシック', sans-serif" onclick="setFont(this)">游ゴシック</button>
+        <button class="font-btn" data-font="'MS Mincho', 'ＭＳ 明朝', serif" onclick="setFont(this)">MS明朝</button>
+        <button class="font-btn" data-font="'MS PMincho', 'ＭＳ Ｐ明朝', serif" onclick="setFont(this)">MSP明朝</button>
+        <button class="font-btn" data-font="'MS PGothic', 'ＭＳ Ｐゴシック', sans-serif" onclick="setFont(this)">MSPゴシック</button>
+      </div>
+    </div>
+
+    <!-- 送付先 -->
+    <div class="sec">
+      <div class="sec-head"><div class="sec-lbl">👤 送付先</div></div>
+      <label>氏名・法人名</label>
+      <input type="text" id="recipientName" placeholder="例：山田　太郎">
+    </div>
+
+    <!-- 添付書類 -->
+    <div class="sec">
+      <div class="sec-head">
+        <div class="sec-lbl">📎 添付書類</div>
+        <button class="btn btn-ghost btn-sm" onclick="openModal()">⚙ よく使う書類を管理</button>
+      </div>
+      <div style="font-size:11px;color:var(--ink-lt);margin-bottom:6px;">クリックで追加</div>
+      <div class="preset-bar" id="presetBar"></div>
+      <div class="doc-list" id="docList"></div>
+      <button class="btn-add-doc" onclick="addDocItem()">＋ 書類を手動追加</button>
+    </div>
+
+    <!-- テンプレート -->
+    <div class="sec">
+      <div class="sec-head"><div class="sec-lbl">💾 テンプレート保存</div></div>
+      <div class="save-row">
+        <input type="text" id="templateName" placeholder="例：相続登記セット">
+        <button class="btn btn-blue btn-sm" onclick="saveTemplate()">保存</button>
+      </div>
+      <div class="saved-panel" id="savedPanel" style="display:none;">
+        <h3>保存済みテンプレート</h3>
+        <div class="saved-list" id="savedList"></div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-teal" onclick="window.print()">🖨　印刷 / PDFに保存</button>
+      <button class="btn btn-ghost" onclick="clearAll()">🗑　クリア</button>
+    </div>
+
+  </div>
+
+  <div class="preview-panel">
+    <div class="preview-lbl">印刷プレビュー</div>
+    <div class="document" id="docPreview"></div>
+  </div>
+
+</div>
+
+<!-- プリセット管理モーダル -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <span>📋　よく使う書類の管理</span>
+      <button class="modal-x" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--ink-mid);margin-bottom:12px;">登録した書類はタグとして一覧表示され、クリックで添付書類リストに追加できます。</p>
+      <div class="pm-list" id="pmList"></div>
+    </div>
+    <div class="modal-foot">
+      <input type="text" id="newPresetInput" placeholder="書類名を入力（例：固定資産評価証明書）">
+      <label class="issiki-chk" style="white-space:nowrap;">
+        <input type="checkbox" id="newPresetIssiki">
+        <span>一式</span>
+      </label>
+      <button class="btn btn-blue btn-sm" onclick="addPreset()">＋ 追加</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEFAULT_PRESETS = [
+  { name: '不動産登記権利情報（登記識別情報通知）', issiki: false },
+  { name: '全部事項証明書（登記簿謄本）', issiki: false },
+  { name: '遺産分割協議書', issiki: false },
+  { name: '法定相続情報一覧図', issiki: false },
+  { name: '評価証明書', issiki: false },
+  { name: '印鑑証明書', issiki: false },
+  { name: '領収書', issiki: false },
+  { name: '登記完了証', issiki: false },
+  { name: '住民票', issiki: false },
+  { name: '戸籍謄本（除籍）', issiki: false },
+  { name: '固定資産評価証明書', issiki: false },
+  { name: '委任状（原本還付）', issiki: false },
+];
+
+let docItems = [], nextId = 1;
+
+function getPresets() {
+  try {
+    const s = localStorage.getItem('sp_presets');
+    if (!s) return DEFAULT_PRESETS.map(p => ({...p}));
+    // 旧形式（文字列配列）との互換
+    const arr = JSON.parse(s);
+    return arr.map(p => typeof p === 'string' ? { name: p, issiki: false } : p);
+  } catch { return DEFAULT_PRESETS.map(p => ({...p})); }
+}
+function savePresets(list) { localStorage.setItem('sp_presets', JSON.stringify(list)); }
+
+function init() {
+  document.getElementById('sendDate').value = new Date().toISOString().split('T')[0];
+  ['sendDate','recipientName'].forEach(id =>
+    document.getElementById(id).addEventListener('input', renderPreview));
+  renderPresetBar();
+  loadSavedTemplates();
+  renderPreview();
+}
+
+// ── フォント切替 ──
+let currentFont = "'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro', sans-serif";
+function setFont(btn) {
+  document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFont = btn.dataset.font;
+  renderPreview();
+}
+
+// ── プリセットバー ──
+function renderPresetBar() {
+  const bar = document.getElementById('presetBar');
+  const list = getPresets();
+  bar.innerHTML = '';
+  if (!list.length) {
+    bar.innerHTML = '<span class="p-empty">登録なし（⚙ 管理から追加できます）</span>';
+    return;
+  }
+  list.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'p-tag';
+    const label = p.name.length > 16 ? p.name.slice(0,15) + '…' : p.name;
+    b.textContent = label + (p.issiki ? '（一式）' : '');
+    b.title = p.name + (p.issiki ? '　一式' : '');
+    b.onclick = () => addDocItem(p.name, 1, p.issiki);
+    bar.appendChild(b);
+  });
+}
+
+// ── モーダル ──
+function openModal() { renderPmList(); document.getElementById('modalOverlay').classList.add('open'); }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+document.addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
+
+function renderPmList() {
+  const list = getPresets();
+  const el = document.getElementById('pmList');
+  el.innerHTML = '';
+  if (!list.length) { el.innerHTML = '<div class="pm-empty">登録されている書類はありません</div>'; return; }
+  list.forEach((p, i) => {
+    const d = document.createElement('div');
+    d.className = 'pm-item';
+    d.innerHTML = `
+      <span style="flex:1;">${escHtml(p.name)}</span>
+      <span style="font-size:11px;color:var(--ink-lt);margin-right:8px;">${p.issiki ? '一式' : ''}</span>
+      <button class="pm-del" onclick="removePreset(${i})" title="削除">×</button>`;
+    el.appendChild(d);
+  });
+}
+function addPreset() {
+  const inp = document.getElementById('newPresetInput');
+  const issikiChk = document.getElementById('newPresetIssiki');
+  const name = inp.value.trim();
+  if (!name) return;
+  const list = getPresets();
+  if (list.some(p => p.name === name)) { showToast('すでに登録されています', 'warn'); return; }
+  list.push({ name, issiki: issikiChk.checked });
+  savePresets(list);
+  inp.value = ''; issikiChk.checked = false;
+  renderPmList(); renderPresetBar();
+  showToast(`「${name}」を登録しました`);
+}
+function removePreset(i) {
+  const list = getPresets();
+  list.splice(i, 1);
+  savePresets(list);
+  renderPmList(); renderPresetBar();
+}
+
+// ── 添付書類 ──
+function addDocItem(name='', count=1, issiki=false) {
+  docItems.push({ id: nextId++, name, count, issiki });
+  renderDocList(); renderPreview();
+}
+function removeDocItem(id) {
+  docItems = docItems.filter(d => d.id !== id);
+  renderDocList(); renderPreview();
+}
+function updateDocItem(id, field, val) {
+  const item = docItems.find(d => d.id === id);
+  if (!item) return;
+  if (field === 'count')  item.count  = parseInt(val) || 1;
+  else if (field === 'issiki') item.issiki = val;
+  else item[field] = val;
+  renderPreview();
+}
+function renderDocList() {
+  const el = document.getElementById('docList');
+  el.innerHTML = '';
+  docItems.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'doc-item';
+    d.innerHTML = `
+      <input type="text" value="${escHtml(item.name)}" placeholder="書類名"
+        oninput="updateDocItem(${item.id},'name',this.value)">
+      <div class="cnt-wrap" id="cntwrap-${item.id}" style="${item.issiki ? 'opacity:.3;pointer-events:none;' : ''}">
+        <input type="number" min="1" max="99" value="${item.count}"
+          oninput="updateDocItem(${item.id},'count',this.value)">
+        <span class="unit">通</span>
+      </div>
+      <label class="issiki-chk" title="〜一式 にする">
+        <input type="checkbox" ${item.issiki ? 'checked' : ''}
+          onchange="updateDocItem(${item.id},'issiki',this.checked);document.getElementById('cntwrap-${item.id}').style=this.checked?'opacity:.3;pointer-events:none;':''">
+        <span>一式</span>
+      </label>
+      <button class="doc-rm" onclick="removeDocItem(${item.id})" title="削除">×</button>`;
+    el.appendChild(d);
+  });
+}
+
+// ── プレビュー ──
+function renderPreview() {
+  const dateVal = document.getElementById('sendDate').value;
+  const name    = document.getElementById('recipientName').value.trim();
+  const dateStr = dateVal ? formatDate(dateVal) : '　　年　月　日';
+  const recName = name || '　　　　　　';
+
+  let attachHtml = '';
+  if (!docItems.length) {
+    attachHtml = '<div style="color:#aaa;font-size:12px;font-style:italic;">（書類が未入力です）</div>';
+  } else {
+    docItems.forEach(item => {
+      // 一式の場合は書類名の直後に「一式」、通数は非表示
+      const countPart = item.issiki
+        ? `<span class="dct-issiki">一式</span>`
+        : `<span class="dct">　${item.count}　通</span>`;
+      attachHtml += `<div class="doc-attach-row">
+        <span class="dan">１．</span>
+        <span class="dnm">${escHtml(item.name || '（書類名未入力）')}</span>${countPart}
+      </div>`;
+    });
+  }
+
+  document.getElementById('docPreview').innerHTML = `
+    <div class="doc-hbar" style="font-family:${currentFont};">
+      <div class="doc-title" style="font-family:${currentFont};">書　類　送　付　案　内</div>
+      <div class="doc-hbar-date" style="font-family:${currentFont};">${escHtml(dateStr)}</div>
+    </div>
+    <div class="doc-main" style="font-family:${currentFont};">
+      <div class="doc-meta-row">
+        <div class="doc-rcpt-block">
+          <div class="doc-rcpt-name" style="font-family:${currentFont};">${escHtml(recName)}　様</div>
+        </div>
+        <div class="doc-sender-block" style="font-family:${currentFont};padding-top:4.8em;">
+          東京都板橋区高島平３－１０－１２－５０５<br>
+          中山司法書士事務所　司法書士　中山吾郎<br>
+          電話　０３－５９９７－５３５６
+        </div>
+      </div>
+      <div class="doc-body-block">
+        <div class="doc-greeting" style="font-family:${currentFont};">拝啓　時下ますますご清祥のこととお慶び申し上げます。平素は格別のご高配を賜り、厚く御礼申し上げます。</div>
+        <div class="doc-body-txt" style="font-family:${currentFont};">さて、このたびの登記手続きが無事完了いたしましたので、関係書類をご送付申し上げます。ご査収のほど、何卒よろしくお願い申し上げます。</div>
+      </div>
+      <div class="doc-closing" style="font-family:${currentFont};">敬　具</div>
+      <div class="doc-attach-block">
+        <div class="doc-attach-title" style="font-family:${currentFont};">添付書類</div>
+        ${attachHtml}
+      </div>
+    </div>`;
+}
+
+// ── テンプレート ──
+function saveTemplate() {
+  const tName = document.getElementById('templateName').value.trim();
+  if (!tName) { showToast('テンプレート名を入力してください', 'warn'); return; }
+  if (!docItems.length) { showToast('書類が入力されていません', 'warn'); return; }
+  const tpls = getTemplates();
+  tpls.push({ id: Date.now(), name: tName, docs: docItems.map(d=>({name:d.name,count:d.count,issiki:d.issiki||false})), saved: new Date().toLocaleDateString('ja-JP') });
+  localStorage.setItem('sp_templates', JSON.stringify(tpls));
+  showToast(`「${tName}」を保存しました`);
+  document.getElementById('templateName').value = '';
+  loadSavedTemplates();
+}
+function getTemplates() { try { return JSON.parse(localStorage.getItem('sp_templates')||'[]'); } catch { return []; } }
+function loadSavedTemplates() {
+  const tpls  = getTemplates();
+  const panel = document.getElementById('savedPanel');
+  const list  = document.getElementById('savedList');
+  if (!tpls.length) { panel.style.display='none'; return; }
+  panel.style.display = 'block';
+  list.innerHTML = '';
+  tpls.slice().reverse().forEach(t => {
+    const d = document.createElement('div');
+    d.className = 's-item';
+    d.innerHTML = `<span class="sname">${escHtml(t.name)}</span><span class="sdate">${t.saved}</span>
+      <button class="sdel" onclick="deleteTpl(${t.id},event)">×</button>`;
+    d.addEventListener('click', e => { if (!e.target.classList.contains('sdel')) loadTemplate(t); });
+    list.appendChild(d);
+  });
+}
+function loadTemplate(t) {
+  docItems=[]; nextId=1;
+  t.docs.forEach(d => docItems.push({id:nextId++,name:d.name,count:d.count,issiki:d.issiki||false}));
+  renderDocList(); renderPreview();
+  showToast(`「${t.name}」を読み込みました`);
+}
+function deleteTpl(id, e) {
+  e.stopPropagation();
+  localStorage.setItem('sp_templates', JSON.stringify(getTemplates().filter(t=>t.id!==id)));
+  loadSavedTemplates();
+}
+
+// ── クリア ──
+function clearAll() {
+  if (!confirm('入力内容をクリアしますか？')) return;
+  document.getElementById('recipientName').value = '';
+  document.getElementById('sendDate').value = new Date().toISOString().split('T')[0];
+  docItems=[]; nextId=1;
+  renderDocList(); renderPreview();
+}
+
+// ── ユーティリティ ──
+function formatDate(val) {
+  const d=new Date(val+'T00:00:00'), y=d.getFullYear(), m=d.getMonth()+1, dy=d.getDate();
+  const w = y>=2019?`令和${y-2018}年`:y>=1989?`平成${y-1988}年`:`${y}年`;
+  return `${w}${m}月${dy}日`;
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg, type) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background = type==='warn' ? '#8b3a1a' : 'var(--navy)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+init();
+
+// URLパラメータから依頼者名を自動入力
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const name = params.get('name');
+  if (name) {
+    const el = document.getElementById('recipientName');
+    if (el) {
+      el.value = name;
+      el.dispatchEvent(new Event('input'));
+    }
+  }
+})();
+</script>
+</body>
+</html>
