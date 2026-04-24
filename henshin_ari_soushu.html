@@ -133,8 +133,20 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
 }
 .ret-item input[type="text"] { margin-bottom: 0; font-size: 12px; padding: 5px 7px; }
 
-/* ── ボタン ── */
-.btn {
+/* ── テンプレート ── */
+.save-row { display: grid; grid-template-columns: 1fr auto; gap: 7px; align-items: center; }
+.save-row input { margin-bottom: 0; }
+.saved-panel { margin-top: 8px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px 12px; }
+.saved-panel h3 { font-size: 11px; font-weight: 600; color: #2563eb; margin-bottom: 7px; }
+.saved-list { display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; }
+.s-item { display: flex; align-items: center; font-size: 12px; padding: 5px 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; cursor: pointer; transition: all .1s; }
+.s-item:hover { border-color: #93c5fd; background: #eff6ff; }
+.s-item .sname { flex: 1; }
+.s-item .sdate { color: #999; font-size: 10px; margin: 0 6px; }
+.s-item .sdel  { background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; padding: 0 2px; }
+.s-item .sdel:hover { color: #ef4444; }
+
+
   display: inline-flex; align-items: center; gap: 5px;
   padding: 7px 15px; border-radius: 5px; border: none;
   font-family: 'Noto Sans JP', sans-serif; font-size: 12px; font-weight: 500;
@@ -339,6 +351,19 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
       <div class="ret-list" id="retDocList"></div>
     </div>
 
+    <!-- テンプレート -->
+    <div class="sec">
+      <div class="sec-head"><div class="sec-lbl">💾 テンプレート保存</div></div>
+      <div class="save-row">
+        <input type="text" id="templateName" placeholder="例：相続登記セット">
+        <button class="btn btn-blue btn-sm" onclick="saveTemplate()">保存</button>
+      </div>
+      <div class="saved-panel" id="savedPanel" style="display:none;">
+        <h3>保存済みテンプレート</h3>
+        <div class="saved-list" id="savedList"></div>
+      </div>
+    </div>
+
     <div class="action-bar">
       <button class="btn btn-teal" onclick="window.print()">🖨　印刷 / PDFに保存</button>
       <button class="btn btn-ghost" onclick="resetAll()">🔄　初期値に戻す</button>
@@ -383,6 +408,7 @@ function init() {
   renderSendList();
   renderRetList();
   renderPreview();
+  loadSavedTemplates();
 }
 
 // ── フォント ──
@@ -571,6 +597,59 @@ function showToast(msg, type) {
   t.style.background = type==='warn' ? '#8b3a1a' : 'var(--navy)';
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+// ── テンプレート ──
+function getTemplates() {
+  try { return JSON.parse(localStorage.getItem('hr_templates') || '[]'); } catch { return []; }
+}
+function saveTemplate() {
+  const tName = document.getElementById('templateName').value.trim();
+  if (!tName) { showToast('テンプレート名を入力してください', 'warn'); return; }
+  const tpls = getTemplates();
+  tpls.push({
+    id: Date.now(), name: tName,
+    sendDocs: sendDocs.map(d => ({ name: d.name, count: d.count, note: d.note || '' })),
+    retDocs:  retDocs.map(d => ({ text: d.text })),
+    subject:  document.getElementById('subjectLine').value,
+    greeting: document.getElementById('greetingText').value,
+    body:     document.getElementById('bodyText').value,
+    saved:    new Date().toLocaleDateString('ja-JP')
+  });
+  localStorage.setItem('hr_templates', JSON.stringify(tpls));
+  showToast(`「${tName}」を保存しました`);
+  document.getElementById('templateName').value = '';
+  loadSavedTemplates();
+}
+function loadSavedTemplates() {
+  const tpls  = getTemplates();
+  const panel = document.getElementById('savedPanel');
+  const list  = document.getElementById('savedList');
+  if (!tpls.length) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  list.innerHTML = '';
+  tpls.slice().reverse().forEach(t => {
+    const d = document.createElement('div');
+    d.className = 's-item';
+    d.innerHTML = `<span class="sname">${t.name}</span><span class="sdate">${t.saved}</span>
+      <button class="sdel" onclick="deleteTpl(${t.id},event)">×</button>`;
+    d.addEventListener('click', e => { if (!e.target.classList.contains('sdel')) loadTemplate(t); });
+    list.appendChild(d);
+  });
+}
+function loadTemplate(t) {
+  sendDocs = (t.sendDocs || []).map((d, i) => ({ id: nextId++, name: d.name, count: d.count, note: d.note || '' }));
+  retDocs  = (t.retDocs  || []).map((d, i) => ({ id: nextId++, text: d.text }));
+  if (t.subject)  document.getElementById('subjectLine').value  = t.subject;
+  if (t.greeting) document.getElementById('greetingText').value = t.greeting;
+  if (t.body)     document.getElementById('bodyText').value     = t.body;
+  renderSendList(); renderRetList(); renderPreview();
+  showToast(`「${t.name}」を読み込みました`);
+}
+function deleteTpl(id, e) {
+  e.stopPropagation();
+  localStorage.setItem('hr_templates', JSON.stringify(getTemplates().filter(t => t.id !== id)));
+  loadSavedTemplates();
 }
 
 init();
