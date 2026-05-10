@@ -18,7 +18,7 @@
    CSS Variables & Reset
    ===================================================== */
 :root {
-  --bg-primary: #eef1f7;
+  --bg-primary: #f0f2f5;
   --bg-secondary: rgba(255,255,255,0.75);
   --bg-sidebar: rgba(20,28,46,0.82);
   --bg-sidebar-hover: rgba(255,255,255,0.12);
@@ -127,49 +127,12 @@ body {
   line-height: 1.5;
   min-height: 100vh;
 }
-body.dark-mode {
-  background: #161a22;
-  background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(50,60,90,0.55) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 0%, rgba(80,55,100,0.35) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 100%, rgba(30,80,80,0.32) 0%, transparent 55%);
-  background-attachment: fixed;
-}
-body.dark-mode .modal {
-  background: rgba(18,28,50,0.80);
-  border-color: rgba(255,255,255,0.10);
-}
-body.dark-mode .case-tile-card {
-  background: rgba(24,36,62,0.68);
-  border-color: rgba(255,255,255,0.10);
-}
-body.dark-mode .today-panel {
-  background: rgba(20,32,54,0.70);
-  border-color: rgba(255,255,255,0.08);
-}
-body.dark-mode .table-container {
-  background: rgba(20,32,54,0.65);
-  border-color: rgba(255,255,255,0.08);
-}
-body.dark-mode .case-detail-header,
-body.dark-mode .info-card {
-  background: rgba(22,34,58,0.70);
-  border-color: rgba(255,255,255,0.09);
-}
-body.dark-mode .info-card-header {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.08);
-}
-body.dark-mode #header {
-  background: rgba(12,20,38,0.75);
-  border-color: rgba(255,255,255,0.08);
-}
 
 /* =====================================================
-   テーマ定義
+   テーマ定義（9種類）
    ===================================================== */
 
-/* シルバー（デフォルト） */
+/* シルバー */
 body[data-theme="silver"] {
   background: #f0f2f5;
   background-image:
@@ -223,6 +186,28 @@ body[data-theme="gold"] {
     radial-gradient(ellipse at 50% 100%, rgba(255,230,140,0.38) 0%, transparent 55%);
   background-attachment: fixed;
 }
+/* ── グラデーションテーマ ── */
+/* コスモス（ピンク→パープル→ブルー） */
+body[data-theme="cosmos"] {
+  background: #f5eefb;
+  background-image:
+    linear-gradient(135deg, rgba(255,180,210,0.70) 0%, rgba(190,140,255,0.55) 45%, rgba(140,185,255,0.50) 100%);
+  background-attachment: fixed;
+}
+/* フレイム（イエロー→オレンジ→コーラル） */
+body[data-theme="flame"] {
+  background: #fff8ee;
+  background-image:
+    linear-gradient(135deg, rgba(255,235,120,0.70) 0%, rgba(255,175,80,0.58) 45%, rgba(255,130,120,0.52) 100%);
+  background-attachment: fixed;
+}
+/* オーシャン（グリーン→シアン→ブルー） */
+body[data-theme="ocean"] {
+  background: #eaf8f8;
+  background-image:
+    linear-gradient(135deg, rgba(130,230,200,0.68) 0%, rgba(80,210,230,0.55) 45%, rgba(100,170,255,0.52) 100%);
+  background-attachment: fixed;
+}
 
 /* テーマピッカー */
 .theme-picker {
@@ -233,7 +218,7 @@ body[data-theme="gold"] {
 #sidebar:hover .theme-picker { display: block; }
 .theme-picker-label {
   font-size: 10px;
-  color: #64748b;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 600;
@@ -252,7 +237,6 @@ body[data-theme="gold"] {
   border: 2px solid rgba(255,255,255,0.25);
   cursor: pointer;
   transition: transform 0.15s, border-color 0.15s;
-  position: relative;
 }
 .theme-swatch:hover { transform: scale(1.2); border-color: rgba(255,255,255,0.7); }
 .theme-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.4); }
@@ -262,8 +246,44 @@ body[data-theme="gold"] {
 .theme-swatch[data-theme="mint"]   { background: linear-gradient(135deg, #6dd8bc, #a0ecd4); }
 .theme-swatch[data-theme="sunset"] { background: linear-gradient(135deg, #ffb09a, #ffaac8); }
 .theme-swatch[data-theme="gold"]   { background: linear-gradient(135deg, #ffd770, #ffe9a0); }
+.theme-swatch[data-theme="cosmos"] { background: linear-gradient(135deg, #ffb4d2, #be8cff, #8cb9ff); }
+.theme-swatch[data-theme="flame"]  { background: linear-gradient(135deg, #ffeb78, #ffaf50, #ff8278); }
+.theme-swatch[data-theme="ocean"]  { background: linear-gradient(135deg, #82e6c8, #50d2e6, #64aaff); }
+
+/* ダークモード補正 */
+body.dark-mode .modal {
+  background: rgba(18,28,50,0.80);
+  border-color: rgba(255,255,255,0.10);
+}
+body.dark-mode .case-tile-card {
+  background: rgba(24,36,62,0.68);
+  border-color: rgba(255,255,255,0.10);
+}
+body.dark-mode .today-panel {
+  background: rgba(20,32,54,0.70);
+  border-color: rgba(255,255,255,0.08);
+}
+body.dark-mode .table-container {
+  background: rgba(20,32,54,0.65);
+  border-color: rgba(255,255,255,0.08);
+}
+body.dark-mode .case-detail-header,
+body.dark-mode .info-card {
+  background: rgba(22,34,58,0.70);
+  border-color: rgba(255,255,255,0.09);
+}
+body.dark-mode .info-card-header {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.08);
+}
+body.dark-mode #header {
+  background: rgba(12,20,38,0.75);
+  border-color: rgba(255,255,255,0.08);
+}
 
 
+   Layout
+   ===================================================== */
 #app { display: flex; min-height: 100vh; }
 
 /* Sidebar */
@@ -499,7 +519,7 @@ body[data-theme="gold"] {
 @media (max-width: 1100px) { .today-grid { grid-template-columns: 1fr; } }
 
 .today-panel {
-  background: var(--bg-secondary);
+  background: rgba(255,255,255,0.75);
   backdrop-filter: blur(16px) saturate(1.6);
   -webkit-backdrop-filter: blur(16px) saturate(1.6);
   border-radius: var(--radius-lg);
@@ -1906,7 +1926,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only"><img src="data:image/png;base64,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"""" style="width:32px;height:32px;border-radius:50%"></div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 5.1.2</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 5.1.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -1928,6 +1948,9 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
           <div class="theme-swatch" data-theme="mint"   onclick="setTheme('mint')"   title="ミント"></div>
           <div class="theme-swatch" data-theme="sunset" onclick="setTheme('sunset')" title="サンセット"></div>
           <div class="theme-swatch" data-theme="gold"   onclick="setTheme('gold')"   title="ゴールド"></div>
+          <div class="theme-swatch" data-theme="cosmos" onclick="setTheme('cosmos')" title="コスモス"></div>
+          <div class="theme-swatch" data-theme="flame"  onclick="setTheme('flame')"  title="フレイム"></div>
+          <div class="theme-swatch" data-theme="ocean"  onclick="setTheme('ocean')"  title="オーシャン"></div>
         </div>
       </div>
     </nav>
@@ -3414,15 +3437,14 @@ function initAppearance() {
   if (hsToggle) hsToggle.checked = hoverSidebar;
   if (darkMode) document.body.classList.add('dark-mode');
   else document.body.classList.remove('dark-mode');
+  // テーマ初期化
+  const savedTheme = localStorage.getItem('app_theme') || 'silver';
+  setTheme(savedTheme);
   // モバイル（768px以下）ではサイドバー設定を適用しない
   if (window.innerWidth > 768) {
     if (!hoverSidebar) toggleHoverSidebar(false);
     else toggleHoverSidebar(true);
   }
-
-  // テーマ初期化
-  const savedTheme = localStorage.getItem('app_theme') || 'silver';
-  setTheme(savedTheme);
 
   // カレンダートグルの状態を反映
   const calToggle = document.getElementById('toggle-cal-hidden');
