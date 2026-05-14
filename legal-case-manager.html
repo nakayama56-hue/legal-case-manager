@@ -196,6 +196,98 @@ body[data-theme="forest"] .today-panel {
 }
 
 
+/* 相続人手配トラッカー */
+.souzoku-tracker {
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255,255,255,0.55);
+  box-shadow: 0 2px 12px rgba(80,100,200,0.08), 0 1px 0 rgba(255,255,255,0.6);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.souzoku-tracker-header {
+  padding: 10px 14px;
+  background: rgba(254,215,170,0.55);
+  border-bottom: 1px solid rgba(251,191,36,0.4);
+  font-size: 13px; font-weight: 700; color: #7c2d12;
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+}
+.souzoku-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  font-size: 12px;
+}
+.souzoku-table th, .souzoku-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: left;
+}
+.souzoku-table th {
+  background: rgba(255,237,213,0.45);
+  font-weight: 700; color: #78350f;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.souzoku-table td.souzoku-name {
+  font-weight: 600;
+  min-width: 100px;
+}
+.souzoku-table td.souzoku-name input {
+  width: 100%; border: 1px solid transparent;
+  background: transparent; padding: 2px 4px; font-size: 12px; font-weight: 600;
+  border-radius: 4px;
+}
+.souzoku-table td.souzoku-name input:focus {
+  background: #fff; border-color: var(--color-primary); outline: none;
+}
+.souzoku-table td.souzoku-status {
+  text-align: center;
+  padding: 4px;
+}
+.souzoku-status-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+.souzoku-status-btn:hover { transform: scale(1.1); }
+.souzoku-status-btn[data-status="none"]   { background: #fff;       color: #9ca3af; }
+.souzoku-status-btn[data-status="going"]  { background: #fef3c7;    color: #78350f; border-color:#fcd34d; }
+.souzoku-status-btn[data-status="done"]   { background: #dcfce7;    color: #166534; border-color:#86efac; }
+.souzoku-status-btn[data-status="na"]     { background: #f3f4f6;    color: #6b7280; border-color:#d1d5db; }
+.souzoku-table td.souzoku-memo input {
+  width: 100%; border: 1px solid transparent;
+  background: transparent; padding: 2px 4px; font-size: 11px;
+  border-radius: 4px;
+}
+.souzoku-table td.souzoku-memo input:focus {
+  background: #fff; border-color: var(--color-primary); outline: none;
+}
+.souzoku-row-batch {
+  font-size: 10px; color: var(--color-muted); margin-left: 4px;
+}
+.souzoku-actions {
+  padding: 8px 14px; display: flex; gap: 8px; flex-wrap: wrap;
+  background: rgba(255,255,255,0.30);
+}
+.souzoku-del-btn {
+  border: none; background: transparent; cursor: pointer;
+  color: #dc2626; font-size: 11px; padding: 2px 4px;
+}
+.souzoku-del-btn:hover { background: #fee2e2; border-radius: 4px; }
+.souzoku-legend {
+  font-size: 10px; color: var(--text-muted);
+  padding: 6px 14px; display: flex; gap: 12px; flex-wrap: wrap;
+  background: rgba(255,255,255,0.30);
+  border-top: 1px solid var(--border-light);
+}
+
 /* セクションハイライト（編集ボタンからジャンプ時） */
 @keyframes sectionPulse {
   0%   { box-shadow: 0 0 0 0 rgba(37,99,168,0.0); outline: 2px solid rgba(37,99,168,0.0); }
@@ -1926,7 +2018,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAALH0lEQVR4nO1ba4xdVRX+1trnnHvuY+bOqy2DLZZnSSmgLVqLBQUSSnmJmigRxEiikRBjAEMiIUElBRFjkAhWEBAJiYSoyFOQ8AhQHuFRlFehD9oCVTrPOzP3nnPP2Wv545yZzpRH59ze9sYwX3Jn7p0zZ5+1v732Xt9ae18qzzlW8QkGt9qAVmOGgFYb0GrMENBqA1qNGQJabUCrMUNAqw1oNWYIaLUBrYazNx5CRAATCAQA0CnXAFUAqlCVqRf3AvYcAQQQG0AVtl5HHNSh1iaXUjJ0vNMgGM+FyXkg3rtOuUcIYGNg4xjhcAVsSNvn7qPdCw/WrgUHorTvbMq1l4gcJhtGWu0blMqWd9H/73U0tGkr2XpMqnvPDZpKAHHi4rXBYeTLbbrwGyvlkDNORM/iRZSf1cnsgASAjPePQEQwiAFiaP8Lr8k9Z11I4egYkzHp3NizaBoBbAyiWgC1VheddbosOf/b1HXYAWwFVK9aBJUQUElcHwqBAiCIKPK+C7Ehnlx1PdUGh9nJ+1CRZpn2sWgKAewYhMMjKM/rlS9fdbF+euVyjgNQbSAAEcFCoaoAEcgxMMQwhiCxwHUNrA30oe9crJsfeZrz3R1Qu3c6DzSBAHYMgoFhzP3iEll50yoUe2eZal8VxAxihojCKfowPiAxtF4JEFRHEEexFvwcwYg+9IPLZNPDT5rC7B6VKE5jRYIpESP9POX6+DQhSsNNNtDulMTYMQgGhzH/hOV25a1XMbs+RaM1sMuQSGGKPsgHKuu2yJaHn9J3n12LysatFFZGIdaSxlYPWvklWXTOqRyJA2OchLjJHSeAdHJHkx9KCihBxEIji2JXHmtW3UDr7nqI/HI7JI04u0LDHkCGEVbG0LtkkZx88xUMdikeq4EdA1hFvsdH3+ub5YVr/6hv3/841waGmAzDuC7IMIzjYqxvgOIwwr5LD+fqMABOBhKYNNITOiH9287XAUisyHUQ3M52aCyZpERjBBBBohh+uSQnXHc5TKFI9UoAMgaqgNeZ09dvvVueuOwaqvYPGa+9hHx3RzKKmvSEjIGT88BMCANBVA1hnOR+EZmIAFNCIiVSSkShAJgAAsHGMcTPI45iZJ0EDRFAzKgPj+CYyy/S7oX7mdr7AYxjICJwO3L6zM+vl+d+eSN75RLluzsgsYXEU12SNFkYCYk3JZYTQIBb8MEMCIBUJ00ZVWfSByWAYiDvA47nIKuGyEwAMaM+Moq5y5fIwrNP47C/DuMa2MgiP8vH81ffIs9e9XuTn9UNiHyg4ztDk6mceBUBZAhDGzZLMDAENYwkeNAkSZB60CRSRASFjhzC9weIHIey6IfGpoCofvb8c5QcwyoRVACv08fbD66xT6+6jvM9XUkcn44h4yueKtRa+G0+Hrl6tb5x532c6yxPyOddQgFyDHmlQiYNkYkAYkZUrWHOkYfqvGM+z9FwPYk8hhEOj+iTl/6ayHXTjCebKyo0zQ8AMoY45xF73vQJaOCZQMZ0mJhggxDzTzpW3TaPNLZQEbhlF+vuuE/6Xt/AbjHbCEy0nf6Ox0Ne6hWZXg0gkweIFbh5X3uXHUVxHRPKLh4L9Y077iXj53ZPwo4vikwgwyBjpmmYZF78xjFtAogINopQ2qdHuw6eTza0ABRuwUXf2ld18I2N1JiGp4kYDwCGgXishmBkGABBbfyx96oqnJwH4+ca8oLpewARbBSj2DsbfkcZcRglsdgDtr30KurVgPK+P20FtgM64f7MDBsrepctVjCJKXxwOtGk+6AK4zkYXLcJfW9sZOO5ezAMEqDWotDdCZNjRMEO6T20cWumh+7U7MQ7IkY8FuEz551ljvrRWbA2jfOJPIAowJq+B2BjIF8Cnr36Vnnv0mtQmNUJ3UXY3RkZ1gCCisJtKxI7qd2UGFIbGExidaZHT2k6jYZJ7+qjAUJVMD7YZkKEQqHQ2MJyEWGtDmqwkJQtDAIAp0apTuhxAqDZEzEAqQj6kCdRei1OFeP43xIBlDxbCXBoanaYFRkISORXNDqmYgHVZMyZgXx3JyAyNYvL0OyUjwp4pRzYAWIBDCZppZ1ulUhRyBM8P5dI5gYwfQLSBKbWNwQJkgVLJZlv7QfMTf6noaFIogApAKtwSi5e+t1t9r01L5JTKACTFkGdwrBCFXA8g6E3N8MrFRoqpGQgIFlxR9/7L8LBIbjtZdi6RRQAsw8/DG7BV7HSsDcqkgTJuIxtz6yldX97gHNt05DCqjC+B5PLNaQFpk2AqsK4Lka2bafB9Rt0n6OXUBwqotEIXQsPpu4FB+j219aTW8hn0gLjjGn6QRVwi3nk2tqR62j7mFHdUVndHSGUTQobRlwLaOsTzym7SaoqcQynnKMFZ56qNggz1/UVSSSZWE0BQBRqJX3Zj3hNur4b1eNM1qoITN7H2w8+QeFwoOw4IIcRD8dYeOapPGvRwVIfq2YnYaIUQDuVw9Jo22CEmQ4yEqBwCz62v/ImbXnsaXHLLsgq1MbwyiVa/rMLVKM4sT+L0ZNSYlgBREHM0DgGRDUO63tsxyh7q2m6+q/rbiOpRwonqf7WBgPMPXGZWXrJeVLbPpAkNLxrEsYXP7UWsRV4RYZX8FGvVuEVC/L1u34rB65YLrW+QbDT/I2szASoCNxSEe89s5Zf+9NdkuvxYCMLNoxwIMTnLjzXHH3p+TYYGFYb2aRI+nHtpfrCbyuiOKugb967xm544DHqmNcrJ978C8xeeoQ54dqf0oGnHGer7/c33RMaak1F4LaV8NyV13PfyxvE78xDrcAYRlQJ8YVLvm9WrL5cvHxOav1DUFWwY5IUl5P9sPF57XkeSKHbnn1eHjj7Iv3Laedyx4H76Tfvvxlzlx7Jo/+pQp0cnfyHK3jRt06zcRBMy7Omi4b3BcgwotEaeg49QL7y99XwCm0cV0PAYWgsyHX5GNjwjqz9zS268d5Hqdo/uSxuQESI6xHa5nSrk3P1/Vffoq7999MlF5yrC84+g41xyY6FIEOoB3WU55Ww8a+P27u/ezG7xQI1a+ts9zdGhiqYu2yJnHL7r8gttlF9JAAZhsQWTsGHkydU1m+VzQ8/pVvXvIjKpq1Ur4xCY0sm56lbLqHzoP1x6KnH66eOW0Zeh8/BYASxFswEjQWFffLYcM+T9h/f+wkriMhw0zZOd4uACRIGK+hdskhW3HQFyvvvy7W+SW6qgJvPwRQAG0PrlRrsWA0qosZ1idtLcNsMsQWiUYFGUVJ8sRbkOih0uVh3+wP2nxesYiWQcR2oNKfzQBMIANLN0cooSnN65Jgrf6wHnX48Sx0UjYZAmuKmjwNMEjWSUrdCrIWIgAEwMdQKyDC8Dg/VoTF5/qrV+vINf2ankCc2pum7xk0hAEgSJRuGsGFdF3xthSz+4TnUc8QhpAqKx5KRVVVIWvebnDgREUAMznlwCoDUYt10/6Py3NU30vbX1rPfWU6P0DT/vEDTCADGO0IIh0eQKxV0/orlcshXT8LsxYdTYVYnkZtUOCaKuAQwJ6EoCqBDW97RrY89revvvI+2Pf8KseuSW8zvcnNlt2zeE1+YIGOg1qI+Mgbi5IhMz2GHaNfCg9A2t5e8chuRIbL1WIO+Aam8/Q76X32L+l7fQLXtA8SeB7eUT0a9ifP9Q23dk98YGT/mMnFIKrZJfc8wxlM/Sec0uw4c3we7Ttrx/6MTIh+F8VzeuOkJsIk9vh2cTxydS+d4pp2gJmCvnBNUVcDqh5bLWv2FpU/8SdEZAlptQKsxQ0CrDWg1ZghotQGtxgwBrTag1ZghoNUGtBr/A/cFjnwlOibMAAAAAElFTkSuQmCC"""" style="width:32px;height:32px;border-radius:50%"></div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 5.2.7</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 5.3.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2414,6 +2506,12 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="form-section">
         <div class="form-section-title">🎯 進捗情報</div>
         <div class="form-grid">
+          <div class="form-group full">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+              <input type="checkbox" id="f-souzoku-tracker-enabled" style="width:16px;height:16px;cursor:pointer">
+              <span>📋 相続人手配トラッカーを使う（相続登記案件向け）</span>
+            </label>
+          </div>
           <div class="form-group full">
             <label class="form-label">備考・メモ</label>
               <textarea class="form-control" id="f-memo" placeholder="その他特記事項"></textarea>
@@ -4859,6 +4957,9 @@ function renderCaseDetail(caseId) {
     <!-- Contacts (multi-person) -->
     ${renderContactCards(c)}
 
+    <!-- 相続人手配トラッカー（手動ON時のみ／印刷除外） -->
+    ${c.souzoku_tracker_enabled ? `<div class="no-print">${renderSouzokuTracker(c)}</div>` : ''}
+
     <!-- 取得証明書等 -->
     ${renderDocuments(c)}
 
@@ -6805,6 +6906,8 @@ function openCaseModal(caseId, scrollTo) {
   document.getElementById('f-case-type-text').value = '';
   document.getElementById('f-hoteisozoku').checked = false;
   document.getElementById('f-dropbox-url').value = '';
+  const souzokuChk = document.getElementById('f-souzoku-tracker-enabled');
+  if (souzokuChk) souzokuChk.checked = false;
   onCaseCategoryChange('不動産登記');
   // ラベルリセット
   const radios = document.querySelectorAll('input[name="case-label"]');
@@ -6861,6 +6964,7 @@ function openCaseModal(caseId, scrollTo) {
     document.getElementById('f-received-date').value = c.received_date || '';
     document.getElementById('f-memo').value = c.memo || '';
     document.getElementById('f-dropbox-url').value = c.dropboxUrl || '';
+    document.getElementById('f-souzoku-tracker-enabled').checked = !!c.souzoku_tracker_enabled;
     document.getElementById('f-hoteisozoku').checked = c.hoteisozoku || false;
 
     // Load contacts — migrate legacy fields if contacts array is empty
@@ -7455,6 +7559,7 @@ function saveCase() {
     received_date:    document.getElementById('f-received-date').value,
     memo:        document.getElementById('f-memo').value.trim(),
     dropboxUrl:  document.getElementById('f-dropbox-url').value.trim(),
+    souzoku_tracker_enabled: document.getElementById('f-souzoku-tracker-enabled').checked,
     hoteisozoku: document.getElementById('f-hoteisozoku').checked,
   };
 
@@ -8130,6 +8235,188 @@ function renderDeliverySection(c) {
 /* =====================================================
    取得証明書等
    ===================================================== */
+
+/* =====================================================
+   相続人手配トラッカー
+   ===================================================== */
+const SOUZOKU_DOC_TYPES = ['戸籍', '除籍', '改製原戸籍', '住民票', '戸籍附票'];
+const SOUZOKU_STATUSES = [
+  { key:'none',  icon:'⬜', label:'未着手' },
+  { key:'going', icon:'🟡', label:'手配中' },
+  { key:'done',  icon:'✅', label:'取得済' },
+  { key:'na',    icon:'—',  label:'不要' },
+];
+
+function getSouzokuTracker(c) {
+  if (!c.souzoku_tracker) {
+    c.souzoku_tracker = { rows: [] };
+  }
+  return c.souzoku_tracker;
+}
+
+function souzokuNextStatus(current) {
+  const order = ['none','going','done','na'];
+  const idx = order.indexOf(current||'none');
+  return order[(idx+1) % order.length];
+}
+
+function souzokuStatusIcon(status) {
+  const s = SOUZOKU_STATUSES.find(x => x.key === (status||'none'));
+  return s ? s.icon : '⬜';
+}
+
+function renderSouzokuTracker(c) {
+  const tracker = getSouzokuTracker(c);
+  const rows = tracker.rows;
+
+  // 相続人名でグループ化（追加手配を同名でまとめる）
+  const grouped = {};
+  rows.forEach((r, idx) => {
+    const key = r.name || `(未入力${idx})`;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push({ ...r, _idx: idx });
+  });
+
+  const docHeaders = SOUZOKU_DOC_TYPES.map(d => `<th>${d}</th>`).join('');
+
+  const bodyRows = Object.entries(grouped).map(([name, items]) => {
+    return items.map((row, batchIdx) => {
+      const isFirst = batchIdx === 0;
+      const batchLabel = items.length > 1 ? `<span class="souzoku-row-batch">(${batchIdx+1}回目)</span>` : '';
+      const nameCell = isFirst
+        ? `<td class="souzoku-name" rowspan="${items.length}"><input value="${escHtml(row.name||'')}" placeholder="相続人名" onchange="souzokuUpdateName('${c.id}',${row._idx},this.value)"></td>`
+        : '';
+      const statusCells = SOUZOKU_DOC_TYPES.map(doc => {
+        const status = (row.statuses && row.statuses[doc]) || 'none';
+        return `<td class="souzoku-status">
+          <button class="souzoku-status-btn" data-status="${status}"
+            onclick="souzokuToggleStatus('${c.id}',${row._idx},'${doc}')"
+            title="${SOUZOKU_STATUSES.find(s=>s.key===status)?.label||''}">${souzokuStatusIcon(status)}</button>
+        </td>`;
+      }).join('');
+      return `<tr>
+        ${nameCell}
+        <td style="text-align:center;font-size:10px;color:var(--text-muted);min-width:50px">${batchLabel || (items.length>1 ? '' : '')}</td>
+        ${statusCells}
+        <td class="souzoku-memo"><input value="${escHtml(row.memo||'')}" placeholder="手配先・備考" onchange="souzokuUpdateMemo('${c.id}',${row._idx},this.value)"></td>
+        <td style="text-align:center;width:30px">
+          <button class="souzoku-del-btn" onclick="souzokuDeleteRow('${c.id}',${row._idx})" title="削除">✕</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }).join('');
+
+  // 相続人別の追加手配ボタン
+  const uniqueNames = [...new Set(rows.map(r => r.name).filter(n => n))];
+  const addBatchBtns = uniqueNames.map(name =>
+    `<button class="btn btn-secondary btn-xs" onclick="souzokuAddBatch('${c.id}','${escHtml(name)}')">＋ ${escHtml(name)}に追加手配</button>`
+  ).join('');
+
+  return `
+    <div class="souzoku-tracker">
+      <div class="souzoku-tracker-header">
+        <span>📋 相続人手配トラッカー${rows.length > 0 ? `（${uniqueNames.length}名）` : ''}</span>
+        <span style="font-size:10px;font-weight:500;color:#92400e">※ 印刷には含まれません</span>
+      </div>
+      ${rows.length === 0 ? `
+        <div style="padding:16px 14px;color:var(--text-muted);font-size:12px;text-align:center">
+          相続人を追加してください
+        </div>
+      ` : `
+        <div style="overflow-x:auto">
+          <table class="souzoku-table">
+            <thead>
+              <tr>
+                <th style="text-align:left">相続人</th>
+                <th></th>
+                ${docHeaders}
+                <th style="text-align:left">手配先・備考</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>${bodyRows}</tbody>
+          </table>
+        </div>
+      `}
+      <div class="souzoku-actions">
+        <button class="btn btn-primary btn-xs" onclick="souzokuAddRow('${c.id}')">＋ 相続人を追加</button>
+        ${addBatchBtns}
+      </div>
+      <div class="souzoku-legend">
+        <span>⬜ 未着手</span>
+        <span>🟡 手配中</span>
+        <span>✅ 取得済</span>
+        <span>— 不要</span>
+        <span style="color:var(--color-primary)">※ アイコンをクリックで切替</span>
+      </div>
+    </div>
+  `;
+}
+
+function souzokuAddRow(caseId) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  const t = getSouzokuTracker(c);
+  t.rows.push({ name:'', statuses:{}, memo:'' });
+  saveToStorage();
+  refreshSouzokuTracker(caseId);
+}
+
+function souzokuAddBatch(caseId, name) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  const t = getSouzokuTracker(c);
+  // 同名の既存行の直後に挿入
+  const lastIdx = t.rows.map((r,i)=>r.name===name?i:-1).filter(i=>i>=0).pop();
+  const newRow = { name, statuses:{}, memo:'' };
+  if (lastIdx !== undefined && lastIdx >= 0) {
+    t.rows.splice(lastIdx+1, 0, newRow);
+  } else {
+    t.rows.push(newRow);
+  }
+  saveToStorage();
+  refreshSouzokuTracker(caseId);
+}
+
+function souzokuUpdateName(caseId, idx, value) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c || !c.souzoku_tracker) return;
+  c.souzoku_tracker.rows[idx].name = value;
+  saveToStorage();
+  refreshSouzokuTracker(caseId);
+}
+
+function souzokuUpdateMemo(caseId, idx, value) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c || !c.souzoku_tracker) return;
+  c.souzoku_tracker.rows[idx].memo = value;
+  saveToStorage();
+}
+
+function souzokuToggleStatus(caseId, idx, doc) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c || !c.souzoku_tracker) return;
+  const row = c.souzoku_tracker.rows[idx];
+  if (!row.statuses) row.statuses = {};
+  row.statuses[doc] = souzokuNextStatus(row.statuses[doc]);
+  saveToStorage();
+  refreshSouzokuTracker(caseId);
+}
+
+function souzokuDeleteRow(caseId, idx) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c || !c.souzoku_tracker) return;
+  const row = c.souzoku_tracker.rows[idx];
+  showConfirm(`「${row.name||'(未入力)'}」の行を削除しますか？`, () => {
+    c.souzoku_tracker.rows.splice(idx, 1);
+    saveToStorage();
+    refreshSouzokuTracker(caseId);
+  });
+}
+
+function refreshSouzokuTracker(caseId) {
+  renderCaseDetail(caseId);
+}
 
 function renderDocuments(c) {
   const docs = c.documents || [];
