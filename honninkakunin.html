@@ -74,10 +74,20 @@
 
   .input-view .section {
     background: white;
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 20px;
     margin-bottom: 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1.5px solid #e5e7eb;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .input-view .section.section-active {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12), 0 4px 16px rgba(59,130,246,0.08);
+  }
+  .input-view .section.section-done {
+    border-color: #86efac;
+    background: #f0fdf4;
   }
   .input-view .section h2 {
     margin: 0 0 16px 0;
@@ -86,7 +96,67 @@
     color: #1e40af;
     padding-bottom: 8px;
     border-bottom: 2px solid #dbeafe;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
+  .section-badge {
+    font-size: 11px;
+    border-radius: 10px;
+    padding: 1px 8px;
+    margin-left: auto;
+    font-weight: 600;
+  }
+  .section-badge.active { background: #3b82f6; color: #fff; }
+  .section-badge.done   { background: #16a34a; color: #fff; }
+
+  /* プログレスバー */
+  .progress-bar-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid #e5e7eb;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 20px;
+    border: 1.5px solid #e5e7eb;
+    background: #f9fafb;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .progress-step:hover { border-color: #93c5fd; color: #1d4ed8; }
+  .progress-step.active { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; font-weight: 700; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+  .progress-step.done   { background: #f0fdf4; border-color: #86efac; color: #16a34a; }
+  .progress-next-btn {
+    margin-left: auto;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: none;
+    background: #3b82f6;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .progress-next-btn:hover { background: #2563eb; }
+  .progress-next-btn:disabled { background: #9ca3af; cursor: default; }
   .input-view .field-row {
     display: grid;
     grid-template-columns: 140px 1fr;
@@ -325,7 +395,7 @@
 <body class="mode-input">
 
 <div class="toolbar">
-  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.1.1</span></h1>
+  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.1.2</span></h1>
   <div class="mode-switch">
     <button id="btn-mode-input" class="active" onclick="setMode('input')">入力</button>
     <button id="btn-mode-print" onclick="setMode('print')">様式プレビュー</button>
@@ -354,9 +424,21 @@
 <!-- =================== 入力モード =================== -->
 <div class="container input-view">
 
+  <!-- プログレスバー -->
+  <div class="progress-bar-wrap" id="progress-bar">
+    <div class="progress-step active" data-section="sec-basic"  onclick="jumpToSection('sec-basic')"><span>📋</span>基本情報</div>
+    <div class="progress-step"       data-section="sec-irai"   onclick="jumpToSection('sec-irai')"><span>👤</span>依頼者</div>
+    <div class="progress-step"       data-section="sec-method" onclick="jumpToSection('sec-method')"><span>🔍</span>確認方法</div>
+    <div class="progress-step"       data-section="sec-doc"    onclick="jumpToSection('sec-doc')"><span>📄</span>確認書類</div>
+    <div class="progress-step"       data-section="sec-dai"    onclick="jumpToSection('sec-dai')"><span>🤝</span>代理人</div>
+    <div class="progress-step"       data-section="sec-jutaku" onclick="jumpToSection('sec-jutaku')"><span>📑</span>受託事務</div>
+    <div class="progress-step"       data-section="sec-note"   onclick="jumpToSection('sec-note')"><span>✏️</span>特記事項</div>
+    <button class="progress-next-btn" onclick="goNextSection()">次のセクションへ ▶</button>
+  </div>
+
   <!-- 上部メタ -->
-  <div class="section">
-    <h2>基本情報</h2>
+  <div class="section" id="sec-basic">
+    <h2>基本情報<span class="section-badge active" id="badge-sec-basic">入力中</span></h2>
     <div class="field-row">
       <label>取引種別</label>
       <div class="radio-group">
@@ -389,8 +471,8 @@
   </div>
 
   <!-- 依頼者（本人） -->
-  <div class="section">
-    <h2>依頼者（本人）</h2>
+  <div class="section" id="sec-irai">
+    <h2>依頼者（本人）<span class="section-badge" id="badge-sec-irai"></span></h2>
     <div class="field-row">
       <label>種別</label>
       <div class="radio-group">
@@ -446,8 +528,8 @@
   </div>
 
   <!-- 依頼者の確認方法 -->
-  <div class="section">
-    <h2>依頼者 確認方法</h2>
+  <div class="section" id="sec-method">
+    <h2>依頼者 確認方法<span class="section-badge" id="badge-sec-method"></span></h2>
     <div class="field-row">
       <label>前回確認</label>
       <div class="inline-row">
@@ -520,8 +602,8 @@
   </div>
 
   <!-- 依頼者の確認書類 -->
-  <div class="section">
-    <h2>依頼者 確認書類</h2>
+  <div class="section" id="sec-doc">
+    <h2>依頼者 確認書類<span class="section-badge" id="badge-sec-doc"></span></h2>
     <div class="field-row">
       <label>写しの有無</label>
       <label><input type="checkbox" id="irai_doc_copy" /> 写しあり</label>
@@ -611,8 +693,8 @@
   </div>
 
   <!-- 代理人・取引担当者 -->
-  <div class="section">
-    <h2>代理人・取引担当者（いる場合のみ）</h2>
+  <div class="section" id="sec-dai">
+    <h2>代理人・取引担当者（いる場合のみ）<span class="section-badge" id="badge-sec-dai"></span></h2>
     <div class="field-row">
       <label>フリガナ</label>
       <input type="text" id="dai_kana" placeholder="カタカナ" />
@@ -807,8 +889,8 @@
   </div>
 
   <!-- 受託事務 -->
-  <div class="section">
-    <h2>受託事務</h2>
+  <div class="section" id="sec-jutaku">
+    <h2>受託事務<span class="section-badge" id="badge-sec-jutaku"></span></h2>
     <div class="field-row">
       <label>不動産売買</label>
       <div class="inline-row">
@@ -913,8 +995,8 @@
   </div>
 
   <!-- 特記事項 -->
-  <div class="section">
-    <h2>特記事項</h2>
+  <div class="section" id="sec-note">
+    <h2>特記事項<span class="section-badge" id="badge-sec-note"></span></h2>
     <textarea id="tokki" rows="4" style="width:100%"></textarea>
   </div>
 
@@ -1561,9 +1643,105 @@ function renderPrintView() {
 }
 
 // ============= 初期化 =============
+/* =====================================================
+   プログレスバー制御
+   ===================================================== */
+const SECTIONS = ['sec-basic','sec-irai','sec-method','sec-doc','sec-dai','sec-jutaku','sec-note'];
+let currentSectionIdx = 0;
+
+function getSectionInputs(sectionId) {
+  const el = document.getElementById(sectionId);
+  if (!el) return [];
+  return [...el.querySelectorAll('input[type="text"],input[type="number"],input[type="tel"],input[type="date"],input[type="time"],textarea,select')];
+}
+
+function isSectionFilled(sectionId) {
+  const el = document.getElementById(sectionId);
+  if (!el) return false;
+  // チェックボックス・ラジオが1つでもON、またはテキスト入力が1つでも入力済み
+  const hasChecked = [...el.querySelectorAll('input[type="checkbox"],input[type="radio"]')].some(i => i.checked);
+  const hasText    = [...el.querySelectorAll('input[type="text"],input[type="number"],textarea')].some(i => i.value.trim() !== '');
+  // 代理人セクションは任意なので常に「完了」扱い可
+  if (sectionId === 'sec-dai') return true;
+  return hasChecked || hasText;
+}
+
+function updateProgress() {
+  SECTIONS.forEach((id, idx) => {
+    const step  = document.querySelector(`.progress-step[data-section="${id}"]`);
+    const badge = document.getElementById(`badge-${id}`);
+    const sec   = document.getElementById(id);
+    if (!step || !sec) return;
+
+    const isActive = idx === currentSectionIdx;
+    const isDone   = !isActive && isSectionFilled(id);
+
+    step.className = 'progress-step' + (isActive ? ' active' : isDone ? ' done' : '');
+    sec.className  = 'section'       + (isActive ? ' section-active' : isDone ? ' section-done' : '');
+
+    if (badge) {
+      badge.textContent = isActive ? '入力中' : isDone ? '✓ 完了' : '';
+      badge.className   = 'section-badge' + (isActive ? ' active' : isDone ? ' done' : '');
+    }
+    if (isActive) step.innerHTML = step.innerHTML; // re-render済み
+  });
+
+  // 「次へ」ボタンを最終セクションで無効化
+  const nextBtn = document.querySelector('.progress-next-btn');
+  if (nextBtn) nextBtn.disabled = currentSectionIdx >= SECTIONS.length - 1;
+}
+
+function jumpToSection(sectionId) {
+  const idx = SECTIONS.indexOf(sectionId);
+  if (idx < 0) return;
+  currentSectionIdx = idx;
+  updateProgress();
+  const el = document.getElementById(sectionId);
+  if (el) {
+    const offset = 80; // プログレスバーの高さ分
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: 'smooth' });
+    // フラッシュ
+    el.style.transition = 'box-shadow 0.1s';
+    setTimeout(() => { el.style.boxShadow = '0 0 0 4px rgba(59,130,246,0.3), 0 4px 20px rgba(59,130,246,0.15)'; }, 100);
+    setTimeout(() => { el.style.boxShadow = ''; }, 800);
+    // 最初の入力欄にフォーカス
+    const firstInput = el.querySelector('input[type="text"],input[type="number"],input[type="tel"],textarea,select');
+    if (firstInput) setTimeout(() => firstInput.focus(), 400);
+  }
+}
+
+function goNextSection() {
+  if (currentSectionIdx < SECTIONS.length - 1) {
+    jumpToSection(SECTIONS[currentSectionIdx + 1]);
+  }
+}
+
+// スクロール位置に応じてアクティブセクションを自動更新
+function onScrollUpdateSection() {
+  const offset = 100;
+  let found = 0;
+  SECTIONS.forEach((id, idx) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.getBoundingClientRect().top < offset) found = idx;
+  });
+  if (found !== currentSectionIdx) {
+    currentSectionIdx = found;
+    updateProgress();
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
   toggleIraiType();
+  // プログレスバー初期化
+  updateProgress();
+  // 入力変更でプログレス更新
+  document.querySelector('.input-view')?.addEventListener('change', updateProgress);
+  document.querySelector('.input-view')?.addEventListener('input',  updateProgress);
+  // スクロールでアクティブセクション更新
+  window.addEventListener('scroll', onScrollUpdateSection, { passive: true });
 
   // URLパラメータから連絡先情報を自動入力
   const params = new URLSearchParams(window.location.search);
