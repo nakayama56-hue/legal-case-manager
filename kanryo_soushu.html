@@ -356,6 +356,24 @@ input:focus { outline: none; border-color: var(--blue-mid); box-shadow: 0 0 0 3p
     <!-- 添付書類 -->
     <div class="sec">
       <div class="sec-head">
+        <div class="sec-lbl">📝 本文</div>
+      </div>
+      <div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap">
+        <select id="bodyTeikei" style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--white)" onchange="loadBodyTeikei(this)">
+          <option value="">── 定型文を選択 ──</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="deleteBodyTeikei()" title="選択中の定型文を削除">🗑</button>
+      </div>
+      <textarea id="bodyText" rows="6" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:5px;font-family:'Noto Sans JP',sans-serif;font-size:12px;color:var(--ink);resize:vertical;line-height:1.7" oninput="renderPreview()"
+        placeholder="本文を入力してください">さて、このたびの登記手続きが無事完了いたしましたので、関係書類をご送付申し上げます。ご査収のほど、何卒よろしくお願い申し上げます。</textarea>
+      <div style="display:flex;gap:5px;margin-top:5px">
+        <input type="text" id="bodyTeikeiName" placeholder="定型文名を入力" style="flex:1;margin-bottom:0">
+        <button class="btn btn-blue btn-sm" onclick="saveBodyTeikei()">定型文保存</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head">
         <div class="sec-lbl">📎 添付書類</div>
         <button class="btn btn-ghost btn-sm" onclick="openModal()">⚙ よく使う書類を管理</button>
       </div>
@@ -451,6 +469,7 @@ function init() {
     document.getElementById(id).addEventListener('input', renderPreview));
   renderPresetBar();
   loadSavedTemplates();
+  loadBodyTeikeiSelect();
   renderPreview();
 }
 
@@ -524,9 +543,16 @@ function removePreset(i) {
 }
 
 // ── 添付書類 ──
-function addDocItem(name='', count=1, issiki=false) {
-  docItems.push({ id: nextId++, name, count, issiki });
+function addDocItem(name='', count=1, issiki=false, note='') {
+  docItems.push({ id: nextId++, name, count, issiki, note });
   renderDocList(); renderPreview();
+}
+function toggleDocNote(id, btn) {
+  const noteEl = document.getElementById(`note-${id}`);
+  if (!noteEl) return;
+  const isOpen = noteEl.style.display !== 'none';
+  noteEl.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) noteEl.querySelector('input')?.focus();
 }
 function removeDocItem(id) {
   docItems = docItems.filter(d => d.id !== id);
@@ -546,20 +572,32 @@ function renderDocList() {
   docItems.forEach(item => {
     const d = document.createElement('div');
     d.className = 'doc-item';
+    d.style.cssText = 'display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:5px;background:var(--white);margin-bottom:4px;overflow:hidden';
     d.innerHTML = `
-      <input type="text" value="${escHtml(item.name)}" placeholder="書類名"
-        oninput="updateDocItem(${item.id},'name',this.value)">
-      <div class="cnt-wrap" id="cntwrap-${item.id}" style="${item.issiki ? 'opacity:.3;pointer-events:none;' : ''}">
-        <input type="number" min="1" max="99" value="${item.count}"
-          oninput="updateDocItem(${item.id},'count',this.value)">
-        <span class="unit">通</span>
+      <div style="display:grid;grid-template-columns:1fr 74px auto auto 26px;gap:5px;align-items:center;padding:5px 6px">
+        <input type="text" value="${escHtml(item.name)}" placeholder="書類名"
+          oninput="updateDocItem(${item.id},'name',this.value)" style="margin-bottom:0;font-size:12px;padding:5px 7px">
+        <div class="cnt-wrap" id="cntwrap-${item.id}" style="${item.issiki ? 'opacity:.3;pointer-events:none;' : ''}">
+          <input type="number" min="1" max="99" value="${item.count}"
+            oninput="updateDocItem(${item.id},'count',this.value)" style="margin-bottom:0">
+          <span class="unit">通</span>
+        </div>
+        <label class="issiki-chk" title="〜一式 にする">
+          <input type="checkbox" ${item.issiki ? 'checked' : ''}
+            onchange="updateDocItem(${item.id},'issiki',this.checked);document.getElementById('cntwrap-${item.id}').style=this.checked?'opacity:.3;pointer-events:none;':''">
+          <span>一式</span>
+        </label>
+        <button title="補足説明を追加" onclick="toggleDocNote(${item.id},this)"
+          style="font-size:11px;padding:2px 6px;border:1px solid ${item.note ? 'var(--blue-mid)' : 'var(--border)'};border-radius:4px;background:${item.note ? 'var(--blue-xlt)' : 'none'};color:${item.note ? 'var(--blue)' : 'var(--ink-lt)'};cursor:pointer;white-space:nowrap">
+          ${item.note ? '📝 補足あり' : '＋ 補足'}
+        </button>
+        <button class="doc-rm" onclick="removeDocItem(${item.id})" title="削除">×</button>
       </div>
-      <label class="issiki-chk" title="〜一式 にする">
-        <input type="checkbox" ${item.issiki ? 'checked' : ''}
-          onchange="updateDocItem(${item.id},'issiki',this.checked);document.getElementById('cntwrap-${item.id}').style=this.checked?'opacity:.3;pointer-events:none;':''">
-        <span>一式</span>
-      </label>
-      <button class="doc-rm" onclick="removeDocItem(${item.id})" title="削除">×</button>`;
+      <div id="note-${item.id}" style="display:${item.note ? 'block' : 'none'};padding:0 6px 6px">
+        <input type="text" value="${escHtml(item.note||'')}" placeholder="補足説明（例：原本、コピー1部同封）"
+          oninput="updateDocItem(${item.id},'note',this.value)"
+          style="margin-bottom:0;font-size:11px;padding:4px 7px;border-color:var(--blue-mid);background:var(--blue-xlt)">
+      </div>`;
     el.appendChild(d);
   });
 }
@@ -576,14 +614,16 @@ function renderPreview() {
     attachHtml = '<div style="color:#aaa;font-size:12px;font-style:italic;">（書類が未入力です）</div>';
   } else {
     docItems.forEach(item => {
-      // 一式の場合は書類名の直後に「一式」、通数は非表示
       const countPart = item.issiki
         ? `<span class="dct-issiki">一式</span>`
         : `<span class="dct">　${item.count}　通</span>`;
+      const notePart = item.note
+        ? `<div style="font-size:0.85em;color:#555;margin-left:1.5em;margin-top:1px">（${escHtml(item.note)}）</div>`
+        : '';
       attachHtml += `<div class="doc-attach-row">
         <span class="dan">１．</span>
         <span class="dnm">${escHtml(item.name || '（書類名未入力）')}</span>${countPart}
-      </div>`;
+      </div>${notePart}`;
     });
   }
 
@@ -605,7 +645,7 @@ function renderPreview() {
       </div>
       <div class="doc-body-block">
         <div class="doc-greeting" style="font-family:${currentFont};">拝啓　時下ますますご清祥のこととお慶び申し上げます。平素は格別のご高配を賜り、厚く御礼申し上げます。</div>
-        <div class="doc-body-txt" style="font-family:${currentFont};">さて、このたびの登記手続きが無事完了いたしましたので、関係書類をご送付申し上げます。ご査収のほど、何卒よろしくお願い申し上げます。</div>
+        <div class="doc-body-txt" style="font-family:${currentFont};white-space:pre-wrap;">${escHtml(document.getElementById('bodyText')?.value || '')}</div>
       </div>
       <div class="doc-closing" style="font-family:${currentFont};">敬　具</div>
       <div class="doc-attach-block">
@@ -615,13 +655,67 @@ function renderPreview() {
     </div>`;
 }
 
+// ── 本文定型文 ──
+function getBodyTeikeiList() {
+  try { return JSON.parse(localStorage.getItem('sp_body_teikei') || '[]'); } catch { return []; }
+}
+function saveBodyTeikei() {
+  const name = document.getElementById('bodyTeikeiName').value.trim();
+  const body = document.getElementById('bodyText').value.trim();
+  if (!name) { showToast('定型文名を入力してください', 'warn'); return; }
+  if (!body) { showToast('本文が空です', 'warn'); return; }
+  const list = getBodyTeikeiList();
+  const existing = list.findIndex(t => t.name === name);
+  if (existing >= 0) {
+    list[existing].body = body;
+    showToast(`「${name}」を上書き保存しました`);
+  } else {
+    list.push({ id: Date.now(), name, body });
+    showToast(`「${name}」を保存しました`);
+  }
+  localStorage.setItem('sp_body_teikei', JSON.stringify(list));
+  document.getElementById('bodyTeikeiName').value = '';
+  loadBodyTeikeiSelect();
+}
+function loadBodyTeikeiSelect() {
+  const sel = document.getElementById('bodyTeikei');
+  if (!sel) return;
+  const current = sel.value;
+  const list = getBodyTeikeiList();
+  sel.innerHTML = '<option value="">── 定型文を選択 ──</option>' +
+    list.map(t => `<option value="${t.id}">${escHtml(t.name)}</option>`).join('');
+  if (current) sel.value = current;
+}
+function loadBodyTeikei(sel) {
+  const id = Number(sel.value);
+  if (!id) return;
+  const t = getBodyTeikeiList().find(t => t.id === id);
+  if (t) {
+    document.getElementById('bodyText').value = t.body;
+    renderPreview();
+  }
+}
+function deleteBodyTeikei() {
+  const sel = document.getElementById('bodyTeikei');
+  const id = Number(sel.value);
+  if (!id) { showToast('削除する定型文を選択してください', 'warn'); return; }
+  const list = getBodyTeikeiList();
+  const t = list.find(t => t.id === id);
+  if (!t) return;
+  if (!confirm(`「${t.name}」を削除しますか？`)) return;
+  localStorage.setItem('sp_body_teikei', JSON.stringify(list.filter(t => t.id !== id)));
+  sel.value = '';
+  showToast(`「${t.name}」を削除しました`);
+  loadBodyTeikeiSelect();
+}
+
 // ── テンプレート ──
 function saveTemplate() {
   const tName = document.getElementById('templateName').value.trim();
   if (!tName) { showToast('テンプレート名を入力してください', 'warn'); return; }
   if (!docItems.length) { showToast('書類が入力されていません', 'warn'); return; }
   const tpls = getTemplates();
-  tpls.push({ id: Date.now(), name: tName, docs: docItems.map(d=>({name:d.name,count:d.count,issiki:d.issiki||false})), saved: new Date().toLocaleDateString('ja-JP') });
+  tpls.push({ id: Date.now(), name: tName, docs: docItems.map(d=>({name:d.name,count:d.count,issiki:d.issiki||false,note:d.note||''})), saved: new Date().toLocaleDateString('ja-JP') });
   localStorage.setItem('sp_templates', JSON.stringify(tpls));
   showToast(`「${tName}」を保存しました`);
   document.getElementById('templateName').value = '';
@@ -646,7 +740,7 @@ function loadSavedTemplates() {
 }
 function loadTemplate(t) {
   docItems=[]; nextId=1;
-  t.docs.forEach(d => docItems.push({id:nextId++,name:d.name,count:d.count,issiki:d.issiki||false}));
+  t.docs.forEach(d => docItems.push({id:nextId++,name:d.name,count:d.count,issiki:d.issiki||false,note:d.note||''}));
   renderDocList(); renderPreview();
   showToast(`「${t.name}」を読み込みました`);
 }
