@@ -345,7 +345,88 @@ body[data-theme="forest"] .today-panel {
 .touhon-suggest-btns { display:flex; gap:6px; flex-shrink:0; }
 @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
 
-/* セクションハイライト（編集ボタンからジャンプ時） */
+/* 申請期間タイムライン */
+.shinsei-timeline {
+  margin-top: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  overflow: hidden;
+  font-size: 11px;
+}
+.shinsei-timeline-header {
+  padding: 6px 12px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.shinsei-timeline-body {
+  padding: 8px 12px;
+}
+.shinsei-tl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.shinsei-tl-row:last-child { margin-bottom: 0; }
+.shinsei-tl-label {
+  width: 60px;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.shinsei-tl-track {
+  flex: 1;
+  height: 20px;
+  position: relative;
+  background: var(--bg-primary);
+  border-radius: 4px;
+  overflow: visible;
+}
+.shinsei-tl-bar {
+  position: absolute;
+  top: 2px;
+  height: 16px;
+  background: #fde047;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #713f12;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.shinsei-tl-today {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: #ef4444;
+  border-radius: 1px;
+  z-index: 2;
+}
+.shinsei-tl-dates {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  padding: 0 0 0 68px;
+}
 @keyframes sectionPulse {
   0%   { box-shadow: 0 0 0 0 rgba(37,99,168,0.0); outline: 2px solid rgba(37,99,168,0.0); }
   12%  { box-shadow: 0 0 0 6px rgba(37,99,168,0.30); outline: 2px solid rgba(37,99,168,0.6); background-color: rgba(219,234,254,0.55); }
@@ -2097,7 +2178,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only"><img src="data:image/png;base64,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"""" style="width:32px;height:32px;border-radius:50%"></div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 5.6.5</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 5.6.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2310,6 +2391,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
               <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#0d9488;display:inline-block"></span>面談</span>
             </div>
             <div id="detail-calendar"></div>
+            <div id="detail-timeline"></div>
           </div>
         </div>
         <div id="case-detail-content"></div>
@@ -4087,13 +4169,66 @@ function renderCalendarBase(containerId, labelId, year, month, eventsFn, flashTo
   if(flashToday) setTimeout(()=>{const c=el.querySelector('.cal-day.today');if(!c)return;c.classList.add('flash');c.addEventListener('animationend',()=>c.classList.remove('flash'),{once:true});},50);
 }
 
+function renderDetailTimeline(caseId) {
+  const el = document.getElementById('detail-timeline');
+  if (!el) return;
+  const c = cases.find(c => c.id === (caseId || currentDetailCaseId));
+  if (!c || !c.shinsei_dates || c.shinsei_dates.length === 0) { el.innerHTML = ''; return; }
+
+  // 申請日・完了予定日が両方ある行だけ対象
+  const rows = (c.shinsei_dates || []).filter(s => s.shinsei && s.yotei);
+  if (rows.length === 0) { el.innerHTML = ''; return; }
+
+  // 表示期間：最も早い申請日の1週前〜最も遅い完了予定日の1週後
+  const allDates = rows.flatMap(s => [s.shinsei, s.yotei]);
+  const minDate = new Date(allDates.reduce((a,b) => a < b ? a : b) + 'T12:00:00');
+  const maxDate = new Date(allDates.reduce((a,b) => a > b ? a : b) + 'T12:00:00');
+  minDate.setDate(minDate.getDate() - 7);
+  maxDate.setDate(maxDate.getDate() + 7);
+  const totalDays = (maxDate - minDate) / 86400000;
+  const todayStr = today();
+
+  const rowsHtml = rows.map((s, i) => {
+    const startD = new Date(s.shinsei + 'T12:00:00');
+    const endD   = new Date(s.yotei   + 'T12:00:00');
+    const leftPct  = ((startD - minDate) / 86400000 / totalDays * 100).toFixed(2);
+    const widthPct = ((endD   - startD)  / 86400000 / totalDays * 100).toFixed(2);
+    const label = s.kankatsu || `管轄${i+1}`;
+    const barLabel = `${s.shinsei.slice(5)} 〜 ${s.yotei.slice(5)}`;
+    const isDone = !!s.kanryo;
+    const barColor = isDone ? '#86efac' : '#fde047';
+    const textColor = isDone ? '#14532d' : '#713f12';
+    return `<div class="shinsei-tl-row">
+      <div class="shinsei-tl-label" title="${escHtml(label)}">${escHtml(label)}</div>
+      <div class="shinsei-tl-track">
+        <div class="shinsei-tl-bar" style="left:${leftPct}%;width:${widthPct}%;background:${barColor};color:${textColor}">${barLabel}</div>
+        ${todayStr >= s.shinsei && todayStr <= s.yotei
+          ? `<div class="shinsei-tl-today" style="left:${(((new Date(todayStr+'T12:00:00'))-minDate)/86400000/totalDays*100).toFixed(2)}%"></div>`
+          : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // 目盛り（開始・中間・終了）
+  const midDate = new Date((minDate.getTime() + maxDate.getTime()) / 2);
+  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+  const datesHtml = `<div class="shinsei-tl-dates">
+    <span>${fmt(minDate)}</span><span>${fmt(midDate)}</span><span>${fmt(maxDate)}</span>
+  </div>`;
+
+  el.innerHTML = `<div class="shinsei-timeline">
+    <div class="shinsei-timeline-header">📊 申請期間タイムライン</div>
+    <div class="shinsei-timeline-body">${rowsHtml}</div>
+    ${datesHtml}
+  </div>`;
+}
+
 function renderDetailCalendar(caseId, flash) {
   const el = document.getElementById('detail-calendar');
   if (el) el.style.display = detailCalHidden ? 'none' : '';
   if (detailCalHidden) return;
   const c = cases.find(c => c.id === (caseId || currentDetailCaseId));
-  renderCalendarBase('detail-calendar','detail-cal-label',detailCalYear,detailCalMonth,()=>{
-    const ev = {};
+  renderCalendarBase('detail-calendar','detail-cal-label',detailCalYear,detailCalMonth,()=>{    const ev = {};
     const add = (date, type, tag, label, onclick) => {
       if (!date) return;
       const d = date.slice(0, 10); // 日付部分のみ
@@ -4168,8 +4303,8 @@ function renderDetailCalendar(caseId, flash) {
     }
     return ev;
   }, flash);
-}
-function calMoveDetail(dir){detailCalMonth+=dir;if(detailCalMonth>11){detailCalMonth=0;detailCalYear++;}if(detailCalMonth<0){detailCalMonth=11;detailCalYear--;}renderDetailCalendar();}
+  renderDetailTimeline(caseId);
+}(dir){detailCalMonth+=dir;if(detailCalMonth>11){detailCalMonth=0;detailCalYear++;}if(detailCalMonth<0){detailCalMonth=11;detailCalYear--;}renderDetailCalendar();}
 function calGoTodayDetail(){detailCalYear=new Date().getFullYear();detailCalMonth=new Date().getMonth();renderDetailCalendar(null,true);}
 function toggleDetailCalendar(){
   detailCalHidden=!detailCalHidden;
