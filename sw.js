@@ -1,22 +1,11 @@
 const CACHE_PREFIX = 'legal-case-manager-';
+const CACHE_NAME = 'legal-case-manager-5-6-1';
 const HTML_URL = './legal-case-manager.html';
-
-async function getCacheName() {
-  try {
-    const res = await fetch(HTML_URL + '?_sw_check=' + Date.now(), { cache: 'no-store' });
-    const text = await res.text();
-    const m = text.match(/ver\.\s*([\d.]+)/);
-    if (m) return CACHE_PREFIX + m[1].replace(/\./g, '-');
-  } catch (e) {}
-  return CACHE_PREFIX + Date.now();
-}
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    getCacheName().then(cacheName =>
-      caches.open(cacheName).then(cache =>
-        cache.addAll([HTML_URL, './manifest.json'])
-      )
+    caches.open(CACHE_NAME).then(cache =>
+      cache.addAll([HTML_URL, './manifest.json'])
     )
   );
   self.skipWaiting();
@@ -24,12 +13,10 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    getCacheName().then(cacheName =>
-      caches.keys().then(keys =>
-        Promise.all(
-          keys.filter(k => k.startsWith(CACHE_PREFIX) && k !== cacheName)
-              .map(k => caches.delete(k))
-        )
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME)
+            .map(k => caches.delete(k))
       )
     )
   );
@@ -47,10 +34,8 @@ self.addEventListener('fetch', event => {
       fetch(event.request).then(response => {
         if (response.ok) {
           const clone = response.clone();
-          getCacheName().then(cacheName =>
-            caches.open(cacheName).then(cache =>
-              cache.put(event.request, clone)
-            )
+          caches.open(CACHE_NAME).then(cache =>
+            cache.put(event.request, clone)
           );
         }
         return response;
