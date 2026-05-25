@@ -335,7 +335,62 @@ body[data-theme="forest"] .today-panel {
   border-top: 1px solid var(--border-light);
 }
 
+.soushu-select-item {
+  display: flex; align-items: center;
+  width: 100%; padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px; cursor: pointer;
+  text-align: left; transition: all 0.15s;
+}
+.soushu-select-item:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+/* 面談記録タイムライン */
+.iv-timeline { padding: 8px 14px 4px; }
+.iv-tl-row { display: flex; gap: 12px; margin-bottom: 0; }
+.iv-tl-left {
+  display: flex; flex-direction: column; align-items: center;
+  flex-shrink: 0; width: 64px;
+}
+.iv-tl-date {
+  font-size: 10px; font-weight: 700; color: var(--color-primary);
+  text-align: center; white-space: pre; line-height: 1.4;
+  background: #eff6ff; border: 1.5px solid #bfdbfe;
+  border-radius: 6px; padding: 3px 6px; margin-bottom: 4px;
+}
+.iv-tl-line {
+  width: 2px; flex: 1; background: #bfdbfe; min-height: 16px;
+}
+.iv-tl-last { background: transparent; }
+.iv-tl-body {
+  flex: 1; background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px; padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.iv-tl-meta {
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap; margin-bottom: 6px;
+  font-size: 11px; color: var(--text-muted);
+}
+.iv-tl-content {
+  font-size: 13px; color: var(--text-primary);
+  white-space: pre-wrap; line-height: 1.6;
+}
+
 /* 謄本取得サジェスト */
+.print-dd-item {
+  display: block; width: 100%;
+  padding: 10px 16px; text-align: left;
+  background: none; border: none; cursor: pointer;
+  font-size: 13px; color: var(--text-primary);
+  transition: background 0.1s;
+}
+.print-dd-item:hover { background: var(--bg-secondary); }
+.print-dd-item + .print-dd-item { border-top: 1px solid var(--border-light); }
 .touhon-suggest {
   display:flex; align-items:center; justify-content:space-between;
   gap:8px; padding:8px 12px; margin-top:6px;
@@ -2192,7 +2247,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only"><img src="data:image/png;base64,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"""" style="width:32px;height:32px;border-radius:50%"></div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 5.9.2</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 5.9.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3009,6 +3064,19 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeMemoModal()">キャンセル</button>
       <button class="btn btn-primary" onclick="saveMemoModal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SOUSHU SELECT MODAL =========== -->
+<div id="soushu-select-modal" class="modal-overlay" style="display:none" onclick="closeSoushuSelectModal(event)">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <div class="modal-title">📬 書類送付先を選択</div>
+      <button class="modal-close" onclick="closeSoushuSelectModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:12px">
+      <div id="soushu-select-list" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
   </div>
 </div>
@@ -5031,7 +5099,13 @@ function renderCaseDetail(caseId) {
           </button>`;
         })()}
         <button class="btn btn-secondary btn-sm no-print" onclick="printCaseSimple('${c.id}')">🖨 簡易印刷</button>
-        <button class="btn btn-secondary btn-sm no-print" onclick="printCaseDetail('${c.id}')">🖨 印刷</button>
+        <div class="print-dropdown no-print" style="position:relative;display:inline-block">
+          <button class="btn btn-secondary btn-sm" onclick="togglePrintDropdown(event)">🖨 印刷・書類 ▾</button>
+          <div id="print-dropdown-menu" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.15);min-width:160px;z-index:300;overflow:hidden">
+            <button class="print-dd-item" onclick="printCaseDetail('${c.id}');closePrintDropdown()">🖨 詳細印刷</button>
+            <button class="print-dd-item" onclick="openSoushuPanel('${c.id}');closePrintDropdown()">📬 書類送付</button>
+          </div>
+        </div>
         ${c.dropboxUrl ? `<a href="${escHtml(c.dropboxUrl)}" target="_blank" rel="noopener" class="btn btn-sm no-print" style="background:#0061ff;color:#fff;border-color:#0061ff;text-decoration:none">📦 Dropboxで開く</a>` : ''}
       </div>
     </div>
@@ -5158,7 +5232,61 @@ function renderCaseDetail(caseId) {
 }
 
 let taskFooterCollapsed = true;
-function expandTaskFooter() {
+function togglePrintDropdown(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('print-dropdown-menu');
+  if (!menu) return;
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+function closePrintDropdown() {
+  const menu = document.getElementById('print-dropdown-menu');
+  if (menu) menu.style.display = 'none';
+}
+document.addEventListener('click', () => closePrintDropdown());
+
+function openSoushuPanel(caseId) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  const contacts = (c.contacts && c.contacts.length > 0) ? c.contacts : [];
+  if (contacts.length <= 1) {
+    // 1名以下なら直接開く
+    const name = contacts[0]?.name || c.client_name || '';
+    _openSoushu(name);
+  } else {
+    // 複数いる場合は選択モーダルを出す
+    const modal = document.getElementById('soushu-select-modal');
+    const list  = document.getElementById('soushu-select-list');
+    if (!modal || !list) return;
+    list.innerHTML = contacts.map(ct =>
+      `<button class="soushu-select-item" onclick="_openSoushu('${escHtml(ct.name||'')}');closeSoushuSelectModal()">
+        <span style="font-weight:700">${escHtml(withKeisho(ct.name||'', ct.role))}</span>
+        ${ct.role ? `<span style="font-size:11px;color:var(--text-muted);margin-left:6px">${escHtml(ct.role)}</span>` : ''}
+      </button>`
+    ).join('');
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('show'));
+  }
+}
+
+function _openSoushu(name) {
+  const params = new URLSearchParams({ name });
+  const modal = document.getElementById('kakunin-modal');
+  const iframe = document.getElementById('kakunin-iframe');
+  if (modal && iframe) {
+    iframe.src = `kanryo_soushu.html?${params.toString()}`;
+    modal.style.display = 'flex';
+  } else {
+    window.open(`kanryo_soushu.html?${params.toString()}`, '_blank', 'noopener');
+  }
+}
+
+function closeSoushuSelectModal(event) {
+  if (event && event.target !== document.getElementById('soushu-select-modal')) return;
+  const modal = document.getElementById('soushu-select-modal');
+  if (!modal) return;
+  modal.classList.remove('show');
+  setTimeout(() => { modal.style.display = 'none'; }, 150);
+}
   const list = document.getElementById('case-task-list');
   const view = document.getElementById('view-case-detail');
   if (list) { list.style.maxHeight = '180px'; list.style.paddingBottom = '8px'; list.style.overflowY = 'auto'; }
@@ -5226,7 +5354,7 @@ function renderContactCards(c) {
       const icon = TEL_ICONS[type] || '📞';
       const label = {'携帯':'Mobile','固定':'固定','会社':'勤務先'}[type] || type;
       const telIcon = type === '携帯' ? '📱' : type === '会社' ? '🏢' : '📞';
-      return `<div class="cp-row"><span class="icon icon-tel">${telIcon}</span><span class="cp-tel">${escHtml(num)}</span><span style="font-size:10px;color:var(--text-muted);margin-left:4px">${label}</span></div>`;
+      return `<div class="cp-row"><span class="icon icon-tel">${telIcon}</span><a href="tel:${escHtml(num.replace(/[^0-9+]/g,''))}" class="cp-tel" style="text-decoration:none;color:inherit">${escHtml(num)}</a><span style="font-size:10px;color:var(--text-muted);margin-left:4px">${label}</span></div>`;
     }).join('');
     const faxRows   = faxes .filter(v=>v).map(v => `<div class="cp-row"><span class="icon icon-fax">📠</span><span>${escHtml(v)}</span><span style="font-size:10px;color:var(--text-muted);margin-left:4px">FAX</span></div>`).join('');
     const emailRows = emails.filter(v=>v).map(v => `<div class="cp-row"><span class="icon icon-email">✉</span><span>${escHtml(v)}</span></div>`).join('');
@@ -8897,21 +9025,24 @@ function renderInterviews(c) {
   const cid = c.id;
   const rows = [...interviews]
     .sort((a, b) => a.datetime.localeCompare(b.datetime))
-    .map(iv => `
-      <div class="interview-card">
-        <div class="interview-card-header">
-          <div>
-            <span class="interview-datetime">${formatDatetime(iv.datetime)}</span>
-            ${iv.place ? `<span class="interview-place">📍 ${escHtml(iv.place)}</span>` : ''}
-          </div>
-          <div style="display:flex;gap:4px">
-            <button class="btn btn-secondary btn-xs" onclick="openInterviewModal('${cid}','${iv.id}')">編集</button>
-            <button class="btn btn-danger btn-xs" onclick="deleteInterview('${cid}','${iv.id}')">削除</button>
-          </div>
+    .map((iv, idx) => `
+      <div class="iv-tl-row">
+        <div class="iv-tl-left">
+          <div class="iv-tl-date">${formatDatetime(iv.datetime).replace(' ', '\n')}</div>
+          <div class="iv-tl-line${idx === interviews.length - 1 ? ' iv-tl-last' : ''}"></div>
         </div>
-        ${iv.party ? `<div class="interview-party">👥 ${escHtml(iv.party)}</div>` : ''}
-        <div class="interview-content">${escHtml(iv.content)}</div>
-        ${iv.azukari ? `<div style="margin-top:6px;padding:5px 8px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 4px 4px 0;font-size:12px;color:#78350f"><span style="font-weight:700">📦 預かったもの：</span>${escHtml(iv.azukari)}</div>` : ''}
+        <div class="iv-tl-body">
+          <div class="iv-tl-meta">
+            ${iv.place ? `<span class="interview-place">📍 ${escHtml(iv.place)}</span>` : ''}
+            ${iv.party ? `<span class="interview-party">👥 ${escHtml(iv.party)}</span>` : ''}
+            <div style="margin-left:auto;display:flex;gap:4px">
+              <button class="btn btn-secondary btn-xs" onclick="openInterviewModal('${cid}','${iv.id}')">編集</button>
+              <button class="btn btn-danger btn-xs" onclick="deleteInterview('${cid}','${iv.id}')">削除</button>
+            </div>
+          </div>
+          <div class="iv-tl-content">${escHtml(iv.content)}</div>
+          ${iv.azukari ? `<div style="margin-top:6px;padding:5px 8px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 4px 4px 0;font-size:12px;color:#78350f"><span style="font-weight:700">📦 預かったもの：</span>${escHtml(iv.azukari)}</div>` : ''}
+        </div>
       </div>`).join('');
 
   return `
@@ -8920,7 +9051,7 @@ function renderInterviews(c) {
         <span>📝 面談記録（${interviews.length}件）</span>
         <button class="btn btn-primary btn-xs" onclick="openInterviewModal('${cid}', null)">＋ 追加</button>
       </div>
-      <div class="interview-list">
+      <div class="iv-timeline">
         ${interviews.length > 0 ? rows : '<div class="interview-empty">面談記録はまだありません</div>'}
       </div>
     </div>`;
