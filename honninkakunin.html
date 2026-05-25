@@ -395,7 +395,7 @@
 <body class="mode-input">
 
 <div class="toolbar">
-  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.1.3</span></h1>
+  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.1.4</span></h1>
   <div class="mode-switch">
     <button id="btn-mode-input" class="active" onclick="setMode('input')">入力</button>
     <button id="btn-mode-print" onclick="setMode('print')">様式プレビュー</button>
@@ -1091,21 +1091,21 @@
   <div class="pv-section">
     <div class="pv-section-title">依頼者　確認書類　<span class="cb" id="p_irai_doc_copy"></span>写し有</div>
     <table><colgroup><col style="width:20%"><col style="width:80%"></colgroup>
-      <tr>
+      <tr id="pv_irai_doc_juridical_row">
         <td class="td-label">法人の場合</td>
         <td><span class="cb" id="p_irai_doc_j_touki"></span>登記事項証明書　<span class="cb" id="p_irai_doc_j_inkan"></span>法人代表者の印鑑証明書　<span class="cb" id="p_irai_doc_j_other"></span>その他（<span id="p_irai_doc_j_other_txt"></span>）</td>
       </tr>
-      <tr>
+      <tr id="pv_irai_doc_natural_row1">
         <td class="td-label" rowspan="4">自然人の場合</td>
         <td>１）<span class="cb" id="p_irai_doc_n_unten"></span>運転免許証　<span class="cb" id="p_irai_doc_n_juki"></span>運転経歴証明書（注1）　<span class="cb" id="p_irai_doc_n_kojin"></span>個人番号カード（注2）　<span class="cb" id="p_irai_doc_n_ryoken"></span>旅券　<span class="cb" id="p_irai_doc_n_zairyu"></span>在留カード　<span class="cb" id="p_irai_doc_n_tokuei"></span>特別永住者証明書</td>
       </tr>
-      <tr>
+      <tr id="pv_irai_doc_natural_row2">
         <td>２）<span class="cb" id="p_irai_doc_n_kenko"></span>健康保険証（注3）　<span class="cb" id="p_irai_doc_n_kaigo"></span>介護保険被保険者証　<span class="cb" id="p_irai_doc_n_kokumin"></span>国民年金手帳（注4）　<span class="cb" id="p_irai_doc_n_shintai"></span>身体障害者手帳　<span class="cb" id="p_irai_doc_n_seishin"></span>精神障害者保健福祉手帳　<span class="cb" id="p_irai_doc_n_ryoiku"></span>療育手帳</td>
       </tr>
-      <tr>
+      <tr id="pv_irai_doc_natural_row3">
         <td>３）<span class="cb" id="p_irai_doc_n_inkan3"></span>印鑑証明書（実印押印委任状）　<span class="cb" id="p_irai_doc_n_jumin"></span>住民票　<span class="cb" id="p_irai_doc_n_koseki"></span>戸籍の附票</td>
       </tr>
-      <tr>
+      <tr id="pv_irai_doc_natural_row4">
         <td>４）<span class="cb" id="p_irai_doc_n_other"></span>その他犯収法施行規則に規定する書類（<span id="p_irai_doc_n_other_txt"></span>）　<span class="cb" id="p_irai_doc_n_photo_y"></span>顔写真付　<span class="cb" id="p_irai_doc_n_photo_n"></span>顔写真無</td>
       </tr>
       <tr>
@@ -1556,6 +1556,16 @@ function renderPrintView() {
   const g = id => document.getElementById(id);
   const v = id => (g(id) ? g(id).value : '');
   const c = id => (g(id) ? g(id).checked : false);
+
+  // 依頼者種別に応じて法人行・自然人行を切り替え
+  const iraiType = document.querySelector('input[name="irai_type"]:checked')?.value || 'natural';
+  const isJuridical = iraiType === 'juridical';
+  ['pv_irai_doc_juridical_row'].forEach(id => {
+    const el = g(id); if (el) el.style.display = isJuridical ? '' : 'none';
+  });
+  ['pv_irai_doc_natural_row1','pv_irai_doc_natural_row2','pv_irai_doc_natural_row3','pv_irai_doc_natural_row4'].forEach(id => {
+    const el = g(id); if (el) el.style.display = isJuridical ? 'none' : '';
+  });
 
   // チェックボックス
   [
