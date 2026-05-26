@@ -1293,31 +1293,122 @@ td.col-case-name {
 }
 
 .info-card {
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(16px) saturate(1.6);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(255,255,255,0.55);
-  box-shadow: 0 2px 12px rgba(80,100,200,0.08), 0 1px 0 rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.58);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.72);
+  box-shadow: 0 4px 16px rgba(80,100,200,0.07), 0 1px 0 rgba(255,255,255,0.7);
   overflow: hidden;
 }
 .info-card-header {
-  padding: 10px 14px;
-  background: rgba(255,255,255,0.40);
-  border-bottom: 1px solid rgba(255,255,255,0.45);
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.42);
+  border-bottom: 1px solid rgba(255,255,255,0.5);
   font-size: 12px; font-weight: 700; color: var(--text-secondary);
   display: flex; align-items: center; gap: 6px;
 }
 
+/* ヒーローヘッダー */
+.cd-hero {
+  background: rgba(255,255,255,0.58);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.72);
+  box-shadow: 0 4px 20px rgba(80,100,200,0.09), 0 1px 0 rgba(255,255,255,0.7);
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cd-hero-left { flex: 1; min-width: 0; }
+.cd-hero-category {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;
+  background: rgba(59,130,246,0.13); color: #1e40af;
+  border: 1px solid rgba(59,130,246,0.2);
+}
+.cd-hero-category.corp {
+  background: rgba(180,120,0,0.12); color: #92400e;
+  border-color: rgba(180,120,0,0.2);
+}
+.cd-hero-title {
+  font-size: 20px; font-weight: 800; color: var(--text-primary);
+  line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cd-hero-sub {
+  font-size: 11px; color: var(--text-muted); margin-top: 5px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.cd-hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+.cd-hero-status {
+  padding: 5px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+  background: rgba(34,197,94,0.13); color: #15803d;
+  border: 1px solid rgba(34,197,94,0.25);
+  white-space: nowrap;
+}
+.cd-hero-status.hold   { background: rgba(245,158,11,0.13); color: #92400e; border-color: rgba(245,158,11,0.25); }
+.cd-hero-status.done   { background: rgba(107,114,128,0.1); color: #374151; border-color: rgba(107,114,128,0.2); }
+.cd-hero-waiting {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+  background: rgba(245,158,11,0.15); color: #78350f;
+  border: 1px solid rgba(245,158,11,0.3);
+}
+.cd-hero-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
 .info-rows { padding: 10px 0; }
 .info-row {
   display: flex; align-items: baseline;
-  padding: 5px 14px; gap: 8px;
-  border-bottom: 1px solid var(--border-light);
+  padding: 5px 16px; gap: 8px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 .info-row:last-child { border-bottom: none; }
 .info-label { width: 120px; flex-shrink: 0; font-size: 11px; color: var(--text-muted); font-weight: 600; }
 .info-value { font-size: 12px; color: var(--text-primary); word-break: break-all; }
+
+/* 連絡先カード（グラフィカル版） */
+.contacts-section {
+  background: rgba(255,255,255,0.58);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.72);
+  border-left: 4px solid #3b82f6;
+  box-shadow: 0 4px 16px rgba(80,100,200,0.07), 0 1px 0 rgba(255,255,255,0.7);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.contacts-section-header {
+  padding: 11px 16px;
+  background: rgba(255,255,255,0.42);
+  border-bottom: 1px solid rgba(255,255,255,0.5);
+  font-size: 13px; font-weight: 700; color: var(--color-primary-dark);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.contacts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+  padding: 16px;
+}
+.contact-person-card {
+  background: rgba(255,255,255,0.65);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.8);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.contact-person-card:hover {
+  box-shadow: 0 6px 20px rgba(59,130,246,0.12);
+  transform: translateY(-1px);
+}
 
 /* Contact cards */
 .contact-card {
@@ -1510,7 +1601,7 @@ textarea.form-control { resize: vertical; min-height: 72px; }
   width: 52px; height: 52px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; font-weight: 800; color: #fff; flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.18);
 }
 .contact-person-card .cp-name { font-size: 14px; font-weight: 800; color: var(--text-primary); }
 .contact-person-card .cp-role {
@@ -1539,15 +1630,15 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 .contact-person-card .cp-tel { font-weight: 700; color: var(--text-primary); font-size: 14px; }
 .contact-person-card .cp-note { font-size: 12px; color: var(--text-secondary); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-light); }
 
-/* Avatar color palette */
-.av-0 { background: #2563a8; }
-.av-1 { background: #7c3aed; }
-.av-2 { background: #0891b2; }
-.av-3 { background: #16a34a; }
-.av-4 { background: #d97706; }
-.av-5 { background: #dc2626; }
-.av-6 { background: #db2777; }
-.av-7 { background: #65a30d; }
+/* Avatar color palette（より鮮やか） */
+.av-0 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.av-1 { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.av-2 { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.av-3 { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.av-4 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.av-5 { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.av-6 { background: linear-gradient(135deg, #ec4899, #db2777); }
+.av-7 { background: linear-gradient(135deg, #84cc16, #65a30d); }
 
 /* =====================================================
    受付台帳
@@ -2259,7 +2350,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only"><img src="data:image/png;base64,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"""" style="width:32px;height:32px;border-radius:50%"></div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 6.0.8</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 6.0.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5125,45 +5216,49 @@ function renderCaseDetail(caseId) {
   const incomplete = caseTasks.filter(t => t.status !== '完了');
 
   document.getElementById('case-detail-content').innerHTML = `
-    <!-- Header -->
-    <div class="case-detail-header">
-      <div class="case-detail-main">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <div class="case-detail-title">${escHtml(c.case_name)}</div>
-          ${c.status === '保留' ? `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#fef9c3;color:#854d0e;border:1px solid #fde047">🔖 保留中</span>` : ''}
-          ${c.status === '完了' ? `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#dcfce7;color:#166534;border:1px solid #86efac">✅ 完了</span>` : ''}
+    <!-- Hero Header -->
+    <div class="cd-hero no-print">
+      <div class="cd-hero-left">
+        <div class="cd-hero-category ${c.category==='商業・法人登記'?'corp':''}">
+          ${c.category==='商業・法人登記'?'🏢 商業・法人登記':'🏠 不動産登記'}
         </div>
-        <div class="case-detail-sub">
-          <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:${c.category==='商業・法人登記'?'#fef3c7':'#dbeafe'};color:${c.category==='商業・法人登記'?'#92400e':'#1e40af'};font-weight:700">${c.category==='商業・法人登記'?'🏢 商業・法人登記':'🏠 不動産登記'}</span>
-          <span>🏷 ${escHtml(c.type||'')}</span>
+        <div class="cd-hero-title">${escHtml(c.case_name)}</div>
+        <div class="cd-hero-sub">
+          ${c.case_num ? `<span>📋 ${escHtml(c.case_num)}</span>` : ''}
+          ${c.received_date ? `<span>受付日 ${formatDate(c.received_date)}</span>` : ''}
+          ${c.type ? `<span>🏷 ${escHtml(c.type)}</span>` : ''}
+          ${c.waiting ? `<span class="cd-hero-waiting">⏳ Waiting</span>` : ''}
         </div>
       </div>
-      <div class="flex-row" style="flex-wrap:wrap;gap:6px">
-        <button class="btn btn-sm no-print" onclick="setCaseStatus('${c.id}','保留')"
-          style="${c.status==='保留'?'background:#fef08a;color:#854d0e;border-color:#fde047;':''}">
-          🔖 ${c.status==='保留'?'保留解除':'保留'}
-        </button>
-        <button class="btn btn-sm no-print" onclick="setCaseStatus('${c.id}','完了')"
-          style="${c.status==='完了'?'background:#86efac;color:#166534;border-color:#4ade80;':''}">
-          ✅ ${c.status==='完了'?'完了解除':'完了'}
-        </button>
-        ${(() => {
-          return `<button class="btn btn-sm no-print" onclick="toggleWaiting('${c.id}')"
-            style="${c.waiting ? 'background:#fde68a;color:#92400e;border-color:#f59e0b;font-weight:700;' : ''}">
-            ⏳ ${c.waiting ? 'Waiting解除' : 'Waiting'}
-          </button>`;
-        })()}
-        <button class="btn btn-secondary btn-sm no-print" onclick="printCaseSimple('${c.id}')">🖨 簡易印刷</button>
-        <div class="print-dropdown no-print" style="position:relative;display:inline-block">
-          <button class="btn btn-secondary btn-sm" onclick="togglePrintDropdown(event)">🖨 印刷・書類 ▾</button>
-          <div id="print-dropdown-menu" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.15);min-width:160px;z-index:300;overflow:hidden">
+      <div class="cd-hero-right">
+        <span class="cd-hero-status ${c.status==='保留'?'hold':c.status==='完了'?'done':''}">
+          ${c.status==='完了'?'✅ 完了':c.status==='保留'?'🔖 保留':'✓ 進行中'}
+        </span>
+        <div class="cd-hero-actions">
+          <button class="btn btn-sm" onclick="setCaseStatus('${c.id}','保留')"
+            style="${c.status==='保留'?'background:#fef08a;color:#854d0e;border-color:#fde047;':''}">
+            🔖 ${c.status==='保留'?'保留解除':'保留'}
+          </button>
+          <button class="btn btn-sm" onclick="setCaseStatus('${c.id}','完了')"
+            style="${c.status==='完了'?'background:#86efac;color:#166534;border-color:#4ade80;':''}">
+            ✅ ${c.status==='完了'?'完了解除':'完了'}
+          </button>
+          <button class="btn btn-sm" onclick="toggleWaiting('${c.id}')"
+            style="${c.waiting?'background:#fde68a;color:#92400e;border-color:#f59e0b;font-weight:700;':''}">
+            ⏳ ${c.waiting?'Waiting解除':'Waiting'}
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="printCaseSimple('${c.id}')">🖨 簡易印刷</button>
+          <div class="print-dropdown" style="position:relative;display:inline-block">
+            <button class="btn btn-secondary btn-sm" onclick="togglePrintDropdown(event)">🖨 印刷・書類 ▾</button>
+            <div id="print-dropdown-menu" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.15);min-width:160px;z-index:300;overflow:hidden">
             <button class="print-dd-item" onclick="printCaseDetail('${c.id}');closePrintDropdown()">🖨 詳細印刷</button>
             <button class="print-dd-item" onclick="openSoushuPanel('${c.id}');closePrintDropdown()">📬 書類送付</button>
           </div>
         </div>
-        ${c.dropboxUrl ? `<a href="${escHtml(c.dropboxUrl)}" target="_blank" rel="noopener" class="btn btn-sm no-print" style="background:#0061ff;color:#fff;border-color:#0061ff;text-decoration:none">📦 Dropboxで開く</a>` : ''}
+        ${c.dropboxUrl ? `<a href="${escHtml(c.dropboxUrl)}" target="_blank" rel="noopener" class="btn btn-sm" style="background:#0061ff;color:#fff;border-color:#0061ff;text-decoration:none">📦 Dropboxで開く</a>` : ''}
+        </div>
       </div>
-    </div>
+    </div><!-- /cd-hero -->
 
     <!-- 受付台帳・不動産一覧（カレンダーと基本情報の間） -->
     ${renderLedger(c)}
