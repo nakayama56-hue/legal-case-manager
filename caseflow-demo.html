@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CaseFlow</title>
+<title>CaseFlow Demo</title>
 <!-- PWA -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -476,17 +476,6 @@ body[data-theme="forest"] .today-panel {
   border-color: #d97706 !important;
   font-weight: 700 !important;
   animation: saveBtnPulse 1.8s ease-in-out infinite;
-}
-@keyframes loadBtnPulse {
-  0%, 100% { background: #10b981; box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
-  50%       { background: #059669; box-shadow: 0 0 0 6px rgba(16,185,129,0); }
-}
-#btn-cloud-load.unloaded {
-  background: #10b981 !important;
-  color: #fff !important;
-  border-color: #059669 !important;
-  font-weight: 700 !important;
-  animation: loadBtnPulse 1.8s ease-in-out infinite;
 }
 
 .shinsei-tl-today {
@@ -1332,11 +1321,12 @@ td.col-case-name {
 .cd-hero {
   border-radius: 18px;
   border: none;
-  padding: 18px 18px 16px;
+  padding: 22px 24px 20px;
   margin-bottom: 16px;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
   position: relative;
   overflow: hidden;
 }
@@ -1366,22 +1356,17 @@ td.col-case-name {
 }
 .cd-hero-category.corp { background: rgba(255,255,255,0.22); color: #fff; }
 .cd-hero-title {
-  font-size: 20px; font-weight: 800; color: #fff;
-  line-height: 1.3;
-  white-space: normal; word-break: break-all;
+  font-size: 22px; font-weight: 800; color: #fff;
+  line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   text-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 .cd-hero-sub {
   font-size: 11px; color: rgba(255,255,255,0.82); margin-top: 6px;
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
-.cd-hero-right {
-  display: flex; flex-direction: row;
-  align-items: center; gap: 6px;
-  flex-wrap: wrap;
-}
+.cd-hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
 .cd-hero-status {
-  padding: 4px 12px; border-radius: 20px;
+  padding: 5px 14px; border-radius: 20px;
   font-size: 12px; font-weight: 700;
   background: rgba(255,255,255,0.25); color: #fff;
   border: 1px solid rgba(255,255,255,0.4);
@@ -1394,7 +1379,7 @@ td.col-case-name {
   background: rgba(255,255,255,0.2); color: #fff;
   border: 1px solid rgba(255,255,255,0.35);
 }
-.cd-hero-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.cd-hero-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .cd-hero-actions .btn {
   background: rgba(255,255,255,0.2) !important;
   color: #fff !important;
@@ -2396,6 +2381,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
 <!-- generated: 1774151282.3539512 -->
 </head>
 <body>
+<div id="demo-banner" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#7F77DD,#D4537E);color:#fff;text-align:center;padding:7px 12px;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.25)">🎭 デモモード — サンプルデータ表示中 / 編集・保存は無効</div>
 
 <div id="app">
   <!-- Mobile sidebar overlay -->
@@ -2407,7 +2393,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
       <div class="sidebar-icon-only"><img src="data:image/png;base64,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"""" style="width:32px;height:32px;border-radius:50%"></div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 6.1.5</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 6.1.4 DEMO</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2536,7 +2522,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
         <div class="table-container">
           <div class="table-toolbar">
             <span style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0">案件一覧</span>
-            <input type="text" class="search-input" id="case-search" placeholder="🔍 CaseFlowを検索..." oninput="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()">
+            <input type="text" class="search-input" id="case-search" placeholder="🔍 案件名・依頼者・タスク・面談・書類送付先・メモ・電話・メール等で全文検索..." oninput="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()">
             <select class="filter-select" id="case-filter-category" onchange="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="min-width:80px">
               <option value="">区分（全て）</option>
               <option value="不動産登記">🏠 不動産登記</option>
@@ -3961,7 +3947,7 @@ function init() {
     localStorage.setItem('ledger_migrated', '1');
   }
   // localStorageが空の場合（新端末・初回アクセス）
-  if (cases.length === 0 && !localStorage.getItem('app_initialized')) {
+  if (false) { // DEMO: 無効化
     // まずUIを表示してからクラウド自動読込を試みる
     localStorage.setItem('app_initialized', '1');
     calHidden = localStorage.getItem('cal_hidden_workspace') === '1';
@@ -4039,7 +4025,6 @@ function init() {
             const localStr = localSavedAt.toLocaleString('ja-JP');
             setCloudStatus('err', `⚠️ クラウドの方が新しい — クラウド: ${cloudStr}`);
             toast(`⚠️ クラウドのデータ（${cloudStr}）がこのデバイス（${localStr}）より新しいです。「☁ 読込」を確認してください`, 'error');
-            markUnloaded();
           } else {
             const t = json.data.savedAt ? new Date(json.data.savedAt).toLocaleString('ja-JP') : '';
             setCloudStatus('ok', `✓ 同期済み — クラウド: ${t}`);
@@ -4054,6 +4039,7 @@ function init() {
    STORAGE
    ===================================================== */
 function saveToStorage() {
+  return; // DEMO
   localStorage.setItem('cases_v1', JSON.stringify(cases));
   localStorage.setItem('tasks_v1', JSON.stringify(tasks));
   takeSnapshot(false); // 自動スナップショット
@@ -4063,40 +4049,9 @@ function saveToStorage() {
 }
 
 function loadFromStorage() {
-  try {
-    cases = JSON.parse(localStorage.getItem('cases_v1') || '[]');
-    tasks = JSON.parse(localStorage.getItem('tasks_v1') || '[]');
-    // 廃止ステータスを移行（保留・完了以外は空に）
-    let migrated = false;
-    const validStatuses = ['完了', '保留', ''];
-    cases.forEach(c => {
-      if (!validStatuses.includes(c.status || '')) {
-        c.status = '';
-        migrated = true;
-      }
-      // memo文字列→memos配列に移行
-      if (!c.memos && c.memo) {
-        c.memos = [{ id: genId(), date: c.received_date || c.created_at || '', text: c.memo }];
-        c.memo = '';
-        migrated = true;
-      } else if (!c.memos) {
-        c.memos = [];
-      }
-    });
-    // waiting_flagタスクをc.waitingフラグに移行
-    tasks.forEach(t => {
-      if (t.type === 'waiting_flag') {
-        const c = cases.find(c => c.id === t.case_id);
-        if (c) c.waiting = true;
-        migrated = true;
-      }
-    });
-    tasks = tasks.filter(t => t.type !== 'waiting_flag');
-    if (migrated) localStorage.setItem('cases_v1', JSON.stringify(cases));
-    if (migrated) localStorage.setItem('tasks_v1', JSON.stringify(tasks));
-  } catch(e) {
-    cases = []; tasks = [];
-  }
+  // DEMO: localStorageを使わずサンプルデータを直接代入
+  cases = JSON.parse('[{"id": "demo001", "case_num": "2026-001", "case_name": "山田様相続登記", "client_name": "山田太郎", "category": "不動産登記", "type": "相続", "status": "進行中", "location": "東京都世田谷区三軒茶屋一丁目1番1号", "received_date": "2026-04-10", "kanryo_yotei_date": "2026-06-15", "memo": "被相続人：山田一郎（令和7年3月逝去）\\n相続人3名での共同相続", "waiting": false, "contacts": [{"id": "c1", "role": "依頼者", "name": "山田太郎", "furigana": "ヤマダタロウ", "tels": [{"type": "携帯", "number": "090-1234-5678"}], "emails": ["taro.yamada@example.com"], "address": "東京都世田谷区三軒茶屋2-2-2", "icon": "man1"}, {"id": "c2", "role": "税理士", "name": "佐藤恵子", "furigana": "サトウケイコ", "tels": [{"type": "固定", "number": "03-1234-5678"}], "emails": ["sato@tax-example.com"], "address": "東京都渋谷区代々木1-1-1", "icon": "woman1"}], "shinsei_dates": [{"kankatsu": "世田谷", "shinsei": "2026-05-10", "yotei": "2026-06-10", "kanryo": "", "tracking": "333300001111", "tracking_return": ""}], "interviews": [{"id": "iv1", "datetime": "2026-04-15 14:00", "place": "依頼者事務所", "party": "山田太郎様", "content": "相続の経緯と相続人の確認。戸籍収集を依頼。", "azukari": ""}, {"id": "iv2", "datetime": "2026-05-02 10:00", "place": "当事務所", "party": "山田太郎様、山田花子様", "content": "書類一式受領。登記申請の段取りを説明。", "azukari": "固定資産評価証明書、戸籍謄本一式"}], "deliveries": [{"name": "山田太郎", "method": "郵送", "zip": "154-0004", "address": "東京都世田谷区三軒茶屋2-2-2", "docs": "登記識別情報、登記完了証", "date": "", "trackings": [], "tracking_return": "", "memo": ""}], "memos": [{"id": "m1", "date": "2026-04-12", "text": "固定資産評価証明は山田様が世田谷区役所で取得予定"}], "documents": [], "ledger": [{"id": "l1", "kankatsu": "世田谷", "mokuteki": "所有権移転", "gen_in": "相続", "kazei": ""}], "souzoku_tracker_enabled": false, "hoteisozoku": false, "dropboxUrl": ""}, {"id": "demo002", "case_num": "2026-002", "case_name": "株式会社ミライ役員変更", "client_name": "鈴木誠一", "category": "商業・法人登記", "type": "役員変更", "status": "進行中", "company_name": "株式会社ミライ", "honten": "東京都新宿区西新宿二丁目8番1号", "corp_num": "1234567890123", "received_date": "2026-05-01", "kanryo_yotei_date": "2026-06-01", "memo": "代表取締役の交代。退任・就任各1名。", "waiting": true, "contacts": [{"id": "c3", "role": "依頼者", "name": "鈴木誠一", "furigana": "スズキセイイチ", "tels": [{"type": "会社", "number": "03-9876-5432"}], "emails": ["suzuki@mirai-corp.example.com"], "address": "東京都新宿区西新宿3-3-3", "icon": "man2"}, {"id": "c4", "role": "弁護士", "name": "田中義雄", "furigana": "タナカヨシオ", "tels": [{"type": "固定", "number": "03-5555-1234"}], "emails": ["tanaka@law-example.com"], "address": "東京都千代田区丸の内1-1-1", "icon": "man1"}], "shinsei_dates": [{"kankatsu": "東京本局", "shinsei": "2026-05-20", "yotei": "2026-06-01", "kanryo": "", "tracking": "333300002222", "tracking_return": ""}], "interviews": [{"id": "iv3", "datetime": "2026-05-05 11:00", "place": "依頼者会社", "party": "鈴木社長", "content": "役員変更の内容確認。就任予定者の住民票取得を依頼。", "azukari": ""}], "deliveries": [], "memos": [], "documents": [], "ledger": [], "souzoku_tracker_enabled": false, "hoteisozoku": false, "dropboxUrl": ""}, {"id": "demo003", "case_num": "2026-003", "case_name": "佐藤様抵当権抹消", "client_name": "佐藤良子", "category": "不動産登記", "type": "抵当権抹消", "status": "進行中", "location": "東京都杉並区荻窪三丁目3番3号", "received_date": "2026-05-15", "kanryo_yotei_date": "2026-06-05", "memo": "住宅ローン完済に伴う抵当権抹消。銀行書類受領済み。", "waiting": false, "contacts": [{"id": "c5", "role": "依頼者", "name": "佐藤良子", "furigana": "サトウリョウコ", "tels": [{"type": "携帯", "number": "080-2345-6789"}], "emails": ["ryoko.sato@example.com"], "address": "東京都杉並区荻窪4-4-4", "icon": "woman2"}], "shinsei_dates": [{"kankatsu": "杉並", "shinsei": "2026-05-25", "yotei": "2026-06-05", "kanryo": "", "tracking": "", "tracking_return": ""}], "interviews": [{"id": "iv4", "datetime": "2026-05-16 15:00", "place": "当事務所", "party": "佐藤良子様", "content": "書類受領・内容確認。登記申請の説明実施。", "azukari": "解除証書、委任状"}], "deliveries": [{"name": "佐藤良子", "method": "郵送", "zip": "167-0051", "address": "東京都杉並区荻窪4-4-4", "docs": "登記完了証、解除証書", "date": "", "trackings": [], "tracking_return": "", "memo": ""}], "memos": [{"id": "m2", "date": "2026-05-15", "text": "みずほ銀行荻窪支店より書類受領済み"}], "documents": [], "ledger": [{"id": "l2", "kankatsu": "杉並", "mokuteki": "抵当権抹消", "gen_in": "弁済", "kazei": ""}], "souzoku_tracker_enabled": false, "hoteisozoku": false, "dropboxUrl": ""}, {"id": "demo004", "case_num": "2026-004", "case_name": "有限会社ナカムラ商店解散", "client_name": "中村浩二", "category": "商業・法人登記", "type": "解散・清算", "status": "保留", "company_name": "有限会社ナカムラ商店", "honten": "東京都板橋区板橋一丁目10番10号", "corp_num": "9876543210987", "received_date": "2026-04-01", "kanryo_yotei_date": "", "memo": "総会決議待ち。5月末予定。", "waiting": false, "contacts": [{"id": "c6", "role": "依頼者", "name": "中村浩二", "furigana": "ナカムラコウジ", "tels": [{"type": "携帯", "number": "090-8765-4321"}], "emails": ["nakamura@example.com"], "address": "東京都板橋区板橋2-10-10", "icon": "man3"}], "shinsei_dates": [], "interviews": [{"id": "iv5", "datetime": "2026-04-05 10:00", "place": "当事務所", "party": "中村浩二様", "content": "解散の経緯と手続きの説明。総会議事録の作成依頼。", "azukari": ""}], "deliveries": [], "memos": [{"id": "m3", "date": "2026-04-05", "text": "総会は5月末予定。決議後すぐ申請できるよう準備しておく"}], "documents": [], "ledger": [], "souzoku_tracker_enabled": false, "hoteisozoku": false, "dropboxUrl": ""}, {"id": "demo005", "case_num": "2025-089", "case_name": "田中様売買（世田谷）", "client_name": "田中幸雄", "category": "不動産登記", "type": "売買", "status": "完了", "location": "東京都世田谷区経堂五丁目5番5号", "received_date": "2025-12-01", "kanryo_yotei_date": "2026-01-15", "memo": "", "waiting": false, "contacts": [{"id": "c7", "role": "依頼者", "name": "田中幸雄", "furigana": "タナカユキオ", "tels": [{"type": "携帯", "number": "090-1111-2222"}], "emails": ["yukio.tanaka@example.com"], "address": "東京都世田谷区経堂6-6-6", "icon": "man1"}], "shinsei_dates": [{"kankatsu": "世田谷", "shinsei": "2026-01-10", "yotei": "2026-01-20", "kanryo": "2026-01-18", "tracking": "333300003333", "tracking_return": "333300003344"}], "interviews": [], "deliveries": [{"name": "田中幸雄", "method": "郵送", "zip": "156-0051", "address": "東京都世田谷区経堂6-6-6", "docs": "登記識別情報、登記完了証", "date": "2026-01-20", "trackings": ["333300004444"], "tracking_return": "", "memo": ""}], "memos": [], "documents": [], "ledger": [{"id": "l3", "kankatsu": "世田谷", "mokuteki": "所有権移転", "gen_in": "売買", "kazei": ""}], "souzoku_tracker_enabled": false, "hoteisozoku": false, "dropboxUrl": ""}]');
+  tasks = JSON.parse('[{"id": "t1", "created_at": "2026-04-10", "name": "戸籍収集", "case_id": "demo001", "status": "完了", "deadline": "2026-04-30", "done_at": "2026-04-28", "memo": "被相続人・相続人全員分", "type": "", "next_action_date": ""}, {"id": "t2", "created_at": "2026-04-10", "name": "登記申請", "case_id": "demo001", "status": "完了", "deadline": "2026-05-10", "done_at": "2026-05-10", "memo": "", "type": "", "next_action_date": ""}, {"id": "t3", "created_at": "2026-04-10", "name": "謄本", "case_id": "demo001", "status": "未着手", "deadline": "2026-06-10", "done_at": "", "memo": "", "type": "", "next_action_date": ""}, {"id": "t4", "created_at": "2026-05-01", "name": "就任者住民票取得", "case_id": "demo002", "status": "完了", "deadline": "2026-05-15", "done_at": "2026-05-14", "memo": "", "type": "", "next_action_date": ""}, {"id": "t5", "created_at": "2026-05-01", "name": "謄本", "case_id": "demo002", "status": "未着手", "deadline": "2026-06-01", "done_at": "", "memo": "", "type": "", "next_action_date": ""}, {"id": "t6", "created_at": "2026-05-15", "name": "登記申請", "case_id": "demo003", "status": "完了", "deadline": "2026-05-25", "done_at": "2026-05-25", "memo": "", "type": "", "next_action_date": ""}, {"id": "t7", "created_at": "2026-05-15", "name": "謄本", "case_id": "demo003", "status": "未着手", "deadline": "2026-06-05", "done_at": "", "memo": "", "type": "", "next_action_date": ""}, {"id": "t8", "created_at": "2026-04-01", "name": "総会議事録作成", "case_id": "demo004", "status": "未着手", "deadline": "2026-05-31", "done_at": "", "memo": "総会後すぐ対応", "type": "", "next_action_date": ""}, {"id": "t9", "created_at": "2025-12-01", "name": "謄本", "case_id": "demo005", "status": "完了", "deadline": "2026-01-20", "done_at": "2026-01-18", "memo": "", "type": "", "next_action_date": ""}]');
 }
 
 function clearAllData() {
@@ -9468,7 +9423,8 @@ function setCloudBtnDisabled(disabled) {
 }
 
 /** クラウドへ保存。silent=true のときトーストを省略 */
-function markUnsaved() {
+function markUnsaved() { return; }
+function _markUnsaved() {
   const btn = document.getElementById('btn-cloud-save');
   if (btn) {
     btn.classList.add('unsaved');
@@ -9484,24 +9440,9 @@ function markSaved() {
     btn.title = 'クラウドへ保存';
   }
 }
-function markUnloaded() {
-  const btn = document.getElementById('btn-cloud-load');
-  if (btn) {
-    btn.classList.add('unloaded');
-    btn.textContent = '⬇ 読込 ●';
-    btn.title = 'クラウドに新しいデータがあります';
-  }
-}
-function markLoaded() {
-  const btn = document.getElementById('btn-cloud-load');
-  if (btn) {
-    btn.classList.remove('unloaded');
-    btn.textContent = '⬇ 読込';
-    btn.title = 'クラウドから読み込む';
-  }
-}
 
-async function cloudSave(silent, forceOverwrite) {
+async function cloudSave(s) { if(!s)try{toast("デモ版のため保存できません","info");}catch(e){} return; }
+async function _cloudSave(silent, forceOverwrite) {
   // casesが空のときは保存しない（誤上書き防止）
   if (!cases || cases.length === 0) {
     if (!silent) toast('案件データがありません。保存をスキップしました', 'error');
@@ -9587,7 +9528,8 @@ function showSyncWarning(message, okLabel, cancelLabel) {
 }
 
 /** クラウドから読込 */
-async function cloudLoad() {
+async function cloudLoad() { try{toast("デモ版のため読込できません","info");}catch(e){} return; }
+async function _cloudLoad() {
   setCloudStatus('loading', '読込中…');
   setCloudBtnDisabled(true);
   try {
@@ -9636,7 +9578,6 @@ async function cloudLoad() {
     showView('cases');
     const saved = savedAt ? `（保存日時: ${new Date(savedAt).toLocaleString('ja-JP')}）` : '';
     setCloudStatus('ok', `✓ 読込完了 ${saved}`);
-    markLoaded();
     toast('クラウドからデータを読み込みました');
   } catch(e) {
     setCloudStatus('err', 'エラー: ' + e.message);
