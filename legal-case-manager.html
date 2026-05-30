@@ -2426,6 +2426,45 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
 input:focus::placeholder,
 textarea:focus::placeholder { color: transparent; }
 
+/* ===== フローティング保存ボタン ===== */
+.float-save-btn {
+  position: sticky;
+  bottom: 16px;
+  float: right;
+  margin-right: 4px;
+  z-index: 50;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.float-save-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.float-save-btn button {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.float-save-btn button:hover {
+  box-shadow: 0 6px 20px rgba(59,130,246,0.6);
+  transform: translateY(-1px);
+}
+
+
 /* ===== マーカーハイライト ===== */
 mark.hl-yellow { background:#fef08a; color:inherit; border-radius:2px; padding:0 1px; }
 mark.hl-blue   { background:#bfdbfe; color:inherit; border-radius:2px; padding:0 1px; }
@@ -2473,7 +2512,7 @@ mark.hl-pink   { background:#fecdd3; color:inherit; border-radius:2px; padding:0
       <div class="sidebar-icon-only"><img src="data:image/png;base64,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"""" style="width:32px;height:32px;border-radius:50%"></div>
       <div class="sidebar-logo">
         <span>CaseFlow</span>
-        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 6.3.2</span>
+        <span style="color:#2dd4bf;font-size:10px;margin-top:3px">ver. 6.3.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2789,7 +2828,10 @@ mark.hl-pink   { background:#fecdd3; color:inherit; border-radius:2px; padding:0
       <div class="modal-title" id="case-modal-title">新規案件</div>
       <button class="modal-close" onclick="closeCaseModal()">✕</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" id="case-modal-body" onscroll="updateFloatSave('case-float-save','case-modal-body')" oninput="updateFloatSave('case-float-save','case-modal-body')">
+      <div class="float-save-btn" id="case-float-save">
+        <button onclick="saveCase()">💾 保存</button>
+      </div>
       <!-- Section 1: Basic -->
       <div class="form-section" id="section-basic">
         <div class="form-section-title">📁 案件基本情報</div>
@@ -2981,11 +3023,11 @@ mark.hl-pink   { background:#fecdd3; color:inherit; border-radius:2px; padding:0
       <div id="gcal-edit-time-wrap" style="display:flex;gap:12px">
         <div style="flex:1">
           <label class="form-label">開始時刻</label>
-          <input type="time" id="gcal-edit-start-time" class="form-control" step="600">
+          <input type="time" id="gcal-edit-start-time" class="form-control" step="600" >
         </div>
         <div style="flex:1">
           <label class="form-label">終了時刻</label>
-          <input type="time" id="gcal-edit-end-time" class="form-control" step="600">
+          <input type="time" id="gcal-edit-end-time" class="form-control" step="600" >
         </div>
       </div>
     </div>
@@ -3100,11 +3142,11 @@ mark.hl-pink   { background:#fecdd3; color:inherit; border-radius:2px; padding:0
       <div id="gcal-event-time-wrap" style="display:none;flex-direction:row;gap:12px">
         <div style="flex:1">
           <label class="form-label">開始時刻</label>
-          <input type="time" id="gcal-event-start-time" class="form-control" step="600" value="09:00">
+          <input type="time" id="gcal-event-start-time" class="form-control" step="600" value="09:00" >
         </div>
         <div style="flex:1">
           <label class="form-label">終了時刻</label>
-          <input type="time" id="gcal-event-end-time" class="form-control" step="600" value="10:00">
+          <input type="time" id="gcal-event-end-time" class="form-control" step="600" value="10:00" >
         </div>
       </div>
     </div>
@@ -3121,7 +3163,10 @@ mark.hl-pink   { background:#fecdd3; color:inherit; border-radius:2px; padding:0
       <div class="modal-title" id="task-modal-title">タスク追加</div>
       <button class="modal-close" onclick="closeTaskModal()">✕</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" id="task-modal-body" onscroll="updateFloatSave('task-float-save','task-modal-body')" oninput="updateFloatSave('task-float-save','task-modal-body')">
+      <div class="float-save-btn" id="task-float-save">
+        <button onclick="saveTask()">💾 保存</button>
+      </div>
       <input type="hidden" id="f-task-case-id">
       <!-- Section 1: Basic -->
       <div class="form-section">
@@ -3237,7 +3282,7 @@ mark.hl-pink   { background:#fecdd3; color:inherit; border-radius:2px; padding:0
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">日時<span class="req">*</span></label>
-            <input class="form-control" type="datetime-local" id="f-interview-datetime" step="600">
+            <input class="form-control" type="datetime-local" id="f-interview-datetime" step="600" >
           </div>
           <div class="form-group">
             <label class="form-label">場所</label>
@@ -7664,6 +7709,8 @@ function openCaseModal(caseId, scrollTo) {
   modal.style.display = 'flex';
   setTimeout(() => {
     modal.classList.add('show');
+    const floatBody = document.getElementById('case-modal-body');
+    if (floatBody) { floatBody.scrollTop = 0; document.getElementById('case-float-save')?.classList.remove('visible'); }
     const body = modal.querySelector('.modal-body');
     if (body) {
       body.scrollTop = 0;
@@ -8388,7 +8435,11 @@ function openTaskModal(taskId, caseId, taskOverride) {
   } // end if actualTaskId
 
   modal.style.display = 'flex';
-  setTimeout(() => modal.classList.add('show'), 10);
+  setTimeout(() => {
+    modal.classList.add('show');
+    const floatBody = document.getElementById('task-modal-body');
+    if (floatBody) { floatBody.scrollTop = 0; document.getElementById('task-float-save')?.classList.remove('visible'); }
+  }, 10);
 }
 
 function closeTaskModal(event) {
@@ -8830,7 +8881,16 @@ function addDeliveryRow(d, idx) {
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">メモ</label>
-        <input class="form-control dv-memo" placeholder="例：受取確認済み" value="${escHtml(d?.memo||'')}">
+        <div class="marker-toolbar">
+          <span style="font-size:11px;color:var(--text-muted);margin-right:2px">🖊️</span>
+          <button type="button" class="marker-btn" style="background:#fef08a" title="黄マーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-yellow')">🟡</button>
+          <button type="button" class="marker-btn" style="background:#bfdbfe" title="青マーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-blue')">🔵</button>
+          <button type="button" class="marker-btn" style="background:#bbf7d0" title="緑マーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-green')">🟢</button>
+          <button type="button" class="marker-btn" style="background:#fecdd3" title="ピンクマーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-pink')">🩷</button>
+          <div class="marker-sep"></div>
+          <button type="button" class="marker-btn-clear" onclick="clearMarkerEl(this.closest('.form-group').querySelector('textarea'))">消去</button>
+        </div>
+        <textarea class="form-control dv-memo" placeholder="例：受取確認済み" rows="2">${escHtml(d?.memo||'')}</textarea>
       </div>
     </div>`;
   list.appendChild(div);
@@ -9955,6 +10015,60 @@ function updateBottomNavBadges() {
 /* =====================================================
    マーカーハイライト機能
    ===================================================== */
+
+
+/* フローティング保存ボタン表示制御 */
+function updateFloatSave(btnId, bodyId) {
+  const body = document.getElementById(bodyId);
+  const btn  = document.getElementById(btnId);
+  if (!body || !btn) return;
+  // スクロール位置が100px以上 OR 入力があれば表示
+  const scrolled = body.scrollTop > 100;
+  btn.classList.toggle('visible', scrolled);
+}
+
+/* マーカー：element直接渡しバージョン（書類送付先用） */
+function applyMarkerEl(ta, cls) {
+  if (!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  if (start === end) { toast('テキストを選択してからボタンを押してください', 'error'); return; }
+  const val = ta.value;
+  const plain = val.slice(start, end).replace(/<mark class="hl-(?:yellow|blue|green|pink)">/g,'').replace(/<\/mark>/g,'');
+  const wrapped = '<mark class="' + cls + '">' + plain + '</mark>';
+  ta.value = val.slice(0, start) + wrapped + val.slice(end);
+  ta.setSelectionRange(start + wrapped.length, start + wrapped.length);
+  ta.focus();
+}
+function clearMarkerEl(ta) {
+  if (!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  if (start === end) {
+    ta.value = ta.value.replace(/<mark class="hl-(?:yellow|blue|green|pink)">/g,'').replace(/<\/mark>/g,'');
+  } else {
+    const val = ta.value;
+    const plain = val.slice(start, end).replace(/<mark class="hl-(?:yellow|blue|green|pink)">/g,'').replace(/<\/mark>/g,'');
+    ta.value = val.slice(0, start) + plain + val.slice(end);
+  }
+  ta.focus();
+}
+function roundTimeTo10(input) {
+  if (!input.value) return;
+  const [h, m] = input.value.split(':').map(Number);
+  const rounded = Math.round(m / 10) * 10;
+  const newM = rounded >= 60 ? 0 : rounded;
+  const newH = rounded >= 60 ? (h + 1) % 24 : h;
+  input.value = String(newH).padStart(2,'0') + ':' + String(newM).padStart(2,'0');
+}
+function roundDatetimeTo10(input) {
+  if (!input.value) return;
+  const [datePart, timePart] = input.value.split('T');
+  if (!timePart) return;
+  const [h, m] = timePart.split(':').map(Number);
+  const rounded = Math.round(m / 10) * 10;
+  const newM = rounded >= 60 ? 0 : rounded;
+  const newH = rounded >= 60 ? (h + 1) % 24 : h;
+  input.value = datePart + 'T' + String(newH).padStart(2,'0') + ':' + String(newM).padStart(2,'0');
+}
 function renderHl(html) {
   if (!html) return '';
   if (/<mark class="hl-/.test(html)) {
