@@ -2678,17 +2678,36 @@ tr.row-waiting:hover > td {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #fff;
-  color: #1e3a5f;
-  border: 2px solid #1e3a5f;
-  border-radius: 5px;
-  font-size: 10px;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #1e3a8a;
+  border: 2px solid rgba(30,58,138,0.75);
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 800;
-  padding: 1px 5px;
-  letter-spacing: 0.05em;
-  line-height: 1.4;
+  padding: 2px 7px;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
   z-index: 2;
   pointer-events: none;
+  font-family: sans-serif;
+}
+.list-shinsei-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #1e3a8a;
+  border: 2px solid rgba(30,58,138,0.75);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 6px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  vertical-align: middle;
+  margin-left: 5px;
   font-family: sans-serif;
 }
 </style>
@@ -2706,7 +2725,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5805,6 +5824,7 @@ function renderCaseTable() {
       <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0"><strong>${escHtml(c.case_num||'')}</strong></td>
       <td class="col-case-name" title="${escHtml(c.case_name)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">
         ${escHtml(c.case_name)}
+        ${(c.shinsei_dates||[]).some(s => s.shinsei && !s.kanryo) ? '<span class="list-shinsei-badge">申請中</span>' : ''}
         ${c.waiting ? `<span style="font-size:10px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:10px;padding:1px 6px;font-weight:700;margin-left:4px">⏳</span>` : ''}
         ${incompleteTasks > 0 ? `<span class="badge badge-進行中" style="margin-left:4px;font-size:10px">${incompleteTasks}件</span>` : ''}
       </td>
