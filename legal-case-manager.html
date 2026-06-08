@@ -2645,12 +2645,12 @@ mark.hl-pink   { background:#fecdd3; color:inherit; border-radius:2px; padding:0
 
 /* ===== Waiting案件：薄暗く ===== */
 .case-tile-card.tile-waiting {
-  background: rgba(100, 100, 120, 0.55) !important;
-  opacity: 0.70 !important;
+  background: rgba(100, 100, 120, 0.35) !important;
+  opacity: 0.78 !important;
 }
 .case-tile-card.tile-waiting:hover {
-  background: rgba(120, 120, 140, 0.60) !important;
-  opacity: 0.85 !important;
+  background: rgba(120, 120, 140, 0.42) !important;
+  opacity: 0.90 !important;
 }
 tr.row-waiting > td {
   background-color: rgba(0, 0, 0, 0.28) !important;
@@ -2672,6 +2672,25 @@ tr.row-waiting:hover > td {
   border-color: rgba(59,130,246,0.70) !important;
   box-shadow: 0 8px 28px rgba(59,130,246,0.28), 0 2px 8px rgba(59,130,246,0.14) !important;
 }
+
+/* ===== 申請中スタンプバッジ ===== */
+.tile-shinsei-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #fff;
+  color: #1e3a5f;
+  border: 2px solid #1e3a5f;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 5px;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+  z-index: 2;
+  pointer-events: none;
+  font-family: sans-serif;
+}
 </style>
 <!-- generated: 1774151282.3539512 -->
 </head>
@@ -2687,7 +2706,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4159,7 +4178,9 @@ function renderCaseTiles() {
     const sc = STATUS_COLORS[c.status] || null;
     const bureaus = (c.legal_bureaus||[]).filter(Boolean);
     const shinsei = (c.shinsei_dates||[]).find(s => s.shinsei);
-    return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" onclick="showCaseDetail('${c.id}')">
+    const isShinseichuu = (c.shinsei_dates||[]).some(s => s.shinsei && !s.kanryo);
+    return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" onclick="showCaseDetail('${c.id}')" style="position:relative">
+      ${isShinseichuu ? '<span class="tile-shinsei-badge">申請中</span>' : ''}
       <div class="tile-header" style="border-top: 4px solid ${sc ? sc.color : 'var(--border-color)'}">
         ${sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '<span></span>'}
         <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
