@@ -2645,12 +2645,22 @@ mark.hl-pink   { background:#fecdd3; color:inherit; border-radius:2px; padding:0
 
 /* ===== Waiting案件：薄暗く ===== */
 .case-tile-card.tile-waiting {
-  filter: brightness(0.55) saturate(0.5) !important;
-  opacity: 0.65 !important;
+  opacity: 0.72 !important;
+}
+.case-tile-card.tile-waiting::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 40, 0.42);
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: 1;
 }
 .case-tile-card.tile-waiting:hover {
-  filter: brightness(0.70) saturate(0.65) !important;
-  opacity: 0.82 !important;
+  opacity: 0.88 !important;
+}
+.case-tile-card.tile-waiting:hover::after {
+  background: rgba(20, 20, 40, 0.22);
 }
 tr.row-waiting > td {
   background-color: rgba(0, 0, 0, 0.28) !important;
@@ -2675,7 +2685,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.1.7</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.1.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
