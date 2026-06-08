@@ -221,6 +221,91 @@ body[data-theme="spring"] {
   background-attachment: fixed;
   min-height: 100vh;
 }
+/* ===== マゼンダ系テーマ 5種 ===== */
+body[data-theme="magenta1"] {
+  background: #1a0820;
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(220,40,160,0.85) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 0%, rgba(160,20,220,0.70) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(80,10,120,0.90) 0%, transparent 60%),
+    linear-gradient(160deg, #2a0535 0%, #1a0820 50%, #0d0518 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+body[data-theme="magenta2"] {
+  background: #0d0520;
+  background-image:
+    radial-gradient(ellipse at 0% 0%, rgba(255,80,180,0.75) 0%, transparent 40%),
+    radial-gradient(ellipse at 100% 50%, rgba(120,0,200,0.65) 0%, transparent 45%),
+    radial-gradient(ellipse at 40% 100%, rgba(200,20,120,0.60) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 30%, rgba(80,0,180,0.50) 0%, transparent 40%),
+    linear-gradient(135deg, #1a0530 0%, #0a0318 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+body[data-theme="magenta3"] {
+  background: #f0e8f5;
+  background-image:
+    radial-gradient(ellipse at 15% 0%, rgba(220,100,200,0.60) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 20%, rgba(180,60,220,0.45) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(240,180,220,0.55) 0%, transparent 55%),
+    radial-gradient(ellipse at 30% 60%, rgba(200,120,240,0.30) 0%, transparent 40%),
+    linear-gradient(160deg, #e8d0f0 0%, #f8eef8 60%, #fff0f8 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+body[data-theme="magenta4"] {
+  background: #180818;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(255,20,120,0.80) 0%, transparent 45%),
+    radial-gradient(ellipse at 0% 60%, rgba(180,0,200,0.60) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 80%, rgba(255,60,160,0.55) 0%, transparent 45%),
+    radial-gradient(ellipse at 60% 40%, rgba(100,0,180,0.45) 0%, transparent 40%),
+    linear-gradient(180deg, #200520 0%, #100010 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+body[data-theme="magenta5"] {
+  background: #1c0a2e;
+  background-image:
+    radial-gradient(ellipse at 25% 15%, rgba(255,100,200,0.65) 0%, transparent 40%),
+    radial-gradient(ellipse at 75% 0%, rgba(200,40,255,0.60) 0%, transparent 45%),
+    radial-gradient(ellipse at 10% 80%, rgba(180,20,180,0.55) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 70%, rgba(120,0,220,0.50) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 50%, rgba(220,60,160,0.30) 0%, transparent 60%),
+    linear-gradient(135deg, #2a0840 0%, #150520 50%, #0a0318 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+/* マゼンダ暗色テーマ共通：ガラスUI補正 */
+body[data-theme="magenta1"] .table-container,
+body[data-theme="magenta1"] .case-detail-header,
+body[data-theme="magenta1"] .info-card,
+body[data-theme="magenta1"] .today-panel,
+body[data-theme="magenta2"] .table-container,
+body[data-theme="magenta2"] .case-detail-header,
+body[data-theme="magenta2"] .info-card,
+body[data-theme="magenta2"] .today-panel,
+body[data-theme="magenta4"] .table-container,
+body[data-theme="magenta4"] .case-detail-header,
+body[data-theme="magenta4"] .info-card,
+body[data-theme="magenta4"] .today-panel,
+body[data-theme="magenta5"] .table-container,
+body[data-theme="magenta5"] .case-detail-header,
+body[data-theme="magenta5"] .info-card,
+body[data-theme="magenta5"] .today-panel {
+  background: rgba(255,255,255,0.10) !important;
+  border-color: rgba(255,180,220,0.20) !important;
+}
+body[data-theme="magenta1"],
+body[data-theme="magenta2"],
+body[data-theme="magenta4"],
+body[data-theme="magenta5"] { color: #f0e0f5; }
+body[data-theme="magenta1"] .nav-picker-label,
+body[data-theme="magenta2"] .nav-picker-label,
+body[data-theme="magenta4"] .nav-picker-label,
+body[data-theme="magenta5"] .nav-picker-label { color: #e0b0d0; }
+
 
 /* フォレストテーマ：ガラスを少し暗く */
 body[data-theme="forest"] .table-container,
@@ -571,6 +656,11 @@ body[data-theme="forest"] .today-panel {
 .theme-swatch[data-theme="mint"]     { background: linear-gradient(to bottom, #80d0b8, #f0fbf8); }
 .theme-swatch[data-theme="lavender2"]{ background: linear-gradient(to bottom, #b0a8e8, #f5f0ff); }
 .theme-swatch[data-theme="spring"]   { background: linear-gradient(to bottom, #a8d8a0, #f0f8ee); }
+.theme-swatch[data-theme="magenta1"] { background: radial-gradient(ellipse at 30% 20%, #e028a0, #6010a0 60%, #1a0820); }
+.theme-swatch[data-theme="magenta2"] { background: radial-gradient(ellipse at 20% 10%, #ff50b4, #7800c8 55%, #0d0520); }
+.theme-swatch[data-theme="magenta3"] { background: radial-gradient(ellipse at 40% 20%, #dc64c8, #b43cdc 55%, #f0e8f5); }
+.theme-swatch[data-theme="magenta4"] { background: radial-gradient(ellipse at 50% 10%, #ff1478, #b400c8 55%, #180818); }
+.theme-swatch[data-theme="magenta5"] { background: radial-gradient(ellipse at 30% 15%, #ff64c8, #c828ff 50%, #1c0a2e); }
 
 /* ダークモード補正 */
 body.dark-mode .modal {
@@ -2045,7 +2135,7 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 
   /* スマホ：ツールバーを2行に */
   .table-toolbar { flex-wrap: wrap; gap: 6px; padding: 8px 10px; }
-  .table-toolbar > span { display: none; } /* 「案件一覧」ラベルを非表示 */
+  .table-toolbar > span:not(.toolbar-title-keep) { display: none; } /* 「案件一覧」ラベルを非表示 */
   .table-toolbar .search-input { flex: 1 1 100%; font-size: 13px; order: 1; }
   .table-toolbar .filter-select { flex: 1; font-size: 12px; order: 2; min-width: 0; }
   .table-toolbar .btn-primary { order: 3; font-size: 12px; padding: 6px 10px; white-space: nowrap; }
@@ -2725,7 +2815,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.2</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2750,6 +2840,11 @@ tr.row-waiting:hover > td {
           <div class="theme-swatch" data-theme="mint"      onclick="setTheme('mint')"      title="ミント"></div>
           <div class="theme-swatch" data-theme="lavender2" onclick="setTheme('lavender2')" title="ラベンダー"></div>
           <div class="theme-swatch" data-theme="spring"    onclick="setTheme('spring')"    title="スプリング"></div>
+          <div class="theme-swatch" data-theme="magenta1"  onclick="setTheme('magenta1')"  title="マゼンダ・ディープ"></div>
+          <div class="theme-swatch" data-theme="magenta2"  onclick="setTheme('magenta2')"  title="マゼンダ・ネオン"></div>
+          <div class="theme-swatch" data-theme="magenta3"  onclick="setTheme('magenta3')"  title="マゼンダ・ライト"></div>
+          <div class="theme-swatch" data-theme="magenta4"  onclick="setTheme('magenta4')"  title="マゼンダ・ルージュ"></div>
+          <div class="theme-swatch" data-theme="magenta5"  onclick="setTheme('magenta5')"  title="マゼンダ・ギャラクシー"></div>
         </div>
       </div>
     </nav>
@@ -2803,7 +2898,7 @@ tr.row-waiting:hover > td {
         <div style="margin-top:12px">
           <div class="table-container">
             <div class="table-toolbar">
-              <span style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0">タスク一覧</span>
+              <span class="toolbar-title-keep" style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0">タスク一覧</span>
               <button class="btn btn-primary" style="margin-left:auto" onclick="openTaskAddWithCaseSelect()">＋ タスク追加</button>
             </div>
             <div class="table-wrap task-table-wrap">
