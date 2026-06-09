@@ -2793,7 +2793,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -10379,6 +10379,10 @@ async function cloudSave(silent, forceOverwrite) {
     return;
   }
 
+  // インジケーターを即時表示（GETチェック前に出す）
+  setCloudStatus('saving', '確認中…');
+  setCloudBtnDisabled(true);
+
   // クラウドの保存日時を確認して新旧チェック
   if (!forceOverwrite) {
     try {
@@ -10400,6 +10404,7 @@ async function cloudSave(silent, forceOverwrite) {
           );
           if (!confirmed) {
             setCloudStatus('ok', '保存をキャンセルしました');
+            setCloudBtnDisabled(false);
             return;
           }
         }
@@ -10410,7 +10415,6 @@ async function cloudSave(silent, forceOverwrite) {
   }
 
   setCloudStatus('saving', '保存中…');
-  setCloudBtnDisabled(true);
   try {
     const shortcuts = loadClientShortcuts();
     const teikei = loadTeikei();
