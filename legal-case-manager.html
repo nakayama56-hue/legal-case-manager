@@ -2793,7 +2793,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.7</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5440,7 +5440,7 @@ function renderTrackingSummary() {
           const t = row.trackings[doc];
           if (!t) return;
           const goingDate = (row.dates && row.dates[doc] && row.dates[doc].going) || '';
-          if (t.tracking && goingDate) {
+          if (t.tracking) {
             items.push({
               date:     goingDate,
               tracking: t.tracking,
@@ -5449,7 +5449,7 @@ function renderTrackingSummary() {
               key:      c.id + '_szt_' + ridx + '_' + doc.replace(/[・ ]/g,'_'),
             });
           }
-          if (t.tracking_return && goingDate) {
+          if (t.tracking_return) {
             items.push({
               date:     goingDate,
               tracking: t.tracking_return,
