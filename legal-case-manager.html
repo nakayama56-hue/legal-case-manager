@@ -2882,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -6505,9 +6505,40 @@ function toggleTaskCard(taskId) {
   if (body) body.classList.toggle('open');
 }
 
-/** 謄本タスク完了時：タスクの期限と一致する申請日・完了予定日をカレンダーから消す */
-function clearTouhonDates(tk) {
-  // 案A: タイムラインの除外はrenderCaseTimeline内でリアルタイムチェックするため不要
+/** 謄本タスク完了時：商業・法人登記案件の自動完了処理 */
+function checkTouhonAutoComplete(tk) {
+  const c = cases.find(c => c.id === tk.case_id);
+  if (!c) return;
+  if (c.category !== '商業・法人登記') return;
+
+  // この案件の謄本タスクが全部完了しているか確認
+  const touhonTasks = tasks.filter(t => t.case_id === c.id && t.name === '謄本');
+  if (touhonTasks.length === 0) return;
+  const allDone = touhonTasks.every(t => t.status === '完了');
+  if (!allDone) return;
+
+  // 案件ステータスを「完了」に
+  const wasAlreadyDone = c.status === '完了';
+  c.status = '完了';
+
+  // shinsei_dates の全行に kanryo（完了日）が未入力なら今日の日付を入れる
+  const todayStr = today();
+  let filled = 0;
+  (c.shinsei_dates || []).forEach(r => {
+    if (!r.kanryo) {
+      r.kanryo = todayStr;
+      filled++;
+    }
+  });
+
+  if (!wasAlreadyDone) {
+    const msg = filled > 0
+      ? `謄本タスクが完了しました。案件を「完了」にし、完了日（${filled}件）に${todayStr}を入力しました。`
+      : `謄本タスクが完了しました。案件を「完了」にしました。`;
+    toast(msg, 'success');
+    renderCaseDetail(c.id);
+    caseViewMode === 'tile' ? renderCaseTiles() : renderCaseTable();
+  }
 }
 
 function toggleTaskDone(taskId) {
@@ -6519,7 +6550,7 @@ function toggleTaskDone(taskId) {
   } else {
     tk.status = '完了';
     tk.done_at = today();
-    clearTouhonDates(tk);
+    checkTouhonAutoComplete(tk);
   }
   saveToStorage();
   updateNavBadges();
