@@ -2793,7 +2793,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.2</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5494,8 +5494,8 @@ function renderTrackingSummary() {
     const rowClick = 'onclick="window.open(\'' + url + '\',\'_blank\')"';
     return '<div ' + rowClick + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
       + '<span style="flex-shrink:0;width:36px;font-size:11px;color:#94a3b8">' + dateStr + '</span>'
-      + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(label) + '</span>'
       + returnBadge
+      + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(label) + '</span>'
       + statusBtn
       + '</div>';
   }).join('');
@@ -5517,8 +5517,8 @@ function renderTrackingSummary() {
     const rowClick = 'onclick="window.open(\'' + url + '\',\'_blank\')"';
     return '<div ' + rowClick + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
       + '<span style="flex-shrink:0;width:36px;font-size:11px;color:#94a3b8">' + dateStr + '</span>'
-      + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(label) + '</span>'
       + returnBadge
+      + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(label) + '</span>'
       + statusBtn
       + '</div>';
   });
