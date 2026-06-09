@@ -640,6 +640,95 @@ body[data-theme="forest"] .today-panel {
 .theme-swatch[data-theme="liquid4"] { background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,248,220,0.85) 50%, rgba(245,230,185,0.90) 100%); border-color: rgba(220,200,150,0.6); }
 .theme-swatch[data-theme="liquid5"] { background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,230,255,0.85) 50%, rgba(220,205,255,0.90) 100%); border-color: rgba(195,170,245,0.6); }
 
+
+/* ===== ダーク系テーマ共通：ハードコード色の上書き ===== */
+body.dark-mode,
+body[data-theme="onyx"] {
+  --hc-primary-text: #e2e8f0;
+  --hc-secondary-text: #94a3b8;
+  --hc-muted-text: #64748b;
+  --hc-accent: #60a5fa;
+  --hc-green: #4ade80;
+  --hc-blue: #93c5fd;
+}
+
+/* テーブル・カード内のハードコード暗色テキスト */
+body.dark-mode td, body[data-theme="onyx"] td,
+body.dark-mode th, body[data-theme="onyx"] th {
+  color: var(--text-primary) !important;
+}
+
+/* インラインstyle="color:#xxxxx"への対応 — 主要な暗色クラスを上書き */
+body.dark-mode .text-dark, body[data-theme="onyx"] .text-dark,
+body.dark-mode .case-name, body[data-theme="onyx"] .case-name,
+body.dark-mode .tile-name, body[data-theme="onyx"] .tile-name,
+body.dark-mode .cd-hero-name, body[data-theme="onyx"] .cd-hero-name,
+body.dark-mode .cd-section-title, body[data-theme="onyx"] .cd-section-title,
+body.dark-mode .info-row-label, body[data-theme="onyx"] .info-row-label,
+body.dark-mode .info-row-value, body[data-theme="onyx"] .info-row-value,
+body.dark-mode .modal-title, body[data-theme="onyx"] .modal-title,
+body.dark-mode .form-label, body[data-theme="onyx"] .form-label,
+body.dark-mode label, body[data-theme="onyx"] label,
+body.dark-mode .section-label, body[data-theme="onyx"] .section-label,
+body.dark-mode .field-label, body[data-theme="onyx"] .field-label,
+body.dark-mode .task-name, body[data-theme="onyx"] .task-name,
+body.dark-mode .nav-label, body[data-theme="onyx"] .nav-label {
+  color: var(--text-primary) !important;
+}
+
+/* カレンダー */
+body.dark-mode .cal-day-num, body[data-theme="onyx"] .cal-day-num { color: var(--text-primary) !important; }
+body.dark-mode .cal-day.saturday .cal-day-num, body[data-theme="onyx"] .cal-day.saturday .cal-day-num { color: #7dd3fc !important; }
+body.dark-mode .cal-day.sunday .cal-day-num, body[data-theme="onyx"] .cal-day.sunday .cal-day-num { color: #fca5a5 !important; }
+body.dark-mode .cal-header-cell, body[data-theme="onyx"] .cal-header-cell { color: var(--text-secondary) !important; }
+
+/* 入力フォーム */
+body.dark-mode input, body[data-theme="onyx"] input,
+body.dark-mode select, body[data-theme="onyx"] select,
+body.dark-mode textarea, body[data-theme="onyx"] textarea {
+  background: rgba(255,255,255,0.08) !important;
+  color: var(--text-primary) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+body.dark-mode input::placeholder, body[data-theme="onyx"] input::placeholder,
+body.dark-mode textarea::placeholder, body[data-theme="onyx"] textarea::placeholder {
+  color: rgba(255,255,255,0.35) !important;
+}
+
+/* モーダル内テキスト */
+body.dark-mode .modal, body[data-theme="onyx"] .modal { color: var(--text-primary) !important; }
+body.dark-mode .modal p, body[data-theme="onyx"] .modal p,
+body.dark-mode .modal span, body[data-theme="onyx"] .modal span,
+body.dark-mode .modal div, body[data-theme="onyx"] .modal div { color: inherit; }
+
+/* 送付追跡パネル */
+body.dark-mode .today-panel, body[data-theme="onyx"] .today-panel { color: var(--text-primary) !important; }
+
+/* タイムライン */
+body.dark-mode .tl-label, body[data-theme="onyx"] .tl-label { color: var(--text-secondary) !important; }
+body.dark-mode .tl-case, body[data-theme="onyx"] .tl-case { color: var(--text-muted) !important; }
+
+/* セクションヘッダー */
+body.dark-mode .table-toolbar span, body[data-theme="onyx"] .table-toolbar span { color: var(--text-primary) !important; }
+
+/* onyx固有：CSS変数が未定義のため明示的に設定 */
+body[data-theme="onyx"] {
+  --text-primary: #f0f0f0;
+  --text-secondary: #c0c0c8;
+  --text-muted: #88889a;
+  --bg-primary: #1a1a1e;
+  --bg-secondary: rgba(255,255,255,0.07);
+  --border-color: rgba(255,255,255,0.12);
+  --glass-border: rgba(255,255,255,0.10);
+}
+body[data-theme="onyx"] input,
+body[data-theme="onyx"] select,
+body[data-theme="onyx"] textarea {
+  background: rgba(255,255,255,0.08) !important;
+  color: #f0f0f0 !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+
 /* ダークモード補正 */
 body.dark-mode .modal {
   background: rgba(18,28,50,0.80);
@@ -2793,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.3</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
