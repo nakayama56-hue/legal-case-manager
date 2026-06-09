@@ -2793,7 +2793,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.6</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5316,8 +5316,8 @@ function toggleTrackingHidden(btn) {
 }
 
 function _markArrived(key) {
-  // key形式: caseId_dv_num / caseId_sh_num / caseId_sr_num
-  const m = key.match(/^(.+?)_(dv|sh|sr)_(.+)$/);
+  // key形式: caseId_dv_num / caseId_sh_num / caseId_sr_num / caseId_szt_ridx_doc / caseId_szr_ridx_doc
+  const m = key.match(/^(.+?)_(dv|sh|sr|szt|szr)_(.+)$/);
   if (!m) return;
   const [, caseId, type, num] = m;
   const c = cases.find(c => c.id === caseId);
@@ -5342,6 +5342,21 @@ function _markArrived(key) {
     (c.shinsei_dates || []).forEach(s => {
       if (s.tracking_return === num) s.tracking_return_arrived = true;
     });
+  } else if (type === 'szt' || type === 'szr') {
+    // 相続人手配トラッカーの追跡番号
+    // num = "ridx_docName" 形式
+    const parts = num.split('_');
+    const ridx = parseInt(parts[0]);
+    const docKey = parts.slice(1).join('_').replace(/_/g, ' ');
+    if (c.souzoku_tracker && c.souzoku_tracker.rows[ridx]) {
+      const row = c.souzoku_tracker.rows[ridx];
+      if (!row.trackings) row.trackings = {};
+      // doc名を復元（スペース区切り）
+      const matchedDoc = SOUZOKU_DOC_TYPES.find(d => d.replace(/[・ ]/g,'_') === parts.slice(1).join('_')) || docKey;
+      if (!row.trackings[matchedDoc]) row.trackings[matchedDoc] = {};
+      const field = type === 'szt' ? 'tracking_arrived' : 'tracking_return_arrived';
+      row.trackings[matchedDoc][field] = true;
+    }
   }
 
   saveToStorage();
@@ -5360,6 +5375,16 @@ function _isArrived(caseId, type, num) {
     return (c.shinsei_dates || []).some(s => s.tracking === num && s.tracking_arrived);
   } else if (type === 'sr') {
     return (c.shinsei_dates || []).some(s => s.tracking_return === num && s.tracking_return_arrived);
+  } else if (type === 'szt' || type === 'szr') {
+    if (!c.souzoku_tracker || !c.souzoku_tracker.rows) return false;
+    const parts = num.split('_');
+    const ridx = parseInt(parts[0]);
+    const matchedDoc = SOUZOKU_DOC_TYPES.find(d => d.replace(/[・ ]/g,'_') === parts.slice(1).join('_'));
+    if (!matchedDoc) return false;
+    const row = c.souzoku_tracker.rows[ridx];
+    if (!row || !row.trackings || !row.trackings[matchedDoc]) return false;
+    const field = type === 'szt' ? 'tracking_arrived' : 'tracking_return_arrived';
+    return !!row.trackings[matchedDoc][field];
   }
   return false;
 }
@@ -5407,6 +5432,35 @@ function renderTrackingSummary() {
         });
       }
     });
+    // 相続人手配トラッカーの追跡番号
+    if (c.souzoku_tracker && c.souzoku_tracker.rows) {
+      c.souzoku_tracker.rows.forEach((row, ridx) => {
+        if (!row.trackings) return;
+        SOUZOKU_DOC_TYPES.forEach(doc => {
+          const t = row.trackings[doc];
+          if (!t) return;
+          const goingDate = (row.dates && row.dates[doc] && row.dates[doc].going) || '';
+          if (t.tracking && goingDate) {
+            items.push({
+              date:     goingDate,
+              tracking: t.tracking,
+              label:    (row.name || '相続人') + ' ' + doc + ' 送付',
+              caseName: c.case_name || '',
+              key:      c.id + '_szt_' + ridx + '_' + doc.replace(/[・ ]/g,'_'),
+            });
+          }
+          if (t.tracking_return && goingDate) {
+            items.push({
+              date:     goingDate,
+              tracking: t.tracking_return,
+              label:    (row.name || '相続人') + ' ' + doc + ' 返信',
+              caseName: c.case_name || '',
+              key:      c.id + '_szr_' + ridx + '_' + doc.replace(/[・ ]/g,'_'),
+            });
+          }
+        });
+      });
+    }
   });
 
   if (items.length === 0) { el.innerHTML = ''; return; }
@@ -5426,7 +5480,7 @@ function renderTrackingSummary() {
     const label   = [item.caseName, item.label].filter(v => v).join(' | ');
     const km = item.key.match(/^(.+?)_(dv|sh|sr)_(.+)$/);
     const arrived = km ? _isArrived(km[1], km[2], km[3]) : false;
-    const isReturn = km && km[2] === 'sr';
+    const isReturn = km && (km[2] === 'sr' || km[2] === 'szr');
     const url = 'https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=' + item.tracking + '&searchKind=S002&locale=ja';
     const keyEsc = item.key.replace(/'/g, "\'");
     const opacity = arrived ? 'opacity:0.55;' : '';
@@ -5449,7 +5503,7 @@ function renderTrackingSummary() {
     const label   = [item.caseName, item.label].filter(v => v).join(' | ');
     const km = item.key.match(/^(.+?)_(dv|sh|sr)_(.+)$/);
     const arrived = km ? _isArrived(km[1], km[2], km[3]) : false;
-    const isReturn = km && km[2] === 'sr';
+    const isReturn = km && (km[2] === 'sr' || km[2] === 'szr');
     const url = 'https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=' + item.tracking + '&searchKind=S002&locale=ja';
     const keyEsc = item.key.replace(/'/g, "\'");
     const opacity = arrived ? 'opacity:0.55;' : '';
@@ -9731,7 +9785,9 @@ function renderSouzokuTracker(c) {
         const showDate = (status === 'going' || status === 'done');
         const dateValue = status === 'done' ? (dates.done || '') : (status === 'going' ? (dates.going || '') : '');
         const dateLabel = status === 'done' ? '取得日' : (status === 'going' ? '手配日' : '');
-        return `<td class="souzoku-status" style="vertical-align:top;width:120px;min-width:120px">
+        const trackNum    = (row.trackings && row.trackings[doc] && row.trackings[doc].tracking) || '';
+        const trackReturn = (row.trackings && row.trackings[doc] && row.trackings[doc].tracking_return) || '';
+        return `<td class="souzoku-status" style="vertical-align:top;width:130px;min-width:130px">
           <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0">
             <button class="souzoku-status-btn" data-status="${status}"
               onclick="souzokuToggleStatus('${c.id}',${row._idx},'${doc}')"
@@ -9742,6 +9798,18 @@ function renderSouzokuTracker(c) {
               <input type="date" value="${escHtml(dateValue)}" style="display:none;font-size:10px;padding:1px 3px;border:1px solid var(--color-primary);border-radius:3px;width:108px"
                 onchange="souzokuUpdateDate('${c.id}',${row._idx},'${doc}','${status}',this.value);this.style.display='none';this.previousElementSibling.textContent=this.value?formatDate(this.value):'—';this.previousElementSibling.style.display='';"
                 onblur="this.style.display='none';this.previousElementSibling.style.display=''">
+              ${status === 'going' ? `
+              <div style="font-size:9px;color:var(--text-muted);font-weight:600;margin-top:3px">追跡番号</div>
+              <input type="text" value="${escHtml(trackNum)}" placeholder="送付追跡番号"
+                style="font-size:10px;padding:1px 4px;border:1px solid var(--border-color);border-radius:3px;width:108px;text-align:center"
+                onchange="souzokuUpdateTracking('${c.id}',${row._idx},'${doc}','tracking',this.value)"
+                onclick="event.stopPropagation()">
+              <div style="font-size:9px;color:var(--text-muted);font-weight:600;margin-top:2px">返信追跡</div>
+              <input type="text" value="${escHtml(trackReturn)}" placeholder="返信追跡番号"
+                style="font-size:10px;padding:1px 4px;border:1px solid var(--border-color);border-radius:3px;width:108px;text-align:center"
+                onchange="souzokuUpdateTracking('${c.id}',${row._idx},'${doc}','tracking_return',this.value)"
+                onclick="event.stopPropagation()">
+              ` : ''}
             ` : '<div style="height:42px"></div>'}
           </div>
         </td>`;
@@ -9890,6 +9958,18 @@ function souzokuUpdateDate(caseId, idx, doc, status, value) {
   if (!row.dates[doc]) row.dates[doc] = {};
   row.dates[doc][status] = value;
   saveToStorage();
+}
+
+function souzokuUpdateTracking(caseId, idx, doc, field, value) {
+  const c = cases.find(c => c.id === caseId);
+  if (!c || !c.souzoku_tracker) return;
+  const row = c.souzoku_tracker.rows[idx];
+  if (!row.trackings) row.trackings = {};
+  if (!row.trackings[doc]) row.trackings[doc] = {};
+  row.trackings[doc][field] = value.trim();
+  saveToStorage();
+  // 送付追跡を即時更新
+  if (typeof renderTrackingSummary === 'function') renderTrackingSummary();
 }
 
 function souzokuToggleStatus(caseId, idx, doc) {
