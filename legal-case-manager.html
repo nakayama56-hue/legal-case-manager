@@ -2793,7 +2793,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.8</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.2.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5478,7 +5478,7 @@ function renderTrackingSummary() {
   const rows = recent.map(item => {
     const dateStr = item.date ? item.date.slice(5) : '—';
     const label   = [item.caseName, item.label].filter(v => v).join(' | ');
-    const km = item.key.match(/^(.+?)_(dv|sh|sr)_(.+)$/);
+    const km = item.key.match(/^(.+?)_(dv|sh|sr|szt|szr)_(.+)$/);
     const arrived = km ? _isArrived(km[1], km[2], km[3]) : false;
     const isReturn = km && (km[2] === 'sr' || km[2] === 'szr');
     const url = 'https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=' + item.tracking + '&searchKind=S002&locale=ja';
@@ -5501,7 +5501,7 @@ function renderTrackingSummary() {
   const rowsArr = recent.map(item => {
     const dateStr = item.date ? item.date.slice(5) : '—';
     const label   = [item.caseName, item.label].filter(v => v).join(' | ');
-    const km = item.key.match(/^(.+?)_(dv|sh|sr)_(.+)$/);
+    const km = item.key.match(/^(.+?)_(dv|sh|sr|szt|szr)_(.+)$/);
     const arrived = km ? _isArrived(km[1], km[2], km[3]) : false;
     const isReturn = km && (km[2] === 'sr' || km[2] === 'szr');
     const url = 'https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=' + item.tracking + '&searchKind=S002&locale=ja';
@@ -9787,7 +9787,7 @@ function renderSouzokuTracker(c) {
         const dateLabel = status === 'done' ? '取得日' : (status === 'going' ? '手配日' : '');
         const trackNum    = (row.trackings && row.trackings[doc] && row.trackings[doc].tracking) || '';
         const trackReturn = (row.trackings && row.trackings[doc] && row.trackings[doc].tracking_return) || '';
-        return `<td class="souzoku-status" style="vertical-align:top;width:130px;min-width:130px">
+        return `<td class="souzoku-status" style="vertical-align:top;width:145px;min-width:145px">
           <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0">
             <button class="souzoku-status-btn" data-status="${status}"
               onclick="souzokuToggleStatus('${c.id}',${row._idx},'${doc}')"
@@ -9801,12 +9801,12 @@ function renderSouzokuTracker(c) {
               ${status === 'going' ? `
               <div style="font-size:9px;color:var(--text-muted);font-weight:600;margin-top:3px">追跡番号</div>
               <input type="text" value="${escHtml(trackNum)}" placeholder="送付追跡番号"
-                style="font-size:10px;padding:1px 4px;border:1px solid var(--border-color);border-radius:3px;width:108px;text-align:center"
+                style="font-size:10px;padding:2px 4px;border:1px solid var(--border-color);border-radius:3px;width:118px;text-align:center"
                 onchange="souzokuUpdateTracking('${c.id}',${row._idx},'${doc}','tracking',this.value)"
                 onclick="event.stopPropagation()">
               <div style="font-size:9px;color:var(--text-muted);font-weight:600;margin-top:2px">返信追跡</div>
               <input type="text" value="${escHtml(trackReturn)}" placeholder="返信追跡番号"
-                style="font-size:10px;padding:1px 4px;border:1px solid var(--border-color);border-radius:3px;width:108px;text-align:center"
+                style="font-size:10px;padding:2px 4px;border:1px solid var(--border-color);border-radius:3px;width:118px;text-align:center"
                 onchange="souzokuUpdateTracking('${c.id}',${row._idx},'${doc}','tracking_return',this.value)"
                 onclick="event.stopPropagation()">
               ` : ''}
