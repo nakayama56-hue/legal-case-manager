@@ -2882,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -6505,7 +6505,7 @@ function toggleTaskCard(taskId) {
   if (body) body.classList.toggle('open');
 }
 
-/** 謄本タスク完了時：商業・法人登記案件の自動完了処理 */
+/** 謄本タスク完了時：商業・法人登記案件の自動完了処理（saveToStorage後に呼ぶ） */
 function checkTouhonAutoComplete(tk) {
   const c = cases.find(c => c.id === tk.case_id);
   if (!c) return;
@@ -6531,12 +6531,14 @@ function checkTouhonAutoComplete(tk) {
     }
   });
 
+  // 保存・画面更新
+  saveToStorage();
   if (!wasAlreadyDone) {
     const msg = filled > 0
       ? `謄本タスクが完了しました。案件を「完了」にし、完了日（${filled}件）に${todayStr}を入力しました。`
       : `謄本タスクが完了しました。案件を「完了」にしました。`;
     toast(msg, 'success');
-    renderCaseDetail(c.id);
+    if (typeof renderCaseDetail === 'function') renderCaseDetail(c.id);
     caseViewMode === 'tile' ? renderCaseTiles() : renderCaseTable();
   }
 }
@@ -6550,11 +6552,14 @@ function toggleTaskDone(taskId) {
   } else {
     tk.status = '完了';
     tk.done_at = today();
-    checkTouhonAutoComplete(tk);
   }
   saveToStorage();
   updateNavBadges();
   refreshCurrentTaskList();
+  // 謄本自動完了チェックはsaveToStorage後に実行
+  if (tk.status === '完了' && tk.name === '謄本') {
+    checkTouhonAutoComplete(tk);
+  }
   setTimeout(() => cloudSave(false), 300);
 }
 
