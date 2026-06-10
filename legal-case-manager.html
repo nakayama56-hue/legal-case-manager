@@ -2882,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.8</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -8066,7 +8066,7 @@ function _doPrintSimple(caseId) {
   <div class="case-num">案件番号：${escHtml(c.case_num||'—')}</div>
   <div class="header-row">
     ${show('casename') ? `<div class="case-name">${escHtml(c.case_name)}</div>` : ''}
-    ${show('client') && clientName ? `<div class="client-name">${escHtml(clientName)}</div>` : ''}
+    ${show('client') && clientName ? `<div class="client-name">${escHtml(clientName)} 様</div>` : ''}
   </div>
   <table class="info-table">
     ${basicInfo}
