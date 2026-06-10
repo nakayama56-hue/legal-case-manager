@@ -2882,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.6</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -6540,6 +6540,7 @@ function checkTouhonAutoComplete(tk) {
     toast(msg, 'success');
     if (typeof renderCaseDetail === 'function') renderCaseDetail(c.id);
     caseViewMode === 'tile' ? renderCaseTiles() : renderCaseTable();
+    renderTaskTable();
   }
 }
 
