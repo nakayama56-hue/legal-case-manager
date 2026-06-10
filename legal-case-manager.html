@@ -2882,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.7</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7288,9 +7288,9 @@ function quickComplete(taskId, btn) {
   if (btn) showCompleteAnim(btn);
   tk.status = '完了';
   tk.done_at = today();
-  clearTouhonDates(tk);
   saveToStorage();
   updateNavBadges();
+  if (tk.name === '謄本') checkTouhonAutoComplete(tk);
   setTimeout(() => cloudSave(false), 300);
 
   // Dashboardのタスク一覧から行をフェードアウトして削除
@@ -7466,7 +7466,7 @@ function renderTaskTable() {
 
   // 直近（今日〜4日後・期限なし・完了）、期限切れ、将来（5日より先）に3分割
   const overdueTasks = filtered.filter(tk => tk.deadline && tk.deadline < t && tk.status !== '完了');
-  const nearTasks    = filtered.filter(tk => tk.status === '完了' || !tk.deadline || (tk.deadline >= t && tk.deadline <= near5EndStr));
+  const nearTasks    = filtered.filter(tk => !tk.deadline || (tk.deadline >= t && tk.deadline <= near5EndStr));
   const laterTasks   = filtered.filter(tk => tk.deadline && tk.deadline > near5EndStr && tk.status !== '完了');
 
   const nearHtml   = nearTasks.map(makeTaskRow).join('');
