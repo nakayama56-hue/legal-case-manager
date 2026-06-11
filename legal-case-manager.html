@@ -2882,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.4.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.4.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2925,7 +2925,7 @@ tr.row-waiting:hover > td {
       <div class="header-title" id="header-title"><span id="header-logo-text" style="font-family:'Comfortaa',sans-serif;font-weight:300;font-size:22px;letter-spacing:0.04em;color:rgba(255,255,255,0.88);text-shadow:none">CaseFlow</span></div>
       <div class="header-actions">
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px">⬇ 読込</button>
-        <button class="btn btn-secondary" onclick="cloudSave()" id="btn-cloud-save" title="クラウドへ保存" style="padding:4px 10px;font-size:12px">⬆ 保存</button>
+        <button class="btn btn-secondary" onclick="cloudSaveWithCheck()" id="btn-cloud-save" title="クラウドへ保存" style="padding:4px 10px;font-size:12px">⬆ 保存</button>
       </div>
     </header>
 
@@ -3104,7 +3104,7 @@ tr.row-waiting:hover > td {
           <div class="cloud-status-dot" id="cloud-dot"></div>
           <div class="cloud-status-text" id="cloud-status-text">未接続 — 下のボタンで確認できます</div>
           <div class="cloud-btn-group">
-            <button class="btn btn-primary" onclick="cloudSave()">☁ クラウドへ保存</button>
+            <button class="btn btn-primary" onclick="cloudSaveWithCheck()">☁ クラウドへ保存</button>
             <button class="btn btn-secondary" onclick="cloudLoad()">☁ クラウドから読込</button>
             <button class="btn btn-secondary" onclick="cloudCheck()">接続確認</button>
           </div>
@@ -4549,6 +4549,7 @@ function init() {
           try { checkDeadlineAlert(); } catch(e) {}
           const saved = json.data.savedAt ? `（${new Date(json.data.savedAt).toLocaleString('ja-JP')}）` : '';
           toast('クラウドからデータを読み込みました' + saved);
+          _recordCloudLoad();
         } else {
           // クラウドにデータがない場合のみサンプル表示
           renderCaseTable();
@@ -10910,6 +10911,7 @@ async function cloudLoad() {
     setCloudStatus('ok', `✓ 読込完了 ${saved}`);
     markLoaded();
     toast('クラウドからデータを読み込みました');
+    _recordCloudLoad();
   } catch(e) {
     setCloudStatus('err', 'エラー: ' + e.message);
     toast('読込に失敗しました: ' + e.message, 'error');
@@ -11321,6 +11323,7 @@ async function startupLoad() {
   try {
     await cloudLoad();
     _setStartupStatus('読み込み完了 ✓');
+    _recordCloudLoad();
     setTimeout(() => _hideStartupOverlay(), 600);
   } catch(e) {
     _setStartupStatus('読み込みに失敗しました。ローカルデータで起動します。');
@@ -11331,6 +11334,90 @@ async function startupLoad() {
 function startupSkip() {
   localStorage.setItem('startup_skipped_today', today());
   _hideStartupOverlay();
+}
+
+/* =====================================================
+   案A: 非アクティブ復帰時オーバーレイ
+   案C: 保存前読込チェック
+   ===================================================== */
+const BACKGROUND_THRESHOLD_MIN = 30; // 30分以上バックグラウンドで復帰時に表示
+let _hiddenAt = null;
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    _hiddenAt = Date.now();
+  } else {
+    if (!_hiddenAt) return;
+    const awayMin = (Date.now() - _hiddenAt) / 1000 / 60;
+    _hiddenAt = null;
+    if (awayMin >= BACKGROUND_THRESHOLD_MIN) {
+      // オーバーレイメッセージを「復帰」用に変更して表示
+      const desc = document.querySelector('#startup-overlay > div > div:last-child');
+      if (desc) desc.textContent = `${Math.floor(awayMin)}分間の離席から戻りました。最新データを読み込んでください`;
+      const btn = document.getElementById('startup-load-btn');
+      if (btn) { btn.disabled = false; btn.textContent = '⬇ クラウドから読み込む'; btn.style.opacity = '1'; }
+      const status = document.getElementById('startup-status');
+      if (status) status.textContent = '';
+      _showStartupOverlay();
+    }
+  }
+});
+
+/* 案C: 保存前読込チェック */
+const SAVE_WITHOUT_LOAD_THRESHOLD_MIN = 60; // 最終読込から60分超で警告
+let _lastCloudLoadAt = null; // cloudLoad完了時刻
+
+function _recordCloudLoad() {
+  _lastCloudLoadAt = Date.now();
+  localStorage.setItem('last_cloud_load_ts', String(_lastCloudLoadAt));
+}
+
+function _restoreCloudLoadTs() {
+  const saved = localStorage.getItem('last_cloud_load_ts');
+  if (saved) _lastCloudLoadAt = parseInt(saved, 10);
+}
+
+async function cloudSaveWithCheck() {
+  // 読込から一定時間経過していたら確認ダイアログ
+  if (_lastCloudLoadAt) {
+    const elapsedMin = (Date.now() - _lastCloudLoadAt) / 1000 / 60;
+    if (elapsedMin >= SAVE_WITHOUT_LOAD_THRESHOLD_MIN) {
+      const elapsed = elapsedMin >= 60
+        ? `${Math.floor(elapsedMin / 60)}時間${Math.floor(elapsedMin % 60)}分`
+        : `${Math.floor(elapsedMin)}分`;
+      const ok = await confirmAsync(
+        `最後にクラウドから読み込んだのは ${elapsed} 前です。\n先に読み込まずに保存すると、他の端末での変更が上書きされる可能性があります。\n\nこのまま保存しますか？`
+      );
+      if (!ok) {
+        // 読込オーバーレイを表示
+        const desc = document.querySelector('#startup-overlay > div > div:last-child');
+        if (desc) desc.textContent = '保存前にクラウドから最新データを読み込んでください';
+        const btn = document.getElementById('startup-load-btn');
+        if (btn) { btn.disabled = false; btn.textContent = '⬇ クラウドから読み込む'; btn.style.opacity = '1'; }
+        const status = document.getElementById('startup-status');
+        if (status) status.textContent = '';
+        _showStartupOverlay();
+        return;
+      }
+    }
+  } else {
+    // 一度も読込していない場合も警告
+    const ok = await confirmAsync(
+      'まだクラウドから読み込んでいません。\n先に読み込まずに保存すると、クラウドのデータが上書きされる可能性があります。\n\nこのまま保存しますか？'
+    );
+    if (!ok) {
+      _showStartupOverlay();
+      return;
+    }
+  }
+  cloudSave();
+}
+
+// シンプルなPromiseベースのconfirm
+function confirmAsync(msg) {
+  return new Promise(resolve => {
+    resolve(window.confirm(msg));
+  });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -11345,6 +11432,8 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => runDailyAutoBackup(), 3000);
   // 起動時読込オーバーレイ表示
   _showStartupOverlay();
+  // 最終読込時刻を復元
+  _restoreCloudLoadTs();
 });
 
 // プルツーリフレッシュ（スマホ・タブレットで下に引っ張って更新）
