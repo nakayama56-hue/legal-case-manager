@@ -2882,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.9</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.10</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3160,6 +3160,24 @@ tr.row-waiting:hover > td {
             <div class="label">JSONエクスポート（バックアップ）</div>
             <div class="desc">全データをJSON形式で保存します。新しいアプリへの引き継ぎに使います</div>
             <button class="btn btn-primary" onclick="exportJSON()">バックアップ保存</button>
+          </div>
+          <div class="data-card">
+            <div class="icon">🕒</div>
+            <div class="label">自動バックアップ（1日1回）</div>
+            <div class="desc">アプリ起動時に1日1回、JSONバックアップを自動保存します</div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;cursor:pointer">
+              <input type="checkbox" id="auto-backup-cb" onchange="toggleAutoBackup(this)" style="width:16px;height:16px">
+              <span>自動バックアップを有効にする</span>
+            </label>
+            <div id="backup-folder-label" style="font-size:11px;color:var(--text-muted);margin-bottom:6px">保存先：ダウンロードフォルダ（未設定）</div>
+            <button class="btn btn-secondary btn-sm" onclick="selectBackupFolder()">📁 保存フォルダを選択（PCのみ）</button>
+          </div>
+          <div class="data-card">
+            <div class="icon">📊</div>
+            <div class="label">ストレージ使用状況</div>
+            <div class="desc">localStorageの使用量を表示します</div>
+            <div id="storage-status" style="text-align:left;width:100%"></div>
+            <button class="btn btn-secondary btn-sm" onclick="renderStorageStatus()" style="margin-top:6px">🔄 更新</button>
           </div>
           <div class="data-card">
             <div class="icon">📥</div>
@@ -9319,12 +9337,182 @@ function toast(msg, type) {
 /* =====================================================
    CSV EXPORT
    ===================================================== */
+/* =====================================================
+   自動バックアップ（File System Access API + フォールバック）
+   ===================================================== */
+let _backupDirHandle = null;
+
+// IndexedDBにディレクトリハンドルを保存/復元
+function _idbOpen() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('caseflow_backup', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function _idbSet(key, val) {
+  const db = await _idbOpen();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(val, key);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+async function _idbGet(key) {
+  const db = await _idbOpen();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles', 'readonly');
+    const rq = tx.objectStore('handles').get(key);
+    rq.onsuccess = () => res(rq.result || null);
+    rq.onerror = () => rej(rq.error);
+  });
+}
+
+// バックアップフォルダを選択（PC Chromeのみ対応）
+async function selectBackupFolder() {
+  if (!window.showDirectoryPicker) {
+    toast('この端末はフォルダ選択に非対応です。自動バックアップはダウンロードフォルダに保存されます', 'error');
+    return;
+  }
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    _backupDirHandle = handle;
+    await _idbSet('backupDir', handle);
+    localStorage.setItem('backup_folder_name', handle.name);
+    _updateBackupFolderLabel();
+    toast(`バックアップフォルダを「${handle.name}」に設定しました`, 'success');
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('フォルダ選択に失敗しました', 'error');
+  }
+}
+
+function _updateBackupFolderLabel() {
+  const el = document.getElementById('backup-folder-label');
+  if (!el) return;
+  const name = localStorage.getItem('backup_folder_name');
+  el.textContent = name ? `保存先：${name}` : '保存先：ダウンロードフォルダ（未設定）';
+}
+
+// バックアップデータ生成（全データ）
+function _buildBackupData() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return {
+    cases, tasks,
+    shortcuts: loadClientShortcuts(),
+    teikei: loadTeikei(),
+    addrBook: loadAddrBook(),
+    exportedAt: `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
+    version: 2
+  };
+}
+
+// 自動バックアップ実行（日次）
+async function runDailyAutoBackup() {
+  if (localStorage.getItem('auto_backup_enabled') !== '1') return;
+  const todayStr = today();
+  if (localStorage.getItem('last_auto_backup') === todayStr) return; // 今日は実施済み
+  if (!cases || cases.length === 0) return;
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+  const filename = `CaseFlow自動バックアップ_${ts}.json`;
+  const json = JSON.stringify(_buildBackupData(), null, 2);
+
+  // フォルダハンドルがあればそこへ書き込み
+  try {
+    if (!_backupDirHandle) _backupDirHandle = await _idbGet('backupDir');
+    if (_backupDirHandle) {
+      // 権限再確認（ページ再訪問時はrequestPermissionが必要）
+      const perm = await _backupDirHandle.queryPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') {
+        const req = await _backupDirHandle.requestPermission({ mode: 'readwrite' });
+        if (req !== 'granted') throw new Error('permission denied');
+      }
+      const fileHandle = await _backupDirHandle.getFileHandle(filename, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      localStorage.setItem('last_auto_backup', todayStr);
+      toast(`自動バックアップを「${_backupDirHandle.name}」に保存しました`, 'success');
+      return;
+    }
+  } catch(e) {
+    console.warn('フォルダへの自動バックアップ失敗、ダウンロードにフォールバック', e);
+  }
+
+  // フォールバック：通常ダウンロード
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  localStorage.setItem('last_auto_backup', todayStr);
+  toast('自動バックアップをダウンロードフォルダに保存しました', 'success');
+}
+
+function toggleAutoBackup(cb) {
+  localStorage.setItem('auto_backup_enabled', cb.checked ? '1' : '0');
+  toast(cb.checked ? '自動バックアップを有効にしました（1日1回）' : '自動バックアップを無効にしました');
+  if (cb.checked) runDailyAutoBackup();
+}
+
+/* =====================================================
+   localStorage使用量モニター
+   ===================================================== */
+function getStorageUsage() {
+  let total = 0;
+  const items = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    const val = localStorage.getItem(key) || '';
+    const bytes = new Blob([key + val]).size;
+    total += bytes;
+    items.push({ key, bytes });
+  }
+  items.sort((a,b) => b.bytes - a.bytes);
+  return { total, items };
+}
+
+function renderStorageStatus() {
+  const el = document.getElementById('storage-status');
+  if (!el) return;
+  const { total, items } = getStorageUsage();
+  const limitMB = 5; // 一般的なlocalStorage上限の保守的見積もり
+  const usedMB = total / 1024 / 1024;
+  const pct = Math.min(100, (usedMB / limitMB) * 100);
+  const barColor = pct > 80 ? '#ef4444' : pct > 60 ? '#f59e0b' : '#10b981';
+  const fmt = b => b > 1024*1024 ? (b/1024/1024).toFixed(2)+' MB' : (b/1024).toFixed(1)+' KB';
+
+  const top5 = items.slice(0,5).map(it =>
+    `<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);padding:1px 0">
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${escHtml(it.key)}</span>
+      <span>${fmt(it.bytes)}</span>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div style="font-size:13px;font-weight:700;margin-bottom:6px">使用量：${fmt(total)} / 約${limitMB} MB（${pct.toFixed(1)}%）</div>
+    <div style="background:var(--bg-secondary);border-radius:6px;height:10px;overflow:hidden;margin-bottom:8px">
+      <div style="width:${pct}%;height:100%;background:${barColor};border-radius:6px;transition:width 0.3s"></div>
+    </div>
+    ${pct > 80 ? '<div style="font-size:11px;color:#ef4444;font-weight:700;margin-bottom:6px">⚠ 使用量が80%を超えています。完了案件の整理やバックアップ後の削除を検討してください</div>' : ''}
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">内訳（上位5件）：</div>
+    ${top5}
+    <div style="font-size:10px;color:var(--text-muted);margin-top:6px">案件数：${cases.length}件 ／ タスク数：${tasks.length}件</div>
+  `;
+}
+
 function exportJSON() {
   const now = new Date();
   const pad = n => String(n).padStart(2,'0');
   const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
   const exportedAt = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  const data = { cases, tasks, exportedAt, version: 1 };
+  const data = _buildBackupData();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -11112,6 +11300,12 @@ window.addEventListener('DOMContentLoaded', () => {
   init();
   _initScrollTopBtn();
   setupPullToRefresh();
+  // 自動バックアップ初期化
+  const abCb = document.getElementById('auto-backup-cb');
+  if (abCb) abCb.checked = localStorage.getItem('auto_backup_enabled') === '1';
+  _updateBackupFolderLabel();
+  renderStorageStatus();
+  setTimeout(() => runDailyAutoBackup(), 3000);
 });
 
 // プルツーリフレッシュ（スマホ・タブレットで下に引っ張って更新）
