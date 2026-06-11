@@ -2882,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.3.10</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.4.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -11296,6 +11296,43 @@ function clearMarker(textareaId) {
 /* =====================================================
    START
    ===================================================== */
+
+/* =====================================================
+   起動時読込オーバーレイ
+   ===================================================== */
+function _showStartupOverlay() {
+  const el = document.getElementById('startup-overlay');
+  if (el) { el.style.display = 'flex'; el.style.opacity = '1'; }
+}
+function _hideStartupOverlay() {
+  const el = document.getElementById('startup-overlay');
+  if (!el) return;
+  el.style.opacity = '0';
+  setTimeout(() => { el.style.display = 'none'; }, 400);
+}
+function _setStartupStatus(msg) {
+  const el = document.getElementById('startup-status');
+  if (el) el.textContent = msg;
+}
+async function startupLoad() {
+  const btn = document.getElementById('startup-load-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '読み込み中…'; btn.style.opacity = '0.7'; }
+  _setStartupStatus('クラウドに接続しています…');
+  try {
+    await cloudLoad();
+    _setStartupStatus('読み込み完了 ✓');
+    setTimeout(() => _hideStartupOverlay(), 600);
+  } catch(e) {
+    _setStartupStatus('読み込みに失敗しました。ローカルデータで起動します。');
+    if (btn) { btn.disabled = false; btn.textContent = '⬇ クラウドから読み込む'; btn.style.opacity = '1'; }
+    setTimeout(() => _hideStartupOverlay(), 2000);
+  }
+}
+function startupSkip() {
+  localStorage.setItem('startup_skipped_today', today());
+  _hideStartupOverlay();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   init();
   _initScrollTopBtn();
@@ -11306,6 +11343,8 @@ window.addEventListener('DOMContentLoaded', () => {
   _updateBackupFolderLabel();
   renderStorageStatus();
   setTimeout(() => runDailyAutoBackup(), 3000);
+  // 起動時読込オーバーレイ表示
+  _showStartupOverlay();
 });
 
 // プルツーリフレッシュ（スマホ・タブレットで下に引っ張って更新）
@@ -11383,5 +11422,42 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<!-- ===== 起動時読込オーバーレイ ===== -->
+<div id="startup-overlay" style="
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(15,20,40,0.82);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  z-index:99999;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:28px;
+  transition:opacity 0.4s;
+">
+  <div style="text-align:center">
+    <div style="font-size:52px;margin-bottom:12px">☁</div>
+    <div style="font-family:'Comfortaa',sans-serif;font-size:28px;font-weight:300;color:#fff;letter-spacing:0.06em;margin-bottom:6px">CaseFlow</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:0.04em">操作を開始する前にクラウドから読み込んでください</div>
+  </div>
+  <button id="startup-load-btn"
+    onclick="startupLoad()"
+    style="
+      font-size:20px;font-weight:700;
+      padding:18px 52px;border-radius:50px;
+      background:linear-gradient(135deg,#3b82f6,#6366f1);
+      color:#fff;border:none;cursor:pointer;
+      box-shadow:0 8px 32px rgba(99,102,241,0.5);
+      letter-spacing:0.06em;transition:transform 0.15s,box-shadow 0.15s;
+    "
+    onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 12px 40px rgba(99,102,241,0.65)'"
+    onmouseout="this.style.transform='';this.style.boxShadow='0 8px 32px rgba(99,102,241,0.5)'"
+  >⬇ クラウドから読み込む</button>
+  <button
+    onclick="startupSkip()"
+    style="font-size:12px;color:rgba(255,255,255,0.45);background:none;border:none;cursor:pointer;text-decoration:underline;padding:4px 12px"
+  >ローカルデータのまま使用する</button>
+  <div id="startup-status" style="font-size:12px;color:rgba(255,255,255,0.55);min-height:18px"></div>
+</div>
 </body>
 </html>
