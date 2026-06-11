@@ -2882,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.4.2</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.4.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3196,7 +3196,7 @@ tr.row-waiting:hover > td {
 
         <div class="section-title" style="margin-top:24px">📸 自動スナップショット</div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.7">
-          データを保存するたびに自動でスナップショットを作成します。直近 <strong>10件</strong> を保持し、いつでも復元できます。
+          データを保存するたびに自動でスナップショットを作成します。直近 <strong>5件</strong> を保持し（30分ごと）、いつでも復元できます。
         </div>
         <div id="snapshot-list" style="margin-bottom:8px"></div>
         <button class="btn btn-secondary btn-sm" onclick="takeSnapshot(true)">📸 今すぐスナップショットを作成</button>
@@ -4614,7 +4614,7 @@ function init() {
    STORAGE
    ===================================================== */
 let _lastSnapshotTime = 0;
-const _SNAPSHOT_INTERVAL_MS = 5 * 60 * 1000; // 5分
+const _SNAPSHOT_INTERVAL_MS = 30 * 60 * 1000; // 30分
 
 function saveToStorage() {
   localStorage.setItem('cases_v1', JSON.stringify(cases));
@@ -10620,7 +10620,7 @@ function deleteInterview(caseId, ivId) {
    SNAPSHOT（自動スナップショット）
    ===================================================== */
 const SNAPSHOT_KEY = 'snapshots_v1';
-const SNAPSHOT_MAX = 10;
+const SNAPSHOT_MAX = 5;
 
 /** スナップショットを作成（manual=trueのとき手動作成） */
 function takeSnapshot(manual) {
@@ -11434,6 +11434,13 @@ window.addEventListener('DOMContentLoaded', () => {
   _showStartupOverlay();
   // 最終読込時刻を復元
   _restoreCloudLoadTs();
+  // 既存スナップショットを最大件数に整理（移行処理）
+  try {
+    const _snaps = loadSnapshots();
+    if (_snaps.length > SNAPSHOT_MAX) {
+      localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(_snaps.slice(0, SNAPSHOT_MAX)));
+    }
+  } catch(e) {}
 });
 
 // プルツーリフレッシュ（スマホ・タブレットで下に引っ張って更新）
