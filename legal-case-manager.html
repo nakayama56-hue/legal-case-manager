@@ -2891,7 +2891,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.5.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.5.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5528,7 +5528,6 @@ function renderTrackingSummary() {
       });
     });
     (c.shinsei_dates || []).forEach(s => {
-      // 申請書送付：申請日が入力済み かつ 未到着のもの
       if (s.tracking && s.shinsei) {
         items.push({
           date:     s.shinsei,
@@ -5538,7 +5537,6 @@ function renderTrackingSummary() {
           key:      c.id + '_sh_' + s.tracking,
         });
       }
-      // 返信：申請日が入力済み かつ 未到着のもの（完了日ではなく申請日基準）
       if (s.tracking_return && s.shinsei) {
         items.push({
           date:     s.shinsei,
@@ -5587,7 +5585,7 @@ function renderTrackingSummary() {
   if (datedItems.length === 0) { el.innerHTML = ''; return; }
   datedItems.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
 
-  // 過去2か月以内を表示
+  // 過去2か月以内を全件表示（件数制限なし）
   const _twoMonthsAgo = new Date();
   _twoMonthsAgo.setMonth(_twoMonthsAgo.getMonth() - 2);
   const _twoMonthsAgoStr = _twoMonthsAgo.toISOString().slice(0, 10);
