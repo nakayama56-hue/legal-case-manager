@@ -2891,7 +2891,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.4.8</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.5.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3168,7 +3168,7 @@ tr.row-waiting:hover > td {
             <div class="icon">💾</div>
             <div class="label">JSONエクスポート（バックアップ）</div>
             <div class="desc">全データをJSON形式で保存します。新しいアプリへの引き継ぎに使います</div>
-            <button class="btn btn-primary" onclick="exportJSON()">バックアップ保存</button>
+            <button class="btn btn-primary" onclick="manualBackupToFolder()">バックアップ保存</button>
           </div>
           <div class="data-card">
             <div class="icon">🕒</div>
@@ -9437,11 +9437,13 @@ async function runDailyAutoBackup() {
   try {
     if (!_backupDirHandle) _backupDirHandle = await _idbGet('backupDir');
     if (_backupDirHandle) {
-      // 権限再確認（ページ再訪問時はrequestPermissionが必要）
+      // 自動実行時はrequestPermissionを呼ばない（ユーザー操作が必要なため）
+      // queryPermissionのみで確認し、grantedでなければスキップ
       const perm = await _backupDirHandle.queryPermission({ mode: 'readwrite' });
       if (perm !== 'granted') {
-        const req = await _backupDirHandle.requestPermission({ mode: 'readwrite' });
-        if (req !== 'granted') throw new Error('permission denied');
+        // 権限切れ：次回手動バックアップ時に再取得を促す
+        toast(`自動バックアップ：「${_backupDirHandle.name}」への書き込み権限が必要です。データ管理画面から手動でバックアップしてください`, 'error');
+        return;
       }
       const fileHandle = await _backupDirHandle.getFileHandle(filename, { create: true });
       const writable = await fileHandle.createWritable();
@@ -9452,10 +9454,12 @@ async function runDailyAutoBackup() {
       return;
     }
   } catch(e) {
-    console.warn('フォルダへの自動バックアップ失敗、ダウンロードにフォールバック', e);
+    console.warn('フォルダへの自動バックアップ失敗', e);
+    toast('自動バックアップに失敗しました。データ管理画面から手動でバックアップしてください', 'error');
+    return;
   }
 
-  // フォールバック：通常ダウンロード
+  // フォルダ未設定時のみダウンロードフォールバック
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -9516,6 +9520,31 @@ function renderStorageStatus() {
     ${top5}
     <div style="font-size:10px;color:var(--text-muted);margin-top:6px">案件数：${cases.length}件 ／ タスク数：${tasks.length}件</div>
   `;
+}
+
+// 手動バックアップ（ユーザー操作起点なのでrequestPermission可）
+async function manualBackupToFolder() {
+  if (!_backupDirHandle) _backupDirHandle = await _idbGet('backupDir');
+  if (!_backupDirHandle) { exportJSON(); return; }
+  try {
+    const perm = await _backupDirHandle.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') {
+      const req = await _backupDirHandle.requestPermission({ mode: 'readwrite' });
+      if (req !== 'granted') { exportJSON(); return; }
+    }
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+    const filename = `CaseFlowバックアップ_${ts}.json`;
+    const json = JSON.stringify(_buildBackupData(), null, 2);
+    const fileHandle = await _backupDirHandle.getFileHandle(filename, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(json);
+    await writable.close();
+    toast(`「${_backupDirHandle.name}」に保存しました`, 'success');
+  } catch(e) {
+    if (e.name !== 'AbortError') { exportJSON(); }
+  }
 }
 
 function exportJSON() {
@@ -11332,14 +11361,59 @@ async function startupLoad() {
   _setStartupStatus('クラウドに接続しています…');
   try {
     await cloudLoad();
-    _setStartupStatus('読み込み完了 ✓');
     _recordCloudLoad();
+    // ユーザー操作起点なのでここでバックアップ権限取得＆実行
+    _setStartupStatus('バックアップを確認中…');
+    await _startupAutoBackup();
+    _setStartupStatus('準備完了 ✓');
     setTimeout(() => _hideStartupOverlay(), 600);
   } catch(e) {
     _setStartupStatus('読み込みに失敗しました。ローカルデータで起動します。');
     if (btn) { btn.disabled = false; btn.textContent = '⬇ クラウドから読み込む'; btn.style.opacity = '1'; }
     setTimeout(() => _hideStartupOverlay(), 2000);
   }
+}
+
+// 起動時バックアップ（読込ボタン押下後＝ユーザー操作起点で実行）
+async function _startupAutoBackup() {
+  if (localStorage.getItem('auto_backup_enabled') !== '1') return;
+  const todayStr = today();
+  if (localStorage.getItem('last_auto_backup') === todayStr) return; // 今日は実施済み
+  if (!cases || cases.length === 0) return;
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+  const filename = `CaseFlow自動バックアップ_${ts}.json`;
+  const json = JSON.stringify(_buildBackupData(), null, 2);
+
+  try {
+    if (!_backupDirHandle) _backupDirHandle = await _idbGet('backupDir');
+    if (_backupDirHandle) {
+      // ユーザー操作起点なのでrequestPermission可
+      const perm = await _backupDirHandle.queryPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') {
+        const req = await _backupDirHandle.requestPermission({ mode: 'readwrite' });
+        if (req !== 'granted') throw new Error('permission denied');
+      }
+      const fileHandle = await _backupDirHandle.getFileHandle(filename, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      localStorage.setItem('last_auto_backup', todayStr);
+      return; // 成功：トーストは出さず準備完了メッセージに任せる
+    }
+  } catch(e) {
+    console.warn('起動時バックアップ失敗', e);
+  }
+
+  // フォルダ未設定またはフォールバック：ダウンロード
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  localStorage.setItem('last_auto_backup', todayStr);
 }
 function startupSkip() {
   localStorage.setItem('startup_skipped_today', today());
@@ -11439,7 +11513,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (abCb) abCb.checked = localStorage.getItem('auto_backup_enabled') === '1';
   _updateBackupFolderLabel();
   renderStorageStatus();
-  setTimeout(() => runDailyAutoBackup(), 3000);
+  // 自動バックアップは読込ボタン押下後（_startupAutoBackup）に実行するためここでは呼ばない
   // 起動時読込オーバーレイ表示
   _showStartupOverlay();
   // 最終読込時刻を復元
