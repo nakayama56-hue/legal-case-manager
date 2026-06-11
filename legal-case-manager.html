@@ -2882,7 +2882,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.4.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.4.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -6127,9 +6127,6 @@ function renderCaseDetail(caseId) {
     <!-- Hero Header -->
     <div class="cd-hero no-print ${c.category==='商業・法人登記'?'corp':'land'}">
       <div class="cd-hero-left">
-        <div class="cd-hero-category ${c.category==='商業・法人登記'?'corp':''}">
-          ${c.category==='商業・法人登記'?'🏢 商業・法人登記':'🏠 不動産登記'}
-        </div>
         <div class="cd-hero-title">${escHtml(c.case_name)}</div>
         <div class="cd-hero-sub">
           ${c.case_num ? `<span>📋 ${escHtml(c.case_num)}</span>` : ''}
@@ -6158,6 +6155,9 @@ function renderCaseDetail(caseId) {
           <button class="btn btn-secondary btn-sm" onclick="printCaseSimple('${c.id}')">🖨 簡易印刷</button>
           <button class="btn btn-secondary btn-sm" onclick="printCaseDetail('${c.id}')">🖨 印刷</button>
         ${c.dropboxUrl ? `<a href="${escHtml(c.dropboxUrl)}" target="_blank" rel="noopener" class="btn btn-sm" style="background:#0061ff;color:#fff;border-color:#0061ff;text-decoration:none">📦 Dropboxで開く</a>` : ''}
+        </div>
+        <div class="cd-hero-category ${c.category==='商業・法人登記'?'corp':''}" style="margin-top:10px;align-self:flex-end;opacity:0.75;font-size:11px">
+          ${c.category==='商業・法人登記'?'🏢 商業・法人登記':'🏠 不動産登記'}
         </div>
       </div>
     </div><!-- /cd-hero -->
