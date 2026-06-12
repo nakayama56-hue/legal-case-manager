@@ -2891,7 +2891,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.5.8</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.5.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -10165,7 +10165,7 @@ function renderSouzokuTracker(c) {
               <div style="font-size:9px;color:var(--text-muted);font-weight:600;margin-top:2px">${dateLabel}</div>
               <div style="font-size:10px;color:var(--text-secondary);cursor:pointer" onclick="souzokuEditDate('${c.id}',${row._idx},'${doc}','${status}',this)">${dateValue ? formatDate(dateValue) : '—'}</div>
               <input type="date" value="${escHtml(dateValue)}" style="display:none;font-size:10px;padding:1px 3px;border:1px solid var(--color-primary);border-radius:3px;width:108px"
-                onchange="souzokuUpdateDate('${c.id}',${row._idx},'${doc}','${status}',this.value);this.style.display='none';this.previousElementSibling.textContent=this.value?formatDate(this.value):'—';this.previousElementSibling.style.display='';"
+                onchange="souzokuUpdateDate('${c.id}',${row._idx},'${doc}','${status}',this.value);this.previousElementSibling.textContent=this.value?formatDate(this.value):'—';"
                 onblur="this.style.display='none';this.previousElementSibling.style.display=''">
               ${status === 'going' ? `
               <div style="font-size:9px;color:var(--text-muted);font-weight:600;margin-top:3px">追跡番号</div>
@@ -10317,6 +10317,7 @@ function souzokuEditDate(caseId, idx, doc, status, textEl) {
   textEl.style.display = 'none';
   input.style.display = '';
   input.focus();
+  try { input.showPicker(); } catch(e) {}
 }
 
 function souzokuUpdateDate(caseId, idx, doc, status, value) {
