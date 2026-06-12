@@ -2891,7 +2891,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.5.9</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5509,6 +5509,8 @@ function _isArrived(caseId, type, num) {
 function renderTrackingSummary() {
   const el = document.getElementById('tracking-summary');
   if (!el) return;
+  // 展開状態を保持
+  const wasOpen = document.getElementById('tracking-hidden-rows')?.classList.contains('open');
 
   // arrived判定はcasesデータから（クラウド同期対応）
 
@@ -5654,6 +5656,13 @@ function renderTrackingSummary() {
     + hiddenSection
     + showRows
     + '</div></div>';
+  // 展開状態を復元
+  if (wasOpen) {
+    const hiddenEl = document.getElementById('tracking-hidden-rows');
+    const toggleEl = document.getElementById('tracking-hidden-toggle');
+    if (hiddenEl) hiddenEl.classList.add('open');
+    if (toggleEl) toggleEl.textContent = '▲ Close';
+  }
 }
 
 /* カレンダー D&D */
