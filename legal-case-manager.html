@@ -2891,7 +2891,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.5.3</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.5.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7670,9 +7670,9 @@ function renderLedger(c) {
         <td><input style="width:100%;text-align:center" value="${escHtml(r.kankatsu||'')}" onchange="updateLedgerField('${cid}','${r.id}','kankatsu',this.value)"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(r.mokuteki||'')}" onchange="updateLedgerField('${cid}','${r.id}','mokuteki',this.value)" ondblclick="showTeikeiPicker(this,'mokuteki')" title="ダブルクリックで定型文"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(r.gen_in||'')}" onchange="updateLedgerField('${cid}','${r.id}','gen_in',this.value)" ondblclick="showTeikeiPicker(this,'gen_in')" title="ダブルクリックで定型文"></td>
-        <td class="money-cell"><input value="${escHtml(r.kazei||'')}" oninput="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','kazei',this.value)" inputmode="numeric" style="width:100%;text-align:right;${r.kazei_checked?'background:#f0fdf4;color:#166534;font-weight:700;':''}" ${r.kazei_checked?'readonly':''}></td>
+        <td class="money-cell"><input value="${r.kazei ? Number(r.kazei).toLocaleString('ja-JP') : ''}" oninput="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','kazei',this.value.replace(/[^\d]/g,''))" inputmode="numeric" style="width:100%;text-align:right;${r.kazei_checked?'background:#f0fdf4;color:#166534;font-weight:700;':''}" ${r.kazei_checked?'readonly':''}></td>
         <td style="text-align:center;vertical-align:middle"><input type="checkbox" ${r.kazei_checked?'checked':''} onchange="toggleLedgerLock('${cid}','${r.id}','kazei',this.checked)" style="cursor:pointer;width:14px;height:14px"></td>
-        <td class="money-cell"><input value="${escHtml(r.menkyo||'')}" oninput="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','menkyo',this.value)" inputmode="numeric" style="width:100%;text-align:right;${r.menkyo_checked?'background:#f0fdf4;color:#166534;font-weight:700;':''}" ${r.menkyo_checked?'readonly':''}></td>
+        <td class="money-cell"><input value="${r.menkyo ? Number(r.menkyo).toLocaleString('ja-JP') : ''}" oninput="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','menkyo',this.value.replace(/[^\d]/g,''))" inputmode="numeric" style="width:100%;text-align:right;${r.menkyo_checked?'background:#f0fdf4;color:#166534;font-weight:700;':''}" ${r.menkyo_checked?'readonly':''}></td>
         <td style="text-align:center;vertical-align:middle"><input type="checkbox" ${r.menkyo_checked?'checked':''} onchange="toggleLedgerLock('${cid}','${r.id}','menkyo',this.checked)" style="cursor:pointer;width:14px;height:14px"></td>
         <td style="text-align:center;padding:2px"><button onclick="duplicateLedgerRow('${cid}','${r.id}')" title="複製" style="width:24px;height:24px;font-size:13px;padding:0;line-height:1;border:1px solid #93c5fd;background:#eff6ff;border-radius:4px;cursor:pointer;color:#1d4ed8">⧉</button></td>
       </tr>`;
