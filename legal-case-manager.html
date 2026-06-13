@@ -1360,6 +1360,11 @@ select.filter-select:focus { outline: none; border-color: var(--color-primary); 
 
 .table-wrap { overflow-x: auto; }
 /* ダッシュボード左右分割（タブレット横・PC） */
+/* スマホ縦表示で非表示 */
+@media (max-width: 768px) and (orientation: portrait) {
+  .hide-mobile-portrait { display: none !important; }
+}
+
 @media (max-width: 768px) {
   #dashboard-layout { flex-direction: column !important; }
   #dashboard-left, #dashboard-right { flex: none !important; width: 100% !important; }
@@ -2891,7 +2896,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.3</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -2959,7 +2964,7 @@ tr.row-waiting:hover > td {
                 <button id="btn-cal-week" onclick="setCalViewMode('week')" style="padding:2px 8px;border:none;background:var(--bg-secondary);color:var(--text-muted);cursor:pointer;font-size:11px">週</button>
               </div>
             </div>
-            <div style="display:flex;gap:8px;font-size:10px;color:var(--text-secondary);align-items:center;flex-wrap:wrap">
+            <div class="hide-mobile-portrait" style="display:flex;gap:8px;font-size:10px;color:var(--text-secondary);align-items:center;flex-wrap:wrap">
               <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#1a73e8;display:inline-block;flex-shrink:0"></span>Googleカレンダー</span>
               <button class="btn btn-secondary btn-xs" onclick="fetchGCalEvents()" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>同期</button>
             </div>
@@ -3014,32 +3019,32 @@ tr.row-waiting:hover > td {
             <button onclick="dismissDeadlineAlert()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#9ca3af;flex-shrink:0;padding:0;line-height:1">✕</button>
           </div>
         </div>
-        <div class="quick-filters">
+        <div class="quick-filters hide-mobile-portrait">
           <button class="qf-btn active" onclick="applyCaseQF('all', this)">進行中案件</button>
           <button class="qf-btn" onclick="applyCaseQF('保留', this)">🔖 保留</button>
           <button class="qf-btn" onclick="applyCaseQF('完了', this)">✅ 完了</button>
         </div>
         <!-- Waitingバナー（進行中案件タブのみ表示） -->
-        <div id="waiting-banner" style="display:none"></div>
+        <div id="waiting-banner" class="hide-mobile-portrait" style="display:none"></div>
         <div class="table-container">
           <div class="table-toolbar">
-            <span style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0">案件一覧</span>
-            <input type="text" class="search-input" id="case-search" placeholder="🔍 CaseFlowを検索..." oninput="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()">
-            <select class="filter-select" id="case-filter-category" onchange="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="min-width:80px">
+            <span class="hide-mobile-portrait" style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0">案件一覧</span>
+            <input type="text" class="search-input hide-mobile-portrait" id="case-search" placeholder="🔍 CaseFlowを検索..." oninput="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()">
+            <select class="filter-select hide-mobile-portrait" id="case-filter-category" onchange="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="min-width:80px">
               <option value="">区分（全て）</option>
               <option value="不動産登記">🏠 不動産登記</option>
               <option value="商業・法人登記">🏢 商業・法人登記</option>
             </select>
             <select class="filter-select" id="case-sort" style="display:none"></select>
             <input type="hidden" id="case-show-completed">
-            <button class="btn btn-primary" onclick="openCaseModal(null)" style="display:inline-flex;align-items:center;gap:6px;font-weight:700;letter-spacing:0.02em"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><line x1="6.5" y1="1" x2="6.5" y2="12" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="6.5" x2="12" y2="6.5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>新規案件</button>
+            <span class="hide-mobile-portrait" style="display:contents"><button class="btn btn-primary" onclick="openCaseModal(null)" style="display:inline-flex;align-items:center;gap:6px;font-weight:700;letter-spacing:0.02em"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><line x1="6.5" y1="1" x2="6.5" y2="12" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="6.5" x2="12" y2="6.5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>新規案件</button>
             <div style="display:flex;border:1px solid var(--border-color);border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0">
               <button id="btn-view-list" onclick="setCaseViewMode('list')" title="リスト表示" style="padding:6px 10px;border:none;background:var(--color-primary);color:#fff;cursor:pointer;display:flex;align-items:center"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="2" rx="1" fill="currentColor"/><rect x="1" y="6" width="12" height="2" rx="1" fill="currentColor"/><rect x="1" y="10" width="12" height="2" rx="1" fill="currentColor"/></svg></button>
               <button id="btn-view-tile" onclick="setCaseViewMode('tile')" title="タイル表示" style="padding:6px 10px;border:none;background:var(--bg-secondary);color:var(--text-muted);cursor:pointer;display:flex;align-items:center"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="currentColor"/></svg></button>
             </div>
           </div><!-- /table-toolbar -->
           <!-- 依頼者ショートカットボタン -->
-          <div id="client-shortcuts" style="padding:8px 14px;border-bottom:1px solid var(--border-color);display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:44px"></div>
+          <div id="client-shortcuts" class="hide-mobile-portrait" style="padding:8px 14px;border-bottom:1px solid var(--border-color);display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:44px"></div>
           <div class="table-wrap" id="case-list-wrap">
             <table id="case-table" style="table-layout:auto;width:100%;min-width:860px">
               <colgroup>
