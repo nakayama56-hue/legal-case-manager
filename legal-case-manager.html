@@ -2891,7 +2891,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7983,16 +7983,21 @@ function toggleLedgerLock(caseId, rowId, field, checked, cbEl) {
   if (!c || !c.ledger) return;
   const row = c.ledger.find(r => r.id === rowId);
   if (!row) return;
-  // チェック前に同じ行の入力値を先に保存（onblurが発火していない場合の対策）
+  // チェック前に同じ行の全inputを保存（onblurが発火していない場合の対策）
   if (cbEl) {
     const tr = cbEl.closest('tr');
     if (tr) {
-      tr.querySelectorAll('input[inputmode="numeric"]').forEach(inp => {
+      tr.querySelectorAll('input[onchange*="updateLedgerField"]').forEach(inp => {
         const oc = inp.getAttribute('onchange') || '';
         const m = oc.match(/updateLedgerField\('[^']+','[^']+','([^']+)'/);
-        if (m && m[1] === field) {
-          const num = inp.value.replace(/[^\d]/g, '');
-          if (num) row[field] = num;
+        if (m) {
+          const f = m[1];
+          if (inp.getAttribute('inputmode') === 'numeric') {
+            const num = inp.value.replace(/[^\d]/g, '');
+            if (num) row[f] = num;
+          } else {
+            if (inp.value) row[f] = inp.value;
+          }
         }
       });
     }
