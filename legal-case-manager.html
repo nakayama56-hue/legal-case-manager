@@ -2891,7 +2891,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.2</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -11402,6 +11402,33 @@ async function startupLoad() {
 }
 
 // 起動時バックアップ（読込ボタン押下後＝ユーザー操作起点で実行）
+
+/* =====================================================
+   バックアップ完了通知
+   ===================================================== */
+async function _requestNotificationPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+function _notifyBackupDone(filename, location) {
+  const msg = `${filename} を${location}に保存しました`;
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('CaseFlow バックアップ完了', {
+      body: msg,
+      icon: '/legal-case-manager/icon-192.png',
+      badge: '/legal-case-manager/icon-192.png',
+      tag: 'caseflow-backup',
+      silent: false,
+    });
+  } else {
+    toast('✅ ' + msg, 'success');
+  }
+}
+
 async function _startupAutoBackup() {
   if (localStorage.getItem('auto_backup_enabled') !== '1') return;
   const todayStr = today();
@@ -11428,7 +11455,8 @@ async function _startupAutoBackup() {
       await writable.write(json);
       await writable.close();
       localStorage.setItem('last_auto_backup', todayStr);
-      return; // 成功：トーストは出さず準備完了メッセージに任せる
+      _notifyBackupDone(filename, `「${_backupDirHandle.name}」フォルダ`);
+      return;
     }
   } catch(e) {
     console.warn('起動時バックアップ失敗', e);
@@ -11441,6 +11469,7 @@ async function _startupAutoBackup() {
   a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
   localStorage.setItem('last_auto_backup', todayStr);
+  _notifyBackupDone(filename, 'ダウンロードフォルダ');
 }
 function startupSkip() {
   localStorage.setItem('startup_skipped_today', today());
@@ -11545,6 +11574,10 @@ window.addEventListener('DOMContentLoaded', () => {
   _showStartupOverlay();
   // 最終読込時刻を復元
   _restoreCloudLoadTs();
+  // 通知権限をリクエスト（自動バックアップが有効な場合）
+  if (localStorage.getItem('auto_backup_enabled') === '1') {
+    _requestNotificationPermission();
+  }
   // 既存スナップショットを最大件数に整理（移行処理）
   try {
     const _snaps = loadSnapshots();
