@@ -2896,7 +2896,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -9414,8 +9414,10 @@ async function _idbGet(key) {
 
 // バックアップフォルダを選択（PC Chromeのみ対応）
 async function selectBackupFolder() {
+  // PWAスタンドアロンモードではshowDirectoryPickerがSecurityErrorで失敗する場合がある
+  // その場合はダウンロードフォルダへの保存に切り替える
   if (!window.showDirectoryPicker) {
-    toast('この端末はフォルダ選択に非対応です。自動バックアップはダウンロードフォルダに保存されます', 'error');
+    _setDownloadFallback();
     return;
   }
   try {
@@ -9423,18 +9425,43 @@ async function selectBackupFolder() {
     _backupDirHandle = handle;
     await _idbSet('backupDir', handle);
     localStorage.setItem('backup_folder_name', handle.name);
+    localStorage.removeItem('backup_use_download');
     _updateBackupFolderLabel();
     toast(`バックアップフォルダを「${handle.name}」に設定しました`, 'success');
   } catch(e) {
-    if (e.name !== 'AbortError') toast('フォルダ選択に失敗しました', 'error');
+    if (e.name === 'AbortError') return; // キャンセル
+    if (e.name === 'SecurityError' || e.name === 'NotAllowedError') {
+      // PWAモードでの制限 → ダウンロードフォールバックに切替
+      _setDownloadFallback();
+    } else {
+      toast(`フォルダ選択に失敗しました（${e.message}）`, 'error');
+    }
   }
+}
+
+function _setDownloadFallback() {
+  _backupDirHandle = null;
+  localStorage.setItem('backup_use_download', '1');
+  localStorage.removeItem('backup_folder_name');
+  _updateBackupFolderLabel();
+  toast('PWAモードではフォルダ指定ができないため、ダウンロードフォルダへの自動保存に設定しました', 'info');
 }
 
 function _updateBackupFolderLabel() {
   const el = document.getElementById('backup-folder-label');
   if (!el) return;
   const name = localStorage.getItem('backup_folder_name');
-  el.textContent = name ? `保存先：${name}` : '保存先：ダウンロードフォルダ（未設定）';
+  const useDL = localStorage.getItem('backup_use_download') === '1';
+  if (name) {
+    el.textContent = `保存先：${name}`;
+    el.style.color = 'var(--color-success, #10b981)';
+  } else if (useDL) {
+    el.textContent = '保存先：ダウンロードフォルダ（自動）';
+    el.style.color = 'var(--text-muted)';
+  } else {
+    el.textContent = '保存先：未設定（ダウンロードフォルダにフォールバック）';
+    el.style.color = 'var(--text-muted)';
+  }
 }
 
 // バックアップデータ生成（全データ）
@@ -9465,6 +9492,17 @@ async function runDailyAutoBackup() {
   const json = JSON.stringify(_buildBackupData(), null, 2);
 
   // フォルダハンドルがあればそこへ書き込み
+  // ダウンロードフォールバック設定の場合は直接ダウンロード
+  if (localStorage.getItem('backup_use_download') === '1') {
+    const blob2 = new Blob([json], { type: 'application/json' });
+    const url2 = URL.createObjectURL(blob2);
+    const a2 = document.createElement('a');
+    a2.href = url2; a2.download = filename; a2.click();
+    URL.revokeObjectURL(url2);
+    localStorage.setItem('last_auto_backup', todayStr);
+    _notifyBackupDone(filename, 'ダウンロードフォルダ');
+    return;
+  }
   try {
     if (!_backupDirHandle) _backupDirHandle = await _idbGet('backupDir');
     if (_backupDirHandle) {
@@ -11446,6 +11484,17 @@ async function _startupAutoBackup() {
   const filename = `CaseFlow自動バックアップ_${ts}.json`;
   const json = JSON.stringify(_buildBackupData(), null, 2);
 
+  // ダウンロードフォールバック設定の場合は直接ダウンロード
+  if (localStorage.getItem('backup_use_download') === '1') {
+    const blob2 = new Blob([json], { type: 'application/json' });
+    const url2 = URL.createObjectURL(blob2);
+    const a2 = document.createElement('a');
+    a2.href = url2; a2.download = filename; a2.click();
+    URL.revokeObjectURL(url2);
+    localStorage.setItem('last_auto_backup', todayStr);
+    _notifyBackupDone(filename, 'ダウンロードフォルダ');
+    return;
+  }
   try {
     if (!_backupDirHandle) _backupDirHandle = await _idbGet('backupDir');
     if (_backupDirHandle) {
