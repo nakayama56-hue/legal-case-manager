@@ -2984,7 +2984,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4493,8 +4493,8 @@ function renderCaseTiles() {
 
       <div class="tile-header" style="border-top: 4px solid ${sc ? sc.color : 'var(--border-color)'}">
         ${sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '<span></span>'}
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-left:auto">
-          <div style="display:flex;align-items:center;gap:4px">${c.pinned ? '<span class="tile-pin">📌</span>' : ''}</div>
+        <div style="display:flex;align-items:center;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end">
+          ${c.pinned ? '<span class="tile-pin">📌</span>' : ''}
           ${isShinseichuu ? '<span class="tile-shinsei-badge-abs">申請中</span>' : ''}
           ${isImportant ? '<span class="tile-important-badge-abs">⚠️ Important</span>' : ''}
         </div>
