@@ -2881,6 +2881,50 @@ tr.row-waiting:hover > td {
   margin-left: 5px;
   font-family: sans-serif;
 }
+
+/* ===== ⚠️ Importantバッジ ===== */
+.tile-important-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #dc2626;
+  border: 2px solid rgba(220,38,38,0.75);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  letter-spacing: 0.05em;
+  line-height: 1.5;
+  z-index: 2;
+  pointer-events: none;
+  font-family: sans-serif;
+}
+.tile-shinsei-badge + .tile-important-badge {
+  top: 36px; /* 申請中バッジの下に */
+}
+.list-important-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #dc2626;
+  border: 2px solid rgba(220,38,38,0.75);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 6px;
+  letter-spacing: 0.05em;
+  line-height: 1.5;
+  vertical-align: middle;
+  margin-left: 5px;
+  font-family: sans-serif;
+}
+.tile-important-badge--below {
+  top: 38px !important;
+}
 </style>
 <!-- generated: 1774151282.3539512 -->
 </head>
@@ -2896,7 +2940,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.6</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4303,6 +4347,13 @@ function setCaseViewMode(mode) {
   }
 }
 
+
+function _hasMarker(c) {
+  if (c.interview_content && c.interview_content.includes('<mark')) return true;
+  if (c.memos && c.memos.some(m => m.text && m.text.includes('<mark'))) return true;
+  return false;
+}
+
 function renderCaseTiles() {
   const grid = document.getElementById('case-tile-grid');
   if (!grid) return;
@@ -4392,8 +4443,9 @@ function renderCaseTiles() {
     const bureaus = (c.legal_bureaus||[]).filter(Boolean);
     const shinsei = (c.shinsei_dates||[]).find(s => s.shinsei);
     const isShinseichuu = (c.shinsei_dates||[]).some(s => s.shinsei && !s.kanryo);
+    const isImportant = _hasMarker(c);
     return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" onclick="showCaseDetail('${c.id}')" style="position:relative">
-      ${isShinseichuu ? '<span class="tile-shinsei-badge">申請中</span>' : ''}
+      ${isShinseichuu ? '<span class="tile-shinsei-badge">申請中</span>' : ''}${isImportant ? '<span class="tile-important-badge' + (isShinseichuu ? ' tile-important-badge--below' : '') + '">⚠️ Important</span>' : ''}
       <div class="tile-header" style="border-top: 4px solid ${sc ? sc.color : 'var(--border-color)'}">
         ${sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '<span></span>'}
         <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
@@ -6104,7 +6156,7 @@ function renderCaseTable() {
       <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0"><strong>${escHtml(c.case_num||'')}</strong></td>
       <td class="col-case-name" title="${escHtml(c.case_name)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">
         ${escHtml(c.case_name)}
-        ${(c.shinsei_dates||[]).some(s => s.shinsei && !s.kanryo) ? '<span class="list-shinsei-badge">申請中</span>' : ''}
+        ${(c.shinsei_dates||[]).some(s => s.shinsei && !s.kanryo) ? '<span class="list-shinsei-badge">申請中</span>' : ''}${_hasMarker(c) ? '<span class="list-important-badge">⚠️ Important</span>' : ''}
         ${c.waiting ? `<span style="font-size:10px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:10px;padding:1px 6px;font-weight:700;margin-left:4px">⏳</span>` : ''}
         ${incompleteTasks > 0 ? `<span class="badge badge-進行中" style="margin-left:4px;font-size:10px">${incompleteTasks}件</span>` : ''}
       </td>
