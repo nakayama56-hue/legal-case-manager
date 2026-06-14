@@ -2846,6 +2846,38 @@ tr.row-waiting:hover > td {
 
 /* ===== 申請中スタンプバッジ ===== */
 .tile-shinsei-badge { display: none; }
+.tile-shinsei-badge-abs {
+  display: inline-block;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #1e3a8a;
+  border: 2px solid rgba(30,58,138,0.80);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 8px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  white-space: nowrap;
+  font-family: sans-serif;
+}
+.tile-important-badge-abs {
+  display: inline-block;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #dc2626;
+  border: 2px solid rgba(220,38,38,0.80);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 8px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  white-space: nowrap;
+  font-family: sans-serif;
+}
 .list-shinsei-badge {
   display: inline-block;
   background: rgba(255,255,255,0.55);
@@ -2954,7 +2986,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.8</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.6.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4459,6 +4491,7 @@ function renderCaseTiles() {
     const isShinseichuu = (c.shinsei_dates||[]).some(s => s.shinsei && !s.kanryo);
     const isImportant = _hasMarker(c);
     return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" onclick="showCaseDetail('${c.id}')" style="position:relative">
+      ${(isShinseichuu || isImportant) ? '<div style="position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:4px;z-index:3;pointer-events:none">' + (isShinseichuu ? '<span class="tile-shinsei-badge-abs">申請中</span>' : '') + (isImportant ? '<span class="tile-important-badge-abs">⚠️ Important</span>' : '') + '</div>' : ''}
 
       <div class="tile-header" style="border-top: 4px solid ${sc ? sc.color : 'var(--border-color)'}">
         ${sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '<span></span>'}
@@ -4473,10 +4506,7 @@ function renderCaseTiles() {
       <div class="tile-footer">
         ${c.category ? `<span>${c.category === '商業・法人登記' ? '🏢' : '🏠'} ${escHtml(c.type||c.category)}</span>` : ''}
         ${shinsei ? `<span>📅 ${escHtml(shinsei.shinsei)}</span>` : ''}
-        <span style="margin-left:auto;display:flex;gap:4px;align-items:center;flex-shrink:0">
-          ${isShinseichuu ? '<span class="tile-shinsei-badge-inline">申請中</span>' : ''}
-          ${isImportant ? '<span class="tile-important-badge-inline">⚠️ Important</span>' : ''}
-        </span>
+        ${''}
       </div>
     </div>`;
   }).join('');
