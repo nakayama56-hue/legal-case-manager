@@ -2355,7 +2355,7 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
   .case-tile-card:hover { box-shadow: 0 12px 36px rgba(31,60,120,0.18); transform: translateY(-3px); }
 
 
-  .case-tile-card .tile-header { padding: 10px 12px 8px; border-bottom: 1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .case-tile-card .tile-header { padding: 6px 10px; border-bottom: 1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; gap:6px; min-height: 36px; }
   .case-tile-card .tile-body { padding: 10px 12px; flex:1; }
   .case-tile-card .tile-footer { padding: 7px 12px; background: var(--bg-secondary); border-top: 1px solid var(--border-color); font-size:10px; color:var(--text-muted); display:flex; flex-wrap:wrap; gap:4px 10px; }
   .case-tile-card .tile-pin { font-size:13px; color:#f59e0b; }
@@ -2969,6 +2969,19 @@ tr.row-waiting:hover > td {
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
+
+.tile-badge-waiting {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
 </style>
 <!-- generated: 1774151282.3539512 -->
 </head>
@@ -2984,7 +2997,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4492,15 +4505,18 @@ function renderCaseTiles() {
       
 
       <div class="tile-header" style="border-top: 4px solid ${sc ? sc.color : 'var(--border-color)'}">
-        ${sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '<span></span>'}
-        <div style="display:flex;align-items:center;gap:4px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end">
+        <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0">
+          ${sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : ''}
+          ${c.waiting ? '<span class="tile-badge-waiting">⏳ Waiting</span>' : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
           ${c.pinned ? '<span class="tile-pin">📌</span>' : ''}
           ${isShinseichuu ? '<span class="tile-shinsei-badge-abs">申請中</span>' : ''}
           ${isImportant ? '<span class="tile-important-badge-abs">⚠️ Important</span>' : ''}
         </div>
       </div>
       <div class="tile-body">
-        <div class="tile-name">${escHtml(c.case_name||'—')}${c.waiting ? ' <span style="font-size:10px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:10px;padding:1px 7px;font-weight:700;vertical-align:middle">⏳ Waiting</span>' : ''}</div>
+        <div class="tile-name">${escHtml(c.case_name||'—')}</div>
         ${clientName(c) ? `<div class="tile-client">👤 ${escHtml(clientName(c))}</div>` : ''}
       </div>
       <div class="tile-footer">
