@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.6</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5388,14 +5388,8 @@ function renderCalendar() {
     const isKogyo = c.category === '商業・法人登記';
     (c.shinsei_dates || []).forEach(s => {
       if (!s.yotei) return;
-      if (isKogyo) {
-        const touhonDone = tasks.some(t =>
-          t.case_id === c.id && t.name === '謄本' && t.status === '完了'
-        );
-        if (touhonDone) return;
-      } else {
-        if (s.kanryo) return;
-      }
+      // 完了日が入力済みなら除外（商業・法人も不動産も共通）
+      if (s.kanryo) return;
       const label = s.kankatsu ? `${s.kankatsu} ${c.case_name}` : c.case_name;
       const cls = isKogyo ? 'yotei-highlight-kogyo' : 'yotei-highlight-fudosan';
       add(s.yotei, cls, '', label, `showCaseDetail('${c.id}')`, '');
@@ -5443,13 +5437,6 @@ function renderCaseTimeline() {
       if (!s.shinsei || !s.yotei) return;
       // 完了日が入力済みなら除外（カテゴリ共通）
       if (s.kanryo) return;
-      // 商業・法人登記：謄本タスクが完了済みでも除外
-      if (isKogyo) {
-        const touhonDone = tasks.some(t =>
-          t.case_id === c.id && t.name === '謄本' && t.status === '完了'
-        );
-        if (touhonDone) return;
-      }
       rows.push({ caseName: c.case_name, caseId: c.id, kankatsu: s.kankatsu, shinsei: s.shinsei, yotei: s.yotei, kanryo: s.kanryo, category: c.category });
     });
   });
@@ -6680,34 +6667,22 @@ function checkTouhonAutoComplete(tk) {
   const c = cases.find(c => c.id === tk.case_id);
   if (!c) return;
   if (c.category !== '商業・法人登記') return;
+  if (tk.name !== '謄本') return;
 
-  // この案件の謄本タスクが全部完了しているか確認
-  const touhonTasks = tasks.filter(t => t.case_id === c.id && t.name === '謄本');
-  if (touhonTasks.length === 0) return;
-  const allDone = touhonTasks.every(t => t.status === '完了');
-  if (!allDone) return;
-
-  // 案件ステータスを「完了」に
-  const wasAlreadyDone = c.status === '完了';
-  c.status = '完了';
-
-  // shinsei_dates の全行に kanryo（完了日）が未入力なら今日の日付を入れる
+  // 完了した謄本タスクの期限(deadline)と呼応する申請日行(yotei一致)のみ完了日を入れる
   const todayStr = today();
   let filled = 0;
   (c.shinsei_dates || []).forEach(r => {
-    if (!r.kanryo) {
+    if (r.yotei && tk.deadline && r.yotei === tk.deadline && !r.kanryo) {
       r.kanryo = todayStr;
       filled++;
     }
   });
 
-  // 保存・画面更新
+  // 案件ステータスは変更しない（手動運用）
   saveToStorage();
-  if (!wasAlreadyDone) {
-    const msg = filled > 0
-      ? `謄本タスクが完了しました。案件を「完了」にし、完了日（${filled}件）に${todayStr}を入力しました。`
-      : `謄本タスクが完了しました。案件を「完了」にしました。`;
-    toast(msg, 'success');
+  if (filled > 0) {
+    toast(`謄本取得により、呼応する完了日（${filled}件）に${todayStr}を入力しました`, 'success');
     if (typeof renderCaseDetail === 'function') renderCaseDetail(c.id);
     caseViewMode === 'tile' ? renderCaseTiles() : renderCaseTable();
     renderTaskTable();
