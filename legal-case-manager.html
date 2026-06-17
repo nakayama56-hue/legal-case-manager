@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.8</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -9277,7 +9277,30 @@ function saveCase() {
 
   if (currentCaseId) {
     const idx = cases.findIndex(c => c.id === currentCaseId);
-    if (idx !== -1) cases[idx] = { ...cases[idx], ...data };
+    if (idx !== -1) {
+      const prev = cases[idx];
+      // 到着済みフラグを引き継ぐ（readDeliveryRows/readShinseiRowsはフラグを読まないため）
+      // deliveries: 追跡番号で照合してarrived_numsを復元
+      (data.deliveries || []).forEach(nd => {
+        const oldD = (prev.deliveries || []).find(od =>
+          od.name === nd.name && JSON.stringify(od.trackings||[]) === JSON.stringify(nd.trackings||[])
+        );
+        if (oldD && oldD.arrived_nums) nd.arrived_nums = oldD.arrived_nums;
+      });
+      // shinsei_dates: 追跡番号で照合してtracking_arrived/tracking_return_arrivedを復元
+      (data.shinsei_dates || []).forEach(ns => {
+        const oldS = (prev.shinsei_dates || []).find(os =>
+          os.tracking === ns.tracking && ns.tracking
+        );
+        if (oldS) {
+          if (oldS.tracking_arrived) ns.tracking_arrived = true;
+          if (oldS.tracking_return && oldS.tracking_return === ns.tracking_return && oldS.tracking_return_arrived) {
+            ns.tracking_return_arrived = true;
+          }
+        }
+      });
+      cases[idx] = { ...prev, ...data };
+    }
     toast('案件を更新しました');
   } else {
     const newId = genId();
