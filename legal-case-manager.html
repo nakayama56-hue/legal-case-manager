@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4419,6 +4419,13 @@ function setCaseViewMode(mode) {
 function _hasMarker(c) {
   if (c.interview_content && c.interview_content.includes('<mark')) return true;
   if (c.memos && c.memos.some(m => m.text && m.text.includes('<mark'))) return true;
+  // 面談記録のマーカー
+  if (c.interviews && c.interviews.some(iv =>
+    (iv.content && iv.content.includes('<mark')) ||
+    (iv.place && iv.place.includes('<mark')) ||
+    (iv.party && iv.party.includes('<mark')) ||
+    (iv.azukari && iv.azukari.includes('<mark'))
+  )) return true;
   return false;
 }
 
