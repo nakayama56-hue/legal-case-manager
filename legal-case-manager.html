@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.7.9</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4662,6 +4662,36 @@ function init() {
     } catch(e) { console.warn('ledger migration error:', e); }
     localStorage.setItem('ledger_migrated', '1');
   }
+  // 到着済みフラグを独立マップ（arrived_tracking）に移行
+  if (!localStorage.getItem('arrived_tracking_migrated')) {
+    try {
+      let migrated2 = false;
+      cases.forEach(c => {
+        if (!c.arrived_tracking) c.arrived_tracking = {};
+        // deliveries の arrived_nums
+        (c.deliveries || []).forEach(d => {
+          (d.arrived_nums || []).forEach(n => { if (n) { c.arrived_tracking[n] = true; migrated2 = true; } });
+        });
+        // shinsei_dates の tracking_arrived / tracking_return_arrived
+        (c.shinsei_dates || []).forEach(s => {
+          if (s.tracking_arrived && s.tracking) { c.arrived_tracking[s.tracking] = true; migrated2 = true; }
+          if (s.tracking_return_arrived && s.tracking_return) { c.arrived_tracking[s.tracking_return] = true; migrated2 = true; }
+        });
+        // souzoku_tracker
+        if (c.souzoku_tracker && c.souzoku_tracker.rows) {
+          c.souzoku_tracker.rows.forEach(row => {
+            if (!row.trackings) return;
+            Object.values(row.trackings).forEach(t => {
+              if (t.tracking_arrived && t.tracking) { c.arrived_tracking[t.tracking] = true; migrated2 = true; }
+              if (t.tracking_return_arrived && t.tracking_return) { c.arrived_tracking[t.tracking_return] = true; migrated2 = true; }
+            });
+          });
+        }
+      });
+      if (migrated2) localStorage.setItem('cases_v1', JSON.stringify(cases));
+    } catch(e) { console.warn('arrived_tracking migration error:', e); }
+    localStorage.setItem('arrived_tracking_migrated', '1');
+  }
   // localStorageが空の場合（新端末・初回アクセス）
   if (cases.length === 0 && !localStorage.getItem('app_initialized')) {
     // まずUIを表示してからクラウド自動読込を試みる
@@ -5561,6 +5591,21 @@ function _markArrived(key) {
   const c = cases.find(c => c.id === caseId);
   if (!c) return;
 
+  // 根本対策：追跡番号をキーにした独立マップに記録（送付先データの再生成・同期に影響されない）
+  // szt/szrは追跡番号が直接numに入らないため、実際の追跡番号を解決してから記録する
+  if (!c.arrived_tracking) c.arrived_tracking = {};
+  let realNum = num;
+  if (type === 'szt' || type === 'szr') {
+    const parts = num.split('_');
+    const ridx = parseInt(parts[0]);
+    const matchedDoc = SOUZOKU_DOC_TYPES.find(d => d.replace(/[・ ]/g,'_') === parts.slice(1).join('_'));
+    if (c.souzoku_tracker && c.souzoku_tracker.rows[ridx] && c.souzoku_tracker.rows[ridx].trackings && matchedDoc) {
+      const t = c.souzoku_tracker.rows[ridx].trackings[matchedDoc];
+      realNum = (type === 'szt' ? t?.tracking : t?.tracking_return) || num;
+    }
+  }
+  if (realNum) c.arrived_tracking[realNum] = true;
+
   if (type === 'dv') {
     // deliveries の追跡番号に arrived フラグ
     (c.deliveries || []).forEach(d => {
@@ -5605,6 +5650,21 @@ function _markArrived(key) {
 function _isArrived(caseId, type, num) {
   const c = cases.find(c => c.id === caseId);
   if (!c) return false;
+
+  // 根本対策：独立マップを最優先でチェック
+  // szt/szrは実際の追跡番号を解決
+  let realNum = num;
+  if (type === 'szt' || type === 'szr') {
+    const parts = num.split('_');
+    const ridx = parseInt(parts[0]);
+    const matchedDoc = SOUZOKU_DOC_TYPES.find(d => d.replace(/[・ ]/g,'_') === parts.slice(1).join('_'));
+    if (c.souzoku_tracker && c.souzoku_tracker.rows[ridx] && c.souzoku_tracker.rows[ridx].trackings && matchedDoc) {
+      const t = c.souzoku_tracker.rows[ridx].trackings[matchedDoc];
+      realNum = (type === 'szt' ? t?.tracking : t?.tracking_return) || num;
+    }
+  }
+  if (c.arrived_tracking && c.arrived_tracking[realNum]) return true;
+
   if (type === 'dv') {
     return (c.deliveries || []).some(d =>
       d.arrived_nums && d.arrived_nums.includes(num)
