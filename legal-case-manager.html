@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5570,6 +5570,19 @@ function renderCaseTimeline() {
   renderTrackingSummary();
 }
 
+function toggleTrackingSection(btn, targetId) {
+  const rows = document.getElementById(targetId);
+  if (!rows || !btn) return;
+  const open = rows.classList.contains('open');
+  if (open) {
+    rows.classList.remove('open');
+    btn.textContent = '▼ View More';
+  } else {
+    rows.classList.add('open');
+    btn.textContent = '▲ Close';
+  }
+}
+
 function toggleTrackingHidden(btn) {
   const rows = document.getElementById('tracking-hidden-rows');
   if (!rows || !btn) return;
@@ -5776,73 +5789,71 @@ function renderTrackingSummary() {
 
   if (recent.length === 0) { el.innerHTML = ''; return; }
 
-  const rows = recent.map(item => {
+  // 展開状態を保持（2セクション分）
+  const wasSendOpen = document.getElementById('tracking-send-hidden')?.classList.contains('open');
+  const wasReturnOpen = document.getElementById('tracking-return-hidden')?.classList.contains('open');
+
+  // 1行を生成する共通関数
+  const buildRow = (item) => {
     const dateStr = item.date ? item.date.slice(5) : '—';
     const label   = [item.caseName, item.label].filter(v => v).join(' | ');
     const km = item.key.match(/^(.+?)_(dv|sh|sr|szt|szr)_(.+)$/);
     const arrived = km ? _isArrived(km[1], km[2], km[3]) : false;
-    const isReturn = km && (km[2] === 'sr' || km[2] === 'szr');
     const url = 'https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=' + item.tracking + '&searchKind=S002&locale=ja';
-    const keyEsc = item.key.replace(/'/g, "\'");
+    const keyEsc = item.key.replace(/'/g, "\\'");
     const opacity = arrived ? 'opacity:0.55;' : '';
-    const returnBadge = isReturn ? '<span style="flex-shrink:0;font-size:10px;background:#dcfce7;color:#15803d;border:1px solid #4ade80;border-radius:4px;padding:3px 7px;font-weight:700;white-space:nowrap;margin-right:4px">📩 返信</span>' : '';
     const statusBtn = arrived
       ? '<span style="flex-shrink:0;width:72px;font-size:10px;background:#d1fae5;color:#065f46;border-radius:4px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">✓ 到着済</span>'
       : '<button onclick="event.stopPropagation();_markArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;background:#1d4ed8;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">📬 到着</button>';
     const rowClick = 'onclick="window.open(\'' + url + '\',\'_blank\')"';
     return '<div ' + rowClick + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
       + '<span style="flex-shrink:0;width:36px;font-size:11px;color:#94a3b8">' + dateStr + '</span>'
-      + returnBadge
       + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(label) + '</span>'
       + statusBtn
       + '</div>';
-  }).join('');
+  };
 
-  // 最初の4件と5件目以降に分割
-  const rowsArr = recent.map(item => {
-    const dateStr = item.date ? item.date.slice(5) : '—';
-    const label   = [item.caseName, item.label].filter(v => v).join(' | ');
+  // 発送と返信に分類
+  const isReturnItem = (item) => {
     const km = item.key.match(/^(.+?)_(dv|sh|sr|szt|szr)_(.+)$/);
-    const arrived = km ? _isArrived(km[1], km[2], km[3]) : false;
-    const isReturn = km && (km[2] === 'sr' || km[2] === 'szr');
-    const url = 'https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=' + item.tracking + '&searchKind=S002&locale=ja';
-    const keyEsc = item.key.replace(/'/g, "\'");
-    const opacity = arrived ? 'opacity:0.55;' : '';
-    const returnBadge = isReturn ? '<span style="flex-shrink:0;font-size:10px;background:#dcfce7;color:#15803d;border:1px solid #4ade80;border-radius:4px;padding:3px 7px;font-weight:700;white-space:nowrap;margin-right:4px">📩 返信</span>' : '';
-    const statusBtn = arrived
-      ? '<span style="flex-shrink:0;width:72px;font-size:10px;background:#d1fae5;color:#065f46;border-radius:4px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">✓ 到着済</span>'
-      : '<button onclick="event.stopPropagation();_markArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;background:#1d4ed8;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block;text-align:center">📬 到着</button>';
-    const rowClick = 'onclick="window.open(\'' + url + '\',\'_blank\')"';
-    return '<div ' + rowClick + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
-      + '<span style="flex-shrink:0;width:36px;font-size:11px;color:#94a3b8">' + dateStr + '</span>'
-      + returnBadge
-      + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(label) + '</span>'
-      + statusBtn
-      + '</div>';
-  });
+    return km && (km[2] === 'sr' || km[2] === 'szr');
+  };
+  const sendItems   = recent.filter(it => !isReturnItem(it));
+  const returnItems = recent.filter(it => isReturnItem(it));
 
-  // 直近5件を常時表示、残り（最大15件）を折りたたみ
-  const showRows   = rowsArr.slice(-5).join('');        // 直近5件（常時表示）
-  const hiddenRows = rowsArr.slice(0, -5).join('');     // 残り最大15件（折りたたみ）
+  // セクションHTML生成（直近5件常時表示＋折りたたみ）
+  const buildSection = (sectionItems, idPrefix, title, titleColor) => {
+    if (sectionItems.length === 0) return '';
+    const rowsArr = sectionItems.map(buildRow);
+    const showRows   = rowsArr.slice(-5).join('');
+    const hiddenRows = rowsArr.slice(0, -5).join('');
+    const hiddenSection = hiddenRows
+      ? '<div id="' + idPrefix + '-hidden" class="tracking-collapsible">' + hiddenRows + '</div>'
+        + '<div onclick="toggleTrackingSection(this,\'' + idPrefix + '-hidden\')" '
+        + 'style="padding:5px 8px;text-align:center;cursor:pointer;font-size:12px;color:#7c3aed;font-weight:700;background:var(--bg-secondary);border-bottom:1px solid #ede9fe">▼ View More</div>'
+      : '';
+    return '<div style="font-size:11px;font-weight:700;color:' + titleColor + ';margin:6px 0 4px;padding-left:2px">' + title + '</div>'
+      + '<div style="background:var(--bg-secondary);border-radius:8px;overflow:hidden">'
+      + hiddenSection + showRows + '</div>';
+  };
 
-  const hiddenSection = hiddenRows
-    ? '<div id="tracking-hidden-rows" class="tracking-collapsible">' + hiddenRows + '</div>'
-      + '<div id="tracking-hidden-toggle" onclick="toggleTrackingHidden(this)" '
-      + 'style="padding:5px 8px;text-align:center;cursor:pointer;font-size:12px;color:#7c3aed;font-weight:700;background:var(--bg-secondary);border-bottom:1px solid #ede9fe">▼ View More</div>'
-    : '';
+  const sendSection   = buildSection(sendItems,   'tracking-send',   '📤 発送（申請書・書類）', '#1e40af');
+  const returnSection = buildSection(returnItems, 'tracking-return', '📩 返信待ち',            '#15803d');
 
   el.innerHTML = '<div style="margin-top:10px;background:linear-gradient(135deg,#eff6ff 0%,#f0f9ff 100%);border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;overflow:hidden">'
-    + '<div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:8px">📮 直近の送付追跡</div>'
-    + '<div style="background:var(--bg-secondary);border-radius:8px;overflow:hidden">'
-    + hiddenSection
-    + showRows
-    + '</div></div>';
+    + '<div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:4px">📮 直近の送付追跡</div>'
+    + sendSection
+    + returnSection
+    + '</div>';
+
   // 展開状態を復元
-  if (wasOpen) {
-    const hiddenEl = document.getElementById('tracking-hidden-rows');
-    const toggleEl = document.getElementById('tracking-hidden-toggle');
-    if (hiddenEl) hiddenEl.classList.add('open');
-    if (toggleEl) toggleEl.textContent = '▲ Close';
+  if (wasSendOpen) {
+    const el2 = document.getElementById('tracking-send-hidden');
+    if (el2) { el2.classList.add('open'); const tg = el2.nextElementSibling; if (tg) tg.textContent = '▲ Close'; }
+  }
+  if (wasReturnOpen) {
+    const el3 = document.getElementById('tracking-return-hidden');
+    if (el3) { el3.classList.add('open'); const tg = el3.nextElementSibling; if (tg) tg.textContent = '▲ Close'; }
   }
 }
 
