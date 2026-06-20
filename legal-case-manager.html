@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.2</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5837,18 +5837,17 @@ function renderTrackingSummary() {
       + '<div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#fff;background:' + opts.headerBg + ';padding:6px 10px;letter-spacing:0.03em">'
       + '<span style="font-size:14px">' + opts.icon + '</span>'
       + '<span>' + opts.label + '</span>'
-      + '<span style="margin-left:auto;font-size:10px;font-weight:700;background:rgba(255,255,255,0.25);border-radius:10px;padding:1px 8px">' + sectionItems.length + '件</span>'
       + '</div>'
       + '<div style="overflow:hidden">'
       + hiddenSection + showRows + '</div></div>';
   };
 
   const sendSection   = buildSection(sendItems,   'tracking-send',   {
-    icon: '📤', label: '発送（申請書・書類）',
+    icon: '📤', label: '発送済',
     headerBg: 'linear-gradient(135deg,#2563eb,#3b82f6)', border: '#93c5fd', cardBg: '#f0f6ff'
   });
   const returnSection = buildSection(returnItems, 'tracking-return', {
-    icon: '📩', label: '返信待ち（相手の対応待ち）',
+    icon: '📩', label: '返信待ち',
     headerBg: 'linear-gradient(135deg,#059669,#10b981)', border: '#6ee7b7', cardBg: '#f0fdf6'
   });
 
