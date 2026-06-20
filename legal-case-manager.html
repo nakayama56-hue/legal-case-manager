@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5822,7 +5822,7 @@ function renderTrackingSummary() {
   const returnItems = recent.filter(it => isReturnItem(it));
 
   // セクションHTML生成（直近5件常時表示＋折りたたみ）
-  const buildSection = (sectionItems, idPrefix, title, titleColor) => {
+  const buildSection = (sectionItems, idPrefix, opts) => {
     if (sectionItems.length === 0) return '';
     const rowsArr = sectionItems.map(buildRow);
     const showRows   = rowsArr.slice(-5).join('');
@@ -5832,13 +5832,25 @@ function renderTrackingSummary() {
         + '<div onclick="toggleTrackingSection(this,\'' + idPrefix + '-hidden\')" '
         + 'style="padding:5px 8px;text-align:center;cursor:pointer;font-size:12px;color:#7c3aed;font-weight:700;background:var(--bg-secondary);border-bottom:1px solid #ede9fe">▼ View More</div>'
       : '';
-    return '<div style="font-size:11px;font-weight:700;color:' + titleColor + ';margin:6px 0 4px;padding-left:2px">' + title + '</div>'
-      + '<div style="background:var(--bg-secondary);border-radius:8px;overflow:hidden">'
-      + hiddenSection + showRows + '</div>';
+    // セクション全体を色付きカードで囲む
+    return '<div style="margin-bottom:10px;border:2px solid ' + opts.border + ';border-radius:9px;overflow:hidden;background:' + opts.cardBg + '">'
+      + '<div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#fff;background:' + opts.headerBg + ';padding:6px 10px;letter-spacing:0.03em">'
+      + '<span style="font-size:14px">' + opts.icon + '</span>'
+      + '<span>' + opts.label + '</span>'
+      + '<span style="margin-left:auto;font-size:10px;font-weight:700;background:rgba(255,255,255,0.25);border-radius:10px;padding:1px 8px">' + sectionItems.length + '件</span>'
+      + '</div>'
+      + '<div style="overflow:hidden">'
+      + hiddenSection + showRows + '</div></div>';
   };
 
-  const sendSection   = buildSection(sendItems,   'tracking-send',   '📤 発送（申請書・書類）', '#1e40af');
-  const returnSection = buildSection(returnItems, 'tracking-return', '📩 返信待ち',            '#15803d');
+  const sendSection   = buildSection(sendItems,   'tracking-send',   {
+    icon: '📤', label: '発送（申請書・書類）',
+    headerBg: 'linear-gradient(135deg,#2563eb,#3b82f6)', border: '#93c5fd', cardBg: '#f0f6ff'
+  });
+  const returnSection = buildSection(returnItems, 'tracking-return', {
+    icon: '📩', label: '返信待ち（相手の対応待ち）',
+    headerBg: 'linear-gradient(135deg,#059669,#10b981)', border: '#6ee7b7', cardBg: '#f0fdf6'
+  });
 
   el.innerHTML = '<div style="margin-top:10px;background:linear-gradient(135deg,#eff6ff 0%,#f0f9ff 100%);border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;overflow:hidden">'
     + '<div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:4px">📮 直近の送付追跡</div>'
