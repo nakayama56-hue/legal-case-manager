@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5846,23 +5846,21 @@ function renderTrackingSummary() {
     // 直近5件を常時表示、古い分を折りたたみ
     const showRows   = rowsArr.slice(-5).join('');
     const hiddenRows = rowsArr.slice(0, -5).join('');
-    const btnStyle = 'padding:5px 8px;text-align:center;cursor:pointer;font-size:12px;color:#7c3aed;font-weight:700;background:var(--bg-secondary);border-bottom:1px solid #ede9fe';
-    // View Moreボタン：ヘッダー直下（折りたたみ時のみ表示）
+    const btnStyle = 'padding:5px 8px;text-align:center;cursor:pointer;font-size:11px;color:' + opts.accent + ';font-weight:600;background:transparent';
+    // View Moreボタン（折りたたみ時のみ表示）
     const openBtn = hiddenRows
-      ? '<div id="' + idPrefix + '-openbtn" onclick="openTrackingSection(\'' + idPrefix + '\')" style="' + btnStyle + '">▼ View More</div>'
+      ? '<div id="' + idPrefix + '-openbtn" onclick="openTrackingSection(\'' + idPrefix + '\')" style="' + btnStyle + ';border-bottom:1px solid rgba(0,0,0,0.05)">▼ もっと見る</div>'
       : '';
-    // 折りたたみ部分（古い分）
     const hiddenSection = hiddenRows
       ? '<div id="' + idPrefix + '-hidden" class="tracking-collapsible">' + hiddenRows + '</div>'
       : '';
-    // Closeボタン：リスト一番下（展開時のみ表示）
     const closeBtn = hiddenRows
-      ? '<div id="' + idPrefix + '-closebtn" onclick="closeTrackingSection(\'' + idPrefix + '\')" style="' + btnStyle + ';border-bottom:none;border-top:1px solid #ede9fe;display:none">▲ Close</div>'
+      ? '<div id="' + idPrefix + '-closebtn" onclick="closeTrackingSection(\'' + idPrefix + '\')" style="' + btnStyle + ';display:none">▲ 閉じる</div>'
       : '';
-    // 並び：ヘッダー → View Moreボタン → (折りたたみ:古い分) → 常時5件 → Closeボタン
-    return '<div style="margin-bottom:10px;border:2px solid ' + opts.border + ';border-radius:9px;overflow:hidden;background:' + opts.cardBg + '">'
-      + '<div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#fff;background:' + opts.headerBg + ';padding:6px 10px;letter-spacing:0.03em">'
-      + '<span style="font-size:14px">' + opts.icon + '</span>'
+    // 細い左アクセントライン＋小さなラベル、太い枠なし
+    return '<div style="margin-bottom:8px;border-radius:8px;overflow:hidden;background:var(--bg-secondary);border-left:3px solid ' + opts.accent + '">'
+      + '<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:' + opts.accent + ';padding:5px 10px 3px">'
+      + '<span style="font-size:12px">' + opts.icon + '</span>'
       + '<span>' + opts.label + '</span>'
       + '</div>'
       + '<div style="overflow:hidden">'
@@ -5870,12 +5868,10 @@ function renderTrackingSummary() {
   };
 
   const sendSection   = buildSection(sendItems,   'tracking-send',   {
-    icon: '📤', label: '発送済',
-    headerBg: 'linear-gradient(180deg,#0a84ff,#0077ed)', border: 'rgba(10,132,255,0.30)', cardBg: 'rgba(10,132,255,0.05)'
+    icon: '📤', label: '発送済', accent: '#0a84ff'
   });
   const returnSection = buildSection(returnItems, 'tracking-return', {
-    icon: '📩', label: '返信待ち',
-    headerBg: 'linear-gradient(180deg,#30d158,#28bd4c)', border: 'rgba(48,209,88,0.30)', cardBg: 'rgba(48,209,88,0.06)'
+    icon: '📩', label: '返信待ち', accent: '#30b14e'
   });
 
   el.innerHTML = '<div style="margin-top:10px;background:linear-gradient(135deg,#eff6ff 0%,#f0f9ff 100%);border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;overflow:hidden">'
