@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.7</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5865,11 +5865,11 @@ function renderTrackingSummary() {
   // 展開状態を復元
   if (wasSendOpen) {
     const el2 = document.getElementById('tracking-send-hidden');
-    if (el2) { el2.classList.add('open'); const tg = el2.nextElementSibling; if (tg) tg.textContent = '▲ Close'; }
+    if (el2) { el2.classList.add('open'); const tg = el2.previousElementSibling; if (tg && tg.textContent.includes('View More')) tg.textContent = '▲ Close'; }
   }
   if (wasReturnOpen) {
     const el3 = document.getElementById('tracking-return-hidden');
-    if (el3) { el3.classList.add('open'); const tg = el3.nextElementSibling; if (tg) tg.textContent = '▲ Close'; }
+    if (el3) { el3.classList.add('open'); const tg = el3.previousElementSibling; if (tg && tg.textContent.includes('View More')) tg.textContent = '▲ Close'; }
   }
 }
 
