@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5871,11 +5871,11 @@ function renderTrackingSummary() {
 
   const sendSection   = buildSection(sendItems,   'tracking-send',   {
     icon: '📤', label: '発送済',
-    headerBg: 'linear-gradient(135deg,#475569,#64748b)', border: '#cbd5e1', cardBg: '#f8fafc'
+    headerBg: 'linear-gradient(180deg,#0a84ff,#0077ed)', border: 'rgba(10,132,255,0.30)', cardBg: 'rgba(10,132,255,0.05)'
   });
   const returnSection = buildSection(returnItems, 'tracking-return', {
     icon: '📩', label: '返信待ち',
-    headerBg: 'linear-gradient(135deg,#0d9488,#14b8a6)', border: '#99f6e4', cardBg: '#f0fdfa'
+    headerBg: 'linear-gradient(180deg,#30d158,#28bd4c)', border: 'rgba(48,209,88,0.30)', cardBg: 'rgba(48,209,88,0.06)'
   });
 
   el.innerHTML = '<div style="margin-top:10px;background:linear-gradient(135deg,#eff6ff 0%,#f0f9ff 100%);border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;overflow:hidden">'
