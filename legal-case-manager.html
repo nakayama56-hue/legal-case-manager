@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5825,12 +5825,16 @@ function renderTrackingSummary() {
   const buildSection = (sectionItems, idPrefix, opts) => {
     if (sectionItems.length === 0) return '';
     const rowsArr = sectionItems.map(buildRow);
+    // 直近5件を常時表示、古い分を折りたたみ
     const showRows   = rowsArr.slice(-5).join('');
     const hiddenRows = rowsArr.slice(0, -5).join('');
+    // ボタンを上部固定、折りたたみ部分が下に展開
+    const toggleBtn = hiddenRows
+      ? '<div onclick="toggleTrackingSection(this,\'' + idPrefix + '-hidden\')" '
+        + 'style="padding:5px 8px;text-align:center;cursor:pointer;font-size:12px;color:#7c3aed;font-weight:700;background:var(--bg-secondary);border-bottom:1px solid #ede9fe">▼ View More</div>'
+      : '';
     const hiddenSection = hiddenRows
       ? '<div id="' + idPrefix + '-hidden" class="tracking-collapsible">' + hiddenRows + '</div>'
-        + '<div onclick="toggleTrackingSection(this,\'' + idPrefix + '-hidden\')" '
-        + 'style="padding:5px 8px;text-align:center;cursor:pointer;font-size:12px;color:#7c3aed;font-weight:700;background:var(--bg-secondary);border-bottom:1px solid #ede9fe">▼ View More</div>'
       : '';
     // セクション全体を色付きカードで囲む
     return '<div style="margin-bottom:10px;border:2px solid ' + opts.border + ';border-radius:9px;overflow:hidden;background:' + opts.cardBg + '">'
@@ -5839,7 +5843,7 @@ function renderTrackingSummary() {
       + '<span>' + opts.label + '</span>'
       + '</div>'
       + '<div style="overflow:hidden">'
-      + hiddenSection + showRows + '</div></div>';
+      + showRows + toggleBtn + hiddenSection + '</div></div>';
   };
 
   const sendSection   = buildSection(sendItems,   'tracking-send',   {
