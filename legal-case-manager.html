@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.8.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -6751,15 +6751,26 @@ function checkTouhonAutoComplete(tk) {
   if (c.category !== '商業・法人登記') return;
   if (tk.name !== '謄本') return;
 
-  // 完了した謄本タスクの期限(deadline)と呼応する申請日行(yotei一致)のみ完了日を入れる
+  // 完了した謄本タスクと呼応する申請日行に完了日を入れる
   const todayStr = today();
   let filled = 0;
-  (c.shinsei_dates || []).forEach(r => {
-    if (r.yotei && tk.deadline && r.yotei === tk.deadline && !r.kanryo) {
-      r.kanryo = todayStr;
-      filled++;
-    }
-  });
+  const rows = c.shinsei_dates || [];
+  // 未完了（kanryo未入力）の申請日行を抽出
+  const pending = rows.filter(r => !r.kanryo && r.yotei);
+
+  if (pending.length === 1) {
+    // 申請日行が1つだけなら、完了予定日の一致を問わずその行に完了日を入れる
+    pending[0].kanryo = todayStr;
+    filled = 1;
+  } else {
+    // 複数行ある場合は完了予定日(yotei)が謄本タスク期限(deadline)と一致する行のみ
+    rows.forEach(r => {
+      if (r.yotei && tk.deadline && r.yotei === tk.deadline && !r.kanryo) {
+        r.kanryo = todayStr;
+        filled++;
+      }
+    });
+  }
 
   // 案件ステータスは変更しない（手動運用）
   saveToStorage();
