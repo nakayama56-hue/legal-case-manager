@@ -1364,12 +1364,31 @@ let currentZoom = 100;
 
 /* フリガナ自動カタカナ変換（ひらがな→カタカナ） */
 function autoKatakana(el) {
+  // IME変換中（未確定）は処理しない
+  if (el.dataset.composing === '1') return;
   const pos = el.selectionStart;
-  el.value = el.value.replace(/[\u3041-\u3096]/g, ch =>
+  const before = el.value;
+  const after = before.replace(/[\u3041-\u3096]/g, ch =>
     String.fromCharCode(ch.charCodeAt(0) + 0x60)
   );
-  el.setSelectionRange(pos, pos);
+  if (before !== after) {
+    el.value = after;
+    try { el.setSelectionRange(pos, pos); } catch(e) {}
+  }
 }
+
+// IME変換中フラグを管理（フリガナ欄共通）
+document.addEventListener('compositionstart', function(e) {
+  if (e.target && e.target.matches('#irai_kana, #dai_kana')) {
+    e.target.dataset.composing = '1';
+  }
+});
+document.addEventListener('compositionend', function(e) {
+  if (e.target && e.target.matches('#irai_kana, #dai_kana')) {
+    e.target.dataset.composing = '0';
+    autoKatakana(e.target); // 確定後に変換
+  }
+});
 
 function setMode(mode) {
   document.body.className = 'mode-' + mode;
