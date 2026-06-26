@@ -359,7 +359,11 @@ body[data-theme="forest"] .today-panel {
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 .souzoku-status-btn:hover { transform: scale(1.06); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
-.souzoku-status-btn[data-status="none"]  { background: #f8fafc; color: #94a3b8; border-color: #cbd5e1; }
+.souzoku-status-btn[data-status="none"]  { background: #fef2f2; color: #b91c1c; border-color: #ef4444; animation: souzokuPulse 1.6s ease-in-out infinite; }
+@keyframes souzokuPulse {
+  0%,100% { box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0 rgba(239,68,68,0.5); }
+  50%     { box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 5px rgba(239,68,68,0); }
+}
 .souzoku-status-btn[data-status="going"] { background: #fffbeb; color: #92400e; border-color: #f59e0b; box-shadow: 0 1px 4px rgba(245,158,11,0.25); }
 .souzoku-status-btn[data-status="done"]  { background: #f0fdf4; color: #166534; border-color: #22c55e; box-shadow: 0 1px 4px rgba(34,197,94,0.25); }
 .souzoku-status-btn[data-status="na"]    { background: #f1f5f9; color: #64748b; border-color: #94a3b8; text-decoration: line-through; }
@@ -3011,7 +3015,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -10408,7 +10412,7 @@ function renderDeliverySection(c) {
    ===================================================== */
 const SOUZOKU_DOC_TYPES = ['戸籍', '除籍・改製原戸籍', '住民票', '戸籍附票'];
 const SOUZOKU_STATUSES = [
-  { key:'none',  icon:'・未着手', label:'未着手' },
+  { key:'none',  icon:'⚠ 未着手', label:'未着手' },
   { key:'going', icon:'📤 手配中', label:'手配中' },
   { key:'done',  icon:'📥 取得済', label:'取得済' },
   { key:'na',    icon:'✕ 不要',   label:'不要' },
@@ -10549,7 +10553,7 @@ function renderSouzokuTracker(c) {
         ${addBatchBtns}
       </div>
       <div class="souzoku-legend">
-        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #cbd5e1;background:#f8fafc;color:#94a3b8;font-size:11px;font-weight:700;padding:0 8px;white-space:nowrap">・未着手</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #ef4444;background:#fef2f2;color:#b91c1c;font-size:11px;font-weight:700;padding:0 8px;white-space:nowrap">⚠ 未着手</span>
         <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #f59e0b;background:#fffbeb;color:#92400e;font-size:11px;font-weight:700;padding:0 8px;white-space:nowrap">📤 手配中</span>
         <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #22c55e;background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:0 8px;white-space:nowrap">📥 取得済</span>
         <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #94a3b8;background:#f1f5f9;color:#64748b;font-size:11px;font-weight:700;padding:0 8px;text-decoration:line-through;white-space:nowrap">✕ 不要</span>
