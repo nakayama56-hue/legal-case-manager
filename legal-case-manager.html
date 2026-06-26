@@ -706,6 +706,9 @@ body.dark-mode .modal span, body[data-theme="onyx"] .modal span,
 body.dark-mode .modal div, body[data-theme="onyx"] .modal div { color: inherit; }
 
 /* 送付追跡パネル */
+.tracking-row { transition: background 0.15s; }
+.tracking-row:hover { background: #f0f7ff; }
+body.dark-mode .tracking-row:hover, body[data-theme="onyx"] .tracking-row:hover { background: rgba(255,255,255,0.07); }
 body.dark-mode .today-panel, body[data-theme="onyx"] .today-panel { color: var(--text-primary) !important; }
 
 /* タイムライン */
@@ -3008,7 +3011,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5829,7 +5832,7 @@ function renderTrackingSummary() {
       ? '<span style="flex-shrink:0;width:72px;font-size:10px;background:#d1fae5;color:#065f46;border-radius:4px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">✓ 到着済</span>'
       : '<button onclick="event.stopPropagation();_markArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;background:#1d4ed8;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">📬 到着</button>';
     const rowClick = 'onclick="window.open(\'' + url + '\',\'_blank\')"';
-    return '<div ' + rowClick + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
+    return '<div class="tracking-row" ' + rowClick + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
       + '<span style="flex-shrink:0;width:36px;font-size:11px;color:#94a3b8">' + dateStr + '</span>'
       + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(label) + '</span>'
       + statusBtn
