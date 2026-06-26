@@ -3008,7 +3008,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.3</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4498,8 +4498,13 @@ function renderCaseTiles() {
     return true;
   });
 
-  // ピン留めを先頭に
-  filtered.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+  // ピン留めを先頭に、Waiting案件を末尾に（安定ソートで元の並びを保持）
+  filtered.sort((a, b) => {
+    const pa = a.pinned ? 1 : 0, pb = b.pinned ? 1 : 0;
+    if (pa !== pb) return pb - pa;          // ピン留め：上へ
+    const wa = a.waiting ? 1 : 0, wb = b.waiting ? 1 : 0;
+    return wa - wb;                          // Waiting：下へ
+  });
 
   if (filtered.length === 0) {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-size:13px">該当する案件がありません</div>';
@@ -6286,11 +6291,12 @@ function renderCaseTable() {
     return 0;
   });
 
-  // ピン留め案件を先頭に固定
+  // ピン留め案件を先頭に、Waiting案件を末尾に固定（列ソートの並びは安定保持）
   filtered.sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    return 0;
+    const pa = a.pinned ? 1 : 0, pb = b.pinned ? 1 : 0;
+    if (pa !== pb) return pb - pa;          // ピン留め：上へ
+    const wa = a.waiting ? 1 : 0, wb = b.waiting ? 1 : 0;
+    return wa - wb;                          // Waiting：下へ
   });
 
   // ヘッダーのアイコンを更新
