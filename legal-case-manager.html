@@ -328,12 +328,12 @@ body[data-theme="forest"] .today-panel {
   white-space: nowrap;
   font-size: 11px;
 }
-/* 相続人が増えてもヘッダー行（戸籍・住民票…）を上部に固定 */
-.souzoku-scroll { overflow: auto; max-height: 62vh; }
+/* 相続人が増えてもヘッダー行（戸籍・住民票…）を枠上部に固定（表計算の固定見出し方式） */
+.souzoku-scroll { overflow: auto; max-height: min(58vh, 440px); overscroll-behavior: contain; }
 .souzoku-table thead th {
   position: sticky; top: 0; z-index: 5;
   background: #ffedd5;
-  box-shadow: inset 0 -1px 0 var(--border-light);
+  box-shadow: inset 0 -1px 0 var(--border-light), 0 2px 4px rgba(0,0,0,0.06);
 }
 .souzoku-table td.souzoku-name {
   font-weight: 600;
@@ -3022,7 +3022,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.7</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
