@@ -328,6 +328,13 @@ body[data-theme="forest"] .today-panel {
   white-space: nowrap;
   font-size: 11px;
 }
+/* 相続人が増えてもヘッダー行（戸籍・住民票…）を上部に固定 */
+.souzoku-scroll { overflow: auto; max-height: 62vh; }
+.souzoku-table thead th {
+  position: sticky; top: 0; z-index: 5;
+  background: #ffedd5;
+  box-shadow: inset 0 -1px 0 var(--border-light);
+}
 .souzoku-table td.souzoku-name {
   font-weight: 600;
   min-width: 100px;
@@ -3015,7 +3022,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.6</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -10533,7 +10540,7 @@ function renderSouzokuTracker(c) {
           相続人を追加してください
         </div>
       ` : `
-        <div style="overflow-x:auto">
+        <div class="souzoku-scroll">
           <table class="souzoku-table">
             <thead>
               <tr>
