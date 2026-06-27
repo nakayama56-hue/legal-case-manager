@@ -338,18 +338,16 @@ body[data-theme="forest"] .today-panel {
 .souzoku-table td.souzoku-name {
   font-weight: 600;
   min-width: 120px;
+  white-space: nowrap;
 }
-.souzoku-table td.souzoku-name textarea {
-  flex: 1 1 auto; min-width: 0;
+.souzoku-table td.souzoku-name input {
   field-sizing: content;
-  resize: none; overflow: hidden;
-  white-space: pre-wrap; word-break: break-word;
-  line-height: 1.4;
-  border: 1px solid transparent; background: transparent;
-  padding: 2px 4px; font-size: 12px; font-weight: 600;
-  border-radius: 4px; font-family: inherit; color: inherit;
+  min-width: 8em;
+  border: 1px solid transparent;
+  background: transparent; padding: 2px 4px; font-size: 12px; font-weight: 600;
+  border-radius: 4px; color: inherit;
 }
-.souzoku-table td.souzoku-name textarea:focus {
+.souzoku-table td.souzoku-name input:focus {
   background: #fff; border-color: var(--color-primary); outline: none;
 }
 .souzoku-table td.souzoku-status {
@@ -3027,7 +3025,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 7.9.9</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.0.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -10510,9 +10508,9 @@ function renderSouzokuTracker(c) {
                 title="${isCompleted?'完了済み（クリックで解除）':'完了にする'}">
                 ${isCompleted?'✓':''}
               </button>
-              <textarea rows="1" placeholder="相続人名"
+              <input type="text" value="${escHtml(row.name||'')}" placeholder="相続人名"
                 onchange="souzokuUpdateName('${c.id}',${row._idx},this.value)"
-                style="${isCompleted?'text-decoration:line-through;color:#16a34a;font-weight:700;':''}">${escHtml(row.name||'')}</textarea>
+                style="${isCompleted?'text-decoration:line-through;color:#16a34a;font-weight:700;':''}">
               ${isCompleted ? `<span style="font-size:9px;background:#16a34a;color:#fff;border-radius:3px;padding:1px 5px;white-space:nowrap;font-weight:700">完了</span>` : ''}
             </div>
           </td>`
