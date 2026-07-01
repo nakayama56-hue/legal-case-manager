@@ -507,12 +507,11 @@ body[data-theme="forest"] .today-panel {
   font-weight: 700;
   color: var(--text-secondary);
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 2px 10px;
+  align-items: flex-start;
+  gap: 6px;
+  position: relative;
 }
 .shinsei-timeline-header .tl-legend {
-  margin-left: auto;
   color: #22c55e;
   font-size: 10px;
   font-weight: 700;
@@ -3043,7 +3042,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.0.7</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.0.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5562,7 +5561,7 @@ function renderCaseTimeline() {
     : null;
 
   el.innerHTML = `<div class="shinsei-timeline" style="margin-top:10px">
-    <div class="shinsei-timeline-header" id="tl-header-row"><span class="tl-title">📊 登記申請タイムライン（${visibleRows.length}件）</span><span class="tl-legend">申請日 ↔ 完了予定日</span></div>
+    <div class="shinsei-timeline-header" id="tl-header-row" style="position:relative"><span class="tl-title">📊 登記申請タイムライン（${visibleRows.length}件）</span></div>
     <div class="shinsei-timeline-body">${rowsHtml}</div>
     <div class="shinsei-tl-dates" id="tl-dates-row" style="min-height:16px"></div>
   </div>`;
@@ -5585,6 +5584,33 @@ function renderCaseTimeline() {
       dateSpan.style.cssText = `position:absolute;left:${leftOffset}px;transform:translateX(-50%);color:#22c55e;font-size:11px;font-weight:700;white-space:nowrap`;
       datesRow.style.position = 'relative';
       datesRow.appendChild(dateSpan);
+
+      // 凡例「申請日 ↔ 完了予定日」を「今日」の縦線の真上（タイトルの下段）に配置
+      if (headerRow) {
+        const headerRect = headerRow.getBoundingClientRect();
+        const lineX = trackRect.left - headerRect.left + trackRect.width * parseFloat(todayFmtPct) / 100;
+        const legend = document.createElement('span');
+        legend.className = 'tl-legend';
+        legend.textContent = '申請日 ↔ 完了予定日';
+        legend.style.cssText = 'position:absolute;left:0;bottom:5px;visibility:hidden;white-space:nowrap';
+        headerRow.style.minHeight = '38px';
+        headerRow.appendChild(legend);
+        requestAnimationFrame(() => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const cs = getComputedStyle(legend);
+          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+          const prefixWidth = ctx.measureText('申請日 ').width;
+          const arrowWidth  = ctx.measureText('↔').width;
+          let left = lineX - prefixWidth - arrowWidth / 2; // 矢印を縦線の真上に
+          const legendWidth = legend.getBoundingClientRect().width;
+          const maxLeft = headerRect.width - legendWidth - 6;
+          if (left > maxLeft) left = maxLeft;
+          if (left < 6) left = 6;
+          legend.style.left = `${left}px`;
+          legend.style.visibility = '';
+        });
+      }
     });
   }
   renderTrackingSummary();
