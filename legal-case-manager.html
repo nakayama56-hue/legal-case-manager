@@ -517,13 +517,19 @@ body[data-theme="forest"] .today-panel {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 4px;
-  margin-bottom: 8px;
-  padding: 7px 12px 10px;
+  gap: 2px;
+  margin-bottom: 6px;
+  padding: 3px 12px 5px;
   background: var(--bg-primary);
   border: 1px solid var(--border-light);
   border-radius: 8px;
 }
+.shinsei-tl-row.tl-cat-fudosan { background: #cfe8fb; border-color: #7fbef0; }
+.shinsei-tl-row.tl-cat-kogyo   { background: #ffe0b8; border-color: #f6b26b; }
+body.dark-mode .shinsei-tl-row.tl-cat-fudosan,
+body[data-theme="onyx"] .shinsei-tl-row.tl-cat-fudosan { background: rgba(56,189,248,0.18); border-color: rgba(56,189,248,0.40); }
+body.dark-mode .shinsei-tl-row.tl-cat-kogyo,
+body[data-theme="onyx"] .shinsei-tl-row.tl-cat-kogyo { background: rgba(251,146,60,0.18); border-color: rgba(251,146,60,0.40); }
 .shinsei-tl-row:last-child { margin-bottom: 0; }
 .shinsei-tl-label {
   width: 100%;
@@ -3029,7 +3035,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.0.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.0.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5529,7 +5535,7 @@ function renderCaseTimeline() {
       : null;
     // 帯の右端の位置（%）
     const rightPct = (parseFloat(leftPct) + parseFloat(widthPct)).toFixed(2);
-    return `<div class="shinsei-tl-row" onclick="showCaseDetail('${r.caseId}')" style="cursor:pointer;align-items:center">
+    return `<div class="shinsei-tl-row ${isKogyo ? 'tl-cat-kogyo' : 'tl-cat-fudosan'}" onclick="showCaseDetail('${r.caseId}')" style="cursor:pointer;align-items:center">
       <div class="shinsei-tl-label" title="${escHtml(labelMain)}">${escHtml(labelMain)}</div>
       <div class="shinsei-tl-track" style="position:relative;height:12px">
         <div style="position:absolute;left:${leftPct}%;width:${widthPct}%;height:100%;background:${barColor};border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,0.10)"></div>
