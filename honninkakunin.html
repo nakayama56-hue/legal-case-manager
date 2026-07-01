@@ -378,18 +378,26 @@
   /* 印刷CSS：プレビューと同じ見た目を維持 */
   @media print {
     @page { size: A4 portrait; margin: 0; }
-    html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
+    html, body { margin: 0 !important; padding: 0 !important; background: white !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
     .toolbar, .input-view { display: none !important; }
     #case-info-panel { display: none !important; }
     body.mode-input .print-view, body.mode-print .print-view { display: block !important; }
     .print-view {
-      /* width・padding・fontはプレビューと同値を維持 */
+      /* width・fontはプレビューと同値を維持。末尾の空白ページを防ぐため下側は詰める */
       margin: 0 auto !important;
       box-shadow: none !important;
       background: white !important;
       transform: none !important;
       transform-origin: unset !important;
+      padding-top: 6mm !important;
+      padding-bottom: 0 !important;
+      height: auto !important;
+      min-height: 0 !important;
+      overflow: visible !important;
     }
+    .print-view > *:last-child { margin-bottom: 0 !important; }
+    .print-view .pv-notes { margin-bottom: 0 !important; }
+    .print-view .pv-footer { margin-top: 2px !important; margin-bottom: 0 !important; }
     .print-view .pv-section { break-inside: avoid; }
     .print-view .pv-section-title { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .print-view .td-label { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -400,7 +408,7 @@
 <body class="mode-input">
 
 <div class="toolbar">
-  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.1.9</span></h1>
+  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.2.0</span></h1>
   <div class="mode-switch">
     <button id="btn-mode-input" class="active" onclick="setMode('input')">入力</button>
     <button id="btn-mode-print" onclick="setMode('print')">様式プレビュー</button>
