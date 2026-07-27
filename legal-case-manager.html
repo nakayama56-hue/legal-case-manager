@@ -3042,7 +3042,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5910,10 +5910,20 @@ function renderTrackingSummary() {
     // 直近5件を常時表示、古い分を折りたたみ
     const showRows   = rowsArr.slice(-5).join('');
     const hiddenRows = rowsArr.slice(0, -5).join('');
+    // 折りたたみ側にある未到着（まだ届いていない）件数
+    const hiddenItems = sectionItems.slice(0, -5);
+    const hiddenPending = hiddenItems.reduce((n, it) => {
+      const km = it.key.match(/^(.+?)_(dv|dvr|sh|sr|szt|szr)_(.+)$/);
+      const arrived = km ? _isArrived(km[1], km[2], km[3]) : false;
+      return n + (arrived ? 0 : 1);
+    }, 0);
+    const pendingBadge = hiddenPending > 0
+      ? '<span style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:800;white-space:nowrap;box-shadow:0 0 0 0 rgba(239,68,68,0.5);animation:souzokuPulse 1.6s ease-in-out infinite">⚠ 未到着' + hiddenPending + '件</span>'
+      : '';
     const btnStyle = 'padding:5px 8px;text-align:center;cursor:pointer;font-size:11px;color:' + opts.accent + ';font-weight:600;background:transparent';
-    // View Moreボタン（折りたたみ時のみ表示）
+    // View Moreボタン（折りたたみ時のみ表示）。隠れた未到着があればバッジで注意喚起
     const openBtn = hiddenRows
-      ? '<div id="' + idPrefix + '-openbtn" onclick="openTrackingSection(\'' + idPrefix + '\')" style="' + btnStyle + ';border-bottom:1px solid rgba(0,0,0,0.05)">▼ もっと見る</div>'
+      ? '<div id="' + idPrefix + '-openbtn" onclick="openTrackingSection(\'' + idPrefix + '\')" style="' + btnStyle + ';border-bottom:1px solid rgba(0,0,0,0.05)">▼ もっと見る' + pendingBadge + '</div>'
       : '';
     const hiddenSection = hiddenRows
       ? '<div id="' + idPrefix + '-hidden" class="tracking-collapsible">' + hiddenRows + '</div>'
