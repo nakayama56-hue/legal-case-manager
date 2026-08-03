@@ -3042,7 +3042,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3349,9 +3349,9 @@ tr.row-waiting:hover > td {
           </div>
           <div class="data-card">
             <div class="icon">📥</div>
-            <div class="label">CSVインポート</div>
-            <div class="desc">CSVファイルから案件データを読み込みます</div>
-            <input type="file" id="import-file" accept=".csv,.json" style="display:none" onchange="importData(this)">
+            <div class="label">バックアップ読込</div>
+            <div class="desc">バックアップJSONから案件・タスクを読み込みます（端末間の移行用）</div>
+            <input type="file" id="import-file" style="display:none" onchange="importData(this)">
             <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">インポート</button>
           </div>
           <div class="data-card">
@@ -9986,14 +9986,24 @@ function importData(input) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
+      if (!data || (!data.cases && !data.tasks)) {
+        toast('このファイルには案件データがありません（バックアップJSONを選んでください）', 'error');
+        return;
+      }
       if (data.cases) cases = data.cases;
       if (data.tasks) tasks = data.tasks;
+      // 付随データも復元（端末間の移行を完全にする）
+      if (Array.isArray(data.shortcuts)) localStorage.setItem('client_shortcuts', JSON.stringify(data.shortcuts));
+      if (data.teikei) localStorage.setItem('teikei_v1', JSON.stringify(data.teikei));
+      if (Array.isArray(data.addrBook)) localStorage.setItem('address_book_v1', JSON.stringify(data.addrBook));
       saveToStorage();
       updateNavBadges();
+      try { updateBottomNavBadges(); } catch(e2) {}
+      try { renderClientShortcutButtons(); } catch(e2) {}
       showView('cases');
-      toast('データをインポートしました');
+      toast(`インポート完了：案件 ${cases.length}件 / タスク ${tasks.length}件`);
     } catch(err) {
-      toast('インポートに失敗しました（JSONファイルを使用してください）', 'error');
+      toast('インポートに失敗しました（バックアップのJSONファイルを選んでください）', 'error');
     }
   };
   reader.readAsText(file);
