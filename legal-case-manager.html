@@ -3031,7 +3031,7 @@ tr.row-waiting:hover > td {
 <!-- generated: 1774151282.3539512 -->
 </head>
 <body>
-<button id="inline-save-btn" onclick="_inlineSaveExec()">⬆ 保存 & クラウド</button>
+<button id="inline-save-btn" onclick="_inlineSaveExec()">⬆ 保存</button>
 <button id="scroll-top-btn" onclick="_scrollToTop()" title="ページトップへ">↑</button>
 
 <div id="app">
@@ -3042,7 +3042,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3084,8 +3084,8 @@ tr.row-waiting:hover > td {
       <button id="hamburger" onclick="openSidebar()" aria-label="メニュー">☰</button>
       <div class="header-title" id="header-title"><span id="header-logo-text" style="font-family:'Comfortaa',sans-serif;font-weight:300;font-size:22px;letter-spacing:0.04em;color:rgba(255,255,255,0.88);text-shadow:none">CaseFlow</span></div>
       <div class="header-actions">
-        <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px">⬇ 読込</button>
-        <button class="btn btn-secondary" onclick="cloudSaveWithCheck()" id="btn-cloud-save" title="クラウドへ保存" style="padding:4px 10px;font-size:12px">⬆ 保存</button>
+        <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
+        <button class="btn btn-secondary" onclick="cloudSaveWithCheck()" id="btn-cloud-save" title="クラウドへ保存" style="padding:4px 10px;font-size:12px;display:none">⬆ 保存</button>
       </div>
     </header>
 
@@ -3259,8 +3259,21 @@ tr.row-waiting:hover > td {
           <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="saveClientShortcuts()">💾 保存</button>
         </div>
 
-        <div class="section-title">☁ クラウド同期（Google スプレッドシート）</div>
-        <div class="cloud-status-bar">
+        <div class="section-title">☁ クラウド同期（無効）</div>
+        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px;font-size:12px;color:var(--text-secondary);line-height:1.8">
+          クラウド同期（Google スプレッドシート）は<strong>無効化されています</strong>。データはこの端末内にのみ保存されます。<br><br>
+          <strong>基本の使い方（1台運用）</strong><br>
+          ・ふだんは1台のパソコンで使います。保存は自動で端末内に行われます。<br>
+          ・万一に備え、ときどき下の「バックアップ保存」でJSONを書き出してください（自動バックアップも1日1回動作します）。<br><br>
+          <strong>別の端末で使うとき</strong><br>
+          ・使っていた端末で「バックアップ保存」→ 最新のJSONを書き出す<br>
+          ・別の端末の「CSVインポート」→「インポート」でそのJSONを読み込む<br>
+          ・作業後は、その端末で再度「バックアップ保存」して最新を持ち出す<br>
+          <span style="color:var(--text-muted)">※ 同じデータを2台で同時に編集しないようご注意ください（あとから読み込んだ方で上書きされます）。</span>
+        </div>
+
+        <div class="section-title" style="display:none">☁ クラウド同期（Google スプレッドシート）</div>
+        <div class="cloud-status-bar" style="display:none">
           <div class="cloud-status-dot" id="cloud-dot"></div>
           <div class="cloud-status-text" id="cloud-status-text">未接続 — 下のボタンで確認できます</div>
           <div class="cloud-btn-group">
@@ -3268,11 +3281,6 @@ tr.row-waiting:hover > td {
             <button class="btn btn-secondary" onclick="cloudLoad()">☁ クラウドから読込</button>
             <button class="btn btn-secondary" onclick="cloudCheck()">接続確認</button>
           </div>
-        </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:20px;line-height:1.7">
-          ※ 案件・タスクを保存するたびに <strong>3秒後に自動でクラウドへ保存</strong>されます。<br>
-          ※ 別の端末で使う場合は「☁ クラウドから読込」ボタンを押してください。<br>
-          ※ データは「☁ クラウドへ保存」で手動保存できます。複数端末で使う場合は保存・読込を意識的に行ってください。
         </div>
 
         <div class="section-title">アプリ設定</div>
@@ -4741,37 +4749,11 @@ function init() {
     try { updateBottomNavBadges(); } catch(e) {}
     try { initAppearance(); } catch(e) {}
     showView('cases');
-    // クラウドから自動読込
-    toast('クラウドからデータを読み込んでいます…', 'info');
-    setTimeout(async () => {
-      try {
-        const res  = await fetch(GAS_URL + '?t=' + Date.now());
-        const json = await res.json();
-        if (json.ok && json.data && json.data.cases && json.data.cases.length > 0) {
-          cases = json.data.cases;
-          tasks = json.data.tasks || [];
-          localStorage.setItem('cases_v1', JSON.stringify(cases));
-          localStorage.setItem('tasks_v1', JSON.stringify(tasks));
-          localStorage.setItem('app_initialized', '1');
-          updateNavBadges();
-          updateBottomNavBadges();
-          renderCaseTable();
-          renderCalendar();
-          renderTaskTable();
-          try { checkDeadlineAlert(); } catch(e) {}
-          const saved = json.data.savedAt ? `（${new Date(json.data.savedAt).toLocaleString('ja-JP')}）` : '';
-          toast('クラウドからデータを読み込みました' + saved);
-          _recordCloudLoad();
-        } else {
-          // クラウドにデータがない場合のみサンプル表示
-          renderCaseTable();
-          toast('クラウドにデータがありません。「☁ 読込」または「＋ 新規案件」から始めてください', 'info');
-        }
-      } catch(e) {
-        renderCaseTable();
-        toast('クラウド読込に失敗しました。手動で「☁ 読込」を押してください', 'error');
-      }
-    }, 300);
+    // 【クラウド無効化】ローカルデータで表示（クラウド自動読込は行わない）
+    renderCaseTable();
+    renderCalendar();
+    renderTaskTable();
+    try { checkDeadlineAlert(); } catch(e) {}
     return;
   }
   localStorage.setItem('app_initialized', '1');
@@ -4788,6 +4770,7 @@ function init() {
 
   // 起動時にショートカットをクラウドからバックグラウンドで取得
   setTimeout(async () => {
+    return; // 【クラウド無効化】起動時のバックグラウンド取得は行わない
     try {
       const res = await fetch(GAS_URL + '?t=' + Date.now());
       const json = await res.json();
@@ -11213,6 +11196,8 @@ function markLoaded() {
 }
 
 async function cloudSave(silent, forceOverwrite) {
+  // 【クラウド同期は無効化】ローカル保存のみ運用。ネットワーク送信は行わない。
+  return;
   // casesが空のときは保存しない（誤上書き防止）
   if (!cases || cases.length === 0) {
     if (!silent) toast('案件データがありません。保存をスキップしました', 'error');
@@ -11303,6 +11288,8 @@ function showSyncWarning(message, okLabel, cancelLabel) {
 
 /** クラウドから読込 */
 async function cloudLoad() {
+  // 【クラウド同期は無効化】読込は行わない（ローカルデータを保護）。
+  return;
   setCloudStatus('loading', '読込中…');
   setCloudBtnDisabled(true);
   try {
@@ -11905,6 +11892,8 @@ function _restoreCloudLoadTs() {
 }
 
 async function cloudSaveWithCheck() {
+  // 【クラウド同期は無効化】手動クラウド保存も行わない。
+  return;
   // 読込から一定時間経過していたら確認ダイアログ
   if (_lastCloudLoadAt) {
     const elapsedMin = (Date.now() - _lastCloudLoadAt) / 1000 / 60;
@@ -11957,8 +11946,12 @@ window.addEventListener('DOMContentLoaded', () => {
   _updateBackupFolderLabel();
   renderStorageStatus();
   // 自動バックアップは読込ボタン押下後（_startupAutoBackup）に実行するためここでは呼ばない
-  // 起動時読込オーバーレイ表示
-  _showStartupOverlay();
+  // 【クラウド無効化】起動時の読込オーバーレイは表示せず、ローカルデータで即起動
+  _hideStartupOverlay();
+  // 日次自動バックアップは最初のユーザー操作時に一度だけ実行（File System Access はユーザー操作が必須のため）
+  if (localStorage.getItem('auto_backup_enabled') === '1') {
+    document.addEventListener('pointerdown', () => { try { _startupAutoBackup(); } catch(e){} }, { once: true });
+  }
   // 最終読込時刻を復元
   _restoreCloudLoadTs();
   // 通知権限をリクエスト（自動バックアップが有効な場合）
