@@ -3042,7 +3042,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.6</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3249,6 +3249,53 @@ tr.row-waiting:hover > td {
 
 <!-- ===== SETTINGS VIEW ===== -->
       <div id="view-settings" class="view">
+        <div class="section-title">💾 ローカルデータ管理</div>
+        <div class="data-mgmt-grid">
+          <div class="data-card">
+            <div class="icon">📤</div>
+            <div class="label">CSVエクスポート</div>
+            <div class="desc">案件・タスクデータをCSV形式でダウンロードします</div>
+            <button class="btn btn-primary" onclick="exportCSV()">エクスポート</button>
+          </div>
+          <div class="data-card">
+            <div class="icon">💾</div>
+            <div class="label">JSONエクスポート（バックアップ）</div>
+            <div class="desc">全データをJSON形式で保存します。新しいアプリへの引き継ぎに使います</div>
+            <button class="btn btn-primary" onclick="manualBackupToFolder()">バックアップ保存</button>
+          </div>
+          <div class="data-card">
+            <div class="icon">🕒</div>
+            <div class="label">自動バックアップ（1日1回）</div>
+            <div class="desc">アプリ起動時に1日1回、JSONバックアップを自動保存します</div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;cursor:pointer">
+              <input type="checkbox" id="auto-backup-cb" onchange="toggleAutoBackup(this)" style="width:16px;height:16px">
+              <span>自動バックアップを有効にする</span>
+            </label>
+            <div id="backup-folder-label" style="font-size:11px;color:var(--text-muted);margin-bottom:6px">保存先：ダウンロードフォルダ（未設定）</div>
+            <button class="btn btn-secondary btn-sm" onclick="selectBackupFolder()">📁 保存フォルダを選択（PCのみ）</button>
+          </div>
+          <div class="data-card">
+            <div class="icon">📊</div>
+            <div class="label">ストレージ使用状況</div>
+            <div class="desc">localStorageの使用量を表示します</div>
+            <div id="storage-status" style="text-align:left;width:100%"></div>
+            <button class="btn btn-secondary btn-sm" onclick="renderStorageStatus()" style="margin-top:6px">🔄 更新</button>
+          </div>
+          <div class="data-card">
+            <div class="icon">📥</div>
+            <div class="label">バックアップ読込</div>
+            <div class="desc">バックアップJSONから案件・タスクを読み込みます（端末間の移行用）</div>
+            <input type="file" id="import-file" style="display:none" onchange="importData(this)">
+            <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">インポート</button>
+          </div>
+          <div class="data-card">
+            <div class="icon">🗑</div>
+            <div class="label">全データ削除</div>
+            <div class="desc">保存されているすべてのデータを削除します</div>
+            <button class="btn btn-danger" onclick="confirmAction('全データを削除しますか？この操作は取り消せません。', clearAllData)">全削除</button>
+          </div>
+        </div>
+
 
         <!-- Cloud sync status -->
         <div class="section-title">👤 依頼者ショートカットボタン</div>
@@ -3315,52 +3362,6 @@ tr.row-waiting:hover > td {
           <button class="btn btn-secondary btn-xs" onclick="resetTeikeiDefaults()" style="margin-top:8px">↩ デフォルトに戻す</button>
         </div>
 
-        <div class="section-title">ローカルデータ管理</div>
-        <div class="data-mgmt-grid">
-          <div class="data-card">
-            <div class="icon">📤</div>
-            <div class="label">CSVエクスポート</div>
-            <div class="desc">案件・タスクデータをCSV形式でダウンロードします</div>
-            <button class="btn btn-primary" onclick="exportCSV()">エクスポート</button>
-          </div>
-          <div class="data-card">
-            <div class="icon">💾</div>
-            <div class="label">JSONエクスポート（バックアップ）</div>
-            <div class="desc">全データをJSON形式で保存します。新しいアプリへの引き継ぎに使います</div>
-            <button class="btn btn-primary" onclick="manualBackupToFolder()">バックアップ保存</button>
-          </div>
-          <div class="data-card">
-            <div class="icon">🕒</div>
-            <div class="label">自動バックアップ（1日1回）</div>
-            <div class="desc">アプリ起動時に1日1回、JSONバックアップを自動保存します</div>
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;cursor:pointer">
-              <input type="checkbox" id="auto-backup-cb" onchange="toggleAutoBackup(this)" style="width:16px;height:16px">
-              <span>自動バックアップを有効にする</span>
-            </label>
-            <div id="backup-folder-label" style="font-size:11px;color:var(--text-muted);margin-bottom:6px">保存先：ダウンロードフォルダ（未設定）</div>
-            <button class="btn btn-secondary btn-sm" onclick="selectBackupFolder()">📁 保存フォルダを選択（PCのみ）</button>
-          </div>
-          <div class="data-card">
-            <div class="icon">📊</div>
-            <div class="label">ストレージ使用状況</div>
-            <div class="desc">localStorageの使用量を表示します</div>
-            <div id="storage-status" style="text-align:left;width:100%"></div>
-            <button class="btn btn-secondary btn-sm" onclick="renderStorageStatus()" style="margin-top:6px">🔄 更新</button>
-          </div>
-          <div class="data-card">
-            <div class="icon">📥</div>
-            <div class="label">バックアップ読込</div>
-            <div class="desc">バックアップJSONから案件・タスクを読み込みます（端末間の移行用）</div>
-            <input type="file" id="import-file" style="display:none" onchange="importData(this)">
-            <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">インポート</button>
-          </div>
-          <div class="data-card">
-            <div class="icon">🗑</div>
-            <div class="label">全データ削除</div>
-            <div class="desc">保存されているすべてのデータを削除します</div>
-            <button class="btn btn-danger" onclick="confirmAction('全データを削除しますか？この操作は取り消せません。', clearAllData)">全削除</button>
-          </div>
-        </div>
 
         <div class="section-title" style="margin-top:24px">📸 自動スナップショット</div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.7">
@@ -11868,6 +11869,8 @@ const BACKGROUND_THRESHOLD_MIN = 30; // 30分以上バックグラウンドで�
 let _hiddenAt = null;
 
 document.addEventListener('visibilitychange', () => {
+  // 【クラウド無効化】離席復帰時の読込促しは行わない
+  return;
   if (document.hidden) {
     _hiddenAt = Date.now();
   } else {
