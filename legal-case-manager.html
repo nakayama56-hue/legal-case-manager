@@ -2403,6 +2403,8 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
   .task-op-col { display: none !important; }
 }
 @media (max-width: 480px) {
+  .btn-header-backup-label { display: none; }
+  #btn-header-backup { padding: 5px 9px !important; }
   #case-calendar, #detail-calendar, #task-calendar {
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }
@@ -3042,7 +3044,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.7</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3084,6 +3086,7 @@ tr.row-waiting:hover > td {
       <button id="hamburger" onclick="openSidebar()" aria-label="メニュー">☰</button>
       <div class="header-title" id="header-title"><span id="header-logo-text" style="font-family:'Comfortaa',sans-serif;font-weight:300;font-size:22px;letter-spacing:0.04em;color:rgba(255,255,255,0.88);text-shadow:none">CaseFlow</span></div>
       <div class="header-actions">
+        <button class="btn btn-primary" onclick="manualBackupToFolder()" id="btn-header-backup" title="バックアップを保存（JSON書き出し）" style="padding:5px 12px;font-size:12px;font-weight:700">💾<span class="btn-header-backup-label" style="margin-left:5px">バックアップ</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
         <button class="btn btn-secondary" onclick="cloudSaveWithCheck()" id="btn-cloud-save" title="クラウドへ保存" style="padding:4px 10px;font-size:12px;display:none">⬆ 保存</button>
       </div>
