@@ -3072,7 +3072,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -10067,8 +10067,11 @@ async function exportViewerHTML() {
     const inject = '<script>window.__VIEWER_MODE__=true;window.__VIEWER_DATA__='
       + JSON.stringify(data).replace(/<\//g, '<\\/')
       + ';<\/script>\n';
-    // <head>直後に埋め込み（本体スクリプト実行前にフラグを立てる）
-    if (/<head[^>]*>/i.test(html)) {
+    // charset指定の直後に埋め込む（charsetを先頭付近に保ち文字化けを防ぐ）。
+    // 本体スクリプト実行前にフラグが立てば良いので、ここで十分。
+    if (/<meta[^>]*charset[^>]*>/i.test(html)) {
+      html = html.replace(/(<meta[^>]*charset[^>]*>)/i, '$1\n' + inject);
+    } else if (/<head[^>]*>/i.test(html)) {
       html = html.replace(/(<head[^>]*>)/i, '$1\n' + inject);
     } else {
       html = inject + html;
