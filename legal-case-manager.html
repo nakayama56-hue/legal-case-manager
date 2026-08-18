@@ -2423,7 +2423,11 @@ body.viewer-mode [onclick*="duplicateCase"],
 body.viewer-mode [onclick*="clearAllData"],
 body.viewer-mode [onclick*="exportJSON"],
 body.viewer-mode [onclick*="cloudSave"],
-body.viewer-mode [onclick*="cloudLoad"] { display: none !important; }
+body.viewer-mode [onclick*="cloudLoad"],
+body.viewer-mode [onclick*="exportViewerHTML"],
+body.viewer-mode [onclick*="selectViewerFolder"],
+body.viewer-mode [onclick*="selectBackupFolder"],
+body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
 
 @media (max-width: 480px) {
   .btn-header-backup-label, .btn-viewer-export-label { display: none; }
@@ -3068,7 +3072,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3279,6 +3283,15 @@ tr.row-waiting:hover > td {
       <div id="view-settings" class="view">
         <div class="section-title">💾 ローカルデータ管理</div>
         <div class="data-mgmt-grid">
+          <div class="data-card" style="border:1.5px solid var(--color-primary,#2563eb)">
+            <div class="icon">👁</div>
+            <div class="label">閲覧用に書き出す</div>
+            <div class="desc">サブ端末で表示するだけの閲覧専用HTMLを書き出します</div>
+            <button class="btn btn-primary" onclick="exportViewerHTML()">閲覧用を書き出す</button>
+            <div id="viewer-folder-label" style="font-size:11px;color:var(--text-muted);margin-top:8px">保存先：未指定（押すとダウンロードされます）</div>
+            <button class="btn btn-secondary btn-sm" onclick="selectViewerFolder()" style="margin-top:6px">📁 保存先フォルダを選択（ブラウザ推奨）</button>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:6px;line-height:1.6">フォルダを指定すると、次回から <strong>CaseFlow閲覧.html</strong> を毎回同じ場所に上書きします（ファイル名固定）。Dropbox内のフォルダを指定すると受け渡しが楽になります。</div>
+          </div>
           <div class="data-card">
             <div class="icon">📤</div>
             <div class="label">CSVエクスポート</div>
@@ -10007,6 +10020,42 @@ async function manualBackupToFolder() {
   }
 }
 
+// 閲覧用HTMLの保存先フォルダ（一度指定すれば以降は固定名で自動上書き）
+let _viewerDirHandle = null;
+async function selectViewerFolder() {
+  if (!window.showDirectoryPicker) {
+    toast('このブラウザではフォルダ指定に対応していません（書き出しはダウンロードになります）', 'info');
+    return;
+  }
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    _viewerDirHandle = handle;
+    await _idbSet('viewerDir', handle);
+    localStorage.setItem('viewer_folder_name', handle.name);
+    _updateViewerFolderLabel();
+    toast(`閲覧用の保存先を「${handle.name}」に設定しました`, 'success');
+  } catch(e) {
+    if (e.name === 'AbortError') return;
+    if (e.name === 'SecurityError' || e.name === 'NotAllowedError') {
+      toast('この環境ではフォルダ指定ができません（PWAではなくブラウザのタブで開いてお試しください）', 'error');
+    } else {
+      toast(`フォルダ選択に失敗しました（${e.message}）`, 'error');
+    }
+  }
+}
+function _updateViewerFolderLabel() {
+  const el = document.getElementById('viewer-folder-label');
+  if (!el) return;
+  const name = localStorage.getItem('viewer_folder_name');
+  if (name) {
+    el.textContent = `保存先：${name}（CaseFlow閲覧.html を上書き）`;
+    el.style.color = 'var(--color-success, #10b981)';
+  } else {
+    el.textContent = '保存先：未指定（押すとダウンロードされます）';
+    el.style.color = 'var(--text-muted)';
+  }
+}
+
 async function exportViewerHTML() {
   try {
     toast('閲覧用ファイルを作成しています…', 'info');
@@ -10023,6 +10072,26 @@ async function exportViewerHTML() {
       html = html.replace(/(<head[^>]*>)/i, '$1\n' + inject);
     } else {
       html = inject + html;
+    }
+    // 保存先フォルダが指定されていれば固定名で上書き、なければ日付付きでダウンロード
+    if (!_viewerDirHandle) { try { _viewerDirHandle = await _idbGet('viewerDir'); } catch(e) {} }
+    if (_viewerDirHandle) {
+      try {
+        const perm = await _viewerDirHandle.queryPermission({ mode: 'readwrite' });
+        if (perm !== 'granted') {
+          const req = await _viewerDirHandle.requestPermission({ mode: 'readwrite' });
+          if (req !== 'granted') throw new Error('no-permission');
+        }
+        const fileHandle = await _viewerDirHandle.getFileHandle('CaseFlow閲覧.html', { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(html);
+        await writable.close();
+        toast(`「${_viewerDirHandle.name}」に CaseFlow閲覧.html を上書きしました（案件${(data.cases||[]).length}件）`, 'success');
+        return;
+      } catch(e) {
+        if (e && e.name === 'AbortError') return;
+        // 権限が取れない等 → ダウンロードにフォールバック
+      }
     }
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
@@ -12063,6 +12132,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const abCb = document.getElementById('auto-backup-cb');
   if (abCb) abCb.checked = localStorage.getItem('auto_backup_enabled') === '1';
   _updateBackupFolderLabel();
+  try { _idbGet('viewerDir').then(h => { if (h) _viewerDirHandle = h; _updateViewerFolderLabel(); }); } catch(e) { _updateViewerFolderLabel(); }
   renderStorageStatus();
   // 自動バックアップは読込ボタン押下後（_startupAutoBackup）に実行するためここでは呼ばない
   // 【クラウド無効化】起動時の読込オーバーレイは表示せず、ローカルデータで即起動
