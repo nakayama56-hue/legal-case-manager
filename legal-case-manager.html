@@ -2402,9 +2402,33 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
 @media (max-width: 480px) and (orientation: portrait) {
   .task-op-col { display: none !important; }
 }
+/* 閲覧専用モード */
+#viewer-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: #1e3a8a; color: #fff; text-align: center;
+  font-size: 12px; font-weight: 700; padding: 5px 10px; letter-spacing: 0.02em;
+}
+body.viewer-mode #content, body.viewer-mode #main { padding-top: 30px; }
+body.viewer-mode #btn-header-backup,
+body.viewer-mode #btn-cloud-load,
+body.viewer-mode #btn-cloud-save,
+body.viewer-mode #inline-save-btn,
+body.viewer-mode #btn-viewer-export { display: none !important; }
+/* 新規案件・編集・追加・削除など書き込み系ボタンを隠す */
+body.viewer-mode [onclick*="openCaseModal"],
+body.viewer-mode [onclick*="openTaskModal"],
+body.viewer-mode [onclick*="manualBackupToFolder"],
+body.viewer-mode [onclick*="deleteCase"],
+body.viewer-mode [onclick*="duplicateCase"],
+body.viewer-mode [onclick*="clearAllData"],
+body.viewer-mode [onclick*="exportJSON"],
+body.viewer-mode [onclick*="cloudSave"],
+body.viewer-mode [onclick*="cloudLoad"] { display: none !important; }
+
 @media (max-width: 480px) {
-  .btn-header-backup-label { display: none; }
+  .btn-header-backup-label, .btn-viewer-export-label { display: none; }
   #btn-header-backup { padding: 5px 9px !important; }
+  #btn-viewer-export { padding: 5px 9px !important; }
   #case-calendar, #detail-calendar, #task-calendar {
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }
@@ -3044,7 +3068,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.1.8</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3086,6 +3110,7 @@ tr.row-waiting:hover > td {
       <button id="hamburger" onclick="openSidebar()" aria-label="メニュー">☰</button>
       <div class="header-title" id="header-title"><span id="header-logo-text" style="font-family:'Comfortaa',sans-serif;font-weight:300;font-size:22px;letter-spacing:0.04em;color:rgba(255,255,255,0.88);text-shadow:none">CaseFlow</span></div>
       <div class="header-actions">
+        <button class="btn btn-secondary" onclick="exportViewerHTML()" id="btn-viewer-export" title="閲覧用HTMLを書き出す（サブ端末で表示専用に使う）" style="padding:5px 10px;font-size:12px;font-weight:700">📤<span class="btn-viewer-export-label" style="margin-left:5px">閲覧用</span></button>
         <button class="btn btn-primary" onclick="manualBackupToFolder()" id="btn-header-backup" title="バックアップを保存（JSON書き出し）" style="padding:5px 12px;font-size:12px;font-weight:700">💾<span class="btn-header-backup-label" style="margin-left:5px">バックアップ</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
         <button class="btn btn-secondary" onclick="cloudSaveWithCheck()" id="btn-cloud-save" title="クラウドへ保存" style="padding:4px 10px;font-size:12px;display:none">⬆ 保存</button>
@@ -3113,7 +3138,7 @@ tr.row-waiting:hover > td {
                 <button id="btn-cal-week" onclick="setCalViewMode('week')" style="padding:2px 8px;border:none;background:var(--bg-secondary);color:var(--text-muted);cursor:pointer;font-size:11px">週</button>
               </div>
             </div>
-            <div class="hide-mobile-portrait" style="display:flex;gap:8px;font-size:10px;color:var(--text-secondary);align-items:center;flex-wrap:wrap">
+            <div class="hide-mobile-portrait" style="display:none;gap:8px;font-size:10px;color:var(--text-secondary);align-items:center;flex-wrap:wrap">
               <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#1a73e8;display:inline-block;flex-shrink:0"></span>Googleカレンダー</span>
               <button class="btn btn-secondary btn-xs" onclick="fetchGCalEvents()" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>同期</button>
             </div>
@@ -4684,7 +4709,36 @@ function initAppearance() {
   });
 }
 
+function _setupViewerMode() {
+  if (!window.__VIEWER_MODE__) return;
+  document.body.classList.add('viewer-mode');
+  // 書き込み・保存・ファイル生成・破壊的操作を無効化
+  const noop = () => { try { toast('閲覧専用モードです（このファイルでは編集・保存はできません）', 'info'); } catch(e){} };
+  const silentNoop = () => {};
+  window.saveToStorage = silentNoop;
+  window.cloudSave = async () => {};
+  window.cloudLoad = async () => {};
+  window.manualBackupToFolder = noop;
+  window.exportJSON = noop;
+  window.importData = noop;
+  window.clearAllData = noop;
+  window.deleteCase = noop;
+  window.duplicateCase = noop;
+  window.takeSnapshot = silentNoop;
+  window.exportViewerHTML = noop;
+  window.openCaseModal = noop;
+  window.openTaskModal = noop;
+  window.saveCase = noop;
+  window.saveTask = noop;
+  // 閲覧専用バナー
+  const banner = document.createElement('div');
+  banner.id = 'viewer-banner';
+  banner.textContent = '👁 閲覧専用モード（このファイルは表示のみ・編集や保存はできません）';
+  document.body.appendChild(banner);
+}
+
 function init() {
+  _setupViewerMode();
   try { loadFromStorage(); } catch(e) { cases = []; tasks = []; }
   // 旧形式のledgerデータ移行（一度だけ実行）
   if (!localStorage.getItem('ledger_migrated')) {
@@ -4830,6 +4884,18 @@ function saveToStorage() {
 }
 
 function loadFromStorage() {
+  // 【閲覧専用モード】埋め込みデータから読み込む（localStorageは使わない）
+  if (window.__VIEWER_MODE__ && window.__VIEWER_DATA__) {
+    const vd = window.__VIEWER_DATA__;
+    cases = Array.isArray(vd.cases) ? vd.cases : [];
+    tasks = Array.isArray(vd.tasks) ? vd.tasks : [];
+    try {
+      if (Array.isArray(vd.shortcuts)) localStorage.setItem('client_shortcuts', JSON.stringify(vd.shortcuts));
+      if (vd.teikei) localStorage.setItem('teikei_v1', JSON.stringify(vd.teikei));
+      if (Array.isArray(vd.addrBook)) localStorage.setItem('address_book_v1', JSON.stringify(vd.addrBook));
+    } catch(e) {}
+    return;
+  }
   try {
     cases = JSON.parse(localStorage.getItem('cases_v1') || '[]');
     tasks = JSON.parse(localStorage.getItem('tasks_v1') || '[]');
@@ -5211,8 +5277,9 @@ let calMonth = new Date().getMonth();
    Googleカレンダー連携
    ===================================================== */
 let gcalEvents = (() => {
-  try { return JSON.parse(localStorage.getItem('gcal_events_cache') || '[]'); }
-  catch(e) { return []; }
+  // 【Googleカレンダー連携は無効化】キャッシュは読み込まず常に空
+  try { localStorage.removeItem('gcal_events_cache'); } catch(e) {}
+  return [];
 })();
 
 /* Googleカレンダー予定編集・削除 */
@@ -5329,6 +5396,8 @@ async function deleteGCalEvent() {
 
 /* Googleカレンダー予定追加モーダル */
 function openGCalEventModal(dateStr) {
+  // 【Googleカレンダー連携は無効化】予定追加は行わない
+  return;
   document.getElementById('gcal-event-date').value = dateStr;
   document.getElementById('gcal-event-title').value = '';
   document.getElementById('gcal-event-allday').checked = true;
@@ -5395,6 +5464,8 @@ async function submitGCalEvent() {
 }
 
 async function fetchGCalEvents(silent) {
+  // 【Googleカレンダー連携は無効化】外部同期は行わない
+  return;
   try {
     const res = await fetch(GAS_URL + '?action=calendar&t=' + Date.now());
     const json = await res.json();
@@ -9936,6 +10007,38 @@ async function manualBackupToFolder() {
   }
 }
 
+async function exportViewerHTML() {
+  try {
+    toast('閲覧用ファイルを作成しています…', 'info');
+    // アプリ本体のHTMLソースを取得
+    const res = await fetch(location.href, { cache: 'no-store' });
+    let html = await res.text();
+    // 現在データを埋め込み用に用意
+    const data = _buildBackupData();
+    const inject = '<script>window.__VIEWER_MODE__=true;window.__VIEWER_DATA__='
+      + JSON.stringify(data).replace(/<\//g, '<\\/')
+      + ';<\/script>\n';
+    // <head>直後に埋め込み（本体スクリプト実行前にフラグを立てる）
+    if (/<head[^>]*>/i.test(html)) {
+      html = html.replace(/(<head[^>]*>)/i, '$1\n' + inject);
+    } else {
+      html = inject + html;
+    }
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+    const filename = `CaseFlow閲覧_${ts}.html`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    toast(`閲覧用ファイルを書き出しました（案件${(data.cases||[]).length}件）`, 'success');
+  } catch(e) {
+    toast('閲覧用ファイルの作成に失敗しました', 'error');
+  }
+}
+
 function exportJSON() {
   const now = new Date();
   const pad = n => String(n).padStart(2,'0');
@@ -11965,7 +12068,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // 【クラウド無効化】起動時の読込オーバーレイは表示せず、ローカルデータで即起動
   _hideStartupOverlay();
   // 日次自動バックアップは最初のユーザー操作時に一度だけ実行（File System Access はユーザー操作が必須のため）
-  if (localStorage.getItem('auto_backup_enabled') === '1') {
+  if (localStorage.getItem('auto_backup_enabled') === '1' && !window.__VIEWER_MODE__) {
     document.addEventListener('pointerdown', () => { try { _startupAutoBackup(); } catch(e){} }, { once: true });
   }
   // 最終読込時刻を復元
@@ -12050,7 +12153,7 @@ function setupPullToRefresh() {
 </script>
 <!-- PWA Service Worker 登録 -->
 <script>
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !window.__VIEWER_MODE__) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
       .then(reg => console.log('SW registered:', reg.scope))
