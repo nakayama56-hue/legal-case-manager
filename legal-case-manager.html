@@ -3072,7 +3072,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.2</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3114,8 +3114,7 @@ tr.row-waiting:hover > td {
       <button id="hamburger" onclick="openSidebar()" aria-label="メニュー">☰</button>
       <div class="header-title" id="header-title"><span id="header-logo-text" style="font-family:'Comfortaa',sans-serif;font-weight:300;font-size:22px;letter-spacing:0.04em;color:rgba(255,255,255,0.88);text-shadow:none">CaseFlow</span></div>
       <div class="header-actions">
-        <button class="btn btn-secondary" onclick="exportViewerHTML()" id="btn-viewer-export" title="閲覧用HTMLを書き出す（サブ端末で表示専用に使う）" style="padding:5px 10px;font-size:12px;font-weight:700">📤<span class="btn-viewer-export-label" style="margin-left:5px">閲覧用</span></button>
-        <button class="btn btn-primary" onclick="manualBackupToFolder()" id="btn-header-backup" title="バックアップを保存（JSON書き出し）" style="padding:5px 12px;font-size:12px;font-weight:700">💾<span class="btn-header-backup-label" style="margin-left:5px">バックアップ</span></button>
+        <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存" style="padding:5px 12px;font-size:12px;font-weight:700">💾<span class="btn-header-backup-label" style="margin-left:5px">保存</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
         <button class="btn btn-secondary" onclick="cloudSaveWithCheck()" id="btn-cloud-save" title="クラウドへ保存" style="padding:4px 10px;font-size:12px;display:none">⬆ 保存</button>
       </div>
@@ -4739,6 +4738,7 @@ function _setupViewerMode() {
   window.duplicateCase = noop;
   window.takeSnapshot = silentNoop;
   window.exportViewerHTML = noop;
+  window.saveAll = noop;
   window.openCaseModal = noop;
   window.openTaskModal = noop;
   window.saveCase = noop;
@@ -9996,14 +9996,14 @@ function renderStorageStatus() {
 }
 
 // 手動バックアップ（ユーザー操作起点なのでrequestPermission可）
-async function manualBackupToFolder() {
+async function manualBackupToFolder(silent) {
   if (!_backupDirHandle) _backupDirHandle = await _idbGet('backupDir');
-  if (!_backupDirHandle) { exportJSON(); return; }
+  if (!_backupDirHandle) { exportJSON(); return 'ダウンロード'; }
   try {
     const perm = await _backupDirHandle.queryPermission({ mode: 'readwrite' });
     if (perm !== 'granted') {
       const req = await _backupDirHandle.requestPermission({ mode: 'readwrite' });
-      if (req !== 'granted') { exportJSON(); return; }
+      if (req !== 'granted') { exportJSON(); return 'ダウンロード'; }
     }
     const now = new Date();
     const pad = n => String(n).padStart(2,'0');
@@ -10014,9 +10014,11 @@ async function manualBackupToFolder() {
     const writable = await fileHandle.createWritable();
     await writable.write(json);
     await writable.close();
-    toast(`「${_backupDirHandle.name}」に保存しました`, 'success');
+    if (!silent) toast(`「${_backupDirHandle.name}」に保存しました`, 'success');
+    return _backupDirHandle.name;
   } catch(e) {
-    if (e.name !== 'AbortError') { exportJSON(); }
+    if (e.name !== 'AbortError') { exportJSON(); return 'ダウンロード'; }
+    return null;
   }
 }
 
@@ -10056,9 +10058,9 @@ function _updateViewerFolderLabel() {
   }
 }
 
-async function exportViewerHTML() {
+async function exportViewerHTML(silent) {
   try {
-    toast('閲覧用ファイルを作成しています…', 'info');
+    if (!silent) toast('閲覧用ファイルを作成しています…', 'info');
     // アプリ本体のHTMLソースを取得
     const res = await fetch(location.href, { cache: 'no-store' });
     let html = await res.text();
@@ -10089,10 +10091,10 @@ async function exportViewerHTML() {
         const writable = await fileHandle.createWritable();
         await writable.write(html);
         await writable.close();
-        toast(`「${_viewerDirHandle.name}」に CaseFlow閲覧.html を上書きしました（案件${(data.cases||[]).length}件）`, 'success');
-        return;
+        if (!silent) toast(`「${_viewerDirHandle.name}」に CaseFlow閲覧.html を上書きしました（案件${(data.cases||[]).length}件）`, 'success');
+        return _viewerDirHandle.name;
       } catch(e) {
-        if (e && e.name === 'AbortError') return;
+        if (e && e.name === 'AbortError') return null;
         // 権限が取れない等 → ダウンロードにフォールバック
       }
     }
@@ -10105,10 +10107,25 @@ async function exportViewerHTML() {
     const a = document.createElement('a');
     a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
-    toast(`閲覧用ファイルを書き出しました（案件${(data.cases||[]).length}件）`, 'success');
+    if (!silent) toast(`閲覧用ファイルを書き出しました（案件${(data.cases||[]).length}件）`, 'success');
+    return 'ダウンロード';
   } catch(e) {
     toast('閲覧用ファイルの作成に失敗しました', 'error');
+    return null;
   }
+}
+
+// バックアップ(JSON)と閲覧用(HTML)を1回でまとめて保存
+async function saveAll() {
+  toast('保存しています…', 'info');
+  let b = null, v = null;
+  try { b = await manualBackupToFolder(true); } catch(e) {}
+  try { v = await exportViewerHTML(true); } catch(e) {}
+  const parts = [];
+  parts.push('バックアップ' + (b ? `→${b}` : '（失敗）'));
+  parts.push('閲覧用' + (v ? `→${v}` : '（失敗）'));
+  const kind = (b || v) ? 'success' : 'error';
+  toast('保存しました（' + parts.join(' / ') + '）', kind);
 }
 
 function exportJSON() {
