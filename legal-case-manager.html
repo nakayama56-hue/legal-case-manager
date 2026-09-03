@@ -3072,7 +3072,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.3</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3150,6 +3150,7 @@ tr.row-waiting:hover > td {
           <div id="case-calendar-week" style="display:none"></div>
           <div id="case-timeline"></div>
           <div id="tracking-summary"></div>
+          <div id="payment-pending"></div>
         </div>
 
         <!-- タスク一覧（カレンダー直下） -->
@@ -5567,6 +5568,7 @@ function renderCalendar() {
 function renderCaseTimeline() {
   // 送付追跡パネルはタイムラインの表示有無に関係なく常に更新する
   renderTrackingSummary();
+  try { renderPaymentPending(); } catch(e) {}
   const el = document.getElementById('case-timeline');
   if (!el || calHidden) { if(el) el.innerHTML=''; return; }
 
@@ -5798,6 +5800,7 @@ function _markArrived(key) {
 
   saveToStorage();
   renderTrackingSummary();
+  try { renderPaymentPending(); } catch(e) {}
   setTimeout(() => cloudSave(false), 300);
 }
 
@@ -5841,6 +5844,72 @@ function _isArrived(caseId, type, num) {
     return !!row.trackings[matchedDoc][field];
   }
   return false;
+}
+
+/* 入金待ち一覧（請求日あり・入金確認日なし） */
+function renderPaymentPending() {
+  const el = document.getElementById('payment-pending');
+  if (!el) return;
+  const items = [];
+  (cases || []).forEach(c => {
+    // 複数請求（invoices）と旧形式の両方に対応
+    const invs = (c.invoices && c.invoices.length > 0) ? c.invoices
+      : ((c.invoice_to || c.invoice_num || c.invoice_date)
+          ? [{ to: c.invoice_to, num: c.invoice_num, date: c.invoice_date, amount: c.invoice_amount, paid: c.invoice_paid }]
+          : []);
+    invs.forEach(inv => {
+      if (!inv) return;
+      const date = (inv.date || '').trim();
+      const paid = (inv.paid || '').trim();
+      if (!date || paid) return; // 請求日がない、または入金済みは対象外
+      items.push({
+        caseId: c.id,
+        caseName: c.case_name || '',
+        to: (inv.to || '').trim(),
+        num: (inv.num || '').trim(),
+        date,
+        days: _daysSince(date),
+      });
+    });
+  });
+
+  if (items.length === 0) {
+    el.innerHTML = '';
+    return;
+  }
+  // 請求日の古い順（待ちが長いものを上に）
+  items.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+  const rows = items.map(it => {
+    const daysTxt = (it.days === null) ? '' : `${it.days}日経過`;
+    const label = [it.to, it.caseName].filter(v => v).join(' / ') || '（請求先未設定）';
+    return '<div class="tracking-row" onclick="showCaseDetail(\'' + it.caseId + '\')" '
+      + 'style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid #fde7c8;cursor:pointer">'
+      + '<span style="font-size:11px;color:#92400e;font-weight:700;white-space:nowrap;flex-shrink:0">' + escHtml(it.date) + '</span>'
+      + '<span style="font-size:12px;color:var(--text-primary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+      + escHtml(label) + (it.num ? ' <span style="color:var(--text-muted);font-size:11px">(' + escHtml(it.num) + ')</span>' : '')
+      + '</span>'
+      + (daysTxt ? '<span style="font-size:11px;color:#b45309;font-weight:700;white-space:nowrap;flex-shrink:0">' + daysTxt + '</span>' : '')
+      + '</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="margin-top:10px;border:1px solid #f6d9a8;border-radius:var(--radius-md);background:#fffaf2;overflow:hidden">'
+    + '<div style="padding:6px 12px;background:#fff3e0;border-bottom:1px solid #f6d9a8;font-size:11px;font-weight:700;color:#92400e">'
+    + '💰 入金待ち（' + items.length + '件）</div>'
+    + '<div>' + rows + '</div>'
+    + '</div>';
+}
+
+/** 指定日（YYYY-MM-DD）から今日までの経過日数。解釈できない場合はnull */
+function _daysSince(dateStr) {
+  const m = String(dateStr).match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);
+  if (!m) return null;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  const a = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = Math.floor((a - d) / 86400000);
+  return diff >= 0 ? diff : null;
 }
 
 function renderTrackingSummary() {
@@ -9603,6 +9672,7 @@ function saveCase() {
   renderCaseTable();
   // 送付追跡パネルを更新（追跡番号の追加・変更を即時反映）
   try { renderTrackingSummary(); } catch(e) {}
+  try { renderPaymentPending(); } catch(e) {}
 }
 
 function deleteCase(caseId) {
@@ -9613,6 +9683,7 @@ function deleteCase(caseId) {
   renderCaseTable();
   renderTaskTable();
   try { renderTrackingSummary(); } catch(e) {}
+  try { renderPaymentPending(); } catch(e) {}
   try { checkDeadlineAlert(); } catch(e) {}
   toast('案件を削除しました');
 }
@@ -10919,6 +10990,7 @@ function souzokuUpdateTracking(caseId, idx, doc, field, value) {
   saveToStorage();
   // 送付追跡を即時更新
   if (typeof renderTrackingSummary === 'function') renderTrackingSummary();
+  if (typeof renderPaymentPending === 'function') renderPaymentPending();
 }
 
 function souzokuToggleStatus(caseId, idx, doc) {
