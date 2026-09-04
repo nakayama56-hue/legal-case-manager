@@ -1,0 +1,8 @@
+# Claude Code 用の作業指示書（事務所の運用が書かれているため公開しない）
+CLAUDE.md
+
+# macOS が勝手に作るファイル
+.DS_Store
+
+# pack.py の出力
+legal-case-manager-pwa.zip
