@@ -3,10 +3,14 @@
 このスクリプトを実行するとSWのキャッシュバージョンを自動更新してZIPを作成します。
 使い方: python3 pack.py
 """
-import datetime, re, zipfile, os
+import re, zipfile, os
 
-# タイムスタンプ生成
-ts = datetime.datetime.now().strftime('%Y%m%d%H%M')
+# 本体HTMLのバージョン表記から採る（例: ver. 8.2.7 → 8-2-7）
+with open('legal-case-manager.html', 'r', encoding='utf-8') as f:
+    m = re.search(r'ver\. (\d+\.\d+\.\d+)', f.read())
+if not m:
+    raise SystemExit('legal-case-manager.html からバージョン表記が見つかりません')
+ts = m.group(1).replace('.', '-')
 print(f'Cache version: legal-case-manager-{ts}')
 
 # sw.jsのキャッシュ名を更新
