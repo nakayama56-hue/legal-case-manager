@@ -3072,7 +3072,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.6</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5350,6 +5350,8 @@ function closeGCalEditModalBtn() {
 }
 
 async function updateGCalEvent() {
+  // 【Googleカレンダー連携は無効化】予定更新は行わない
+  return;
   const eventId    = document.getElementById('gcal-edit-event-id').value;
   const calendarId = document.getElementById('gcal-edit-calendar-id').value;
   const title      = document.getElementById('gcal-edit-title').value.trim();
@@ -5387,6 +5389,8 @@ async function updateGCalEvent() {
 }
 
 async function deleteGCalEvent() {
+  // 【Googleカレンダー連携は無効化】予定削除は行わない
+  return;
   const eventId = document.getElementById('gcal-edit-event-id').value;
   const calendarId = document.getElementById('gcal-edit-calendar-id').value;
   if (!confirm('この予定を削除しますか？')) return;
@@ -5439,6 +5443,8 @@ function closeGCalEventModalBtn() {
 }
 
 async function submitGCalEvent() {
+  // 【Googleカレンダー連携は無効化】予定追加は行わない
+  return;
   const date = document.getElementById('gcal-event-date').value;
   const title = document.getElementById('gcal-event-title').value.trim();
   const calendarId = document.getElementById('gcal-event-calendar').value;
@@ -11614,6 +11620,8 @@ async function cloudLoad() {
 
 /** 接続確認 */
 async function cloudCheck() {
+  // 【クラウド同期は無効化】接続確認は行わない
+  return;
   setCloudStatus('loading', '接続確認中…');
   try {
     const res  = await fetch(GAS_URL + '?t=' + Date.now());
