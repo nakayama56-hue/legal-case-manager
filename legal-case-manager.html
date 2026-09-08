@@ -2777,6 +2777,100 @@ textarea:focus::placeholder { color: transparent; }
 }
 
 
+/* =====================================================
+   案件詳細：タスク一覧の右サイドパネル
+   画面の下端は Mac の Dock と場所を取り合うため、右端に縦置きする。
+   折りたたみ時は右端の細いタブだけが残り、クリックで開閉する（hover では開かない）。
+   ※ このブロックは @media の外に置くこと（PC に届かなくなるため。CLAUDE.md 5-2）
+   ===================================================== */
+#case-task-panel {
+  position: fixed;
+  top: calc(var(--header-height) + 8px);
+  right: 0;
+  bottom: 16px;
+  width: 320px;
+  z-index: 120;
+  display: flex;
+  transition: transform 0.22s ease;
+}
+#case-task-panel.collapsed { transform: translateX(100%); }
+
+/* 折りたたみ時に右端へ残るタブ */
+#case-task-tab {
+  position: absolute;
+  top: 0; left: -36px;
+  width: 36px;
+  padding: 9px 0 11px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px 0 0 10px;
+  box-shadow: -3px 0 14px rgba(30,64,175,0.22);
+  cursor: pointer;
+  font-family: inherit;
+}
+#case-task-tab:hover { background: var(--color-primary-light); }
+.ctp-tab-count {
+  min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 10px;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 11px; font-weight: 700; line-height: 20px; text-align: center;
+}
+.ctp-tab-count.zero { background: rgba(255,255,255,0.28); }
+.ctp-tab-label { writing-mode: vertical-rl; font-size: 12px; font-weight: 700; letter-spacing: 2px; }
+
+.ctp-body {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  background: var(--bg-primary);
+  border-left: 2px solid var(--color-primary);
+  border-radius: 14px 0 0 14px;
+  box-shadow: -6px 0 24px rgba(30,64,175,0.16);
+  overflow: hidden;
+}
+.ctp-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+.ctp-title { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+.ctp-close {
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  color: var(--text-muted); font-size: 13px; line-height: 1;
+  padding: 4px 6px; border-radius: 6px; flex-shrink: 0;
+}
+.ctp-close:hover { background: var(--bg-secondary); color: var(--text-primary); }
+/* 追加ボタンはパネルの上に置く。下端に置くと結局 Dock の帯に戻ってしまう */
+.ctp-actions { padding: 9px 12px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; }
+.ctp-actions .btn { width: 100%; }
+body.viewer-mode .ctp-actions { display: none; }
+.ctp-list { flex: 1; overflow-y: auto; padding: 10px 12px; }
+
+/* 幅 320px に収めるためのタスクカード調整 */
+.ctp-list .task-card-header { flex-wrap: wrap; padding: 9px 11px; }
+.ctp-list .task-card-name {
+  min-width: 0;
+  word-break: normal; overflow-wrap: break-word; line-break: strict;
+}
+.ctp-list .task-card-meta { flex-basis: 100%; margin-left: 0; padding-left: 28px; gap: 6px; }
+.ctp-list .task-card-body { padding: 0 11px 11px; }
+.ctp-list .task-card-body.open { padding-top: 9px; }
+
+/* 本文がパネルの下に潜り込まないよう場所を空ける */
+#view-case-detail { padding-right: 44px; }
+body.task-panel-open #view-case-detail { padding-right: 348px; }
+body.task-panel-open #scroll-top-btn { right: 348px; }
+
+@media (max-width: 768px) {
+  #case-task-panel { width: min(86vw, 340px); top: calc(var(--header-height) + 4px); bottom: 8px; }
+  #view-case-detail,
+  body.task-panel-open #view-case-detail { padding-right: 40px; }
+  body.task-panel-open #scroll-top-btn { right: 16px; }
+}
+
 /* ===== スクロールトップボタン ===== */
 #scroll-top-btn {
   position: fixed;
@@ -3220,7 +3314,7 @@ body[data-theme="onyx"] .case-tile-card:hover {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3410,20 +3504,25 @@ body[data-theme="onyx"] .case-tile-card:hover {
       </div><!-- /view-cases -->
 
       <!-- ===== CASE DETAIL VIEW ===== -->
-      <div id="view-case-detail" class="view" style="padding-bottom:220px">
+      <div id="view-case-detail" class="view" style="padding-bottom:40px">
         <button class="back-btn" onclick="showView('cases')">← Dashboardに戻る</button>
         <div id="case-detail-content"></div>
       </div>
-      <!-- 固定フッター：タスク一覧 -->
-      <div id="case-task-footer" class="no-print" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--bg-primary);border-top:2px solid var(--color-primary);box-shadow:0 -4px 20px rgba(0,0,0,0.12);transition:height 0.2s ease"
-        onmouseenter="expandTaskFooter()" onmouseleave="collapseTaskFooter()">
-        <div style="max-width:1400px;margin:0 auto;padding:0 16px">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0 4px">
-            <div id="case-task-footer-title" class="section-title" style="margin-bottom:0;font-size:13px"></div>
+      <!-- 右サイド固定パネル：タスク一覧（下端は Dock と重なるため右端に置く） -->
+      <div id="case-task-panel" class="no-print collapsed" style="display:none">
+        <button type="button" id="case-task-tab" onclick="toggleTaskPanel()" aria-label="タスク一覧を開く">
+          <span class="ctp-tab-count" id="case-task-tab-count">0</span>
+          <span class="ctp-tab-label">タスク</span>
+        </button>
+        <div class="ctp-body">
+          <div class="ctp-head">
+            <div class="ctp-title" id="case-task-panel-title"></div>
+            <button type="button" class="ctp-close" onclick="toggleTaskPanel()" aria-label="タスク一覧を閉じる">✕</button>
+          </div>
+          <div class="ctp-actions">
             <button class="btn btn-primary btn-xs" id="case-task-add-btn" onclick="">＋ タスク追加</button>
           </div>
-          <div id="case-task-list" style="max-height:0;overflow:hidden;transition:max-height 0.25s ease,padding 0.25s ease;padding-bottom:0">
-          </div>
+          <div class="ctp-list" id="case-task-list"></div>
         </div>
       </div>
 
@@ -5185,9 +5284,12 @@ function showView(name) {
   document.getElementById('scroll-top-btn')?.classList.remove('visible');
   window.scrollTo({ top: 0 });
 
-  // タスクフッターはcase-detail以外では非表示
-  const taskFooter = document.getElementById('case-task-footer');
-  if (taskFooter) taskFooter.style.display = name === 'case-detail' ? 'block' : 'none';
+  // タスクパネルはcase-detail以外では非表示
+  const taskPanel = document.getElementById('case-task-panel');
+  if (taskPanel) taskPanel.style.display = name === 'case-detail' ? 'flex' : 'none';
+  // 本文の余白・スクロールトップボタンの位置に効く目印なので、離れるときは必ず外す
+  if (name === 'case-detail') _applyTaskPanelState();
+  else document.body.classList.remove('task-panel-open');
 
   // Waitingバナーはcasesビューで更新
   if (name === 'cases') renderWaitingBanner();
@@ -6882,23 +6984,19 @@ function renderCaseDetail(caseId) {
     </div>
   `;
 
-  // タスク固定フッターを更新
-  const footer = document.getElementById('case-task-footer');
-  const footerTitle = document.getElementById('case-task-footer-title');
-  const taskList = document.getElementById('case-task-list');
+  // タスクの右サイドパネルを更新
+  const panel = document.getElementById('case-task-panel');
   const addBtn = document.getElementById('case-task-add-btn');
-  if (footer) footer.style.display = 'block';
-  if (footerTitle) footerTitle.textContent = `タスク一覧（${caseTasks.length}件 / 未完了 ${incomplete.length}件）`;
-  if (taskList) taskList.innerHTML = renderCaseTasks(caseId);
+  if (panel) panel.style.display = 'flex';
   if (addBtn) addBtn.setAttribute('onclick', `openTaskModal(null,'${c.id}',null)`);
-  // 初期は折りたたみ状態
-  collapseTaskFooter();
+  updateCaseTaskPanel(caseId);
+  // 開閉は前回の状態を引き継ぐ（毎回たたまない）
+  _applyTaskPanelState();
 
   // 案件詳細画面の入力欄に追従ボタンをセットアップ
   _setupInlineSaveForDetail(caseId);
 }
 
-let taskFooterCollapsed = true;
 function togglePrintDropdown(e) {
   e.stopPropagation();
   const menu = document.getElementById('print-dropdown-menu');
@@ -6954,17 +7052,37 @@ function closeSoushuSelectModal(event) {
   modal.classList.remove('show');
   setTimeout(() => { modal.style.display = 'none'; }, 150);
 }
-function expandTaskFooter() {
-  const list = document.getElementById('case-task-list');
-  const view = document.getElementById('view-case-detail');
-  if (list) { list.style.maxHeight = '180px'; list.style.paddingBottom = '8px'; list.style.overflowY = 'auto'; }
-  if (view) view.style.paddingBottom = '240px';
+/* 案件詳細のタスクパネル（右サイド）の開閉。状態は localStorage に覚えさせる */
+const TASK_PANEL_KEY = 'caseTaskPanelOpen_v1';
+let taskPanelOpen = (() => {
+  try { return localStorage.getItem(TASK_PANEL_KEY) === '1'; } catch (e) { return false; }
+})();
+
+function _applyTaskPanelState() {
+  const panel = document.getElementById('case-task-panel');
+  if (!panel) return;
+  panel.classList.toggle('collapsed', !taskPanelOpen);
+  document.body.classList.toggle('task-panel-open', taskPanelOpen);
+  const tab = document.getElementById('case-task-tab');
+  if (tab) tab.setAttribute('aria-label', taskPanelOpen ? 'タスク一覧を閉じる' : 'タスク一覧を開く');
 }
-function collapseTaskFooter() {
-  const list = document.getElementById('case-task-list');
-  const view = document.getElementById('view-case-detail');
-  if (list) { list.style.maxHeight = '0'; list.style.paddingBottom = '0'; list.style.overflowY = 'hidden'; }
-  if (view) view.style.paddingBottom = '48px';
+
+function toggleTaskPanel() {
+  taskPanelOpen = !taskPanelOpen;
+  try { localStorage.setItem(TASK_PANEL_KEY, taskPanelOpen ? '1' : '0'); } catch (e) {}
+  _applyTaskPanelState();
+}
+
+/* 見出し・タブの件数・一覧をまとめて更新する。件数はタブに出るのでズレさせない */
+function updateCaseTaskPanel(caseId) {
+  const all = tasks.filter(t => t.case_id === caseId);
+  const undone = all.filter(t => t.status !== '完了').length;
+  const title = document.getElementById('case-task-panel-title');
+  const count = document.getElementById('case-task-tab-count');
+  const list  = document.getElementById('case-task-list');
+  if (title) title.textContent = `タスク一覧（${all.length}件 / 未完了 ${undone}件）`;
+  if (count) { count.textContent = undone; count.classList.toggle('zero', undone === 0); }
+  if (list)  list.innerHTML = renderCaseTasks(caseId);
 }
 
 function infoRow(label, value) {
@@ -7964,8 +8082,7 @@ function changeTaskStatus(taskId, newStatus) {
 function refreshCurrentTaskList() {
   const caseDetailView = document.getElementById('view-case-detail');
   if (caseDetailView && caseDetailView.classList.contains('active') && currentDetailCaseId) {
-    const listEl = document.getElementById('case-task-list');
-    if (listEl) listEl.innerHTML = renderCaseTasks(currentDetailCaseId);
+    updateCaseTaskPanel(currentDetailCaseId);
     // renderDetailCalendar removed
   }
   renderTaskTable();
