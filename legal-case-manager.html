@@ -3305,13 +3305,13 @@ body[data-theme="onyx"] .case-tile-card:hover {
 /* --- カレンダーのすぐ上の帯（2026年9月8日）。外部の早見表への入口。
        色は青（`--color-primary`）に揃える。外部読み込みは無し（アイコンも内製 SVG） --- */
 .cal-ext-banner {
-  display: flex; align-items: center; gap: 7px;
-  margin: 0 0 8px; padding: 7px 12px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 9px; line-height: 1.5;
   border: 1px solid color-mix(in srgb, var(--color-primary) 26%, transparent);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--color-primary) 7%, transparent);
   color: var(--color-primary);
-  font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap;
   text-decoration: none; cursor: pointer;
   transition: background .18s ease, border-color .18s ease;
 }
@@ -3320,7 +3320,7 @@ body[data-theme="onyx"] .case-tile-card:hover {
   border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
 }
 .cal-ext-banner .ceb-ico { flex: 0 0 auto; opacity: 0.85; }
-.cal-ext-banner .ceb-text { flex: 1 1 auto; min-width: 0; }
+.cal-ext-banner .ceb-text { flex: 0 1 auto; min-width: 0; }
 .cal-ext-banner .ceb-out { flex: 0 0 auto; opacity: 0.6; }
 /* 暗いテーマ：--color-primary はテーマで変わらない一定の濃い青なので、
    そのままだと暗い地に沈む。色相は保ったまま明度だけ上げる */
@@ -3370,7 +3370,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.7</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3429,7 +3429,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
         <!-- 統合カレンダー -->
         <div id="case-calendar-wrap" style="margin-bottom:12px">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
-            <div style="display:flex;align-items:center;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <button class="btn btn-secondary btn-xs" onclick="calMove(-1)" style="padding:4px 8px;line-height:1" title="前へ"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 1L3 5L7 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <span id="cal-label" style="font-size:13px;font-weight:700;color:var(--text-primary);min-width:80px;text-align:center"></span>
               <button class="btn btn-secondary btn-xs" onclick="calMove(1)" style="padding:4px 8px;line-height:1" title="次へ"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1L7 5L3 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -3438,18 +3438,18 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
                 <button id="btn-cal-month" onclick="setCalViewMode('month')" style="padding:2px 8px;border:none;background:var(--color-primary);color:#fff;cursor:pointer;font-size:11px">月</button>
                 <button id="btn-cal-week" onclick="setCalViewMode('week')" style="padding:2px 8px;border:none;background:var(--bg-secondary);color:var(--text-muted);cursor:pointer;font-size:11px">週</button>
               </div>
+              <!-- 外部の早見表への入口。別タブで開く（2026年9月8日） -->
+              <a class="cal-ext-banner no-print" href="https://1ran.hikak.com/eto/index2.php" target="_blank" rel="noopener noreferrer" title="別のタブで開きます">
+                <svg class="ceb-ico" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.4" y="3.6" width="11.2" height="10" rx="1.6"/><path d="M2.4 6.8h11.2M5.6 2.4v2.4M10.4 2.4v2.4"/></svg>
+                <span class="ceb-text">干支西暦和暦年齢一覧表</span>
+                <svg class="ceb-out" width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 1.5h6v6M10.5 1.5 5 7"/><path d="M9 7.5v3h-7.5V3h3"/></svg>
+              </a>
             </div>
             <div class="hide-mobile-portrait" style="display:none;gap:8px;font-size:10px;color:var(--text-secondary);align-items:center;flex-wrap:wrap">
               <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:#1a73e8;display:inline-block;flex-shrink:0"></span>Googleカレンダー</span>
               <button class="btn btn-secondary btn-xs" onclick="fetchGCalEvents()" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>同期</button>
             </div>
           </div>
-          <!-- 外部の早見表への入口。別タブで開く（2026年9月8日） -->
-          <a class="cal-ext-banner no-print" href="https://1ran.hikak.com/eto/index2.php" target="_blank" rel="noopener noreferrer" title="別のタブで開きます">
-            <svg class="ceb-ico" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.4" y="3.6" width="11.2" height="10" rx="1.6"/><path d="M2.4 6.8h11.2M5.6 2.4v2.4M10.4 2.4v2.4"/></svg>
-            <span class="ceb-text">干支西暦和暦年齢一覧表</span>
-            <svg class="ceb-out" width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 1.5h6v6M10.5 1.5 5 7"/><path d="M9 7.5v3h-7.5V3h3"/></svg>
-          </a>
           <div id="case-calendar"></div>
           <div id="case-calendar-week" style="display:none"></div>
           <div id="case-timeline"></div>
