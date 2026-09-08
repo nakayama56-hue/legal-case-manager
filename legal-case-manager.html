@@ -3294,11 +3294,28 @@ body[data-theme="onyx"] .case-tile-card:hover {
   margin-bottom: 9px; min-height: 32px;
 }
 .case-tile-card .cat-mark {
+  position: relative;
   display: flex; align-items: center; justify-content: center;
   width: 32px; height: 32px; flex: 0 0 32px; box-sizing: border-box;
   color: var(--tile-accent);
 }
 .case-tile-card .cat-ico { width: 28px; height: 28px; display: block; }
+
+/* --- 未完了タスクのバッジ（2026年9月8日）。
+       区分マークの右上に重ねる。右上の印の列（申請中・要確認）とは場所を取り合わない。
+       重なり避けの余白を決め打ちしないための配置（5-2 章）--- */
+.case-tile-card .tile-task-badge {
+  position: absolute; top: -5px; right: -7px;
+  min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--color-danger); color: #fff;
+  font-size: 10.5px; font-weight: 700; line-height: 18px; text-align: center;
+  letter-spacing: 0; white-space: nowrap;
+  box-shadow: 0 0 0 2px var(--tile-badge-ring, rgba(255,255,255,0.92));
+  pointer-events: none;
+}
+body.dark-mode .case-tile-card,
+body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85); }
 </style>
 <!-- generated: 1774151282.3539512 -->
 </head>
@@ -3314,7 +3331,7 @@ body[data-theme="onyx"] .case-tile-card:hover {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4866,6 +4883,13 @@ function renderCaseTiles() {
     return withKeisho(name, role);
   };
 
+  // 未完了タスク件数（案件ごと）。タイル1枚ごとに tasks を走査しないよう先に集計する
+  const undoneByCase = {};
+  tasks.forEach(tk => {
+    if (!tk.case_id || tk.status === '完了') return;
+    undoneByCase[tk.case_id] = (undoneByCase[tk.case_id] || 0) + 1;
+  });
+
   grid.innerHTML = filtered.map(c => {
     const sc = STATUS_COLORS[c.status] || null;
     const bureaus = (c.legal_bureaus||[]).filter(Boolean);
@@ -4873,6 +4897,7 @@ function renderCaseTiles() {
     const isShinseichuu = (c.shinsei_dates||[]).some(s => s.shinsei && !s.kanryo);
     const isImportant = _hasMarker(c);
     const _isCorp = c.category === '商業・法人登記';
+    const _undone = undoneByCase[c.id] || 0;
     const _mark = [
       sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '',
       c.waiting ? '<span class="tile-badge-waiting">Waiting</span>' : '',
@@ -4883,7 +4908,7 @@ function renderCaseTiles() {
     return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" data-cat="${_isCorp ? 'corp' : 'real'}" onclick="showCaseDetail('${c.id}')">
       <div class="tile-body">
         <div class="tile-toprow">
-          <span class="cat-mark">${_isCorp ? ICON_CAT_CORP : ICON_CAT_REAL}</span>
+          <span class="cat-mark">${_isCorp ? ICON_CAT_CORP : ICON_CAT_REAL}${_undone ? `<span class="tile-task-badge" title="未完了タスク ${_undone}件">${_undone > 99 ? '99+' : _undone}</span>` : ''}</span>
           ${_mark ? `<div class="tile-marks">${_mark}</div>` : ''}
         </div>
         <div class="tile-name">${escHtml(c.case_name||'—')}</div>
