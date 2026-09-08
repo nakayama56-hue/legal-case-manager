@@ -3184,6 +3184,16 @@ body[data-theme="onyx"] .case-tile-card:hover {
   background: rgba(255,255,255,0.13) !important;
   box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 14px 32px rgba(0,0,0,0.4) !important;
 }
+
+/* --- 区分マーク（面）。左に立て、文字は右にまとめる --- */
+.case-tile-card .tile-body { display: flex !important; gap: 11px; align-items: flex-start; }
+.case-tile-card .tile-text { flex: 1 1 auto; min-width: 0; }
+.case-tile-card .cat-mark {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; flex: 0 0 26px; box-sizing: border-box;
+  color: var(--tile-accent);
+}
+.case-tile-card .cat-ico { width: 22px; height: 22px; display: block; }
 </style>
 <!-- generated: 1774151282.3539512 -->
 </head>
@@ -3199,7 +3209,7 @@ body[data-theme="onyx"] .case-tile-card:hover {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.9</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4644,8 +4654,18 @@ function _hasMarker(c) {
 /* タイル用の細線アイコン（外部読み込みなし・単一HTML内で自己完結） */
 const _svg = p => `<svg class="tile-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 const ICON_PERSON = _svg('<circle cx="8" cy="5.2" r="2.6"/><path d="M2.8 13.6c0-2.7 2.3-4.4 5.2-4.4s5.2 1.7 5.2 4.4"/>');
-const ICON_HOME   = _svg('<path d="M2.4 7.2 8 2.6l5.6 4.6"/><path d="M3.8 8.4v5h8.4v-5"/>');
-const ICON_CORP   = _svg('<path d="M3.4 13.6V3.4h6.2v10.2"/><path d="M9.6 13.6V6.6h3v7"/><path d="M5.3 5.8h2.4M5.3 8.2h2.4M5.3 10.6h2.4"/>');
+/* 区分マーク（面）。不動産＝地面の線＋建物／商業＝並んだビル。地面線の高さを揃えてある */
+const _catSvg = p => `<svg class="cat-ico" viewBox="0 0 24 24" fill="currentColor" stroke="none">${p}</svg>`;
+const ICON_CAT_REAL = _catSvg(
+  '<path d="M12 4.2 21.2 11a.9.9 0 0 1-.55 1.62H19v5.38H5V12.62H3.35A.9.9 0 0 1 2.8 11z"/>' +
+  '<rect x="10.2" y="14" width="3.6" height="4.5" fill="#fff" opacity=".95"/>' +
+  '<rect x="2.6" y="19.4" width="18.8" height="1.5" rx=".75"/>');
+const ICON_CAT_CORP = _catSvg(
+  '<path d="M4.6 4.6h8.1v13.9H4.6z"/><path d="M12.7 9.1h6.7v9.4h-6.7z"/>' +
+  '<g fill="#fff" opacity=".95"><rect x="6.6" y="6.9" width="4.1" height="1.4"/>' +
+  '<rect x="6.6" y="9.9" width="4.1" height="1.4"/><rect x="6.6" y="12.9" width="4.1" height="1.4"/>' +
+  '<rect x="14.6" y="11.6" width="2.9" height="1.4"/><rect x="14.6" y="14.4" width="2.9" height="1.4"/></g>' +
+  '<rect x="2.6" y="19.4" width="18.8" height="1.5" rx=".75"/>');
 const ICON_CAL    = _svg('<rect x="2.4" y="3.6" width="11.2" height="10" rx="1.6"/><path d="M2.4 6.8h11.2M5.6 2.4v2.4M10.4 2.4v2.4"/>');
 function renderCaseTiles() {
   const grid = document.getElementById('case-tile-grid');
@@ -4753,11 +4773,14 @@ function renderCaseTiles() {
     return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" data-cat="${_isCorp ? 'corp' : 'real'}" onclick="showCaseDetail('${c.id}')">
       ${_mark ? `<div class="tile-marks">${_mark}</div>` : ''}
       <div class="tile-body">
-        <div class="tile-name">${escHtml(c.case_name||'—')}</div>
-        ${clientName(c) ? `<div class="tile-client">${ICON_PERSON}<span>${escHtml(clientName(c))}</span></div>` : ''}
+        <span class="cat-mark">${_isCorp ? ICON_CAT_CORP : ICON_CAT_REAL}</span>
+        <div class="tile-text">
+          <div class="tile-name">${escHtml(c.case_name||'—')}</div>
+          ${clientName(c) ? `<div class="tile-client">${ICON_PERSON}<span>${escHtml(clientName(c))}</span></div>` : ''}
+        </div>
       </div>
       <div class="tile-footer">
-        ${c.category ? `<span>${_isCorp ? ICON_CORP : ICON_HOME}${escHtml(c.type||c.category)}</span>` : ''}
+        ${c.category ? `<span>${escHtml(c.type||c.category)}</span>` : ''}
         ${shinsei ? `<span>${ICON_CAL}${escHtml(shinsei.shinsei)}</span>` : ''}
       </div>
     </div>`;
