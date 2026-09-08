@@ -3116,8 +3116,8 @@ tr.row-waiting:hover > td {
 /* --- 空の上帯を廃止し、印は右上に浮かせる --- */
 .case-tile-card .tile-header { display: none !important; }
 .case-tile-card .tile-marks {
-  position: absolute; top: 9px; right: 9px;
-  display: flex; align-items: center; gap: 5px; z-index: 2;
+  display: flex; align-items: center; justify-content: flex-end;
+  flex-wrap: wrap; gap: 5px; margin-left: auto;
 }
 
 /* --- 本文：余白を広げ、字の階層をつける --- */
@@ -3125,9 +3125,17 @@ tr.row-waiting:hover > td {
 .case-tile-card .tile-name {
   font-size: 14px !important; font-weight: 700 !important;
   line-height: 1.5 !important; letter-spacing: 0.01em;
-  word-break: normal !important; overflow-wrap: anywhere;
   margin-bottom: 7px !important;
-  padding-right: 58px;           /* 右上の印と重ならないように */
+  /* 日本語の禁則処理にまかせる。overflow-wrap:anywhere は「（」の直後などでも
+     平気で折り返してしまうため使わない（2026年9月8日） */
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  line-break: strict;
+}
+.case-tile-card .tile-client {
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  line-break: strict;
 }
 .case-tile-card .tile-client {
   font-size: 11.5px !important; color: var(--text-muted) !important;
@@ -3185,15 +3193,18 @@ body[data-theme="onyx"] .case-tile-card:hover {
   box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 14px 32px rgba(0,0,0,0.4) !important;
 }
 
-/* --- 区分マーク（面）。左に立て、文字は右にまとめる --- */
-.case-tile-card .tile-body { display: flex !important; gap: 11px; align-items: flex-start; }
-.case-tile-card .tile-text { flex: 1 1 auto; min-width: 0; }
+/* --- 区分マーク（面）と印を上の行にそろえる。
+       案件名は幅いっぱいを使い、カード間で高さがそろう（2026年9月8日） --- */
+.case-tile-card .tile-toprow {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 9px; min-height: 32px;
+}
 .case-tile-card .cat-mark {
   display: flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; flex: 0 0 26px; box-sizing: border-box;
+  width: 32px; height: 32px; flex: 0 0 32px; box-sizing: border-box;
   color: var(--tile-accent);
 }
-.case-tile-card .cat-ico { width: 22px; height: 22px; display: block; }
+.case-tile-card .cat-ico { width: 28px; height: 28px; display: block; }
 </style>
 <!-- generated: 1774151282.3539512 -->
 </head>
@@ -3209,7 +3220,7 @@ body[data-theme="onyx"] .case-tile-card:hover {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4771,13 +4782,13 @@ function renderCaseTiles() {
       c.pinned ? '<span class="tile-pin">📌</span>' : '',
     ].filter(Boolean).join('');
     return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" data-cat="${_isCorp ? 'corp' : 'real'}" onclick="showCaseDetail('${c.id}')">
-      ${_mark ? `<div class="tile-marks">${_mark}</div>` : ''}
       <div class="tile-body">
-        <span class="cat-mark">${_isCorp ? ICON_CAT_CORP : ICON_CAT_REAL}</span>
-        <div class="tile-text">
-          <div class="tile-name">${escHtml(c.case_name||'—')}</div>
-          ${clientName(c) ? `<div class="tile-client">${ICON_PERSON}<span>${escHtml(clientName(c))}</span></div>` : ''}
+        <div class="tile-toprow">
+          <span class="cat-mark">${_isCorp ? ICON_CAT_CORP : ICON_CAT_REAL}</span>
+          ${_mark ? `<div class="tile-marks">${_mark}</div>` : ''}
         </div>
+        <div class="tile-name">${escHtml(c.case_name||'—')}</div>
+        ${clientName(c) ? `<div class="tile-client">${ICON_PERSON}<span>${escHtml(clientName(c))}</span></div>` : ''}
       </div>
       <div class="tile-footer">
         ${c.category ? `<span>${escHtml(c.type||c.category)}</span>` : ''}
