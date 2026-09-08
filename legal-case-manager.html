@@ -3314,7 +3314,7 @@ body[data-theme="onyx"] .case-tile-card:hover {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.3</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7950,6 +7950,10 @@ function inlineEditDeadline(tdEl, taskId) {
 }
 
 function renderWaitingBanner() {
+  // 【Waitingバナーは無効化】2026年9月8日、本人の指示。案件一覧の上に出さない。
+  // バナーの div は既定で display:none なので、ここで返せば何も出ない。
+  // 戻したいときはこの return を消すだけでよい。
+  return;
   const el = document.getElementById('waiting-banner');
   if (!el) return;
   // 進行中案件タブ以外では非表示
