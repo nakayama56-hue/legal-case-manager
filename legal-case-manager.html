@@ -3199,7 +3199,7 @@ body[data-theme="onyx"] .case-tile-card:hover {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.8</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.2.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7703,6 +7703,10 @@ function _alertDismissKey() {
 }
 
 function checkDeadlineAlert() {
+  // 【朝の「要確認」バナーは無効化】2026年9月8日、本人の指示。ふだん見ないため。
+  // バナーの div は既定で display:none なので、ここで返せば何も出ない。
+  // 戻したいときはこの return を消すだけでよい。
+  return;
   const banner = document.getElementById('deadline-alert-banner');
   if (!banner) return;
 
