@@ -3170,7 +3170,9 @@ tr.row-waiting:hover > td {
   position: relative !important;
   backdrop-filter: blur(14px) saturate(1.5) !important;
   -webkit-backdrop-filter: blur(14px) saturate(1.5) !important;
-  overflow: hidden !important;
+  /* 未完了タスクのバッジを枠の外へはみ出させるため visible。
+     切り抜きに頼っていた部品（左の色帯 ::before）は自前で角丸を持っている */
+  overflow: visible !important;
   display: flex !important;
   flex-direction: column !important;
 }
@@ -3294,24 +3296,27 @@ body[data-theme="onyx"] .case-tile-card:hover {
   margin-bottom: 9px; min-height: 32px;
 }
 .case-tile-card .cat-mark {
-  position: relative;
   display: flex; align-items: center; justify-content: center;
   width: 32px; height: 32px; flex: 0 0 32px; box-sizing: border-box;
   color: var(--tile-accent);
 }
 .case-tile-card .cat-ico { width: 28px; height: 28px; display: block; }
 
-/* --- 未完了タスクのバッジ（2026年9月8日）。
-       区分マークの右上に重ねる。右上の印の列（申請中・要確認）とは場所を取り合わない。
-       重なり避けの余白を決め打ちしないための配置（5-2 章）--- */
+/* --- 未完了タスクのバッジ（2026年9月8日）。タイルの枠の右上角にはみ出させる。
+       5-2 章の「余白の決め打ち」を踏まないための理屈：
+       バッジの高さは 19px で固定（中身が増えても横に伸びるだけ）。
+       枠の上端から 8px 上に出すので下端は枠内 11px、
+       印の列は tile-body の上余白 15px から始まる。
+       つまり縦方向の隙間は中身によらず一定で、印が何個並んでも重ならない --- */
 .case-tile-card .tile-task-badge {
-  position: absolute; top: -5px; right: -7px;
-  min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+  position: absolute; top: -8px; right: -8px; z-index: 2;
+  min-width: 19px; height: 19px; padding: 0 5px; box-sizing: border-box;
   border-radius: 999px;
   background: var(--color-danger); color: #fff;
-  font-size: 10.5px; font-weight: 700; line-height: 18px; text-align: center;
+  font-size: 11px; font-weight: 700; line-height: 19px; text-align: center;
   letter-spacing: 0; white-space: nowrap;
-  box-shadow: 0 0 0 2px var(--tile-badge-ring, rgba(255,255,255,0.92));
+  box-shadow: 0 0 0 2px var(--tile-badge-ring, rgba(255,255,255,0.92)),
+              0 1px 3px rgba(20,30,60,0.22);
   pointer-events: none;
 }
 body.dark-mode .case-tile-card,
@@ -3331,7 +3336,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4906,9 +4911,10 @@ function renderCaseTiles() {
       c.pinned ? '<span class="tile-pin">📌</span>' : '',
     ].filter(Boolean).join('');
     return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" data-cat="${_isCorp ? 'corp' : 'real'}" onclick="showCaseDetail('${c.id}')">
+      ${_undone ? `<span class="tile-task-badge" title="未完了タスク ${_undone}件">${_undone > 99 ? '99+' : _undone}</span>` : ''}
       <div class="tile-body">
         <div class="tile-toprow">
-          <span class="cat-mark">${_isCorp ? ICON_CAT_CORP : ICON_CAT_REAL}${_undone ? `<span class="tile-task-badge" title="未完了タスク ${_undone}件">${_undone > 99 ? '99+' : _undone}</span>` : ''}</span>
+          <span class="cat-mark">${_isCorp ? ICON_CAT_CORP : ICON_CAT_REAL}</span>
           ${_mark ? `<div class="tile-marks">${_mark}</div>` : ''}
         </div>
         <div class="tile-name">${escHtml(c.case_name||'—')}</div>
