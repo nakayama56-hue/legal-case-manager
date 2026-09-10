@@ -3159,8 +3159,11 @@ tr.row-waiting:hover > td {
    ===================================================== */
 
 #case-tile-grid {
-  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)) !important;
-  gap: 14px !important;
+  /* カプセル形は横に長いほど丸みが素直に見える。1枚の最小幅を広げる（8.4.0） */
+  /* min(330px,100%) にしておくと、幅の狭い画面で 330px の枠が
+     はみ出して横スクロールが出るのを防げる */
+  grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr)) !important;
+  gap: 16px !important;
 }
 
 
@@ -3177,12 +3180,15 @@ tr.row-waiting:hover > td {
   flex-direction: column !important;
 }
 
-/* --- カード本体：1枚の面にする --- */
+/* --- カード本体：カプセル形（左右の端が半円）にする。2026年9月11日、8.4.0 --- */
 .case-tile-card {
-  border-radius: 14px !important;
+  border-radius: 999px !important;
   padding: 0 !important;
+  align-items: center !important;
+  text-align: center !important;
   box-shadow: 0 1px 2px rgba(20,30,60,0.05), 0 6px 18px rgba(20,30,60,0.07) !important;
-  border: 1px solid var(--glass-border) !important;
+  /* 区分の色は枠線で示す（下の ::before の項を参照） */
+  border: 1.5px solid color-mix(in srgb, var(--tile-accent) 40%, transparent) !important;
   transition: box-shadow .22s ease, transform .22s ease, border-color .22s ease !important;
 }
 .case-tile-card:hover {
@@ -3190,22 +3196,22 @@ tr.row-waiting:hover > td {
   box-shadow: 0 2px 4px rgba(20,30,60,0.06), 0 14px 32px rgba(20,30,60,0.14) !important;
 }
 
-/* 区分の色：左の細い帯で示す。青＝不動産／橙＝商業 */
-.case-tile-card::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  background: var(--tile-accent); border-radius: 14px 0 0 14px;
-}
+/* 区分の色：カプセル形にした 8.4.0 で「左の 3px の色帯」をやめ、枠線の色に移した。
+   丸い枠に上下いっぱいの直線の帯を重ねると、帯だけが枠の外にはみ出すため。
+   示す場所は今も 2 か所（枠線＋区分マーク）で、色の変数も同じ。帯を戻すなら
+   角丸を 14px に戻すこと（片方だけ戻すと形が崩れる） */
+.case-tile-card::before { content: none !important; }
 .case-tile-card[data-cat="real"] { --tile-accent: var(--color-primary); }
 .case-tile-card[data-cat="corp"] { --tile-accent: var(--color-accent); }
 
 /* 一律の青グラデーションをやめ、左帯だけで区別する */
 .case-tile-card.tile-active {
   background: rgba(255,255,255,0.72) !important;
-  border: 1px solid var(--glass-border) !important;
+  border: 1.5px solid color-mix(in srgb, var(--tile-accent) 40%, transparent) !important;
   box-shadow: 0 1px 2px rgba(20,30,60,0.05), 0 6px 18px rgba(20,30,60,0.07) !important;
 }
 .case-tile-card.tile-active:hover {
-  border-color: color-mix(in srgb, var(--tile-accent) 45%, transparent) !important;
+  border-color: color-mix(in srgb, var(--tile-accent) 62%, transparent) !important;
   box-shadow: 0 2px 4px rgba(20,30,60,0.06), 0 14px 32px rgba(20,30,60,0.14) !important;
 }
 
@@ -3213,11 +3219,17 @@ tr.row-waiting:hover > td {
 .case-tile-card .tile-header { display: none !important; }
 .case-tile-card .tile-marks {
   display: flex; align-items: center; justify-content: flex-end;
-  flex-wrap: wrap; gap: 5px; margin-left: auto;
+  flex-wrap: wrap; gap: 5px; margin-left: 8px;
 }
 
 /* --- 本文：余白を広げ、字の階層をつける --- */
-.case-tile-card .tile-body { padding: 15px 15px 11px 16px !important; }
+.case-tile-card .tile-body {
+  /* 左右の余白は丸みを避けるためのもの。案件名はカードの上下の中央（丸みが
+     いちばん浅い高さ）に来るので 30px で足りる。上下の端に近い行のほうが
+     深く削られるため、下段（tile-footer）だけ 40px にしてある */
+  padding: 14px 30px 8px !important;
+  width: 100%; box-sizing: border-box;
+}
 .case-tile-card .tile-name {
   font-size: 14px !important; font-weight: 700 !important;
   line-height: 1.5 !important; letter-spacing: 0.01em;
@@ -3235,12 +3247,13 @@ tr.row-waiting:hover > td {
 }
 .case-tile-card .tile-client {
   font-size: 11.5px !important; color: var(--text-muted) !important;
-  gap: 5px !important;
+  gap: 5px !important; justify-content: center;
 }
 
 /* --- 下段：灰色の帯と境界線をやめ、余白で分ける --- */
 .case-tile-card .tile-footer {
-  padding: 0 15px 13px 16px !important;
+  padding: 0 40px 14px !important;
+  width: 100%; box-sizing: border-box; justify-content: center;
   background: none !important; border-top: none !important;
   font-size: 10.5px !important; color: var(--text-muted) !important;
   gap: 4px 12px !important;
@@ -3280,7 +3293,8 @@ body[data-theme="onyx"] .case-tile-card,
 body.dark-mode .case-tile-card.tile-active,
 body[data-theme="onyx"] .case-tile-card.tile-active {
   background: rgba(255,255,255,0.08) !important;
-  border-color: rgba(255,255,255,0.14) !important;
+  /* 枠線が区分色になったので、暗い地でも沈まないよう色相は保って明度だけ上げる */
+  border-color: color-mix(in srgb, var(--tile-accent) 60%, #ffffff) !important;
   box-shadow: 0 1px 2px rgba(0,0,0,0.25), 0 6px 18px rgba(0,0,0,0.28) !important;
 }
 body.dark-mode .case-tile-card:hover,
@@ -3292,8 +3306,8 @@ body[data-theme="onyx"] .case-tile-card:hover {
 /* --- 区分マーク（面）と印を上の行にそろえる。
        案件名は幅いっぱいを使い、カード間で高さがそろう（2026年9月8日） --- */
 .case-tile-card .tile-toprow {
-  display: flex; align-items: center; gap: 8px;
-  margin-bottom: 9px; min-height: 32px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 5px; min-height: 30px;
 }
 .case-tile-card .cat-mark {
   display: flex; align-items: center; justify-content: center;
@@ -3337,14 +3351,18 @@ body[data-theme="onyx"] .cal-ext-banner:hover {
   border-color: color-mix(in srgb, var(--color-primary) 80%, transparent);
 }
 
-/* --- 未完了タスクのバッジ（2026年9月8日）。タイルの枠の右上角にはみ出させる。
+/* --- 未完了タスクのバッジ（2026年9月8日）。8.4.0 でカプセル形にしたため、
+       置き場所を「枠の右上角」から「右端の半円の中央」へ移した。
+       角丸 999px では右上角が丸みの外側になり、バッジだけが宙に浮くため。
        5-2 章の「余白の決め打ち」を踏まないための理屈：
-       バッジの高さは 19px で固定（中身が増えても横に伸びるだけ）。
-       枠の上端から 8px 上に出すので下端は枠内 11px、
-       印の列は tile-body の上余白 15px から始まる。
-       つまり縦方向の隙間は中身によらず一定で、印が何個並んでも重ならない --- */
+       バッジの高さは 19px で固定（中身が増えても横に伸びるだけ）で、
+       右へ 7px 出すぶん枠の内側に食い込むのは 12px。
+       本文は tile-body の左右余白 46px の内側にしか来ないので、
+       件数が 3 桁（99+）になっても文字には届かない。
+       上下は枠のちょうど中央なので、上の行の印とも重ならない。
+       タイルの隙間は 16px あり、はみ出した 7px は隣のタイルにも届かない --- */
 .case-tile-card .tile-task-badge {
-  position: absolute; top: -8px; right: -8px; z-index: 2;
+  position: absolute; top: 50%; right: -7px; transform: translateY(-50%); z-index: 2;
   min-width: 19px; height: 19px; padding: 0 5px; box-sizing: border-box;
   border-radius: 999px;
   background: var(--color-danger); color: #fff;
@@ -3371,7 +3389,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.3.9</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
