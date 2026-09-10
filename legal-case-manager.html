@@ -3353,19 +3353,38 @@ body[data-theme="onyx"] .cal-ext-banner:hover {
   border-color: color-mix(in srgb, var(--color-primary) 80%, transparent);
 }
 
-/* --- 未完了タスクのバッジ（2026年9月8日）。8.4.0 でカプセル形にしたため、
-       置き場所を「枠の右上角」から「右端の半円の中央」へ移した。
-       角丸 999px では右上角が丸みの外側になり、バッジだけが宙に浮くため。
+/* --- 未完了タスクのバッジ（2026年9月8日）。置き場所は枠の右上
+       （8.4.2 でご本人のご指示により、8.4.0〜8.4.1 の「右端の中央」から戻した）。
+
+       ただしカプセル形の「右上」は、四角の右上角ではない。
+       角丸 999px では右上角は枠の外側の何もない空間なので、そこに置くと
+       バッジだけが宙に浮く。枠の線の上で右上に当たるのは
+       **右端の半円の 45 度の位置**で、そこへ半分だけ重ねてある。
+
+       位置を px で決め打ちできない理由：半円の半径は「カードの高さ÷2」で、
+       高さは案件名の行数で変わる。45 度の点は右上角から
+       縦横それぞれ (1-cos45°)/2 = 14.645% × 高さ だけ内側に入った所にある。
+       CSS の `right` の % はカードの「幅」に対する割合なので、高さでは書けない。
+       そこで **高さと同じ辺の長さを持つ正方形の基準枠**（.tile-badge-anchor。
+       top:0/bottom:0 で高さを決め、aspect-ratio:1 で幅を高さに合わせる）を
+       右端に置き、その中で縦横とも 14.645% と書いている。
+       これで高さが変わっても常に 45 度の位置に乗る。JS は使っていない。
+
        5-2 章の「余白の決め打ち」を踏まないための理屈：
-       バッジは枠の右端に**半分だけ**重ねている（right:0 ＋ translate(50%,-50%)）。
-       こうすると枠の内側への食い込みも外へのはみ出しも、常にバッジの幅の半分になる。
-       いちばん広い「99+」でも 31px の半分＝15.5px。
-       本文は tile-body の左右余白 22px の内側にしか来ないので文字には届かず、
-       タイルの隙間 16px より小さいので隣のタイルにも届かない。
-       右へ何px と決め打ちすると、桁数が増えたぶんだけ内側へ食い込む
-       （5-2 章の轍）。半分で決めるとその心配が要らない --- */
+       枠の線に半分だけ重ねているので、内側への食い込みも外へのはみ出しも
+       常にバッジの幅の半分（いちばん広い「99+」でも約 18px）で、
+       しかも斜め方向なので本文側・上の印の側へ食い込む量はさらに小さい。
+       タイルの隙間 16px より小さいので隣のタイルにも届かない --- */
+.case-tile-card .tile-badge-anchor {
+  /* 高さ＝カードの高さ、幅＝aspect-ratio でそれに合わせた正方形。
+     右上角を原点にして、割合で 45 度の位置を指せるようにするための土台。
+     見えないし押せない。ここに背景や境界線を付けないこと */
+  position: absolute; top: 0; right: 0; bottom: 0; width: auto; aspect-ratio: 1;
+  pointer-events: none; z-index: 2;
+}
 .case-tile-card .tile-task-badge {
-  position: absolute; top: 50%; right: 0; transform: translate(50%, -50%); z-index: 2;
+  position: absolute; top: 14.645%; right: 14.645%;
+  transform: translate(50%, -50%); z-index: 2;
   min-width: 19px; height: 19px; padding: 0 5px; box-sizing: border-box;
   border-radius: 999px;
   background: var(--color-danger); color: #fff;
@@ -3392,7 +3411,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4973,7 +4992,7 @@ function renderCaseTiles() {
       c.pinned ? '<span class="tile-pin">📌</span>' : '',
     ].filter(Boolean).join('');
     return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" data-cat="${_isCorp ? 'corp' : 'real'}" onclick="showCaseDetail('${c.id}')">
-      ${_undone ? `<span class="tile-task-badge" title="未完了タスク ${_undone}件">${_undone > 99 ? '99+' : _undone}</span>` : ''}
+      ${_undone ? `<span class="tile-badge-anchor"><span class="tile-task-badge" title="未完了タスク ${_undone}件">${_undone > 99 ? '99+' : _undone}</span></span>` : ''}
       <div class="tile-body">
         <div class="tile-toprow">
           <span class="cat-mark">${_isCorp ? ICON_CAT_CORP : ICON_CAT_REAL}</span>
