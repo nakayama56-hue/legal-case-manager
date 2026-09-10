@@ -3160,9 +3160,9 @@ tr.row-waiting:hover > td {
 
 #case-tile-grid {
   /* カプセル形は横に長いほど丸みが素直に見える。1枚の最小幅を広げる（8.4.0） */
-  /* min(330px,100%) にしておくと、幅の狭い画面で 330px の枠が
+  /* min(280px,100%) にしておくと、幅の狭い画面で 280px の枠が
      はみ出して横スクロールが出るのを防げる */
-  grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr)) !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)) !important;
   gap: 16px !important;
 }
 
@@ -3225,9 +3225,11 @@ tr.row-waiting:hover > td {
 /* --- 本文：余白を広げ、字の階層をつける --- */
 .case-tile-card .tile-body {
   /* 左右の余白は丸みを避けるためのもの。案件名はカードの上下の中央（丸みが
-     いちばん浅い高さ）に来るので 30px で足りる。上下の端に近い行のほうが
-     深く削られるため、下段（tile-footer）だけ 40px にしてある */
-  padding: 14px 30px 8px !important;
+     いちばん浅い高さ）に来るので、丸みを避けるだけなら 14px で足りる。
+     22px にしてあるのは、右端に半分重なるバッジ（いちばん広い「99+」で
+     枠の内側へ 18px 食い込む）に案件名の行が触らないようにするため。
+     上下の端に近い行のほうが丸みに深く削られるので、下段だけ 26px */
+  padding: 10px 22px 8px !important;
   width: 100%; box-sizing: border-box;
 }
 .case-tile-card .tile-name {
@@ -3252,7 +3254,7 @@ tr.row-waiting:hover > td {
 
 /* --- 下段：灰色の帯と境界線をやめ、余白で分ける --- */
 .case-tile-card .tile-footer {
-  padding: 0 40px 14px !important;
+  padding: 0 26px 12px !important;
   width: 100%; box-sizing: border-box; justify-content: center;
   background: none !important; border-top: none !important;
   font-size: 10.5px !important; color: var(--text-muted) !important;
@@ -3307,7 +3309,7 @@ body[data-theme="onyx"] .case-tile-card:hover {
        案件名は幅いっぱいを使い、カード間で高さがそろう（2026年9月8日） --- */
 .case-tile-card .tile-toprow {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  margin-bottom: 5px; min-height: 30px;
+  margin-bottom: 4px; min-height: 28px;
 }
 .case-tile-card .cat-mark {
   display: flex; align-items: center; justify-content: center;
@@ -3355,14 +3357,15 @@ body[data-theme="onyx"] .cal-ext-banner:hover {
        置き場所を「枠の右上角」から「右端の半円の中央」へ移した。
        角丸 999px では右上角が丸みの外側になり、バッジだけが宙に浮くため。
        5-2 章の「余白の決め打ち」を踏まないための理屈：
-       バッジの高さは 19px で固定（中身が増えても横に伸びるだけ）で、
-       右へ 7px 出すぶん枠の内側に食い込むのは 12px。
-       本文は tile-body の左右余白 46px の内側にしか来ないので、
-       件数が 3 桁（99+）になっても文字には届かない。
-       上下は枠のちょうど中央なので、上の行の印とも重ならない。
-       タイルの隙間は 16px あり、はみ出した 7px は隣のタイルにも届かない --- */
+       バッジは枠の右端に**半分だけ**重ねている（right:0 ＋ translate(50%,-50%)）。
+       こうすると枠の内側への食い込みも外へのはみ出しも、常にバッジの幅の半分になる。
+       いちばん広い「99+」でも 31px の半分＝15.5px。
+       本文は tile-body の左右余白 22px の内側にしか来ないので文字には届かず、
+       タイルの隙間 16px より小さいので隣のタイルにも届かない。
+       右へ何px と決め打ちすると、桁数が増えたぶんだけ内側へ食い込む
+       （5-2 章の轍）。半分で決めるとその心配が要らない --- */
 .case-tile-card .tile-task-badge {
-  position: absolute; top: 50%; right: -7px; transform: translateY(-50%); z-index: 2;
+  position: absolute; top: 50%; right: 0; transform: translate(50%, -50%); z-index: 2;
   min-width: 19px; height: 19px; padding: 0 5px; box-sizing: border-box;
   border-radius: 999px;
   background: var(--color-danger); color: #fff;
@@ -3389,7 +3392,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
