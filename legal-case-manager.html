@@ -3225,11 +3225,11 @@ tr.row-waiting:hover > td {
 /* --- 本文：余白を広げ、字の階層をつける --- */
 .case-tile-card .tile-body {
   /* 左右の余白は丸みを避けるためのもの。案件名はカードの上下の中央（丸みが
-     いちばん浅い高さ）に来るので、丸みを避けるだけなら 14px で足りる。
-     22px にしてあるのは、右端に半分重なるバッジ（いちばん広い「99+」で
-     枠の内側へ 18px 食い込む）に案件名の行が触らないようにするため。
-     上下の端に近い行のほうが丸みに深く削られるので、下段だけ 26px */
-  padding: 10px 22px 8px !important;
+     いちばん浅い高さ）に来るので 16px で足りる。8.4.1 までの 22px は
+     「右端の中央」にあったバッジを避けるためだったが、8.4.2 でバッジが
+     右上（斜め）へ移り、その制約は外れた。8.4.3 でここまで詰めた。
+     上下の端に近い行のほうが丸みに深く削られるので、下段だけ 20px */
+  padding: 10px 16px 8px !important;
   width: 100%; box-sizing: border-box;
 }
 .case-tile-card .tile-name {
@@ -3254,7 +3254,7 @@ tr.row-waiting:hover > td {
 
 /* --- 下段：灰色の帯と境界線をやめ、余白で分ける --- */
 .case-tile-card .tile-footer {
-  padding: 0 26px 12px !important;
+  padding: 0 20px 12px !important;
   width: 100%; box-sizing: border-box; justify-content: center;
   background: none !important; border-top: none !important;
   font-size: 10.5px !important; color: var(--text-muted) !important;
@@ -3411,7 +3411,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.2</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
