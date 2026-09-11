@@ -2482,8 +2482,10 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   border-left: 3px solid var(--color-primary);
   border-radius: 8px;
   padding: 10px 14px;
-  margin-bottom: 10px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;            /* grid セルが中身に押し広げられるのを防ぐ */
 }
 .memo-card-header {
   display: flex;
@@ -2503,6 +2505,10 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   color: var(--text-primary);
   white-space: pre-wrap;
   line-height: 1.7;
+  flex: 1;
+  word-break: normal;       /* anywhere は使わない。括弧の直後で折れる */
+  overflow-wrap: break-word;
+  line-break: strict;
 }
 .memo-card-edit-area {
   width: 100%;
@@ -2518,6 +2524,38 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   line-height: 1.7;
   box-sizing: border-box;
 }
+
+/* 備考・メモのタイル表示（2026年9月11日、8.4.4）。
+   列数は固定しない。右のタスクパネルを開くと本文幅が約300px縮むため
+   （実測：1218px → 914px。4列 → 3列） */
+.memo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 12px;
+}
+/* 既定は 6 行でクランプ。同じ行のタイルは stretch で高さがそろう */
+.memo-card-text.memo-clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+}
+.memo-more {
+  display: none;
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 2px 0;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.memo-more:hover { text-decoration: underline; }
+/* 溢れているタイルにだけ「続きを読む」を出す（判定は refreshMemoClamps）*/
+.memo-card.is-overflowing .memo-more { display: inline-block; }
 
 
 /* 定型文ピッカー */
@@ -3411,7 +3449,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.3</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7615,16 +7653,68 @@ function renderMemoList(c) {
   if (c.memos.length === 0) {
     return '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">メモはありません</div>';
   }
-  return c.memos.map((m, i) => `
+  // DOM に入るのはこの文字列が差し込まれたあと。溢れ判定はその後に回す
+  setTimeout(_observeMemoGrids, 0);
+  return `<div class="memo-grid">` + c.memos.map((m, i) => `
     <div class="memo-card" id="memo-card-${m.id}">
       <div class="memo-card-header">
         <span class="memo-card-date">${formatDate(m.date) || m.date || '日付なし'}</span>
         <button class="btn btn-secondary btn-xs no-print" onclick="openMemoModal('${c.id}','${m.id}')" style="margin-left:auto">✏ 編集</button>
         <button class="btn btn-xs no-print" onclick="deleteMemoItem('${c.id}','${m.id}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#dc2626">✕</button>
       </div>
-      <div class="memo-card-text" id="memo-text-${m.id}">${renderHl(m.text||'')}</div>
+      <div class="memo-card-text memo-clamp" id="memo-text-${m.id}">${renderHl(m.text||'')}</div>
+      <button type="button" class="memo-more no-print" id="memo-more-${m.id}" onclick="toggleMemoMore('${m.id}')">続きを読む</button>
     </div>
-  `).join('');
+  `).join('') + `</div>`;
+}
+
+/** クランプで隠れているタイルにだけ「続きを読む」を出す。
+    1枚の幅が変わると溢れ方も変わるので、幅が動くたびに呼び直す（_observeMemoGrids）*/
+function refreshMemoClamps() {
+  document.querySelectorAll('.memo-card').forEach(card => {
+    if (card.classList.contains('memo-open')) return;   // 展開中は触らない
+    const t = card.querySelector('.memo-card-text');
+    if (!t) return;                                      // 編集中のカードは対象外
+    // 幅が未確定のうちに測ると、1行1文字で折り返した高さを拾って全部「溢れている」に
+    // なる（実測で確認）。幅が出るまでは判定しない
+    if (!t.clientWidth) return;
+    card.classList.toggle('is-overflowing', t.scrollHeight - t.clientHeight > 1);
+  });
+}
+
+/** メモのグリッドの幅を見張る。
+    初回描画・ウィンドウのリサイズ・タスクパネルの開閉（本文幅が約300px動く）を
+    これ1つでまかなう。高さの変化では回さないので堂々巡りにならない */
+let _memoRO = null;
+function _observeMemoGrids() {
+  const grids = document.querySelectorAll('.memo-grid');
+  if (!grids.length) return;
+  if (!window.ResizeObserver) { refreshMemoClamps(); return; }
+  if (!_memoRO) {
+    _memoRO = new ResizeObserver(entries => {
+      let widthChanged = false;
+      entries.forEach(e => {
+        const w = Math.round(e.contentRect.width);
+        if (e.target._memoLastW !== w) { e.target._memoLastW = w; widthChanged = true; }
+      });
+      if (widthChanged) refreshMemoClamps();
+    });
+  }
+  _memoRO.disconnect();   // 前の描画で消えたグリッドを抱えたままにしない
+  grids.forEach(g => { g._memoLastW = undefined; _memoRO.observe(g); });
+  refreshMemoClamps();    // RO の通知は次の描画まで来ない。初回はここで済ませる
+}
+
+/** 「続きを読む」／「閉じる」 */
+function toggleMemoMore(memoId) {
+  const card = document.getElementById(`memo-card-${memoId}`);
+  const text = document.getElementById(`memo-text-${memoId}`);
+  const btn  = document.getElementById(`memo-more-${memoId}`);
+  if (!card || !text || !btn) return;
+  const open = card.classList.toggle('memo-open');
+  text.classList.toggle('memo-clamp', !open);
+  btn.textContent = open ? '閉じる' : '続きを読む';
+  if (!open) refreshMemoClamps();
 }
 
 /** メモ追加 */
