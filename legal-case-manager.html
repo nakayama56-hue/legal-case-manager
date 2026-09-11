@@ -432,43 +432,60 @@ body[data-theme="forest"] .today-panel {
   border-color: #93c5fd;
 }
 
-/* 面談記録タイムライン */
-.iv-timeline { padding: 8px 14px 4px; }
-.iv-tl-row { display: flex; gap: 12px; margin-bottom: 0; }
-.iv-tl-left {
-  display: flex; flex-direction: column; align-items: center;
-  flex-shrink: 0; width: 64px;
+/* 面談記録のタイル表示（2026年9月11日、8.4.5）。
+   それまでは左に日時、そこから縦線が伸びるタイムラインだった。
+   横に並べると線がつながらないので縦線は廃止し、日時のチップだけを残した。
+   列数を固定しない理由は備考・メモ（.memo-grid）と同じ */
+.iv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: 12px;
+  padding: 10px 14px;
 }
-.iv-tl-date {
-  font-size: 11px; font-weight: 700; color: var(--color-primary);
-  text-align: center; white-space: pre; line-height: 1.4;
-  background: #eff6ff; border: 1.5px solid #bfdbfe;
-  border-radius: 6px; padding: 4px 6px; margin-bottom: 4px;
-}
-.iv-tl-line {
-  width: 2px; flex: 1; background: #bfdbfe; min-height: 16px;
-}
-.iv-tl-last { background: transparent; }
-.iv-tl-body {
-  flex: 1; background: var(--bg-primary);
+.iv-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;            /* grid セルが中身に押し広げられるのを防ぐ */
+  background: var(--bg-primary);
   border: 1px solid rgba(255,255,255,0.12);
   border-left: 3px solid #bfdbfe;
-  border-radius: 8px; padding: 10px 14px;
-  margin-bottom: 14px;
+  border-radius: 8px;
+  padding: 10px 14px;
 }
-.iv-tl-meta {
+/* 日時・場所・相手・ボタンは同じ行に並べ、場所をレイアウトに決めさせる
+   （幅が変わりうるものを絶対配置＋余白で避けない） */
+.iv-card-head {
   display: flex; align-items: center; gap: 6px;
   flex-wrap: wrap; margin-bottom: 8px;
   font-size: 12px; color: var(--text-muted);
 }
-.iv-tl-meta .meta-badge {
+.iv-card-actions { margin-left: auto; display: flex; gap: 4px; }
+.iv-date {
+  font-size: 11px; font-weight: 700; color: var(--color-primary);
+  text-align: center; white-space: pre; line-height: 1.4;
+  background: #eff6ff; border: 1.5px solid #bfdbfe;
+  border-radius: 6px; padding: 4px 6px;
+}
+.meta-badge {
   background: #eff6ff; color: #1d4ed8;
   border-radius: 4px; padding: 1px 7px;
   font-size: 11px; font-weight: 600; white-space: nowrap;
 }
-.iv-tl-content {
+.iv-card-content {
   font-size: 13px; color: var(--text-primary);
   white-space: pre-wrap; line-height: 1.7;
+  flex: 1;
+  word-break: normal;       /* anywhere は使わない。括弧の直後で折れる */
+  overflow-wrap: break-word;
+  line-break: strict;
+}
+/* 預かったものはクランプの外。本文が折りたたまれていても常に見える */
+.iv-azukari {
+  margin-top: 8px; padding: 6px 10px;
+  background: #fffbeb; border-left: 3px solid #f59e0b;
+  border-radius: 0 4px 4px 0;
+  font-size: 12px; color: #78350f; line-height: 1.6;
+  word-break: normal; overflow-wrap: break-word; line-break: strict;
 }
 
 /* 謄本取得サジェスト */
@@ -2526,6 +2543,7 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
 }
 
 /* 備考・メモのタイル表示（2026年9月11日、8.4.4）。
+   クランプの仕組み（.clamp-text / .clamp-more）は面談記録と共用（8.4.5）。
    列数は固定しない。右のタスクパネルを開くと本文幅が約300px縮むため
    （実測：1218px → 914px。4列 → 3列） */
 .memo-grid {
@@ -2533,14 +2551,17 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: 12px;
 }
-/* 既定は 6 行でクランプ。同じ行のタイルは stretch で高さがそろう */
-.memo-card-text.memo-clamp {
+/* 6 行でクランプ。備考・メモと面談記録で共用する。
+   同じ行のタイルは grid の stretch で高さがそろう。
+   display を上書きするので、.memo-card-text / .iv-card-content より
+   後ろに置くこと（同じ強さなので後勝ち） */
+.clamp-text {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 6;
   overflow: hidden;
 }
-.memo-more {
+.clamp-more {
   display: none;
   align-self: flex-start;
   margin-top: 6px;
@@ -2553,9 +2574,9 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   color: var(--color-primary);
   cursor: pointer;
 }
-.memo-more:hover { text-decoration: underline; }
-/* 溢れているタイルにだけ「続きを読む」を出す（判定は refreshMemoClamps）*/
-.memo-card.is-overflowing .memo-more { display: inline-block; }
+.clamp-more:hover { text-decoration: underline; }
+/* 溢れているタイルにだけ「続きを読む」を出す（判定は refreshClamps）*/
+.is-overflowing > .clamp-more { display: inline-block; }
 
 
 /* 定型文ピッカー */
@@ -3449,7 +3470,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7654,7 +7675,7 @@ function renderMemoList(c) {
     return '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">メモはありません</div>';
   }
   // DOM に入るのはこの文字列が差し込まれたあと。溢れ判定はその後に回す
-  setTimeout(_observeMemoGrids, 0);
+  setTimeout(_observeClampGrids, 0);
   return `<div class="memo-grid">` + c.memos.map((m, i) => `
     <div class="memo-card" id="memo-card-${m.id}">
       <div class="memo-card-header">
@@ -7662,18 +7683,24 @@ function renderMemoList(c) {
         <button class="btn btn-secondary btn-xs no-print" onclick="openMemoModal('${c.id}','${m.id}')" style="margin-left:auto">✏ 編集</button>
         <button class="btn btn-xs no-print" onclick="deleteMemoItem('${c.id}','${m.id}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#dc2626">✕</button>
       </div>
-      <div class="memo-card-text memo-clamp" id="memo-text-${m.id}">${renderHl(m.text||'')}</div>
-      <button type="button" class="memo-more no-print" id="memo-more-${m.id}" onclick="toggleMemoMore('${m.id}')">続きを読む</button>
+      <div class="memo-card-text clamp-text" id="memo-text-${m.id}">${renderHl(m.text||'')}</div>
+      <button type="button" class="clamp-more no-print" onclick="toggleClampCard(this)">続きを読む</button>
     </div>
   `).join('') + `</div>`;
 }
 
+/* 6行クランプ＋「続きを読む」は、備考・メモ（.memo-card）と
+   面談記録（.iv-card）で同じ仕組みを使う。二重実装しない */
+const CLAMP_GRID_SEL = '.memo-grid, .iv-grid';
+const CLAMP_CARD_SEL = '.memo-card, .iv-card';
+const CLAMP_TEXT_SEL = '.memo-card-text, .iv-card-content';
+
 /** クランプで隠れているタイルにだけ「続きを読む」を出す。
-    1枚の幅が変わると溢れ方も変わるので、幅が動くたびに呼び直す（_observeMemoGrids）*/
-function refreshMemoClamps() {
-  document.querySelectorAll('.memo-card').forEach(card => {
-    if (card.classList.contains('memo-open')) return;   // 展開中は触らない
-    const t = card.querySelector('.memo-card-text');
+    1枚の幅が変わると溢れ方も変わるので、幅が動くたびに呼び直す（_observeClampGrids）*/
+function refreshClamps() {
+  document.querySelectorAll(CLAMP_CARD_SEL).forEach(card => {
+    if (card.classList.contains('clamp-open')) return;   // 展開中は触らない
+    const t = card.querySelector(CLAMP_TEXT_SEL);
     if (!t) return;                                      // 編集中のカードは対象外
     // 幅が未確定のうちに測ると、1行1文字で折り返した高さを拾って全部「溢れている」に
     // なる（実測で確認）。幅が出るまでは判定しない
@@ -7682,39 +7709,39 @@ function refreshMemoClamps() {
   });
 }
 
-/** メモのグリッドの幅を見張る。
+/** タイルのグリッドの幅を見張る。
     初回描画・ウィンドウのリサイズ・タスクパネルの開閉（本文幅が約300px動く）を
     これ1つでまかなう。高さの変化では回さないので堂々巡りにならない */
-let _memoRO = null;
-function _observeMemoGrids() {
-  const grids = document.querySelectorAll('.memo-grid');
+let _clampRO = null;
+function _observeClampGrids() {
+  const grids = document.querySelectorAll(CLAMP_GRID_SEL);
   if (!grids.length) return;
-  if (!window.ResizeObserver) { refreshMemoClamps(); return; }
-  if (!_memoRO) {
-    _memoRO = new ResizeObserver(entries => {
+  if (!window.ResizeObserver) { refreshClamps(); return; }
+  if (!_clampRO) {
+    _clampRO = new ResizeObserver(entries => {
       let widthChanged = false;
       entries.forEach(e => {
         const w = Math.round(e.contentRect.width);
-        if (e.target._memoLastW !== w) { e.target._memoLastW = w; widthChanged = true; }
+        if (e.target._clampLastW !== w) { e.target._clampLastW = w; widthChanged = true; }
       });
-      if (widthChanged) refreshMemoClamps();
+      if (widthChanged) refreshClamps();
     });
   }
-  _memoRO.disconnect();   // 前の描画で消えたグリッドを抱えたままにしない
-  grids.forEach(g => { g._memoLastW = undefined; _memoRO.observe(g); });
-  refreshMemoClamps();    // RO の通知は次の描画まで来ない。初回はここで済ませる
+  _clampRO.disconnect();   // 前の描画で消えたグリッドを抱えたままにしない
+  grids.forEach(g => { g._clampLastW = undefined; _clampRO.observe(g); });
+  refreshClamps();         // RO の通知は次の描画まで来ない。初回はここで済ませる
 }
 
-/** 「続きを読む」／「閉じる」 */
-function toggleMemoMore(memoId) {
-  const card = document.getElementById(`memo-card-${memoId}`);
-  const text = document.getElementById(`memo-text-${memoId}`);
-  const btn  = document.getElementById(`memo-more-${memoId}`);
-  if (!card || !text || !btn) return;
-  const open = card.classList.toggle('memo-open');
-  text.classList.toggle('memo-clamp', !open);
+/** 「続きを読む」／「閉じる」。ボタン自身を渡すので id を持たせなくてよい */
+function toggleClampCard(btn) {
+  const card = btn.closest(CLAMP_CARD_SEL);
+  if (!card) return;
+  const text = card.querySelector(CLAMP_TEXT_SEL);
+  if (!text) return;
+  const open = card.classList.toggle('clamp-open');
+  text.classList.toggle('clamp-text', !open);
   btn.textContent = open ? '閉じる' : '続きを読む';
-  if (!open) refreshMemoClamps();
+  if (!open) refreshClamps();
 }
 
 /** メモ追加 */
@@ -11665,27 +11692,26 @@ function deleteDocument(caseId, docId) {
 function renderInterviews(c) {
   const interviews = c.interviews || [];
   const cid = c.id;
-  const rows = [...interviews]
+  const cards = [...interviews]
     .sort((a, b) => a.datetime.localeCompare(b.datetime))
-    .map((iv, idx) => `
-      <div class="iv-tl-row">
-        <div class="iv-tl-left">
-          <div class="iv-tl-date">${formatDatetime(iv.datetime).replace(' ', '\n')}</div>
-          <div class="iv-tl-line${idx === interviews.length - 1 ? ' iv-tl-last' : ''}"></div>
-        </div>
-        <div class="iv-tl-body">
-          <div class="iv-tl-meta">
-            ${iv.place ? `<span class="meta-badge">📍 ${escHtml(iv.place)}</span>` : ''}
-            ${iv.party ? `<span class="meta-badge">👥 ${escHtml(iv.party)}</span>` : ''}
-            <div style="margin-left:auto;display:flex;gap:4px">
-              <button class="btn btn-secondary btn-xs" onclick="openInterviewModal('${cid}','${iv.id}')">編集</button>
-              <button class="btn btn-danger btn-xs" onclick="deleteInterview('${cid}','${iv.id}')">削除</button>
-            </div>
+    .map(iv => `
+      <div class="iv-card">
+        <div class="iv-card-head">
+          <span class="iv-date">${formatDatetime(iv.datetime).replace(' ', '\n')}</span>
+          ${iv.place ? `<span class="meta-badge">📍 ${escHtml(iv.place)}</span>` : ''}
+          ${iv.party ? `<span class="meta-badge">👥 ${escHtml(iv.party)}</span>` : ''}
+          <div class="iv-card-actions no-print">
+            <button class="btn btn-secondary btn-xs" onclick="openInterviewModal('${cid}','${iv.id}')">編集</button>
+            <button class="btn btn-danger btn-xs" onclick="deleteInterview('${cid}','${iv.id}')">削除</button>
           </div>
-          <div class="iv-tl-content">${renderHl(iv.content)}</div>
-          ${iv.azukari ? `<div style="margin-top:8px;padding:6px 10px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 4px 4px 0;font-size:12px;color:#78350f;line-height:1.6"><span style="font-weight:700">📦 預かったもの：</span>${escHtml(iv.azukari)}</div>` : ''}
         </div>
+        <div class="iv-card-content clamp-text">${renderHl(iv.content)}</div>
+        <button type="button" class="clamp-more no-print" onclick="toggleClampCard(this)">続きを読む</button>
+        ${iv.azukari ? `<div class="iv-azukari"><span style="font-weight:700">📦 預かったもの：</span>${escHtml(iv.azukari)}</div>` : ''}
       </div>`).join('');
+
+  // DOM に入るのはこの文字列が差し込まれたあと。溢れ判定はその後に回す
+  setTimeout(_observeClampGrids, 0);
 
   return `
     <div class="interview-section">
@@ -11693,9 +11719,9 @@ function renderInterviews(c) {
         <span>📝 面談記録（${interviews.length}件）</span>
         <button class="btn btn-primary btn-xs" onclick="openInterviewModal('${cid}', null)">＋ 追加</button>
       </div>
-      <div class="iv-timeline">
-        ${interviews.length > 0 ? rows : '<div class="interview-empty">面談記録はまだありません</div>'}
-      </div>
+      ${interviews.length > 0
+        ? `<div class="iv-grid">${cards}</div>`
+        : '<div class="interview-empty">面談記録はまだありません</div>'}
     </div>`;
 }
 
