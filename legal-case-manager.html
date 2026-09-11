@@ -2680,7 +2680,9 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   body > * { display: none !important; }
   #print-area { display: block !important; }
   #print-area {
-    width: 100%;
+    /* 余白を幅の内側に収める。border-box が無いと 210mm＋余白24mm になり、
+       右端が紙からはみ出して切れる */
+    width: 100%; box-sizing: border-box;
     margin: 0; padding: 10mm 12mm;
     background: #fff; color: #000;
     font-size: 10pt; line-height: 1.5;
@@ -2717,6 +2719,20 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   }
   .print-tasks th { background: #f5f5f5; font-weight: 700; white-space: nowrap; }
   .print-tasks tr.done td { color: #888; }
+  .print-tasks td.chk, .print-tasks th.chk { text-align: center; }
+  .print-tasks td.num { text-align: right; white-space: nowrap; }
+  /* 受付台帳の「段」、評価証明書等の小見出し */
+  .print-subhead {
+    font-size: 8.5pt; font-weight: 700; color: #444;
+    margin: 2mm 0 1mm; padding-left: 1mm; border-left: 2px solid #999;
+  }
+  /* トラッカーの日付・追跡番号などの添え字 */
+  .print-note { font-size: 7pt; color: #555; line-height: 1.3; }
+  /* 受付台帳（下段）は最大14列になるので、字と余白を詰めてA4縦に収める */
+  .print-ledger-lower { font-size: 7pt; table-layout: fixed; }
+  .print-ledger-lower th, .print-ledger-lower td {
+    padding: 1mm; word-break: normal; overflow-wrap: break-word; line-break: strict;
+  }
   .print-footer { font-size: 8pt; color: #888; text-align: right; margin-top: 4mm; border-top: 1px solid #ccc; padding-top: 2mm; }
   .no-print { display: none !important; }
   .print-section { page-break-inside: avoid; }
@@ -3470,7 +3486,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -9105,32 +9121,123 @@ function printCaseDetail(caseId) {
   const c = cases.find(c => c.id === caseId);
   if (!c) return;
 
-  const caseTasks = tasks.filter(t => t.case_id === caseId);
-  const bureaus = (c.legal_bureaus && c.legal_bureaus.length > 0)
-    ? c.legal_bureaus : (c.legal_bureau ? [c.legal_bureau] : []);
+  const caseTasks  = tasks.filter(t => t.case_id === caseId);
+  const isCorporate = c.category === '商業・法人登記';
+  const printDate  = new Date().toLocaleDateString('ja-JP');
 
-  // 連絡先
+  /* 金額は画面と同じく3桁区切りで出す */
+  const money = v => {
+    const n = Number(String(v == null ? '' : v).replace(/[^\d]/g, ''));
+    return n ? n.toLocaleString('ja-JP') : '';
+  };
+  const sect = (title, body) => `<div class="print-section"><div class="print-section-title">${title}</div>${body}</div>`;
+
+  /* ===== 受付台帳（上段）：画面と同じく「段」ごとに分ける。No.も段ごと ===== */
+  const upperRows = c.ledger || [];
+  const upperGroups = [];
+  upperRows.forEach(r => { const g = r.group || 'grp_legacy_upper'; if (!upperGroups.includes(g)) upperGroups.push(g); });
+  const ledgerUpperHtml = upperGroups.map((gid, gi) => {
+    const gRows = upperRows.filter(r => (r.group || 'grp_legacy_upper') === gid);
+    return `
+      ${upperGroups.length > 1 ? `<div class="print-subhead">段 ${gi + 1}</div>` : ''}
+      <table class="print-tasks"${gi > 0 ? ' style="margin-top:2mm"' : ''}>
+        <thead><tr>
+          <th style="width:9mm">No.</th><th style="width:17mm">受託番号</th><th style="width:24mm">管轄</th>
+          <th>登記の目的</th><th>登記原因</th>
+          <th style="width:23mm">課税価格</th><th class="chk" style="width:6mm">✓</th>
+          <th style="width:23mm">登録免許税</th><th class="chk" style="width:6mm">✓</th>
+        </tr></thead>
+        <tbody>${gRows.map((r, i) => `<tr>
+          <td class="chk">${escHtml(r.row_no || String(i + 1))}</td>
+          <td class="chk">${escHtml(r.jutaku_num || '')}</td>
+          <td class="chk">${escHtml(r.kankatsu || '')}</td>
+          <td>${escHtml(r.mokuteki || '')}</td>
+          <td>${escHtml(r.gen_in || '')}</td>
+          <td class="num">${money(r.kazei)}</td>
+          <td class="chk">${r.kazei_checked ? '✓' : ''}</td>
+          <td class="num">${money(r.menkyo)}</td>
+          <td class="chk">${r.menkyo_checked ? '✓' : ''}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }).join('');
+
+  /* ===== 受付台帳（下段）：権利者4・義務者4・不動産5をすべて出す =====
+     ただし、どの行も空のままの後ろの欄は落とす（紙幅を空欄に食われないため）。
+     値のある欄は必ず出るので、取りこぼしは起きない */
+  const lowerRows = c.ledger_lower || [];
+  const usedCols = (key, size) => {
+    let n = 1;
+    lowerRows.forEach(r => {
+      const a = r[key] || [];
+      for (let i = 0; i < size; i++) if (a[i]) n = Math.max(n, i + 1);
+    });
+    return n;
+  };
+  const nKenri = usedCols('kenri', 4), nGimu = usedCols('gimu', 4), nFudo = usedCols('fudosan', 5);
+  const numTh  = n => Array.from({ length: n }, (_, i) => `<th class="chk">${i + 1}</th>`).join('');
+  const arrTd  = (arr, n) => Array.from({ length: n }, (_, i) => `<td>${escHtml((arr || [])[i] || '')}</td>`).join('');
+  const lowerGroups = [];
+  lowerRows.forEach(r => { const g = r.group || 'grp_legacy_lower'; if (!lowerGroups.includes(g)) lowerGroups.push(g); });
+  const ledgerLowerHtml = lowerGroups.map((gid, gi) => {
+    const gRows = lowerRows.filter(r => (r.group || 'grp_legacy_lower') === gid);
+    return `
+      ${lowerGroups.length > 1 ? `<div class="print-subhead">段 ${gi + 1}</div>` : ''}
+      <table class="print-tasks print-ledger-lower"${gi > 0 ? ' style="margin-top:2mm"' : ''}>
+        <thead>
+          <tr>
+            <th rowspan="2" style="width:9mm">No.</th>
+            <th colspan="${nKenri}">権利者／申請人</th>
+            <th colspan="${nGimu}">義務者</th>
+            <th colspan="${nFudo}">不動産</th>
+          </tr>
+          <tr>${numTh(nKenri)}${numTh(nGimu)}${numTh(nFudo)}</tr>
+        </thead>
+        <tbody>${gRows.map((r, i) => `<tr>
+          <td class="chk">${escHtml(r.row_no || String(i + 1))}</td>
+          ${arrTd(r.kenri, nKenri)}${arrTd(r.gimu, nGimu)}${arrTd(r.fudosan, nFudo)}
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }).join('');
+
+  /* ===== 不動産一覧 ===== */
+  const props = c.properties || [];
+  const propsHtml = `<table class="print-tasks">
+    <thead><tr>
+      <th class="chk" style="width:14mm">不動産</th><th>所在／地番</th>
+      <th style="width:18%">家屋番号</th><th class="chk" style="width:16mm">敷地権の数</th>
+      <th style="width:20%">マンション名等</th>
+    </tr></thead>
+    <tbody>${props.map((p, i) => `<tr>
+      <td class="chk">${escHtml(PROP_NUMS[i] || String(i + 1))}</td>
+      <td>${escHtml(p.location || '')}</td>
+      <td>${escHtml(p.kaoku || '')}</td>
+      <td class="chk">${escHtml(p.shikichi_num || '')}</td>
+      <td>${escHtml(p.mansion || '')}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+
+  /* ===== 連絡先 ===== */
   let contacts = (c.contacts && c.contacts.length > 0) ? c.contacts : [];
   if (contacts.length === 0) {
     if (c.client_name || c.client_tel) contacts.push({ role:'依頼者', name:c.client_name||'', tels:[{type:'固定',number:c.client_tel||''}], emails:[c.client_email||''], faxes:[], note:'' });
     if (c.other_name) contacts.push({ role:'関係者', name:c.other_name||'', tels:[{type:'固定',number:c.other_contact||''}], emails:[], faxes:[], note:'' });
   }
-  const TEL_ICONS = {'携帯':'📱','固定':'🏠','会社':'🏢'};
-    const TEL_LABELS = {'携帯':'Mobile','固定':'固定','会社':'勤務先'};
+  const TEL_ICONS = { '携帯':'📱', '固定':'🏠', '会社':'🏢' };
+  const TEL_LABELS = { '携帯':'Mobile', '固定':'固定', '会社':'勤務先' };
 
   const contactsHtml = contacts.map(ct => {
-    const tels   = ct.tels   || (ct.tel   ? [{type:'固定',number:ct.tel}]:[]);
-    const faxes  = ct.faxes  || (ct.fax   ? [ct.fax]:[]);
-    const emails = ct.emails || (ct.email ? [ct.email]:[]);
+    const tels   = ct.tels   || (ct.tel   ? [{type:'固定',number:ct.tel}] : []);
+    const faxes  = ct.faxes  || (ct.fax   ? [ct.fax]   : []);
+    const emails = ct.emails || (ct.email ? [ct.email] : []);
     return `<div class="print-contact-card">
       <div class="print-contact-role">${escHtml(ct.role||'')}</div>
       <div class="print-contact-name">${escHtml(ct.name||'')}</div>
       ${ct.furigana ? `<div style="font-size:8pt;color:#666">${escHtml(ct.furigana)}</div>` : ''}
       ${ct.address  ? `<div class="print-contact-row">📍 ${escHtml(ct.address)}</div>` : ''}
       ${tels.filter(t=>t.number||t).map(t=>{
-        const num=typeof t==='object'?t.number:t;
-        const tp=typeof t==='object'?(t.type||'固定'):'固定';
-        return `<div class="print-contact-row">${TEL_ICONS[tp]||'📞'} ${escHtml(num)} <small>(${ {'携帯':'Mobile','固定':'固定','会社':'勤務先'}[tp]||tp })</small></div>`;
+        const num = typeof t === 'object' ? t.number : t;
+        const tp  = typeof t === 'object' ? (t.type||'固定') : '固定';
+        return `<div class="print-contact-row">${TEL_ICONS[tp]||'📞'} ${escHtml(num)} <small>(${TEL_LABELS[tp]||tp})</small></div>`;
       }).join('')}
       ${faxes.filter(v=>v).map(v=>`<div class="print-contact-row">📠 ${escHtml(v)}</div>`).join('')}
       ${emails.filter(v=>v).map(v=>`<div class="print-contact-row">✉ ${escHtml(v)}</div>`).join('')}
@@ -9138,37 +9245,96 @@ function printCaseDetail(caseId) {
     </div>`;
   }).join('');
 
-  // タスク一覧
+  /* ===== 相続人手配トラッカー（画面で有効にしているときだけ） ===== */
+  const souzokuRows = (c.souzoku_tracker && c.souzoku_tracker.rows) ? c.souzoku_tracker.rows : [];
+  const SOUZOKU_LABELS = { none:'未着手', going:'手配中', done:'取得済', na:'不要' };
+  const souzokuGrouped = {};
+  souzokuRows.forEach((r, idx) => {
+    const key = r.name || `(未入力${idx})`;
+    if (!souzokuGrouped[key]) souzokuGrouped[key] = [];
+    souzokuGrouped[key].push(r);
+  });
+  const souzokuHtml = `<table class="print-tasks">
+    <thead><tr>
+      <th style="width:26mm">相続人</th><th class="chk" style="width:12mm"></th>
+      ${SOUZOKU_DOC_TYPES.map(d => `<th>${escHtml(d)}</th>`).join('')}
+      <th style="width:26mm">手配先・備考</th>
+    </tr></thead>
+    <tbody>${Object.entries(souzokuGrouped).map(([name, items]) => items.map((row, bi) => {
+      const done = !!items[0].completed;
+      const nameCell = bi === 0
+        ? `<td rowspan="${items.length}">${escHtml(row.name || '')}${done ? ' <small>✓完了</small>' : ''}</td>`
+        : '';
+      return `<tr>
+        ${nameCell}
+        <td class="chk">${items.length > 1 ? `${bi + 1}回目` : ''}</td>
+        ${SOUZOKU_DOC_TYPES.map(doc => {
+          const st    = (row.statuses && row.statuses[doc]) || 'none';
+          const dates = (row.dates && row.dates[doc]) || {};
+          const dv    = st === 'done' ? (dates.done || '') : (st === 'going' ? (dates.going || '') : '');
+          const tr    = (row.trackings && row.trackings[doc]) || {};
+          return `<td class="chk">${SOUZOKU_LABELS[st] || st}
+            ${dv ? `<div class="print-note">${st === 'done' ? '取得' : '手配'} ${formatDate(dv)}</div>` : ''}
+            ${tr.tracking ? `<div class="print-note">追跡 ${escHtml(tr.tracking)}</div>` : ''}
+            ${tr.tracking_return ? `<div class="print-note">返信 ${escHtml(tr.tracking_return)}</div>` : ''}
+          </td>`;
+        }).join('')}
+        <td>${escHtml(row.memo || '')}</td>
+      </tr>`;
+    }).join('')).join('')}</tbody>
+  </table>`;
+
+  /* ===== 取得証明書等：画面と同じく小計・評価証明書等の区分け・合計を出す ===== */
+  const docs   = c.documents || [];
+  const hyoka  = docs.filter(d => d.category === 'hyoka' || (!d.category && (d.name||'').includes('評価')));
+  const others = docs.filter(d => d.category === 'other' || (!d.category && !(d.name||'').includes('評価')));
+  const docTotal = arr => arr.reduce((s, d) => s + ((parseInt((d.amount||'').replace(/,/g,'')) || 0) * (parseInt(d.count) || 1)), 0);
+  const docCount = arr => arr.reduce((s, d) => s + (parseInt(d.count) || 1), 0);
+  const docTable = arr => `<table class="print-tasks">
+    <thead><tr>
+      <th>書類名</th><th style="width:18mm">単価</th><th class="chk" style="width:13mm">通数</th>
+      <th style="width:20mm">小計</th><th style="width:22mm">取得日</th><th style="width:26mm">取得先</th><th>メモ</th>
+    </tr></thead>
+    <tbody>${arr.map(d => {
+      const a = parseInt((d.amount||'').replace(/,/g,'')) || 0;
+      const n = parseInt(d.count) || 1;
+      return `<tr>
+        <td>${escHtml(d.name || '')}</td>
+        <td class="num">${d.amount ? '¥' + money(d.amount) : '—'}</td>
+        <td class="chk">${escHtml(d.count || '1')}通</td>
+        <td class="num">${a ? '¥' + (a * n).toLocaleString('ja-JP') : '—'}</td>
+        <td>${escHtml(d.date || '—')}</td>
+        <td>${escHtml(d.from || '')}</td>
+        <td>${escHtml(d.memo || '')}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+  const docsHtml = `
+    ${others.length > 0 ? docTable(others) : ''}
+    ${hyoka.length > 0 ? `
+      <div class="print-subhead">📋 評価証明書等（合計 ${docCount(hyoka)}通${docTotal(hyoka) ? ' ／ ¥' + docTotal(hyoka).toLocaleString('ja-JP') : ''}）</div>
+      ${docTable(hyoka)}` : ''}`;
+
+  /* ===== タスク ===== */
   const taskRows = [...caseTasks]
-    .sort((a,b) => {
-      const ad = a.status==='完了'?1:0, bd = b.status==='完了'?1:0;
-      if (ad!==bd) return ad-bd;
-      return (a.deadline||'9999') < (b.deadline||'9999') ? -1 : 1;
+    .sort((a, b) => {
+      const ad = a.status === '完了' ? 1 : 0, bd = b.status === '完了' ? 1 : 0;
+      if (ad !== bd) return ad - bd;
+      return (a.deadline || '9999') < (b.deadline || '9999') ? -1 : 1;
     })
     .map(tk => `
-      <tr class="${tk.status==='完了'?'done':''}">
+      <tr class="${tk.status === '完了' ? 'done' : ''}">
         <td>${escHtml(tk.name)}</td>
         <td>${formatDate(tk.deadline)}</td>
-        <td>${escHtml(tk.status||'')}</td>
+        <td>${escHtml(tk.status || '')}</td>
         <td>${formatDate(tk.done_at)}</td>
-        <td>${escHtml(tk.memo||'')}</td>
+        <td>${escHtml(tk.memo || '')}</td>
       </tr>`).join('');
 
-  // 台帳
-  const ledger = c.ledger || [];
-  const ledgerUpper = ledger.map((r,i) => `
-    <tr>
-      <td style="text-align:center">${escHtml(r.row_no||String(i+1))}</td>
-      <td style="text-align:center">${escHtml(r.jutaku_num||'')}</td>
-      <td style="text-align:center">${escHtml(r.kankatsu||'')}</td>
-      <td>${escHtml(r.mokuteki||'')}</td>
-      <td>${escHtml(r.gen_in||'')}</td>
-      <td style="text-align:right">${escHtml(r.kazei||'')}</td>
-      <td style="text-align:right">${escHtml(r.menkyo||'')}</td>
-    </tr>`).join('');
+  /* ===== 備考・メモ ===== */
+  const memos = (c.memos && c.memos.length > 0) ? c.memos : (c.memo ? [{ date:'', text:c.memo }] : []);
 
-  const printDate = new Date().toLocaleDateString('ja-JP');
-
+  /* ===== 並びは案件詳細画面と同じ順にする ===== */
   const html = `
     <div class="print-title">${escHtml(c.case_name)}</div>
     <div class="print-meta">
@@ -9176,195 +9342,125 @@ function printCaseDetail(caseId) {
       <span>区分：${escHtml(c.category||'不動産登記')}</span>
       <span>種別：${escHtml(c.type||'—')}</span>
       <span>ステータス：${escHtml(c.status||'—')}</span>
+      ${c.waiting ? `<span>⏳ Waiting</span>` : ''}
       <span>印刷日：${printDate}</span>
     </div>
 
-    <div class="print-section">
-      <div class="print-section-title">案件基本情報</div>
+    ${upperRows.length > 0 ? sect('受付台帳（上段）', ledgerUpperHtml) : ''}
+    ${lowerRows.length > 0 ? sect('受付台帳（下段：当事者・不動産）', ledgerLowerHtml) : ''}
+    ${props.length > 0 ? sect('不動産一覧', propsHtml) : ''}
+
+    ${sect('案件基本情報', `
       <table class="print-table">
         <tr><th>依頼者名</th><td>${escHtml(c.client_name||'—')}</td></tr>
-        ${c.category === '商業・法人登記'
+        ${isCorporate
           ? `<tr><th>商号・法人名</th><td>${escHtml(c.company_name||'—')}</td></tr>
-        <tr><th>本店所在地</th><td>${escHtml(c.honten||'—')}</td></tr>`
+             <tr><th>本店所在地</th><td>${escHtml(c.honten||'—')}</td></tr>
+             ${c.corp_num ? `<tr><th>会社法人等番号</th><td>${escHtml(c.corp_num)}</td></tr>` : ''}`
           : `<tr><th>不動産所在地</th><td>${escHtml(c.location||'—')}</td></tr>`}
+        <tr><th>区分</th><td>${escHtml(c.category||'—')}</td></tr>
+        <tr><th>種別</th><td>${escHtml(c.type||'—')}</td></tr>
         <tr><th>受付日</th><td>${formatDate(c.received_date)}</td></tr>
         ${c.kanryo_yotei_date ? `<tr><th>登記完了予定日</th><td>${formatDate(c.kanryo_yotei_date)}</td></tr>` : ''}
-        ${c.memo ? `<tr><th>備考・メモ</th><td style="white-space:pre-wrap">${escHtml(c.memo)}</td></tr>` : ''}
-      </table>
-    </div>
+        ${c.hoteisozoku ? `<tr><th>法定相続情報一覧図</th><td>✅ 取得あり</td></tr>` : ''}
+      </table>`)}
 
-    ${(c.shinsei_dates||[]).length > 0 ? `
-    <div class="print-section">
-      <div class="print-section-title">管轄別 申請日・完了日</div>
+    ${(c.touki_list||[]).length > 0 ? sect(`登記事項証明書取得（${c.touki_list.length}件）`, `
       <table class="print-tasks">
-        <thead><tr><th>管轄</th><th>申請日</th><th>完了予定日</th><th>完了日</th></tr></thead>
-        <tbody>${(c.shinsei_dates||[]).map(s=>`<tr>
-          <td>${escHtml(s.kankatsu||'')}</td>
-          <td>${escHtml(s.shinsei||'')}</td>
-          <td>${escHtml(s.yotei||'')}</td>
-          <td>${escHtml(s.kanryo||'')}</td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>` : ''}
-
-    ${(c.touki_list||[]).length > 0 ? `
-    <div class="print-section">
-      <div class="print-section-title">登記事項証明書取得</div>
-      <table class="print-tasks">
-        <thead><tr><th>対象者・物件名</th><th>種別</th><th>通数</th><th>メモ</th></tr></thead>
-        <tbody>${(c.touki_list||[]).map(t=>`<tr>
+        <thead><tr><th>対象者・物件名</th><th style="width:30mm">種別</th><th class="chk" style="width:14mm">通数</th><th>メモ</th></tr></thead>
+        <tbody>${c.touki_list.map(t => `<tr>
           <td>${escHtml(t.target||'')}</td>
           <td>${escHtml(t.type||'')}</td>
-          <td>${escHtml(t.count||'')}通</td>
+          <td class="chk">${escHtml(t.count||'')}通</td>
           <td>${escHtml(t.memo||'')}</td>
         </tr>`).join('')}</tbody>
-      </table>
-    </div>` : ''}
+      </table>`) : ''}
 
-    ${(()=>{
+    ${(() => {
       const invs = c.invoices && c.invoices.length > 0 ? c.invoices
-        : (c.invoice_to||c.invoice_num||c.invoice_date)
-          ? [{to:c.invoice_to,num:c.invoice_num,date:c.invoice_date,paid:c.invoice_paid,memo:c.invoice_memo}]
+        : (c.invoice_to || c.invoice_num || c.invoice_date)
+          ? [{ to:c.invoice_to, num:c.invoice_num, date:c.invoice_date, paid:c.invoice_paid, memo:c.invoice_memo }]
           : [];
       if (!invs.length) return '';
-      return `<div class="print-section">
-        <div class="print-section-title">請求情報</div>
+      return sect(`請求情報（${invs.length}件）`, `
         <table class="print-tasks">
-          <thead><tr><th>請求先</th><th>請求書番号</th><th>請求日</th><th>入金確認日</th><th>メモ</th></tr></thead>
-          <tbody>${invs.map(inv=>`<tr>
+          <thead><tr><th>請求先</th><th style="width:28mm">請求書番号</th><th style="width:24mm">請求日</th><th style="width:24mm">入金確認日</th><th>メモ</th></tr></thead>
+          <tbody>${invs.map(inv => `<tr>
             <td>${escHtml(inv.to||'')}</td>
             <td>${escHtml(inv.num||'')}</td>
             <td>${escHtml(inv.date||'')}</td>
             <td>${escHtml(inv.paid||'')}</td>
             <td>${escHtml(inv.memo||'')}</td>
           </tr>`).join('')}</tbody>
-        </table>
-      </div>`;
+        </table>`);
     })()}
 
-    ${contacts.length > 0 ? `
-    <div class="print-section">
-      <div class="print-section-title">連絡先一覧</div>
-      <div class="print-contacts">${contactsHtml}</div>
-    </div>` : ''}
+    ${memos.length > 0 ? sect('備考・メモ', `
+      <table class="print-tasks">
+        <thead><tr><th style="width:26mm">日付</th><th>内容</th></tr></thead>
+        <tbody>${memos.map(m => `<tr>
+          <td style="white-space:nowrap">${escHtml(m.date||'')}</td>
+          <td style="white-space:pre-wrap">${renderHl(m.text||'')}</td>
+        </tr>`).join('')}</tbody>
+      </table>`) : ''}
 
-    ${(c.deliveries||[]).length > 0 ? `
-    <div class="print-section">
-      <div class="print-section-title">書類送付先</div>
-      ${(c.deliveries||[]).map((d, i) => `
-      <table class="print-tasks" style="${i > 0 ? 'margin-top:6px' : ''}">
+    ${contacts.length > 0 ? sect('連絡先一覧', `<div class="print-contacts">${contactsHtml}</div>`) : ''}
+
+    ${(c.souzoku_tracker_enabled && souzokuRows.length > 0)
+      ? sect(`相続人手配トラッカー（${Object.keys(souzokuGrouped).length}名）`, souzokuHtml) : ''}
+
+    ${docs.length > 0 ? sect(`取得証明書等（合計 ${docCount(others)}通${docTotal(others) ? ' ／ ¥' + docTotal(others).toLocaleString('ja-JP') : ''}）`, docsHtml) : ''}
+
+    ${(c.shinsei_dates||[]).length > 0 ? sect(`管轄別 申請日・完了日（${c.shinsei_dates.length}件）`, `
+      <table class="print-tasks">
+        <thead><tr><th style="width:34mm">管轄</th><th style="width:24mm">申請日</th><th style="width:26mm">完了予定日</th><th style="width:24mm">完了日</th><th>追跡番号</th></tr></thead>
+        <tbody>${c.shinsei_dates.map(s => {
+          const nums = s.trackings && s.trackings.length > 0 ? s.trackings : (s.tracking ? [s.tracking] : []);
+          return `<tr>
+            <td>${escHtml(s.kankatsu||'')}</td>
+            <td>${escHtml(s.shinsei||'')}</td>
+            <td>${escHtml(s.yotei||'')}</td>
+            <td>${escHtml(s.kanryo||'')}</td>
+            <td>${nums.map(n => escHtml(n)).join('<br>')}${s.tracking_return ? `${nums.length ? '<br>' : ''}返信 ${escHtml(s.tracking_return)}` : ''}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`) : ''}
+
+    ${(c.interviews||[]).length > 0 ? sect(`面談記録（${c.interviews.length}件）`, `
+      <table class="print-tasks">
+        <thead><tr><th style="width:28mm">日時</th><th style="width:26mm">場所</th><th style="width:26mm">相手</th><th>内容</th><th style="width:32mm">預かったもの</th></tr></thead>
+        <tbody>${[...c.interviews].sort((a,b) => a.datetime.localeCompare(b.datetime)).map(iv => `<tr>
+          <td style="white-space:nowrap">${escHtml(formatDatetime(iv.datetime))}</td>
+          <td>${escHtml(iv.place||'')}</td>
+          <td>${escHtml(iv.party||'')}</td>
+          <td style="white-space:pre-wrap">${renderHl(iv.content||'')}</td>
+          <td style="white-space:pre-wrap">${escHtml(iv.azukari||'')}</td>
+        </tr>`).join('')}</tbody>
+      </table>`) : ''}
+
+    ${(c.deliveries||[]).length > 0 ? sect(`書類送付先（${c.deliveries.length}件）`, c.deliveries.map((d, i) => `
+      <table class="print-tasks" style="${i > 0 ? 'margin-top:2mm' : ''}">
         <thead><tr><th colspan="2">${i+1}. ${escHtml(d.name||'送付先'+(i+1))}</th></tr></thead>
         <tbody>
-          <tr><td style="width:100px;color:#555">送付方法</td><td>${escHtml(d.method||'—')}</td></tr>
+          <tr><td style="width:26mm;color:#555">送付方法</td><td>${escHtml(d.method||'—')}</td></tr>
           ${d.zip||d.address ? `<tr><td style="color:#555">住所</td><td>${d.zip?`〒${escHtml(d.zip)} `:''}${escHtml(d.address||'')}</td></tr>` : ''}
           ${d.docs     ? `<tr><td style="color:#555">送付書類</td><td>${escHtml(d.docs)}</td></tr>` : ''}
           ${d.date     ? `<tr><td style="color:#555">送付日</td><td>${escHtml(d.date)}</td></tr>` : ''}
           ${d.handover ? `<tr><td style="color:#555">手渡し日</td><td>${escHtml(d.handover)}</td></tr>` : ''}
           ${(() => {
             const nums = d.trackings && d.trackings.length > 0 ? d.trackings : (d.tracking ? [d.tracking] : []);
-            return nums.map((num, i) => `<tr><td style="color:#555">追跡番号${nums.length > 1 ? (i+1) : ''}</td><td>${escHtml(num)}</td></tr>`).join('');
+            return nums.map((num, j) => `<tr><td style="color:#555">追跡番号${nums.length > 1 ? (j+1) : ''}</td><td>${escHtml(num)}</td></tr>`).join('');
           })()}
           ${d.tracking_return ? `<tr><td style="color:#555">返信追跡番号</td><td>${escHtml(d.tracking_return)}</td></tr>` : ''}
           ${d.memo     ? `<tr><td style="color:#555">メモ</td><td style="white-space:pre-wrap">${escHtml(d.memo)}</td></tr>` : ''}
         </tbody>
-      </table>`).join('')}
-    </div>` : ''}
+      </table>`).join('')) : ''}
 
-    ${(c.documents||[]).length > 0 ? `
-    <div class="print-section">
-      <div class="print-section-title">取得証明書等</div>
+    ${caseTasks.length > 0 ? sect(`タスク一覧（${caseTasks.length}件）`, `
       <table class="print-tasks">
-        <thead><tr><th>書類名</th><th>単価</th><th>通数</th><th>取得日</th><th>取得先</th><th>メモ</th></tr></thead>
-        <tbody>${(c.documents||[]).map(d=>`<tr>
-          <td>${escHtml(d.name||'')}</td>
-          <td>${d.amount?'¥'+escHtml(d.amount):'—'}</td>
-          <td>${escHtml(d.count||'1')}通</td>
-          <td>${escHtml(d.date||'')}</td>
-          <td>${escHtml(d.from||'')}</td>
-          <td>${escHtml(d.memo||'')}</td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>` : ''}
-
-    ${ledger.length > 0 ? `
-    <div class="print-section">
-      <div class="print-section-title">受付台帳（上段）</div>
-      <table class="print-tasks">
-        <thead><tr><th>No.</th><th>受託番号</th><th>管轄</th><th>登記の目的</th><th>登記原因</th><th>課税価格</th><th>登録免許税</th></tr></thead>
-        <tbody>${ledgerUpper}</tbody>
-      </table>
-    </div>` : ''}
-
-    ${(c.ledger_lower||[]).length > 0 ? `
-    <div class="print-section">
-      <div class="print-section-title">受付台帳（下段）</div>
-      <table class="print-tasks">
-        <thead><tr><th>No.</th><th>権利者1</th><th>権利者2</th><th>義務者1</th><th>義務者2</th><th>不動産1</th></tr></thead>
-        <tbody>${(c.ledger_lower||[]).map((r,i)=>`<tr>
-          <td>${escHtml(r.row_no||String(i+1))}</td>
-          <td>${escHtml((r.kenri||[])[0]||'')}</td>
-          <td>${escHtml((r.kenri||[])[1]||'')}</td>
-          <td>${escHtml((r.gimu||[])[0]||'')}</td>
-          <td>${escHtml((r.gimu||[])[1]||'')}</td>
-          <td>${escHtml((r.fudosan||[])[0]||'')}</td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>` : ''}
-
-    ${(c.properties||[]).length > 0 ? `
-    <div class="print-section">
-      <div class="print-section-title">不動産一覧</div>
-      <table class="print-tasks">
-        <thead><tr><th>不動産</th><th>所在／地番</th><th>家屋番号</th><th style="text-align:center">敷地権の数</th><th>マンション名等</th></tr></thead>
-        <tbody>${(c.properties||[]).map((p,i)=>`<tr>
-          <td style="text-align:center">${escHtml(String(i+1))}</td>
-          <td>${escHtml(p.location||'')}</td>
-          <td>${escHtml(p.kaoku||'')}</td>
-          <td style="text-align:center">${escHtml(p.shikichi_num||'')}</td>
-          <td>${escHtml(p.mansion||'')}</td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>` : ''}
-
-    ${(c.interviews||[]).length > 0 ? `
-    <div class="print-section">
-      <div class="print-section-title">面談記録</div>
-      <table class="print-tasks">
-        <thead><tr><th>日時</th><th>場所</th><th>内容</th><th>預かったもの</th></tr></thead>
-        <tbody>${[...(c.interviews||[])].sort((a,b)=>a.datetime.localeCompare(b.datetime)).map(iv=>`<tr>
-          <td style="white-space:nowrap">${escHtml(formatDatetime(iv.datetime))}</td>
-          <td>${escHtml(iv.place||'')}</td>
-          <td style="white-space:pre-wrap">${escHtml(iv.content||'')}</td>
-          <td style="white-space:pre-wrap">${escHtml(iv.azukari||'')}</td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>` : ''}
-
-    ${caseTasks.length > 0 ? `
-    <div class="print-section">
-      <div class="print-section-title">タスク一覧（${caseTasks.length}件）</div>
-      <table class="print-tasks">
-        <thead><tr><th>タスク名</th><th>期限</th><th>ステータス</th><th>完了日</th><th>メモ</th></tr></thead>
+        <thead><tr><th>タスク名</th><th style="width:24mm">期限</th><th style="width:20mm">ステータス</th><th style="width:24mm">完了日</th><th>メモ</th></tr></thead>
         <tbody>${taskRows}</tbody>
-      </table>
-    </div>` : ''}
-
-    ${(c.memos && c.memos.length > 0) || c.memo ? `
-    <div class="print-section">
-      <div class="print-section-title">備考・メモ</div>
-      <table class="print-tasks">
-        <thead><tr><th style="width:100px">日付</th><th>内容</th></tr></thead>
-        <tbody>${(() => {
-          const memos = c.memos && c.memos.length > 0
-            ? c.memos
-            : c.memo ? [{ date: '', text: c.memo }] : [];
-          return memos.map(m => `<tr>
-            <td style="white-space:nowrap">${escHtml(m.date||'')}</td>
-            <td style="white-space:pre-wrap">${escHtml(m.text||'')}</td>
-          </tr>`).join('');
-        })()}</tbody>
-      </table>
-    </div>` : ''}
+      </table>`) : ''}
 
     <div class="print-footer">印刷日：${printDate} ／ CaseFlow</div>
   `;
