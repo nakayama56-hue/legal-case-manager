@@ -2733,6 +2733,24 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   .print-ledger-lower th, .print-ledger-lower td {
     padding: 1mm; word-break: normal; overflow-wrap: break-word; line-break: strict;
   }
+  /* 面談記録は画面のタイルと同じ組み方。本文を紙幅いっぱいに使う */
+  .print-iv { border: 1px solid #bbb; padding: 2mm 3mm; margin-bottom: 2mm; page-break-inside: avoid; }
+  .print-iv-head {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 2mm 4mm;
+    border-bottom: 1px solid #ddd; padding-bottom: 1.5mm; margin-bottom: 1.5mm;
+  }
+  .print-iv-date { font-size: 9.5pt; font-weight: 700; white-space: nowrap; }
+  .print-iv-meta { font-size: 8.5pt; color: #555; }
+  .print-iv-body {
+    font-size: 9pt; white-space: pre-wrap;
+    word-break: normal; overflow-wrap: break-word; line-break: strict;
+  }
+  .print-iv-azukari {
+    font-size: 8.5pt; margin-top: 1.5mm; padding: 1mm 2mm;
+    background: #f5f5f5; border: 1px solid #ddd;
+  }
+  /* 中で区切ってよい節（面談記録）。1件ずつは .print-iv 側で割れないようにしてある */
+  .print-section.allow-break { page-break-inside: auto; }
   .print-footer { font-size: 8pt; color: #888; text-align: right; margin-top: 4mm; border-top: 1px solid #ccc; padding-top: 2mm; }
   .no-print { display: none !important; }
   .print-section { page-break-inside: avoid; }
@@ -3486,7 +3504,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.6</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -9130,7 +9148,7 @@ function printCaseDetail(caseId) {
     const n = Number(String(v == null ? '' : v).replace(/[^\d]/g, ''));
     return n ? n.toLocaleString('ja-JP') : '';
   };
-  const sect = (title, body) => `<div class="print-section"><div class="print-section-title">${title}</div>${body}</div>`;
+  const sect = (title, body, cls) => `<div class="print-section${cls ? ' ' + cls : ''}"><div class="print-section-title">${title}</div>${body}</div>`;
 
   /* ===== 受付台帳（上段）：画面と同じく「段」ごとに分ける。No.も段ごと ===== */
   const upperRows = c.ledger || [];
@@ -9426,17 +9444,17 @@ function printCaseDetail(caseId) {
         }).join('')}</tbody>
       </table>`) : ''}
 
-    ${(c.interviews||[]).length > 0 ? sect(`面談記録（${c.interviews.length}件）`, `
-      <table class="print-tasks">
-        <thead><tr><th style="width:28mm">日時</th><th style="width:26mm">場所</th><th style="width:26mm">相手</th><th>内容</th><th style="width:32mm">預かったもの</th></tr></thead>
-        <tbody>${[...c.interviews].sort((a,b) => a.datetime.localeCompare(b.datetime)).map(iv => `<tr>
-          <td style="white-space:nowrap">${escHtml(formatDatetime(iv.datetime))}</td>
-          <td>${escHtml(iv.place||'')}</td>
-          <td>${escHtml(iv.party||'')}</td>
-          <td style="white-space:pre-wrap">${renderHl(iv.content||'')}</td>
-          <td style="white-space:pre-wrap">${escHtml(iv.azukari||'')}</td>
-        </tr>`).join('')}</tbody>
-      </table>`) : ''}
+    ${(c.interviews||[]).length > 0 ? sect(`面談記録（${c.interviews.length}件）`,
+      [...c.interviews].sort((a,b) => a.datetime.localeCompare(b.datetime)).map(iv => `
+      <div class="print-iv">
+        <div class="print-iv-head">
+          <span class="print-iv-date">${escHtml(formatDatetime(iv.datetime))}</span>
+          ${iv.place ? `<span class="print-iv-meta">📍 ${escHtml(iv.place)}</span>` : ''}
+          ${iv.party ? `<span class="print-iv-meta">👥 ${escHtml(iv.party)}</span>` : ''}
+        </div>
+        <div class="print-iv-body">${renderHl(iv.content||'')}</div>
+        ${iv.azukari ? `<div class="print-iv-azukari"><b>📦 預かったもの：</b>${escHtml(iv.azukari)}</div>` : ''}
+      </div>`).join(''), 'allow-break') : ''}
 
     ${(c.deliveries||[]).length > 0 ? sect(`書類送付先（${c.deliveries.length}件）`, c.deliveries.map((d, i) => `
       <table class="print-tasks" style="${i > 0 ? 'margin-top:2mm' : ''}">
