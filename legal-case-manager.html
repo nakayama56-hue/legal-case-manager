@@ -773,7 +773,45 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   flex: 1;
   display: flex;
   align-items: center;
+  gap: 10px;
+  min-width: 0;
   filter: none;
+}
+
+/* ── メイン画面 左上のロゴ ──────────────────────────────
+   かつては font-family に 'Comfortaa' を指定していたが、この書体は
+   入っておらず、外部読み込みは禁止（4章）なので一度も効いていなかった。
+   Mac に必ず入っている Avenir Next に替えてある。
+
+   色は --color-primary / --color-accent をそのまま使う。テーマを替えれば
+   自動で追従するので、JS で色を塗り直す必要がない
+   （このために updateLogoColor を廃止した）。
+
+   ★ 字の大きさと印の大きさを変えたいときは、下の 2 つの数字だけを触ること。
+     3 か所に散らばっていた旧来の直書きは、ここ 1 か所に集約してある */
+.app-logo-mark {
+  width: 30px; height: 30px;
+  flex-shrink: 0;
+}
+.app-logo-word {
+  font-family: 'Avenir Next','Avenir',sans-serif;
+  font-weight: 600;
+  font-size: 27px;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+  text-shadow: none;
+  white-space: nowrap;
+}
+/* 案件詳細などの見出しに切り替わったとき。印はそのまま残る */
+.app-logo-heading {
+  font-family: 'Avenir Next','Avenir',sans-serif;
+  font-weight: 500;
+  font-size: 19px;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+  opacity: 0.82;
+  text-shadow: none;
+  white-space: nowrap;
 }
 
 .header-actions { display: flex; gap: 8px; align-items: center; }
@@ -2036,7 +2074,12 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 
   /* Header */
   #header { padding: 0 12px; gap: 8px; height: 52px; }
-  .header-title { font-size: 14px; }
+  .header-title { font-size: 14px; gap: 7px; }
+  /* ロゴは span 側で大きさを持っているので、.header-title の font-size では
+     届かない。狭い画面ではヘッダーが 52px に縮むぶん、ここで明示的に下げる */
+  .app-logo-mark { width: 24px; height: 24px; }
+  .app-logo-word { font-size: 21px; }
+  .app-logo-heading { font-size: 16px; }
   .btn-primary { padding: 6px 10px; font-size: 12px; }
 
   /* Hamburger button */
@@ -3298,7 +3341,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.9</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.0</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3325,7 +3368,7 @@ tr.row-waiting:hover > td {
     <header id="header">
       <!-- Hamburger (mobile only) -->
       <button id="hamburger" onclick="openSidebar()" aria-label="メニュー">☰</button>
-      <div class="header-title" id="header-title"><span id="header-logo-text" style="font-family:'Comfortaa',sans-serif;font-weight:300;font-size:22px;letter-spacing:0.04em;color:rgba(255,255,255,0.88);text-shadow:none">CaseFlow</span></div>
+      <div class="header-title" id="header-title"><svg class="app-logo-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></svg><span id="header-logo-text" class="app-logo-word">CaseFlow</span></div>
       <div class="header-actions">
         <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存" style="padding:5px 12px;font-size:12px;font-weight:700">💾<span class="btn-header-backup-label" style="margin-left:5px">保存</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
@@ -4920,26 +4963,12 @@ function setTheme(theme) {
   document.querySelectorAll('.theme-swatch').forEach(el => {
     el.classList.toggle('active', el.dataset.theme === theme);
   });
-  updateLogoColor(theme);
 }
 
 // 明るいテーマかどうか。消したテーマ名が保存されている場合も
 // 既定へ読み替えてから判定する（setTheme と同じ扱いにするため）
 function isLightTheme(theme) {
   return LIGHT_THEMES.includes(THEMES.includes(theme) ? theme : DEFAULT_THEME);
-}
-
-function updateLogoColor(theme) {
-  const isLight = isLightTheme(theme);
-  const logoEl = document.getElementById('header-logo-text');
-  if (!logoEl) return;
-  if (isLight) {
-    logoEl.style.color = 'rgba(30,80,160,0.85)';
-    logoEl.style.textShadow = '0 1px 4px rgba(180,210,255,0.5)';
-  } else {
-    logoEl.style.color = 'rgba(255,255,255,0.88)';
-    logoEl.style.textShadow = 'none';
-  }
 }
 
 function initAppearance() {
@@ -5280,18 +5309,12 @@ function showView(name) {
   const _title = titles[name] || '';
   const _logoTxt = document.getElementById('header-logo-text');
   if (_logoTxt) {
-    if (!_title || _title === 'CaseFlow') {
-      const _isLight = (typeof isLightTheme !== 'undefined') && isLightTheme(localStorage.getItem('app_theme'));
-      const _logoColor = _isLight ? 'rgba(30,80,160,0.85)' : 'rgba(255,255,255,0.88)';
-      const _logoShadow = _isLight ? '0 1px 4px rgba(180,210,255,0.5)' : 'none';
-      _logoTxt.style.cssText = `font-family:'Comfortaa',sans-serif;font-weight:300;font-size:22px;letter-spacing:0.04em;color:${_logoColor};text-shadow:${_logoShadow}`;
-      _logoTxt.textContent = 'CaseFlow';
-    } else {
-      const _isLight2 = (typeof isLightTheme !== 'undefined') && isLightTheme(localStorage.getItem('app_theme'));
-      const _logoColor2 = _isLight2 ? 'rgba(30,80,160,0.70)' : 'rgba(255,255,255,0.75)';
-      _logoTxt.style.cssText = `font-family:'Comfortaa',sans-serif;font-weight:300;font-size:18px;letter-spacing:0.08em;color:${_logoColor2};text-shadow:none`;
-      _logoTxt.textContent = _title;
-    }
+    // 字づかいと色は CSS（.app-logo-word / .app-logo-heading）が受け持つ。
+    // ここで style を直書きすると、大きさの指定が 3 か所に散らばって
+    // 直し忘れの元になる（Comfortaa が効いていなかったのがまさにこれ）
+    const _isLogo = (!_title || _title === 'CaseFlow');
+    _logoTxt.className = _isLogo ? 'app-logo-word' : 'app-logo-heading';
+    _logoTxt.textContent = _isLogo ? 'CaseFlow' : _title;
   }
 
   // Mobile: close sidebar, update bottom nav
