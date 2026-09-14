@@ -75,25 +75,6 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ダークモード */
-body.dark-mode {
-  --bg-primary: #151c2e;
-  --bg-secondary: rgba(30,40,60,0.72);
-  --bg-sidebar: rgba(10,14,26,0.88);
-  --bg-sidebar-hover: rgba(255,255,255,0.09);
-  --bg-header: rgba(18,26,44,0.80);
-  --text-primary: #f0f4f8;
-  --text-secondary: #c8d0db;
-  --text-muted: #8a95a3;
-  --border-color: rgba(60,80,120,0.45);
-  --border-light: rgba(40,60,100,0.4);
-  --glass-border: rgba(255,255,255,0.10);
-  --glass-border-dark: rgba(255,255,255,0.06);
-  --glass-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 1.5px 4px rgba(0,0,0,0.25);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
-}
-
 /* サイドバートグルスイッチ */
 .sidebar-toggle-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -132,165 +113,83 @@ body {
 }
 
 /* =====================================================
-   テーマ定義（9種類）
+   テーマ定義（2種類）
+   2026年9月14日、16種類からここまで絞った。
+   16種あっても印象が変わらなかったのは、どれも body の背景（壁紙）しか
+   変えておらず、パネル・文字・アクセント色が全種共通だったため。
+   いまは背景に加えて、パネルの不透明度・枠線・影・アクセント色まで
+   一組で変える。
    ===================================================== */
 
-/* シルバー */
-/* シルバー（ニュートラル） */
-body[data-theme="silver"] {
-  background: #f0f2f5;
-  background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(200,210,230,0.60) 0%, transparent 55%),
-    radial-gradient(ellipse at 100% 0%, rgba(220,205,235,0.45) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 100%, rgba(195,225,220,0.40) 0%, transparent 55%);
-  background-attachment: fixed;
-}
-/* アクア→オレンジ（Huawei：シアン上→オレンジ下） */
-body[data-theme="aqua"] {
-  background: linear-gradient(to bottom, #7ee8e8 0%, #b8dff5 30%, #f5d5a8 65%, #f5a050 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-/* ラベンダー→ピーチ（Huawei：パープル上→ベージュ下） */
-body[data-theme="lavender"] {
-  background: linear-gradient(to bottom, #c4a8e8 0%, #d8c0f0 30%, #eeddd0 65%, #e8c8a8 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-/* フォレスト（Huawei：深緑上→白銀下） */
-body[data-theme="forest"] {
-  background: linear-gradient(to bottom, #5a7a48 0%, #8aaa70 30%, #c8d8b8 65%, #e8ede4 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-/* パール（Huawei：白→シャンパン） */
-body[data-theme="pearl"] {
-  background: linear-gradient(to bottom, #f8f8f8 0%, #f0ece4 40%, #e8dfc8 70%, #d8cca8 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-/* オニキス（Huawei：黒→チャコール） */
-body[data-theme="onyx"] {
-  background: linear-gradient(to bottom, #1a1a1a 0%, #2a2a2e 40%, #38383e 70%, #484850 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-
-/* オニキステーマ用：テキストを白系に */
-body[data-theme="onyx"] #header,
-body[data-theme="onyx"] .table-container,
-body[data-theme="onyx"] .case-detail-header,
-body[data-theme="onyx"] .info-card,
-body[data-theme="onyx"] .today-panel,
-body[data-theme="onyx"] .modal {
-  background: rgba(255,255,255,0.08) !important;
-  border-color: rgba(255,255,255,0.12) !important;
-  color: #f0f0f0;
-}
-body[data-theme="onyx"] { color: #f0f0f0; }
-body[data-theme="onyx"] .nav-picker-label { color: #aaa; }
-
-/* 新テーマ */
-body[data-theme="sky"] {
-  background: #e8f5fb;
-  background-image: linear-gradient(to bottom, #6ab8e8 0%, #d8eef8 45%, #f8d8e0 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-body[data-theme="sakura"] {
-  background: #fdf0f2;
-  background-image: linear-gradient(to bottom, #f0b0c0 0%, #f8d8e0 50%, #fdf0f0 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-body[data-theme="mint"] {
-  background: #f0fbf8;
-  background-image: linear-gradient(to bottom, #80d0b8 0%, #c0e8e0 50%, #f0fbf8 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-body[data-theme="lavender2"] {
-  background: #f5f0ff;
-  background-image: linear-gradient(to bottom, #b0a8e8 0%, #d8d0f5 50%, #f5f0ff 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-body[data-theme="spring"] {
-  background: #f0f8ee;
-  background-image: linear-gradient(to bottom, #a8d8a0 0%, #d0ecc8 50%, #f0f8ee 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-/* ===== リキッドグラス系テーマ 5種 ===== */
-/* liquid1: アイス — 白〜淡ブルーの冷たい透明感 */
-body[data-theme="liquid1"] {
+/* 霜（しも）── 軽い。白〜淡い青。既定。
+   旧「リキッド・アイス」の後継。:root の既定値がこの地に合わせて
+   調整済みなので、ここでは背景だけを指定する */
+body[data-theme="frost"] {
   background: #f0f5ff;
   background-image:
-    radial-gradient(ellipse at 15% 10%, rgba(255,255,255,0.98) 0%, transparent 45%),
-    radial-gradient(ellipse at 85% 5%,  rgba(195,220,255,0.70) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 90%, rgba(210,228,255,0.60) 0%, transparent 55%),
-    radial-gradient(ellipse at 75% 60%, rgba(230,242,255,0.50) 0%, transparent 40%),
-    linear-gradient(160deg, #e8f2ff 0%, #f5f9ff 50%, #ffffff 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-/* liquid2: ミスト — 白〜エメラルドの朝霧 */
-body[data-theme="liquid2"] {
-  background: #f0faf6;
-  background-image:
-    radial-gradient(ellipse at 20% 5%,  rgba(255,255,255,0.98) 0%, transparent 40%),
-    radial-gradient(ellipse at 80% 15%, rgba(180,240,215,0.65) 0%, transparent 50%),
-    radial-gradient(ellipse at 40% 85%, rgba(195,245,225,0.55) 0%, transparent 50%),
-    radial-gradient(ellipse at 65% 50%, rgba(220,250,238,0.45) 0%, transparent 40%),
-    linear-gradient(155deg, #e8f8f1 0%, #f4fbf7 50%, #ffffff 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-/* liquid3: ローズ — 白〜ローズクォーツの優しい輝き */
-body[data-theme="liquid3"] {
-  background: #fdf5f8;
-  background-image:
-    radial-gradient(ellipse at 10% 10%, rgba(255,255,255,0.98) 0%, transparent 42%),
-    radial-gradient(ellipse at 88% 8%,  rgba(255,210,228,0.65) 0%, transparent 48%),
-    radial-gradient(ellipse at 55% 88%, rgba(250,215,232,0.55) 0%, transparent 52%),
-    radial-gradient(ellipse at 30% 60%, rgba(255,230,240,0.45) 0%, transparent 38%),
-    linear-gradient(150deg, #fce8ef 0%, #fdf2f5 50%, #ffffff 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-/* liquid4: シャンパン — 白〜ゴールドのシャンパン気泡 */
-body[data-theme="liquid4"] {
-  background: #fdfaf0;
-  background-image:
-    radial-gradient(ellipse at 25% 8%,  rgba(255,255,255,0.98) 0%, transparent 42%),
-    radial-gradient(ellipse at 78% 12%, rgba(245,228,170,0.65) 0%, transparent 48%),
-    radial-gradient(ellipse at 45% 82%, rgba(248,232,178,0.55) 0%, transparent 52%),
-    radial-gradient(ellipse at 70% 55%, rgba(252,242,205,0.45) 0%, transparent 40%),
-    linear-gradient(158deg, #f8f0d8 0%, #fdf8ea 50%, #ffffff 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-/* liquid5: クォーツ — 白〜薄紫の水晶 */
-body[data-theme="liquid5"] {
-  background: #f8f4ff;
-  background-image:
-    radial-gradient(ellipse at 18% 8%,  rgba(255,255,255,0.98) 0%, transparent 42%),
-    radial-gradient(ellipse at 82% 10%, rgba(218,200,255,0.65) 0%, transparent 48%),
-    radial-gradient(ellipse at 50% 88%, rgba(225,210,255,0.55) 0%, transparent 52%),
-    radial-gradient(ellipse at 35% 58%, rgba(238,228,255,0.45) 0%, transparent 38%),
-    linear-gradient(152deg, #ede5ff 0%, #f5f0ff 50%, #ffffff 100%);
+    radial-gradient(ellipse at 15% 8%,  rgba(255,255,255,0.98) 0%, transparent 45%),
+    radial-gradient(ellipse at 88% 4%,  rgba(188,214,255,0.72) 0%, transparent 52%),
+    radial-gradient(ellipse at 48% 96%, rgba(205,226,255,0.60) 0%, transparent 55%),
+    linear-gradient(160deg, #e4effd 0%, #f3f8ff 52%, #ffffff 100%);
   background-attachment: fixed;
   min-height: 100vh;
 }
 
+/* 銀鼠（ぎんねず）── 締まる。中くらいの明るさの灰青の地に、ほぼ真っ白なパネル。
+   地を淡くしないのが肝。パネルとの明度差で輪郭が立つ。
+   淡くすると霜と見分けがつかなくなり、16種の失敗を繰り返すことになる */
+body[data-theme="ginnezu"] {
+  background: #a9b4c4;
+  background-image:
+    radial-gradient(ellipse at 14% 6%,  rgba(214,223,234,0.75) 0%, transparent 50%),
+    radial-gradient(ellipse at 88% 90%, rgba(142,155,174,0.60) 0%, transparent 55%),
+    linear-gradient(165deg, #9daabc 0%, #b2bccb 52%, #c8d1dd 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  /* 地が濃いぶん、アクセントも少し濃くして釣り合わせる。
+     不動産＝寒色／商業＝暖色の対は変えない */
+  --color-primary: #1f5fa8;
+  --color-primary-light: #3579c4;
+  --color-primary-dark: #184d8b;
+  --color-accent: #ce711f;
+  --color-info: #1f5fa8;
+  --border-color: rgba(150,164,184,0.55);
+  --border-light: rgba(170,183,201,0.45);
+  --glass-border: rgba(255,255,255,0.72);
+  --glass-shadow: 0 12px 28px rgba(38,52,74,0.16), 0 2px 5px rgba(38,52,74,0.13);
+  --shadow-sm: 0 1px 3px rgba(38,52,74,0.10);
+  --shadow-md: 0 4px 16px rgba(38,52,74,0.14);
+  --shadow-lg: 0 12px 32px rgba(38,52,74,0.18);
+}
 
-
-/* フォレストテーマ：ガラスを少し暗く */
-body[data-theme="forest"] .table-container,
-body[data-theme="forest"] .case-detail-header,
-body[data-theme="forest"] .info-card,
-body[data-theme="forest"] .today-panel {
-  background: rgba(255,255,255,0.55) !important;
+/* 銀鼠：ガラス面を白く、影を深く。
+   パネルの色は rgba(255,255,255,…) で各所に直書きされていて（0.45〜0.82）、
+   そのままでは中明度の地に沈んで文字が読みにくい。
+   ここに挙げた面は、かつてオニキスとフォレストが上書きしていたのと同じ組。 */
+body[data-theme="ginnezu"] #header {
+  background: rgba(255,255,255,0.88) !important;
+  border-bottom-color: rgba(255,255,255,0.75) !important;
+}
+body[data-theme="ginnezu"] .table-container,
+body[data-theme="ginnezu"] .case-detail-header,
+body[data-theme="ginnezu"] .info-card,
+body[data-theme="ginnezu"] .today-panel,
+body[data-theme="ginnezu"] .souzoku-tracker,
+body[data-theme="ginnezu"] .modal {
+  background: rgba(255,255,255,0.94) !important;
+  border-color: rgba(255,255,255,0.72) !important;
+  box-shadow: 0 12px 28px rgba(38,52,74,0.16), 0 1px 0 rgba(255,255,255,0.9) !important;
+}
+/* 案件タイル。枠線は区分色（青／橙）なので触らない */
+body[data-theme="ginnezu"] .case-tile-card,
+body[data-theme="ginnezu"] .case-tile-card.tile-active {
+  background: rgba(255,255,255,0.94) !important;
+  box-shadow: 0 2px 5px rgba(38,52,74,0.13), 0 12px 28px rgba(38,52,74,0.16) !important;
+}
+body[data-theme="ginnezu"] .case-tile-card:hover,
+body[data-theme="ginnezu"] .case-tile-card.tile-active:hover {
+  background: rgba(255,255,255,0.98) !important;
+  box-shadow: 0 3px 8px rgba(38,52,74,0.16), 0 18px 38px rgba(38,52,74,0.22) !important;
 }
 
 
@@ -550,10 +449,6 @@ body[data-theme="forest"] .today-panel {
 }
 .shinsei-tl-row.tl-cat-fudosan { background: #f1f7fc; border-left: 3px solid #6ba3d6; }
 .shinsei-tl-row.tl-cat-kogyo   { background: #fbf5ed; border-left: 3px solid #d99a5b; }
-body.dark-mode .shinsei-tl-row.tl-cat-fudosan,
-body[data-theme="onyx"] .shinsei-tl-row.tl-cat-fudosan { background: rgba(107,163,214,0.12); border-left-color: #6ba3d6; }
-body.dark-mode .shinsei-tl-row.tl-cat-kogyo,
-body[data-theme="onyx"] .shinsei-tl-row.tl-cat-kogyo { background: rgba(217,154,91,0.12); border-left-color: #d99a5b; }
 .shinsei-tl-row:last-child { margin-bottom: 0; }
 .shinsei-tl-label {
   width: 100%;
@@ -675,147 +570,15 @@ body[data-theme="onyx"] .shinsei-tl-row.tl-cat-kogyo { background: rgba(217,154,
 }
 .theme-swatch:hover { transform: scale(1.2); border-color: rgba(255,255,255,0.7); }
 .theme-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.4); }
-.theme-swatch[data-theme="silver"]   { background: linear-gradient(135deg, #c8d4e8, #dde8f5); }
-.theme-swatch[data-theme="aqua"]     { background: linear-gradient(to bottom, #7ee8e8, #f5a050); }
-.theme-swatch[data-theme="lavender"] { background: linear-gradient(to bottom, #c4a8e8, #e8c8a8); }
-.theme-swatch[data-theme="forest"]   { background: linear-gradient(to bottom, #5a7a48, #e8ede4); }
-.theme-swatch[data-theme="pearl"]    { background: linear-gradient(to bottom, #f8f8f8, #d8cca8); }
-.theme-swatch[data-theme="onyx"]     { background: linear-gradient(to bottom, #1a1a1a, #484850); }
-.theme-swatch[data-theme="sky"]      { background: linear-gradient(to bottom, #6ab8e8, #f8d8e0); }
-.theme-swatch[data-theme="sakura"]   { background: linear-gradient(to bottom, #f0b0c0, #fdf0f0); }
-.theme-swatch[data-theme="mint"]     { background: linear-gradient(to bottom, #80d0b8, #f0fbf8); }
-.theme-swatch[data-theme="lavender2"]{ background: linear-gradient(to bottom, #b0a8e8, #f5f0ff); }
-.theme-swatch[data-theme="spring"]   { background: linear-gradient(to bottom, #a8d8a0, #f0f8ee); }
-.theme-swatch[data-theme="liquid1"] { background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(220,235,255,0.85) 50%, rgba(200,220,255,0.90) 100%); border-color: rgba(180,210,255,0.6); }
-.theme-swatch[data-theme="liquid2"] { background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(220,255,240,0.85) 50%, rgba(190,240,220,0.90) 100%); border-color: rgba(160,230,200,0.6); }
-.theme-swatch[data-theme="liquid3"] { background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,235,245,0.85) 50%, rgba(245,210,235,0.90) 100%); border-color: rgba(230,180,220,0.6); }
-.theme-swatch[data-theme="liquid4"] { background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,248,220,0.85) 50%, rgba(245,230,185,0.90) 100%); border-color: rgba(220,200,150,0.6); }
-.theme-swatch[data-theme="liquid5"] { background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,230,255,0.85) 50%, rgba(220,205,255,0.90) 100%); border-color: rgba(195,170,245,0.6); }
+.theme-swatch[data-theme="frost"]   { background: linear-gradient(135deg, #e4effd 0%, #f3f8ff 55%, #ffffff 100%); border-color: rgba(180,210,255,0.6); }
+.theme-swatch[data-theme="ginnezu"] { background: linear-gradient(135deg, #9daabc 0%, #b2bccb 52%, #c8d1dd 100%); border-color: rgba(255,255,255,0.55); }
 
-
-/* ===== ダーク系テーマ共通：ハードコード色の上書き ===== */
-body.dark-mode,
-body[data-theme="onyx"] {
-  --hc-primary-text: #e2e8f0;
-  --hc-secondary-text: #94a3b8;
-  --hc-muted-text: #64748b;
-  --hc-accent: #60a5fa;
-  --hc-green: #4ade80;
-  --hc-blue: #93c5fd;
-}
-
-/* テーブル・カード内のハードコード暗色テキスト */
-body.dark-mode td, body[data-theme="onyx"] td,
-body.dark-mode th, body[data-theme="onyx"] th {
-  color: var(--text-primary) !important;
-}
-
-/* インラインstyle="color:#xxxxx"への対応 — 主要な暗色クラスを上書き */
-body.dark-mode .text-dark, body[data-theme="onyx"] .text-dark,
-body.dark-mode .case-name, body[data-theme="onyx"] .case-name,
-body.dark-mode .tile-name, body[data-theme="onyx"] .tile-name,
-body.dark-mode .cd-hero-name, body[data-theme="onyx"] .cd-hero-name,
-body.dark-mode .cd-section-title, body[data-theme="onyx"] .cd-section-title,
-body.dark-mode .info-row-label, body[data-theme="onyx"] .info-row-label,
-body.dark-mode .info-row-value, body[data-theme="onyx"] .info-row-value,
-body.dark-mode .modal-title, body[data-theme="onyx"] .modal-title,
-body.dark-mode .form-label, body[data-theme="onyx"] .form-label,
-body.dark-mode label, body[data-theme="onyx"] label,
-body.dark-mode .section-label, body[data-theme="onyx"] .section-label,
-body.dark-mode .field-label, body[data-theme="onyx"] .field-label,
-body.dark-mode .task-name, body[data-theme="onyx"] .task-name,
-body.dark-mode .nav-label, body[data-theme="onyx"] .nav-label {
-  color: var(--text-primary) !important;
-}
-
-/* カレンダー */
-body.dark-mode .cal-day-num, body[data-theme="onyx"] .cal-day-num { color: var(--text-primary) !important; }
-body.dark-mode .cal-day.saturday .cal-day-num, body[data-theme="onyx"] .cal-day.saturday .cal-day-num { color: #7dd3fc !important; }
-body.dark-mode .cal-day.sunday .cal-day-num, body[data-theme="onyx"] .cal-day.sunday .cal-day-num { color: #fca5a5 !important; }
-body.dark-mode .cal-header-cell, body[data-theme="onyx"] .cal-header-cell { color: var(--text-secondary) !important; }
-
-/* 入力フォーム */
-body.dark-mode input, body[data-theme="onyx"] input,
-body.dark-mode select, body[data-theme="onyx"] select,
-body.dark-mode textarea, body[data-theme="onyx"] textarea {
-  background: rgba(255,255,255,0.08) !important;
-  color: var(--text-primary) !important;
-  border-color: rgba(255,255,255,0.15) !important;
-}
-body.dark-mode input::placeholder, body[data-theme="onyx"] input::placeholder,
-body.dark-mode textarea::placeholder, body[data-theme="onyx"] textarea::placeholder {
-  color: rgba(255,255,255,0.35) !important;
-}
-
-/* モーダル内テキスト */
-body.dark-mode .modal, body[data-theme="onyx"] .modal { color: var(--text-primary) !important; }
-body.dark-mode .modal p, body[data-theme="onyx"] .modal p,
-body.dark-mode .modal span, body[data-theme="onyx"] .modal span,
-body.dark-mode .modal div, body[data-theme="onyx"] .modal div { color: inherit; }
 
 /* 送付追跡パネル */
 .tracking-row { transition: background 0.15s; }
 .tracking-row:hover { background: #f0f7ff; }
-body.dark-mode .tracking-row:hover, body[data-theme="onyx"] .tracking-row:hover { background: rgba(255,255,255,0.07); }
-body.dark-mode .today-panel, body[data-theme="onyx"] .today-panel { color: var(--text-primary) !important; }
 
-/* タイムライン */
-body.dark-mode .tl-label, body[data-theme="onyx"] .tl-label { color: var(--text-secondary) !important; }
-body.dark-mode .tl-case, body[data-theme="onyx"] .tl-case { color: var(--text-muted) !important; }
-
-/* セクションヘッダー */
-body.dark-mode .table-toolbar span, body[data-theme="onyx"] .table-toolbar span { color: var(--text-primary) !important; }
-
-/* onyx固有：CSS変数が未定義のため明示的に設定 */
-body[data-theme="onyx"] {
-  --text-primary: #f0f0f0;
-  --text-secondary: #c0c0c8;
-  --text-muted: #88889a;
-  --bg-primary: #1a1a1e;
-  --bg-secondary: rgba(255,255,255,0.07);
-  --border-color: rgba(255,255,255,0.12);
-  --glass-border: rgba(255,255,255,0.10);
-}
-body[data-theme="onyx"] input,
-body[data-theme="onyx"] select,
-body[data-theme="onyx"] textarea {
-  background: rgba(255,255,255,0.08) !important;
-  color: #f0f0f0 !important;
-  border-color: rgba(255,255,255,0.15) !important;
-}
-
-/* ダークモード補正 */
-body.dark-mode .modal {
-  background: rgba(18,28,50,0.80);
-  border-color: rgba(255,255,255,0.10);
-}
-body.dark-mode .case-tile-card {
-  background: rgba(24,36,62,0.68);
-  border-color: rgba(255,255,255,0.10);
-}
-body.dark-mode .today-panel {
-  background: rgba(20,32,54,0.70);
-  border-color: rgba(255,255,255,0.08);
-}
-body.dark-mode .table-container {
-  background: rgba(20,32,54,0.65);
-  border-color: rgba(255,255,255,0.08);
-}
-body.dark-mode .case-detail-header,
-body.dark-mode .info-card {
-  background: rgba(22,34,58,0.70);
-  border-color: rgba(255,255,255,0.09);
-}
-body.dark-mode .info-card-header {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.08);
-}
-body.dark-mode #header {
-  background: rgba(12,20,38,0.75);
-  border-color: rgba(255,255,255,0.08);
-}
-
-
+/* =====================================================
    Layout
    ===================================================== */
 #app { display: flex; min-height: 100vh; }
@@ -3382,22 +3145,6 @@ tr.row-waiting:hover > td {
 }
 .case-tile-card .tile-pin { font-size: 12px !important; line-height: 1; }
 
-/* --- 暗いテーマ：カードも暗くする（文字色は明るいまま使えるように）--- */
-body.dark-mode .case-tile-card,
-body[data-theme="onyx"] .case-tile-card,
-body.dark-mode .case-tile-card.tile-active,
-body[data-theme="onyx"] .case-tile-card.tile-active {
-  background: rgba(255,255,255,0.08) !important;
-  /* 枠線が区分色になったので、暗い地でも沈まないよう色相は保って明度だけ上げる */
-  border-color: color-mix(in srgb, var(--tile-accent) 60%, #ffffff) !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.25), 0 6px 18px rgba(0,0,0,0.28) !important;
-}
-body.dark-mode .case-tile-card:hover,
-body[data-theme="onyx"] .case-tile-card:hover {
-  background: rgba(255,255,255,0.13) !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 14px 32px rgba(0,0,0,0.4) !important;
-}
-
 /* --- 区分マーク（面）と印を上の行にそろえる。
        案件名は幅いっぱいを使い、カード間で高さがそろう（2026年9月8日） --- */
 .case-tile-card .tile-toprow {
@@ -3432,20 +3179,6 @@ body[data-theme="onyx"] .case-tile-card:hover {
 .cal-ext-banner .ceb-ico { flex: 0 0 auto; opacity: 0.85; }
 .cal-ext-banner .ceb-text { flex: 0 1 auto; min-width: 0; }
 .cal-ext-banner .ceb-out { flex: 0 0 auto; opacity: 0.6; }
-/* 暗いテーマ：--color-primary はテーマで変わらない一定の濃い青なので、
-   そのままだと暗い地に沈む。色相は保ったまま明度だけ上げる */
-body.dark-mode .cal-ext-banner,
-body[data-theme="onyx"] .cal-ext-banner {
-  color: color-mix(in srgb, var(--color-primary) 40%, #fff);
-  border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
-}
-body.dark-mode .cal-ext-banner:hover,
-body[data-theme="onyx"] .cal-ext-banner:hover {
-  background: color-mix(in srgb, var(--color-primary) 34%, transparent);
-  border-color: color-mix(in srgb, var(--color-primary) 80%, transparent);
-}
-
 /* --- 未完了タスクのバッジ（2026年9月8日）。置き場所は枠の右上
        （8.4.2 でご本人のご指示により、8.4.0〜8.4.1 の「右端の中央」から戻した）。
 
@@ -3487,8 +3220,6 @@ body[data-theme="onyx"] .cal-ext-banner:hover {
               0 1px 3px rgba(20,30,60,0.22);
   pointer-events: none;
 }
-body.dark-mode .case-tile-card,
-body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85); }
 </style>
 <!-- generated: 1774151282.3539512 -->
 </head>
@@ -3504,7 +3235,7 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.7</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3518,22 +3249,8 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
       <div class="theme-picker">
         <div class="theme-picker-label">🎨 テーマ</div>
         <div class="theme-swatches">
-          <div class="theme-swatch" data-theme="silver"    onclick="setTheme('silver')"    title="シルバー"></div>
-          <div class="theme-swatch" data-theme="aqua"      onclick="setTheme('aqua')"      title="アクア→オレンジ"></div>
-          <div class="theme-swatch" data-theme="lavender"  onclick="setTheme('lavender')"  title="ラベンダー→ピーチ"></div>
-          <div class="theme-swatch" data-theme="forest"    onclick="setTheme('forest')"    title="フォレスト"></div>
-          <div class="theme-swatch" data-theme="pearl"     onclick="setTheme('pearl')"     title="パール"></div>
-          <div class="theme-swatch" data-theme="onyx"      onclick="setTheme('onyx')"      title="オニキス"></div>
-          <div class="theme-swatch" data-theme="sky"       onclick="setTheme('sky')"       title="スカイ"></div>
-          <div class="theme-swatch" data-theme="sakura"    onclick="setTheme('sakura')"    title="サクラ"></div>
-          <div class="theme-swatch" data-theme="mint"      onclick="setTheme('mint')"      title="ミント"></div>
-          <div class="theme-swatch" data-theme="lavender2" onclick="setTheme('lavender2')" title="ラベンダー"></div>
-          <div class="theme-swatch" data-theme="spring"    onclick="setTheme('spring')"    title="スプリング"></div>
-          <div class="theme-swatch" data-theme="liquid1"   onclick="setTheme('liquid1')"   title="リキッド・アイス"></div>
-          <div class="theme-swatch" data-theme="liquid2"   onclick="setTheme('liquid2')"   title="リキッド・ミスト"></div>
-          <div class="theme-swatch" data-theme="liquid3"   onclick="setTheme('liquid3')"   title="リキッド・ローズ"></div>
-          <div class="theme-swatch" data-theme="liquid4"   onclick="setTheme('liquid4')"   title="リキッド・シャンパン"></div>
-          <div class="theme-swatch" data-theme="liquid5"   onclick="setTheme('liquid5')"   title="リキッド・クォーツ"></div>
+          <div class="theme-swatch" data-theme="frost"   onclick="setTheme('frost')"   title="霜（しも）"></div>
+          <div class="theme-swatch" data-theme="ginnezu" onclick="setTheme('ginnezu')" title="銀鼠（ぎんねず）"></div>
         </div>
       </div>
     </nav>
@@ -3823,17 +3540,6 @@ body[data-theme="onyx"] .case-tile-card { --tile-badge-ring: rgba(22,26,36,0.85)
             </div>
             <label class="toggle-switch" style="flex-shrink:0">
               <input type="checkbox" id="toggle-hover-sidebar" checked onchange="toggleHoverSidebar(this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div style="border-top:1px solid var(--border-color)"></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary)">ダークモード</div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">背景を暗いテーマに切り替える</div>
-            </div>
-            <label class="toggle-switch" style="flex-shrink:0">
-              <input type="checkbox" id="toggle-dark-mode" onchange="toggleDarkMode(this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -4476,7 +4182,7 @@ const TASK_STATUSES = ['未着手','進行中','手配中','連絡待ち','回�
    INIT
    ===================================================== */
 /* =====================================================
-   サイドバーホバー展開 / ダークモード
+   サイドバーホバー展開 / テーマ
    ===================================================== */
 /* =====================================================
    アドレス帳
@@ -5134,14 +4840,17 @@ function loadPrintSettings() {
   } catch(e) { return {}; }
 }
 
-function toggleDarkMode(enabled) {
-  document.body.classList.toggle('dark-mode', enabled);
-  localStorage.setItem('dark_mode', enabled ? '1' : '0');
-}
-
-const LIGHT_THEMES = ['liquid1','liquid2','liquid3','liquid4','liquid5','pearl','silver'];
+// 2026年9月14日、テーマを2種類に絞り、ダークモードの切り替えを廃止した。
+// どちらも明るいテーマなので LIGHT_THEMES は全部入り（ロゴの文字色の判定に使う）。
+const THEMES = ['frost','ginnezu'];
+const DEFAULT_THEME = 'frost';
+const LIGHT_THEMES = ['frost','ginnezu'];
 
 function setTheme(theme) {
+  // 保存されている名前が、消したテーマ（liquid1 や silver など）のことがある。
+  // そのまま渡すと背景の指定が1つも当たらず、真っ白な画面になる。
+  // 知らない名前は既定へ読み替える
+  if (!THEMES.includes(theme)) theme = DEFAULT_THEME;
   document.body.setAttribute('data-theme', theme);
   localStorage.setItem('app_theme', theme);
   document.querySelectorAll('.theme-swatch').forEach(el => {
@@ -5150,8 +4859,14 @@ function setTheme(theme) {
   updateLogoColor(theme);
 }
 
+// 明るいテーマかどうか。消したテーマ名が保存されている場合も
+// 既定へ読み替えてから判定する（setTheme と同じ扱いにするため）
+function isLightTheme(theme) {
+  return LIGHT_THEMES.includes(THEMES.includes(theme) ? theme : DEFAULT_THEME);
+}
+
 function updateLogoColor(theme) {
-  const isLight = LIGHT_THEMES.includes(theme);
+  const isLight = isLightTheme(theme);
   const logoEl = document.getElementById('header-logo-text');
   if (!logoEl) return;
   if (isLight) {
@@ -5164,16 +4879,11 @@ function updateLogoColor(theme) {
 }
 
 function initAppearance() {
-  const darkMode = localStorage.getItem('dark_mode') === '1';
   const hoverSidebar = localStorage.getItem('sidebar_hover') !== '0';
-  const dmToggle = document.getElementById('toggle-dark-mode');
   const hsToggle = document.getElementById('toggle-hover-sidebar');
-  if (dmToggle) dmToggle.checked = darkMode;
   if (hsToggle) hsToggle.checked = hoverSidebar;
-  if (darkMode) document.body.classList.add('dark-mode');
-  else document.body.classList.remove('dark-mode');
-  // テーマ初期化
-  const savedTheme = localStorage.getItem('app_theme') || 'silver';
+  // テーマ初期化（知らない名前は setTheme が既定へ読み替える）
+  const savedTheme = localStorage.getItem('app_theme') || DEFAULT_THEME;
   setTheme(savedTheme);
   // モバイル（768px以下）ではサイドバー設定を適用しない
   if (window.innerWidth > 768) {
@@ -5507,13 +5217,13 @@ function showView(name) {
   const _logoTxt = document.getElementById('header-logo-text');
   if (_logoTxt) {
     if (!_title || _title === 'CaseFlow') {
-      const _isLight = (typeof LIGHT_THEMES !== 'undefined') && LIGHT_THEMES.includes(localStorage.getItem('app_theme')||'silver');
+      const _isLight = (typeof isLightTheme !== 'undefined') && isLightTheme(localStorage.getItem('app_theme'));
       const _logoColor = _isLight ? 'rgba(30,80,160,0.85)' : 'rgba(255,255,255,0.88)';
       const _logoShadow = _isLight ? '0 1px 4px rgba(180,210,255,0.5)' : 'none';
       _logoTxt.style.cssText = `font-family:'Comfortaa',sans-serif;font-weight:300;font-size:22px;letter-spacing:0.04em;color:${_logoColor};text-shadow:${_logoShadow}`;
       _logoTxt.textContent = 'CaseFlow';
     } else {
-      const _isLight2 = (typeof LIGHT_THEMES !== 'undefined') && LIGHT_THEMES.includes(localStorage.getItem('app_theme')||'silver');
+      const _isLight2 = (typeof isLightTheme !== 'undefined') && isLightTheme(localStorage.getItem('app_theme'));
       const _logoColor2 = _isLight2 ? 'rgba(30,80,160,0.70)' : 'rgba(255,255,255,0.75)';
       _logoTxt.style.cssText = `font-family:'Comfortaa',sans-serif;font-weight:300;font-size:18px;letter-spacing:0.08em;color:${_logoColor2};text-shadow:none`;
       _logoTxt.textContent = _title;
