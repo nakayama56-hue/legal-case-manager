@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400&display=swap" rel="stylesheet">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CaseFlow</title>
@@ -779,9 +776,9 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
 }
 
 /* ── メイン画面 左上のロゴ ──────────────────────────────
-   かつては font-family に 'Comfortaa' を指定していたが、この書体は
-   入っておらず、外部読み込みは禁止（4章）なので一度も効いていなかった。
-   Mac に必ず入っている Avenir Next に替えてある。
+   かつては 'Comfortaa' を Google Fonts から読み込んでいたが、これは
+   4章の「外部CDN禁止」に反していた（オフラインでも崩れる）。
+   Mac に必ず入っている Avenir Next に替え、link ごと外してある。
 
    色は --color-primary / --color-accent をそのまま使う。テーマを替えれば
    自動で追従するので、JS で色を塗り直す必要がない
@@ -3341,7 +3338,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -5311,7 +5308,7 @@ function showView(name) {
   if (_logoTxt) {
     // 字づかいと色は CSS（.app-logo-word / .app-logo-heading）が受け持つ。
     // ここで style を直書きすると、大きさの指定が 3 か所に散らばって
-    // 直し忘れの元になる（Comfortaa が効いていなかったのがまさにこれ）
+    // 直し忘れの元になる（書体の指定が3か所にあったのがまさにこれ）
     const _isLogo = (!_title || _title === 'CaseFlow');
     _logoTxt.className = _isLogo ? 'app-logo-word' : 'app-logo-heading';
     _logoTxt.textContent = _isLogo ? 'CaseFlow' : _title;
@@ -12760,7 +12757,7 @@ if ('serviceWorker' in navigator && !window.__VIEWER_MODE__) {
 ">
   <div style="text-align:center">
     <div style="font-size:52px;margin-bottom:12px">☁</div>
-    <div style="font-family:'Comfortaa',sans-serif;font-size:28px;font-weight:300;color:#fff;letter-spacing:0.06em;margin-bottom:6px">CaseFlow</div>
+    <div style="font-family:'Avenir Next','Avenir',sans-serif;font-size:28px;font-weight:600;color:#fff;letter-spacing:0.05em;margin-bottom:6px">CaseFlow</div>
     <div style="font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:0.04em">操作を開始する前にクラウドから読み込んでください</div>
   </div>
   <button id="startup-load-btn"
