@@ -3338,7 +3338,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7069,6 +7069,32 @@ function toggleTaskPanel() {
   try { localStorage.setItem(TASK_PANEL_KEY, taskPanelOpen ? '1' : '0'); } catch (e) {}
   _applyTaskPanelState();
 }
+
+/* パネルの外を押したら閉じる（2026 年 9 月 14 日、ご本人のご指示）。
+   ✕ を押したときと同じ扱いにしてある（localStorage にも閉じた状態を覚えさせる）。
+
+   ★ 捕捉（capture）の段階で判定していること。ここを普通の bubble に変えないこと。
+     パネルの中のタスクを押すと updateCaseTaskPanel() が #case-task-list を
+     innerHTML で丸ごと描き直す。bubble は中の onclick より「後」に走るので、
+     そのときには押した要素が DOM から切り離されていて panel.contains() が
+     false を返す。つまり中を押したのに「外」と判定されて閉じてしまう。
+     capture なら中の onclick より先に走るので、DOM が元のまま判定できる。
+
+   ★ pointerdown ではなく click で拾っていること。
+     閉じると #view-case-detail の右余白が 348px → 44px に変わって中身が動く。
+     押し下げの段階で閉じると、指の下にあるものが別のものに入れ替わる。
+
+   ★ モーダルが開いているときは何もしない。
+     .modal-overlay は inset:0 で画面全体を覆うので、除外しないと
+     「＋ タスク追加」で開いた入力欄を触っただけで背後のパネルが閉じてしまう。 */
+document.addEventListener('click', e => {
+  if (!taskPanelOpen) return;
+  const panel = document.getElementById('case-task-panel');
+  if (!panel || panel.style.display === 'none') return;   // 案件詳細以外では出ていない
+  if (panel.contains(e.target)) return;                   // タブ・✕・タスクカードは中
+  if (e.target instanceof Element && e.target.closest('.modal-overlay')) return;
+  toggleTaskPanel();
+}, true);
 
 /* 見出し・タブの件数・一覧をまとめて更新する。件数はタブに出るのでズレさせない */
 function updateCaseTaskPanel(caseId) {
