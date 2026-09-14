@@ -192,6 +192,68 @@ body[data-theme="ginnezu"] .case-tile-card.tile-active:hover {
   box-shadow: 0 3px 8px rgba(38,52,74,0.16), 0 18px 38px rgba(38,52,74,0.22) !important;
 }
 
+/* 琥珀（こはく）── 締まる暖色。銀鼠の暖色版で、構造はまったく同じ。
+   中明度の砂色の地に、ほぼ真っ白なパネル。
+   銀鼠と同じく、地を淡くしないこと。淡くすると檜のような
+   「霜と見分けのつかない淡いテーマ」になってしまう */
+body[data-theme="kohaku"] {
+  background: #c9b697;
+  background-image:
+    radial-gradient(ellipse at 14% 6%,  rgba(240,228,206,0.75) 0%, transparent 50%),
+    radial-gradient(ellipse at 88% 90%, rgba(172,150,118,0.60) 0%, transparent 55%),
+    linear-gradient(165deg, #bfae95 0%, #cebda0 52%, #dccdb4 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  /* 不動産＝寒色／商業＝暖色の対は変えない */
+  --color-primary: #1f5c8f;
+  --color-primary-light: #3277ad;
+  --color-primary-dark: #184b76;
+  --color-accent: #c2661c;
+  --color-info: #1f5c8f;
+  /* 地が暖色なので、文字と枠線も灰色ではなく茶寄りにそろえる。
+     既定の --text-muted（#9ca3af）より濃いので、薄い字はむしろ読みやすくなる */
+  --text-primary: #2a241c;
+  --text-secondary: #5a5145;
+  --text-muted: #7d7365;
+  --border-color: rgba(184,166,138,0.55);
+  --border-light: rgba(201,186,162,0.45);
+  --glass-border: rgba(255,252,246,0.76);
+  --glass-shadow: 0 12px 28px rgba(90,68,40,0.20), 0 2px 5px rgba(90,68,40,0.16);
+  --shadow-sm: 0 1px 3px rgba(90,68,40,0.12);
+  --shadow-md: 0 4px 16px rgba(90,68,40,0.16);
+  --shadow-lg: 0 12px 32px rgba(90,68,40,0.22);
+  /* サイドバーも暖色の暗色に。既定の紺のままだと地とちぐはぐになる
+     （銀鼠は寒色なので既定の紺のままでよい） */
+  --bg-sidebar: rgba(56,44,30,0.88);
+}
+
+/* 琥珀：ガラス面を白く、影を深く。対象は銀鼠と同じ組 */
+body[data-theme="kohaku"] #header {
+  background: rgba(255,253,249,0.90) !important;
+  border-bottom-color: rgba(255,252,246,0.78) !important;
+}
+body[data-theme="kohaku"] .table-container,
+body[data-theme="kohaku"] .case-detail-header,
+body[data-theme="kohaku"] .info-card,
+body[data-theme="kohaku"] .today-panel,
+body[data-theme="kohaku"] .souzoku-tracker,
+body[data-theme="kohaku"] .modal {
+  background: rgba(255,253,249,0.95) !important;
+  border-color: rgba(255,252,246,0.76) !important;
+  box-shadow: 0 12px 28px rgba(90,68,40,0.20), 0 1px 0 rgba(255,253,249,0.9) !important;
+}
+/* 案件タイル。枠線は区分色（青／橙）なので触らない */
+body[data-theme="kohaku"] .case-tile-card,
+body[data-theme="kohaku"] .case-tile-card.tile-active {
+  background: rgba(255,253,249,0.95) !important;
+  box-shadow: 0 2px 5px rgba(90,68,40,0.16), 0 12px 28px rgba(90,68,40,0.20) !important;
+}
+body[data-theme="kohaku"] .case-tile-card:hover,
+body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
+  background: rgba(255,254,252,0.99) !important;
+  box-shadow: 0 3px 8px rgba(90,68,40,0.20), 0 18px 38px rgba(90,68,40,0.26) !important;
+}
+
 
 /* 相続人手配トラッカー */
 .souzoku-tracker {
@@ -572,6 +634,7 @@ body[data-theme="ginnezu"] .case-tile-card.tile-active:hover {
 .theme-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.4); }
 .theme-swatch[data-theme="frost"]   { background: linear-gradient(135deg, #e4effd 0%, #f3f8ff 55%, #ffffff 100%); border-color: rgba(180,210,255,0.6); }
 .theme-swatch[data-theme="ginnezu"] { background: linear-gradient(135deg, #9daabc 0%, #b2bccb 52%, #c8d1dd 100%); border-color: rgba(255,255,255,0.55); }
+.theme-swatch[data-theme="kohaku"]  { background: linear-gradient(135deg, #bfae95 0%, #cebda0 52%, #dccdb4 100%); border-color: rgba(255,252,246,0.55); }
 
 
 /* 送付追跡パネル */
@@ -3235,7 +3298,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.8</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.4.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3251,6 +3314,7 @@ tr.row-waiting:hover > td {
         <div class="theme-swatches">
           <div class="theme-swatch" data-theme="frost"   onclick="setTheme('frost')"   title="霜（しも）"></div>
           <div class="theme-swatch" data-theme="ginnezu" onclick="setTheme('ginnezu')" title="銀鼠（ぎんねず）"></div>
+          <div class="theme-swatch" data-theme="kohaku"  onclick="setTheme('kohaku')"  title="琥珀（こはく）"></div>
         </div>
       </div>
     </nav>
@@ -4842,9 +4906,9 @@ function loadPrintSettings() {
 
 // 2026年9月14日、テーマを2種類に絞り、ダークモードの切り替えを廃止した。
 // どちらも明るいテーマなので LIGHT_THEMES は全部入り（ロゴの文字色の判定に使う）。
-const THEMES = ['frost','ginnezu'];
+const THEMES = ['frost','ginnezu','kohaku'];
 const DEFAULT_THEME = 'frost';
-const LIGHT_THEMES = ['frost','ginnezu'];
+const LIGHT_THEMES = ['frost','ginnezu','kohaku'];
 
 function setTheme(theme) {
   // 保存されている名前が、消したテーマ（liquid1 や silver など）のことがある。
