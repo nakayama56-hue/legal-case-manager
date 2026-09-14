@@ -79,7 +79,8 @@
   white-space: nowrap; overflow: hidden;
   opacity: 0; transition: opacity 0.15s;
 }
-#sidebar:hover .sidebar-toggle-row { opacity: 1; }
+#sidebar:not(.sidebar-click-mode):hover .sidebar-toggle-row,
+#sidebar.sidebar-open-click .sidebar-toggle-row { opacity: 1; }
 .toggle-switch {
   position: relative; width: 32px; height: 18px; flex-shrink: 0;
 }
@@ -604,7 +605,8 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   padding: 8px 10px;
   border-top: 1px solid rgba(255,255,255,0.10);
 }
-#sidebar:hover .theme-picker { display: block; }
+#sidebar:not(.sidebar-click-mode):hover .theme-picker,
+#sidebar.sidebar-open-click .theme-picker { display: block; }
 .theme-picker-label {
   font-size: 10px;
   color: #94a3b8;
@@ -643,7 +645,18 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
    ===================================================== */
 #app { display: flex; min-height: 100vh; }
 
-/* Sidebar */
+/* Sidebar
+   開き方は2通り。設定「サイドバー自動展開」で切り替える。
+   ・オン（既定）… カーソルを乗せると開く（#sidebar:hover）
+   ・オフ　　　　… #sidebar に .sidebar-click-mode が付き、hover では開かない。
+     　　　　　　　たたんだ帯を押したときだけ .sidebar-open-click が付いて開く
+
+   ★ どちらの方式でも、たたんだ幅（56px）が基準。オフでも出しっぱなしにしない
+     （2026 年 9 月 14 日、8.5.3 でこの形にした。それまでオフは幅 220px で固定され、
+      本文も 220px 右へ寄っていた）。
+   ★ 開いた見た目を決める規則は「:not(.sidebar-click-mode):hover」と
+     「.sidebar-open-click」の2本立てで9か所ある。1本だけ足すと、
+     ラベルは出るのに幅が変わらない、といった半端な状態になる */
 #sidebar {
   width: var(--sidebar-width);
   background: var(--bg-sidebar);
@@ -659,7 +672,8 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   width: var(--sidebar-collapsed);
   transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
 }
-#sidebar:hover {
+#sidebar:not(.sidebar-click-mode):hover,
+#sidebar.sidebar-open-click {
   width: var(--sidebar-width);
   box-shadow: 4px 0 32px rgba(0,0,0,0.22);
 }
@@ -680,7 +694,8 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   transition: opacity 0.15s ease;
   white-space: nowrap;
 }
-#sidebar:hover .sidebar-logo { opacity: 1; }
+#sidebar:not(.sidebar-click-mode):hover .sidebar-logo,
+#sidebar.sidebar-open-click .sidebar-logo { opacity: 1; }
 .sidebar-logo span { color: #7dd3fc; font-size: 11px; font-weight: 400; display: block; margin-top: 2px; }
 
 /* アイコンだけ常に表示 */
@@ -691,7 +706,8 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   font-size: 18px;
   transition: opacity 0.15s;
 }
-#sidebar:hover .sidebar-icon-only { display: none; }
+#sidebar:not(.sidebar-click-mode):hover .sidebar-icon-only,
+#sidebar.sidebar-open-click .sidebar-icon-only { display: none; }
 
 .sidebar-nav { flex: 1; padding: 8px 0; overflow: hidden; }
 
@@ -706,7 +722,8 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   opacity: 0;
   transition: opacity 0.15s;
 }
-#sidebar:hover .nav-section-label { opacity: 1; }
+#sidebar:not(.sidebar-click-mode):hover .nav-section-label,
+#sidebar.sidebar-open-click .nav-section-label { opacity: 1; }
 
 .nav-item {
   display: flex; align-items: center; gap: 10px;
@@ -723,7 +740,8 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
 .nav-item.active { background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); color: #fff; border-left-color: #7dd3fc; border-radius: 10px; margin: 0 6px; padding-left: 5px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.15); }
 .nav-item .nav-icon { width: 36px; text-align: center; font-size: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .nav-item .nav-label { opacity: 0; transition: opacity 0.15s; }
-#sidebar:hover .nav-item .nav-label { opacity: 1; }
+#sidebar:not(.sidebar-click-mode):hover .nav-item .nav-label,
+#sidebar.sidebar-open-click .nav-item .nav-label { opacity: 1; }
 .nav-badge {
   margin-left: auto; background: var(--color-danger);
   color: #fff; font-size: 10px; font-weight: 700;
@@ -731,7 +749,8 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   margin-right: 8px;
   opacity: 0; transition: opacity 0.15s;
 }
-#sidebar:hover .nav-badge { opacity: 1; }
+#sidebar:not(.sidebar-click-mode):hover .nav-badge,
+#sidebar.sidebar-open-click .nav-badge { opacity: 1; }
 .nav-badge.warn { background: var(--color-warning); }
 
 .sidebar-footer {
@@ -742,7 +761,8 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   opacity: 0;
   transition: opacity 0.15s;
 }
-#sidebar:hover .sidebar-footer { opacity: 1; }
+#sidebar:not(.sidebar-click-mode):hover .sidebar-footer,
+#sidebar.sidebar-open-click .sidebar-footer { opacity: 1; }
 
 /* Main content */
 #main {
@@ -3338,7 +3358,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.2</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3640,7 +3660,7 @@ tr.row-waiting:hover > td {
           <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--text-primary)">サイドバー自動展開</div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">カーソルを乗せたときだけサイドバーを開く</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">オン：カーソルを乗せると開く　／　オフ：帯を押したときだけ開く</div>
             </div>
             <label class="toggle-switch" style="flex-shrink:0">
               <input type="checkbox" id="toggle-hover-sidebar" checked onchange="toggleHoverSidebar(this.checked)">
@@ -4701,32 +4721,55 @@ function openSoushuFromForm(btn) {
   }
 }
 
+/* サイドバーの開き方の切り替え。
+   オン  … カーソルを乗せると開く
+   オフ  … たたんだ帯を押したときだけ開く（2026 年 9 月 14 日、8.5.3）
+   どちらもたたんだ幅が基準なので、本文の左余白は常に 56px。
+   以前のオフは幅 220px で固定し、ラベルの opacity まで直書きで 1 にしていたが、
+   「オフでも出しっぱなしにしない」とのご指示でこの形にした。
+   見た目の切り替えは CSS のクラス 2 つに任せ、ここでは直書きの style を全部戻す */
 function toggleHoverSidebar(enabled) {
   const sidebar = document.getElementById('sidebar');
   const main = document.getElementById('main');
   const isMobile = window.innerWidth <= 768;
-  if (enabled) {
-    sidebar.style.width = '';
-    sidebar.classList.remove('sidebar-fixed');
-    if (main && !isMobile) main.style.marginLeft = 'var(--sidebar-collapsed)';
-    else if (main && isMobile) main.style.marginLeft = '';
-    document.querySelectorAll('.nav-label,.nav-badge,.sidebar-logo,.nav-section-label,.sidebar-toggle-row').forEach(el => {
-      el.style.opacity = '';
-    });
-    const iconOnly = document.querySelector('.sidebar-icon-only');
-    if (iconOnly) iconOnly.style.display = '';
-  } else {
-    sidebar.style.width = 'var(--sidebar-width)';
-    sidebar.classList.add('sidebar-fixed');
-    if (main && !isMobile) main.style.marginLeft = 'var(--sidebar-width)';
-    document.querySelectorAll('.nav-label,.nav-badge,.sidebar-logo,.nav-section-label,.sidebar-toggle-row').forEach(el => {
-      el.style.opacity = '1';
-    });
-    const iconOnly = document.querySelector('.sidebar-icon-only');
-    if (iconOnly) iconOnly.style.display = 'none';
-  }
+  if (!sidebar) return;
+
+  sidebar.style.width = '';
+  sidebar.classList.remove(SIDEBAR_OPEN_CLICK);          // 方式を変えたら必ずたたむ
+  sidebar.classList.toggle(SIDEBAR_CLICK_MODE, !enabled);
+  if (main) main.style.marginLeft = isMobile ? '' : 'var(--sidebar-collapsed)';
+  document.querySelectorAll('.nav-label,.nav-badge,.sidebar-logo,.nav-section-label,.sidebar-toggle-row').forEach(el => {
+    el.style.opacity = '';
+  });
+  const iconOnly = document.querySelector('.sidebar-icon-only');
+  if (iconOnly) iconOnly.style.display = '';
+
   localStorage.setItem('sidebar_hover', enabled ? '1' : '0');
 }
+
+/* 押して開く方式のときの開閉。
+   ★ 捕捉（capture）フェーズで拾っていること。たたんだ帯を押したときは
+     「開くだけ」にして、下にある項目（CaseFlow・設定のアイコン）を押させない。
+     たたんだ状態のアイコンは、自動展開オンのときは
+     「乗せた時点で開いてしまう」ため、そもそも押せた試しがない。
+     だから押し分けの機会を失うことにはならない。
+   ★ 外を押したら閉じる。カーソルが離れただけでは閉じない（それは hover の作法）。
+   ★ 項目を選んで画面が変わるときは showView → closeSidebar() が閉じる */
+document.addEventListener('click', e => {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar || !sidebar.classList.contains(SIDEBAR_CLICK_MODE)) return;
+  const isOpen = sidebar.classList.contains(SIDEBAR_OPEN_CLICK);
+  const inside = (e.target instanceof Node) && sidebar.contains(e.target);
+  if (inside) {
+    if (!isOpen) {                       // たたんだ帯を押した → 開くだけ
+      sidebar.classList.add(SIDEBAR_OPEN_CLICK);
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    return;                              // 開いている間は中身を普通に使える
+  }
+  if (isOpen) sidebar.classList.remove(SIDEBAR_OPEN_CLICK);   // 外を押した → 閉じる
+}, true);
 
 function setCaseViewMode(mode) {
   caseViewMode = mode;
@@ -4967,6 +5010,10 @@ function setTheme(theme) {
 function isLightTheme(theme) {
   return LIGHT_THEMES.includes(THEMES.includes(theme) ? theme : DEFAULT_THEME);
 }
+
+/* サイドバーの状態を表すクラス。CSS 側の9か所の規則と対になっている */
+const SIDEBAR_CLICK_MODE = 'sidebar-click-mode';   // 押して開く方式
+const SIDEBAR_OPEN_CLICK = 'sidebar-open-click';   // その方式で今開いている
 
 function initAppearance() {
   const hoverSidebar = localStorage.getItem('sidebar_hover') !== '0';
@@ -12116,7 +12163,10 @@ function openSidebar() {
 }
 
 function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.remove('open');
+  // 押して開く方式のときも、項目を選んで画面が変わったらたたむ
+  sidebar.classList.remove(SIDEBAR_OPEN_CLICK);
   document.getElementById('sidebar-overlay').classList.remove('show');
   document.body.style.overflow = '';
 }
