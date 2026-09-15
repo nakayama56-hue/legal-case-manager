@@ -3460,7 +3460,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.8</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.9</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7506,10 +7506,9 @@ function cfChooserGoto(i) { const ch = _cf.chooser; if (!ch) return; _cfLoadChoo
 function cfChooserFilter(v) {
   if (!_cf.chooser) return;
   _cf.chooser.filter = v;
-  const before = _cfHost().querySelector('.cf-tools input'); const pos = before ? before.selectionStart : null;
-  _cfRender();
-  const after = _cfHost().querySelector('.cf-tools input');
-  if (after) { after.focus(); if (pos != null) try { after.setSelectionRange(pos, pos); } catch (e) {} }
+  const host = _cfHost(); if (!host) return;
+  const listEl = host.querySelector('.cf-list');
+  if (listEl) listEl.innerHTML = _cfChooserListHtml(); else _cfRender();
 }
 /* i を渡せばその行のフォルダ、省けばいま開いている場所そのものに結び付ける */
 async function cfBind(i) {
@@ -7633,6 +7632,28 @@ function _cfSortedEntries() {
   return list;
 }
 
+/* 一覧の中身だけを作る。絞り込みの入力のたびに呼ぶので、入力欄は作り直さない
+   （8.5.9。全体を描き直すと日本語入力の変換中に入力欄が消え、文字が二重になる・変換が途切れる） */
+function _cfListHtml() {
+  const list = _cfSortedEntries();
+  const rows = list.map(e => {
+    const idx = _cf.entries.indexOf(e);
+    if (e.kind === 'dir') {
+      return `<div class="cf-row is-dir" onclick="cfEnter(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">—</span><span class="cf-meta r cf-size"></span><span class="cf-acts"><button onclick="event.stopPropagation();cfEnter(${idx})">開く</button></span></div>`;
+    }
+    return `<div class="cf-row" ondblclick="cfOpen(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">${_cfDate(e.mtime)}</span><span class="cf-meta r cf-size">${_cfSize(e.size)}</span><span class="cf-acts"><button onclick="cfOpen(${idx})">開く</button><button class="cf-write" onclick="cfRename(${idx})">名前</button></span></div>`;
+  }).join('');
+  return rows || `<div class="cf-empty">${_cf.filter ? '該当するものがありません' : 'このフォルダは空です'}</div>`;
+}
+function _cfChooserListHtml() {
+  const ch = _cf.chooser; if (!ch) return '';
+  if (ch.missing) return `<div class="cf-empty">「${escHtml(ch.path.join('/'))}」が見当たりません。上で別のフォルダを選んでください</div>`;
+  const q = (ch.filter || '').trim().toLowerCase();
+  const items = ch.items.filter(n => !q || n.toLowerCase().includes(q));
+  const hit = n => ch.keys.some(k => n.includes(k));
+  const rows = items.map(n => { const i = ch.items.indexOf(n); return `<div class="cf-row is-dir" onclick="cfChooserEnter(${i})" title="押すと中に入ります"><span class="cf-ic dir">📁</span><span class="cf-name">${escHtml(n)}</span><span class="cf-meta">${hit(n) ? '★ 依頼者名と一致' : ''}</span><span class="cf-meta r cf-size"></span><span class="cf-acts" style="opacity:1"><button onclick="event.stopPropagation();cfBind(${i})">これにする</button></span></div>`; }).join('');
+  return rows || `<div class="cf-empty">${q ? '該当するものがありません' : 'この中にフォルダはありません。上の「📌 ここにする」でこのフォルダに結び付けられます'}</div>`;
+}
 function _cfRender() {
   const host = _cfHost();
   if (!host) return;
@@ -7676,10 +7697,6 @@ function _cfRender() {
     case 'choose': {
       const ch = _cf.chooser;
       if (!ch || ch.loading) { body = `<div class="cf-empty">フォルダの一覧を読んでいます…</div>`; break; }
-      const q = (ch.filter || '').trim().toLowerCase();
-      const items = ch.items.filter(n => !q || n.toLowerCase().includes(q));
-      const hit = n => ch.keys.some(k => n.includes(k));
-      const rows = items.map(n => { const i = ch.items.indexOf(n); return `<div class="cf-row is-dir" onclick="cfChooserEnter(${i})" title="押すと中に入ります"><span class="cf-ic dir">📁</span><span class="cf-name">${escHtml(n)}</span><span class="cf-meta">${hit(n) ? '★ 依頼者名と一致' : ''}</span><span class="cf-meta r cf-size"></span><span class="cf-acts" style="opacity:1"><button onclick="event.stopPropagation();cfBind(${i})">これにする</button></span></div>`; }).join('');
       const crumb = ch.path.map((seg, i) => i === ch.path.length - 1 ? `<b>${escHtml(seg)}</b>` : `<span style="cursor:pointer;text-decoration:underline" onclick="cfChooserGoto(${i})">${escHtml(seg)}</span>`).join(' › ');
       body = `
         <div class="cf-tools" style="flex-wrap:wrap">
@@ -7691,26 +7708,18 @@ function _cfRender() {
           ${ch.path.length > 1 ? `<button class="btn btn-secondary btn-xs" onclick="cfChooserGoto(${ch.path.length - 2})">↑ 上へ</button>` : ''}
           ${ch.path.length > 1 ? `<button class="btn btn-primary btn-xs" onclick="cfBind()" title="いま開いている「${escHtml(ch.path[ch.path.length - 1])}」をこの案件のフォルダにする">📌 ここにする</button>` : ''}
         </div>
-        <div class="cf-list">${ch.missing ? `<div class="cf-empty">「${escHtml(ch.path.join('/'))}」が見当たりません。上で別のフォルダを選んでください</div>` : rows || `<div class="cf-empty">${q ? '該当するものがありません' : 'この中にフォルダはありません。上の「📌 ここにする」でこのフォルダに結び付けられます'}</div>`}</div>
+        <div class="cf-list">${_cfChooserListHtml()}</div>
         <div class="cf-foot">行を押すと中に入ります。「これにする」か「📌 ここにする」で結び付くと、次からは自動で出ます。<a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">一覧に無い場所を直接選ぶ</a></div>`;
       break;
     }
     case 'error': body = `<div class="cf-empty">読めませんでした。<br><span style="font-size:10px">${escHtml(_cf.errorMsg || '')}</span><br><button class="btn btn-secondary btn-sm" onclick="_cfLoad()">↻ 読み直す</button></div>`; break;
     case 'ok': {
-      const list = _cfSortedEntries();
-      const rows = list.map(e => {
-        const idx = _cf.entries.indexOf(e);
-        if (e.kind === 'dir') {
-          return `<div class="cf-row is-dir" onclick="cfEnter(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">—</span><span class="cf-meta r cf-size"></span><span class="cf-acts"><button onclick="event.stopPropagation();cfEnter(${idx})">開く</button></span></div>`;
-        }
-        return `<div class="cf-row" ondblclick="cfOpen(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">${_cfDate(e.mtime)}</span><span class="cf-meta r cf-size">${_cfSize(e.size)}</span><span class="cf-acts"><button onclick="cfOpen(${idx})">開く</button><button class="cf-write" onclick="cfRename(${idx})">名前</button></span></div>`;
-      }).join('');
       body = `
         <div class="cf-tools">
           <input type="search" placeholder="名前で絞り込み" value="${escHtml(_cf.filter)}" oninput="cfFilter(this.value)">
           <span class="cf-sort"><span class="${_cf.sort === 'name' ? 'on' : ''}" onclick="cfSort('name')">名前</span><span class="${_cf.sort === 'date' ? 'on' : ''}" onclick="cfSort('date')">更新日</span></span>
         </div>
-        <div class="cf-list">${rows || `<div class="cf-empty">${_cf.filter ? '該当するものがありません' : 'このフォルダは空です'}</div>`}</div>
+        <div class="cf-list">${_cfListHtml()}</div>
         <div class="cf-drop cf-write" ondragover="cfDragOver(event)" ondragleave="this.classList.remove('over')" ondrop="cfDrop(event)">ここにファイルを落とすと、<b>このフォルダに追加</b>されます</div>
         <div class="cf-foot">PDF・画像はその場で開きます。Word などはダウンロードになります。削除はここからはできません（Dropbox か Finder で）。</div>`;
       break;
@@ -7749,15 +7758,12 @@ async function cfGrant() {
   } catch (e) { toast(`許可を求められませんでした（${e.message}）`, 'error'); }
 }
 function cfSort(k) { _cf.sort = k; _cfRender(); }
+/* 絞り込み。入力欄は触らず、一覧だけ差し替える（日本語入力の変換を壊さないため） */
 function cfFilter(v) {
   _cf.filter = v;
   const host = _cfHost(); if (!host) return;
   const listEl = host.querySelector('.cf-list');
-  const before = host.querySelector('.cf-tools input');
-  const pos = before ? before.selectionStart : null;
-  _cfRender();
-  const after = _cfHost().querySelector('.cf-tools input');
-  if (after) { after.focus(); if (pos != null) try { after.setSelectionRange(pos, pos); } catch (e) {} }
+  if (listEl) listEl.innerHTML = _cfListHtml(); else _cfRender();
 }
 function cfEnter(idx) { const e = _cf.entries[idx]; if (!e || e.kind !== 'dir') return; _cf.path.push(e.name); _cf.filter = ''; if (_cf.relPath) _cfSubSet(_cf.caseId, _cf.path.join('/')); _cfLoad(); }
 function cfGoto(i) { _cf.path = i < 0 ? [] : _cf.path.slice(0, i + 1); _cf.filter = ''; if (_cf.relPath) _cfSubSet(_cf.caseId, _cf.path.join('/')); _cfLoad(); }
