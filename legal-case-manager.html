@@ -3460,7 +3460,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.7</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.8</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7421,7 +7421,11 @@ async function renderCaseFiles(caseId) {
   try {
     _cf.root = await _cfResolve(base, rel);
     _cf.relPath = rel;
+    _cf.path = _cfSubGet(caseId).split('/').filter(Boolean);   // 最後に開いていた下位フォルダ
     await _cfLoad();
+    if (_cf.caseId === caseId && _cf.status !== 'ok' && _cf.path.length) {   // 下位が消えていたら根に戻る
+      _cf.path = []; _cfSubSet(caseId, ''); await _cfLoad();
+    }
   } catch (e) {
     if (_cf.caseId !== caseId) return;
     _cf.relPath = rel; _cf.status = 'lost'; _cfRender();
@@ -7464,12 +7468,17 @@ function _cfNameKeys(c) {
   for (const f of [c && c.client_name, c && c.company_name]) { const n = norm(f); if (n.length >= 2) k.add(n.slice(0, 2)); }
   return [...k];
 }
-async function _cfLoadChooser(parentName) {
+/* 一覧から選ぶ（chooser）。親フォルダの中を段々と降りて行ける（8.5.8）。
+   実データではフォルダが `不動産登記案件/一般/〇〇様` のように一段深い所にもあるため、
+   区分のフォルダの直下だけを見せる 8.5.5 の形では届かないことがあった。
+   `path` は親からの道のり（配列）。行の名前を押すと中に入り、「これにする」でそのフォルダに結び付ける。
+   いま開いている場所そのものに結び付けるのが「📌 ここにする」 */
+async function _cfLoadChooser(path) {
   const caseId = _cf.caseId;
   const c = cases.find(x => x.id === caseId);
-  const parent = parentName || (_cf.chooser && _cf.chooser.parent) || _cfCategoryFolder(c);
+  if (!Array.isArray(path)) path = (_cf.chooser && _cf.chooser.path) || [_cfCategoryFolder(c)];
   const filter = (_cf.chooser && _cf.chooser.filter) || '';
-  _cf.chooser = { parent, items: [], tops: [], keys: [], filter, loading: true, missing: false };
+  _cf.chooser = { path, items: [], tops: [], keys: [], filter, loading: true, missing: false };
   _cfRender();
   try {
     const tops = [];
@@ -7477,21 +7486,23 @@ async function _cfLoadChooser(parentName) {
     tops.sort((a, b) => a.localeCompare(b, 'ja'));
     const items = []; let missing = false;
     try {
-      const pd = await _cf.base.getDirectoryHandle(parent);
+      const pd = await _cfResolve(_cf.base, path.join('/'));
       for await (const [n, h] of pd.entries()) if (h.kind === 'directory' && !n.startsWith('.')) items.push(n);
     } catch (e) { missing = true; }
     const keys = _cfNameKeys(c);
     const hit = n => keys.some(k => n.includes(k));
     items.sort((a, b) => { const am = hit(a), bm = hit(b); if (am !== bm) return am ? -1 : 1; return a.localeCompare(b, 'ja'); });
     if (_cf.caseId !== caseId) return;
-    _cf.chooser = { parent, items, tops, keys, filter, loading: false, missing };
+    _cf.chooser = { path, items, tops, keys, filter: '', loading: false, missing };
   } catch (e) {
     if (_cf.caseId !== caseId) return;
     _cf.chooser.loading = false; _cf.chooser.error = e.message;
   }
   _cfRender();
 }
-function cfChooserParent(name) { _cfLoadChooser(name); }
+function cfChooserParent(name) { _cfLoadChooser([name]); }
+function cfChooserEnter(i) { const ch = _cf.chooser; if (!ch || !ch.items[i]) return; _cfLoadChooser([...ch.path, ch.items[i]]); }
+function cfChooserGoto(i) { const ch = _cf.chooser; if (!ch) return; _cfLoadChooser(ch.path.slice(0, i + 1)); }
 function cfChooserFilter(v) {
   if (!_cf.chooser) return;
   _cf.chooser.filter = v;
@@ -7500,24 +7511,38 @@ function cfChooserFilter(v) {
   const after = _cfHost().querySelector('.cf-tools input');
   if (after) { after.focus(); if (pos != null) try { after.setSelectionRange(pos, pos); } catch (e) {} }
 }
+/* i を渡せばその行のフォルダ、省けばいま開いている場所そのものに結び付ける */
 async function cfBind(i) {
-  const ch = _cf.chooser; if (!ch || !ch.items[i] || !_cf.base) return;
-  const caseId = _cf.caseId; const rel = ch.parent + '/' + ch.items[i];
+  const ch = _cf.chooser; if (!ch || !_cf.base) return;
+  const segs = (i == null) ? ch.path : [...ch.path, ch.items[i]];
+  if (!segs.length || (i != null && !ch.items[i])) return;
+  const caseId = _cf.caseId; const rel = segs.join('/');
   try {
     const d = await _cfResolve(_cf.base, rel);
     if (_cf.caseId !== caseId) return;
     _cfMapSet(caseId, rel);
+    _cfSubSet(caseId, '');
     try { await _idbDel('caseDir:' + caseId); } catch (e) {}   // 直接の結び付けが残っていれば外す
     Object.assign(_cf, { root: d, relPath: rel, path: [], entries: [], filter: '', chooser: null });
-    toast(`この案件に「${ch.items[i]}」を結び付けました`, 'success');
+    toast(`この案件に「${segs[segs.length - 1]}」を結び付けました`, 'success');
     await _cfLoad();
   } catch (e) { toast(`結び付けられませんでした（${e.message}）`, 'error'); }
 }
-/* 「選び直す」。親があれば一覧から、無ければ直接選ぶ */
+/* 「選び直す」。親があれば一覧から、無ければ直接選ぶ。いま結び付いている場所の親から始める */
 function cfRebind() {
   if (!_cf.base) { cfConnect(); return; }
+  const cur = (_cf.relPath || '').split('/').filter(Boolean);
+  const start = cur.length > 1 ? cur.slice(0, -1) : null;
   Object.assign(_cf, { status: 'choose', root: null, relPath: '', path: [], entries: [], filter: '', chooser: null });
-  _cfRender(); _cfLoadChooser();
+  _cfRender(); _cfLoadChooser(start);
+}
+/* 最後に開いていた下位フォルダを案件ごとに覚える（8.5.8。「次回からそのフォルダが開きっぱなしに」とのご指示） */
+const CASE_FILES_SUB_KEY = 'caseFilesSub_v1';
+function _cfSubAll() { try { return JSON.parse(localStorage.getItem(CASE_FILES_SUB_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function _cfSubGet(id) { return _cfSubAll()[id] || ''; }
+function _cfSubSet(id, sub) {
+  const m = _cfSubAll(); if (sub) m[id] = sub; else delete m[id];
+  try { localStorage.setItem(CASE_FILES_SUB_KEY, JSON.stringify(m)); } catch (e) {}
 }
 /* 親フォルダ（一度だけ） */
 async function cfConnectRoot() {
@@ -7654,15 +7679,20 @@ function _cfRender() {
       const q = (ch.filter || '').trim().toLowerCase();
       const items = ch.items.filter(n => !q || n.toLowerCase().includes(q));
       const hit = n => ch.keys.some(k => n.includes(k));
-      const rows = items.map(n => { const i = ch.items.indexOf(n); return `<div class="cf-row is-dir" onclick="cfBind(${i})"><span class="cf-ic dir">📁</span><span class="cf-name" title="${escHtml(n)}">${escHtml(n)}</span><span class="cf-meta">${hit(n) ? '★ 依頼者名と一致' : ''}</span><span class="cf-meta r cf-size"></span><span class="cf-acts"><button onclick="event.stopPropagation();cfBind(${i})">これにする</button></span></div>`; }).join('');
+      const rows = items.map(n => { const i = ch.items.indexOf(n); return `<div class="cf-row is-dir" onclick="cfChooserEnter(${i})" title="押すと中に入ります"><span class="cf-ic dir">📁</span><span class="cf-name">${escHtml(n)}</span><span class="cf-meta">${hit(n) ? '★ 依頼者名と一致' : ''}</span><span class="cf-meta r cf-size"></span><span class="cf-acts" style="opacity:1"><button onclick="event.stopPropagation();cfBind(${i})">これにする</button></span></div>`; }).join('');
+      const crumb = ch.path.map((seg, i) => i === ch.path.length - 1 ? `<b>${escHtml(seg)}</b>` : `<span style="cursor:pointer;text-decoration:underline" onclick="cfChooserGoto(${i})">${escHtml(seg)}</span>`).join(' › ');
       body = `
         <div class="cf-tools" style="flex-wrap:wrap">
-          <span style="white-space:nowrap">この案件のフォルダを選んでください：</span>
-          <select onchange="cfChooserParent(this.value)" title="親の中のどのフォルダから選ぶか">${ch.tops.map(t => `<option value="${escHtml(t)}"${t === ch.parent ? ' selected' : ''}>${escHtml(t)}</option>`).join('')}</select>
+          <select onchange="cfChooserParent(this.value)" title="親の中のどのフォルダから探すか">${ch.tops.map(t => `<option value="${escHtml(t)}"${t === ch.path[0] ? ' selected' : ''}>${escHtml(t)}</option>`).join('')}</select>
           <input type="search" placeholder="名前で絞り込み" value="${escHtml(ch.filter || '')}" oninput="cfChooserFilter(this.value)">
         </div>
-        <div class="cf-list">${ch.missing ? `<div class="cf-empty">「${escHtml(ch.parent)}」が親フォルダの中に見当たりません。上で別のフォルダを選んでください</div>` : rows || `<div class="cf-empty">${q ? '該当するものがありません' : 'この中にフォルダがありません'}</div>`}</div>
-        <div class="cf-foot">押すとこの案件に結び付き、次からは自動で出ます。<a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">一覧に無い場所を直接選ぶ</a></div>`;
+        <div class="cf-tools" style="flex-wrap:wrap;gap:6px">
+          <span class="cf-path" style="flex:1;min-width:0">${crumb}</span>
+          ${ch.path.length > 1 ? `<button class="btn btn-secondary btn-xs" onclick="cfChooserGoto(${ch.path.length - 2})">↑ 上へ</button>` : ''}
+          ${ch.path.length > 1 ? `<button class="btn btn-primary btn-xs" onclick="cfBind()" title="いま開いている「${escHtml(ch.path[ch.path.length - 1])}」をこの案件のフォルダにする">📌 ここにする</button>` : ''}
+        </div>
+        <div class="cf-list">${ch.missing ? `<div class="cf-empty">「${escHtml(ch.path.join('/'))}」が見当たりません。上で別のフォルダを選んでください</div>` : rows || `<div class="cf-empty">${q ? '該当するものがありません' : 'この中にフォルダはありません。上の「📌 ここにする」でこのフォルダに結び付けられます'}</div>`}</div>
+        <div class="cf-foot">行を押すと中に入ります。「これにする」か「📌 ここにする」で結び付くと、次からは自動で出ます。<a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">一覧に無い場所を直接選ぶ</a></div>`;
       break;
     }
     case 'error': body = `<div class="cf-empty">読めませんでした。<br><span style="font-size:10px">${escHtml(_cf.errorMsg || '')}</span><br><button class="btn btn-secondary btn-sm" onclick="_cfLoad()">↻ 読み直す</button></div>`; break;
@@ -7729,8 +7759,8 @@ function cfFilter(v) {
   const after = _cfHost().querySelector('.cf-tools input');
   if (after) { after.focus(); if (pos != null) try { after.setSelectionRange(pos, pos); } catch (e) {} }
 }
-function cfEnter(idx) { const e = _cf.entries[idx]; if (!e || e.kind !== 'dir') return; _cf.path.push(e.name); _cf.filter = ''; _cfLoad(); }
-function cfGoto(i) { _cf.path = i < 0 ? [] : _cf.path.slice(0, i + 1); _cf.filter = ''; _cfLoad(); }
+function cfEnter(idx) { const e = _cf.entries[idx]; if (!e || e.kind !== 'dir') return; _cf.path.push(e.name); _cf.filter = ''; if (_cf.relPath) _cfSubSet(_cf.caseId, _cf.path.join('/')); _cfLoad(); }
+function cfGoto(i) { _cf.path = i < 0 ? [] : _cf.path.slice(0, i + 1); _cf.filter = ''; if (_cf.relPath) _cfSubSet(_cf.caseId, _cf.path.join('/')); _cfLoad(); }
 
 async function cfOpen(idx) {
   const e = _cf.entries[idx]; if (!e || e.kind !== 'file') return;
