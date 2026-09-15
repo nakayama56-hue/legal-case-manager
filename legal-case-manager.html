@@ -2775,9 +2775,10 @@ textarea:focus::placeholder { color: transparent; }
 #case-task-panel.collapsed { transform: translateX(100%); }
 
 /* 折りたたみ時に右端へ残るタブ */
-#case-task-tab {
-  position: absolute;
-  top: 0; left: -36px;
+/* 縦のタブ。8.5.6 から 2 つ（タスク／ファイル）になり得るので、入れ物 .ctp-side に縦に並べる。
+   ファイルのタブは、一覧を右パネルに置いたとき（body.files-in-panel）だけ出る */
+.ctp-side { position: absolute; top: 0; left: -36px; width: 36px; display: flex; flex-direction: column; gap: 6px; }
+#case-task-tab, #case-files-tab {
   width: 36px;
   padding: 9px 0 11px;
   display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -2789,7 +2790,13 @@ textarea:focus::placeholder { color: transparent; }
   cursor: pointer;
   font-family: inherit;
 }
-#case-task-tab:hover { background: var(--color-primary-light); }
+/* ★ この 2 行は上の共通ブロックより後ろに置くこと。同じ強さなので前に置くと display:flex に負けて常に出る（8.5.6 で一度踏んだ） */
+#case-files-tab { display: none; }
+body.files-in-panel #case-files-tab { display: flex; }
+#case-task-tab:hover, #case-files-tab:hover { background: var(--color-primary-light); }
+/* いま開いているほうのタブを少し明るく */
+body.files-in-panel.task-panel-open #case-task-panel[data-tab="tasks"] #case-task-tab,
+body.files-in-panel.task-panel-open #case-task-panel[data-tab="files"] #case-files-tab { background: var(--color-primary-light); }
 .ctp-tab-count {
   min-width: 20px; height: 20px; padding: 0 5px;
   border-radius: 10px;
@@ -3453,7 +3460,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3642,10 +3649,16 @@ tr.row-waiting:hover > td {
       </div>
       <!-- 右サイド固定パネル：タスク一覧（下端は Dock と重なるため右端に置く） -->
       <div id="case-task-panel" class="no-print collapsed" style="display:none">
-        <button type="button" id="case-task-tab" onclick="toggleTaskPanel()" aria-label="タスク一覧を開く">
-          <span class="ctp-tab-count" id="case-task-tab-count">0</span>
-          <span class="ctp-tab-label">タスク</span>
-        </button>
+        <div class="ctp-side">
+          <button type="button" id="case-task-tab" onclick="openTaskPanelTo('tasks')" aria-label="タスク一覧を開く">
+            <span class="ctp-tab-count" id="case-task-tab-count">0</span>
+            <span class="ctp-tab-label">タスク</span>
+          </button>
+          <button type="button" id="case-files-tab" onclick="openTaskPanelTo('files')" aria-label="ファイル一覧を開く">
+            <span class="ctp-tab-count zero" id="case-files-tab-count">–</span>
+            <span class="ctp-tab-label">ファイル</span>
+          </button>
+        </div>
         <div class="ctp-body">
           <div class="ctp-head">
             <div class="ctp-title" id="case-task-panel-title"></div>
@@ -7229,6 +7242,15 @@ function _applyTaskPanelState() {
   if (tab) tab.setAttribute('aria-label', taskPanelOpen ? 'タスク一覧を閉じる' : 'タスク一覧を開く');
 }
 
+/* 縦のタブから開く。押したタブがすでに開いていれば閉じる（8.5.6）。
+   一覧を右パネルに置くと縦のタブが 2 つになる。以前は 1 つのタブが「最後に見ていたタブ」で
+   開いたため、「タスク」を押してもファイルが出ることがあった */
+function openTaskPanelTo(tab) {
+  const current = caseFilesPlace === 'panel' ? taskPanelTab : 'tasks';
+  if (taskPanelOpen && current === tab) { toggleTaskPanel(); return; }
+  if (caseFilesPlace === 'panel') setTaskPanelTab(tab);
+  if (!taskPanelOpen) toggleTaskPanel();
+}
 function toggleTaskPanel() {
   taskPanelOpen = !taskPanelOpen;
   try { localStorage.setItem(TASK_PANEL_KEY, taskPanelOpen ? '1' : '0'); } catch (e) {}
@@ -7571,6 +7593,8 @@ function _cfRender() {
   const fileCount = _cf.status === 'ok' ? _cf.entries.filter(e => e.kind === 'file').length : null;
   const tabCount = document.getElementById('ctp-tab-files-count');
   if (tabCount) tabCount.textContent = fileCount == null ? '–' : fileCount;
+  const sideCount = document.getElementById('case-files-tab-count');
+  if (sideCount) { sideCount.textContent = fileCount == null ? '–' : fileCount; sideCount.classList.toggle('zero', !fileCount); }
 
   const rootName = _cf.root ? _cf.root.name : '';
   const crumbs = _cf.status === 'ok'
