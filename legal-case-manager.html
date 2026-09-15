@@ -3460,7 +3460,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.6</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.7</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7395,15 +7395,24 @@ async function renderCaseFiles(caseId) {
   let h = null;
   try { h = await _idbGet('caseDir:' + caseId); } catch (e) {}
   if (_cf.caseId !== caseId) return;          // 読んでいる間に別の案件へ移った
+  // (1) 親フォルダ＋相対パス
+  let base = null;
+  try { base = await _idbGet('caseFilesRoot'); } catch (e) {}
+  if (_cf.caseId !== caseId) return;
+  if (h && base) {
+    /* 8.5.4 で直接結び付けたフォルダが親の下にあれば、相対パスに移し替える（8.5.7）。
+       取っ手ごとに許可が要るので、親の 1 つにまとめないと Chrome を開き直すたびに案件ごとに聞かれる */
+    try {
+      const segs = await base.resolve(h);
+      if (segs && segs.length) { _cfMapSet(caseId, segs.join('/')); await _idbDel('caseDir:' + caseId); h = null; }
+    } catch (e) {}
+    if (_cf.caseId !== caseId) return;
+  }
   if (h) {
     _cf.root = h;
     if (!(await _cfPermOk(h, caseId))) return;
     await _cfLoad(); return;
   }
-  // (1) 親フォルダ＋相対パス
-  let base = null;
-  try { base = await _idbGet('caseFilesRoot'); } catch (e) {}
-  if (_cf.caseId !== caseId) return;
   if (!base) { _cf.status = 'noroot'; _cfRender(); return; }
   _cf.base = base;
   if (!(await _cfPermOk(base, caseId))) return;
@@ -7422,6 +7431,19 @@ async function _cfResolve(base, rel) {
   let d = base;
   for (const seg of rel.split('/').filter(Boolean)) d = await d.getDirectoryHandle(seg);
   return d;
+}
+/* 起動後の最初の操作で、親フォルダの許可を求める。すでに許可済みなら何もしない */
+async function _cfRequestRootOnFirstGesture() {
+  if (!window.showDirectoryPicker) return;
+  let base = null;
+  try { base = await _idbGet('caseFilesRoot'); } catch (e) {}
+  if (!base) return;
+  let perm = 'prompt';
+  try { perm = await base.queryPermission({ mode: 'readwrite' }); } catch (e) {}
+  if (perm === 'granted') return;
+  try { perm = await base.requestPermission({ mode: 'readwrite' }); } catch (e) { return; }
+  // 案件詳細を開いていて許可待ちだったなら、そのまま描き直す
+  if (perm === 'granted' && _cf.caseId && _cf.status === 'perm') { const id = _cf.caseId; _cf.caseId = null; renderCaseFiles(id); }
 }
 /* 許可が無ければ 'perm' にして false を返す（自動では聞けないので、押してもらう） */
 async function _cfPermOk(handle, caseId) {
@@ -7624,7 +7646,7 @@ function _cfRender() {
     case 'loading': body = `<div class="cf-empty">読み込み中…</div>`; break;
     case 'unsupported': body = `<div class="cf-empty">このブラウザではフォルダに接続できません。<br>パソコンの Chrome か Edge で開いてください。</div>`; break;
     case 'noroot': body = `<div class="cf-empty">はじめに、案件フォルダの親（Dropbox の「中山事務所」）を一度だけ結び付けてください。<br>以後は、案件ごとに一覧から押すだけになります。<br><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">📂 親フォルダを選ぶ</button><div style="font-size:10px;margin-top:8px"><a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">この案件のフォルダを直接選ぶ</a></div></div>`; break;
-    case 'perm': { const tn = _cf.permTarget ? _cf.permTarget.name : rootName; body = `<div class="cf-empty">「${escHtml(tn)}」を読むには、ブラウザの許可が要ります。<br><button class="btn btn-primary btn-sm" onclick="cfGrant()">🔓 許可する</button><div style="font-size:10px;margin-top:6px">確認の窓で「今後も許可」を選ぶと、次から聞かれません</div></div>`; break; }
+    case 'perm': { const tn = _cf.permTarget ? _cf.permTarget.name : rootName; body = `<div class="cf-empty">「${escHtml(tn)}」を読むには、ブラウザの許可が要ります。<br><button class="btn btn-primary btn-sm" onclick="cfGrant()">🔓 許可する</button><div style="font-size:10px;margin-top:6px;line-height:1.6">Chrome の確認の窓に「今回のみ」と「毎回（今後も）許可」があれば、<b>毎回のほう</b>を選んでください。次から聞かれなくなります</div></div>`; break; }
     case 'lost': body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath || rootName)}」が見当たりません。<br>名前が変わったか、移動したか、消えた可能性があります。<br><button class="btn btn-primary btn-sm" onclick="cfRebind()">🔗 選び直す</button></div>`; break;
     case 'choose': {
       const ch = _cf.chooser;
@@ -13385,6 +13407,12 @@ window.addEventListener('DOMContentLoaded', () => {
   // 日次自動バックアップは最初のユーザー操作時に一度だけ実行（File System Access はユーザー操作が必須のため）
   if (localStorage.getItem('auto_backup_enabled') === '1' && !window.__VIEWER_MODE__) {
     document.addEventListener('pointerdown', () => { try { _startupAutoBackup(); } catch(e){} }, { once: true });
+  }
+  // 案件フォルダの親の許可も、最初の操作のときに一度だけ求める（8.5.7）。
+  // Chrome を開き直すと許可が消えることがあり、そのたびに「🔓 許可する」を探して押すのは手間なため。
+  // 確認の窓で「毎回許可」を選んでもらえば、以後は出ない（Chrome 122 以降の persistent permissions）
+  if (!window.__VIEWER_MODE__) {
+    document.addEventListener('pointerdown', () => { try { _cfRequestRootOnFirstGesture(); } catch(e){} }, { once: true });
   }
   // 最終読込時刻を復元
   _restoreCloudLoadTs();
