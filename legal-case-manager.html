@@ -2899,6 +2899,7 @@ body.files-in-panel #case-task-panel[data-tab="files"] #case-files-panel-host { 
 .cf-count { background: var(--color-primary); color: #fff; border-radius: 10px; padding: 0 7px; font-size: 11px; line-height: 18px; }
 .cf-head-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .cf-tools { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-bottom: 1px solid var(--border-light); font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+.cf-tools select { font-family: inherit; font-size: 12px; padding: 4px 6px; border: 1px solid var(--border-color); border-radius: 7px; background: rgba(255,255,255,0.7); color: var(--text-primary); max-width: 46%; }
 .cf-tools input { flex: 1; min-width: 80px; font-family: inherit; font-size: 12px; padding: 4px 9px; border: 1px solid var(--border-color); border-radius: 7px; background: rgba(255,255,255,0.7); color: var(--text-primary); }
 .cf-sort { display: flex; gap: 2px; }
 .cf-sort span { padding: 3px 8px; border-radius: 6px; cursor: pointer; }
@@ -3452,7 +3453,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7297,7 +7298,11 @@ let taskPanelTab   = (() => { try { return localStorage.getItem(TASK_PANEL_TAB_K
 
 const _cf = {
   caseId: null,
-  status: 'idle',   // idle | loading | none(未接続) | perm(許可待ち) | ok | lost(フォルダが見当たらない) | unsupported
+  status: 'idle',   // idle | loading | noroot(親フォルダ未設定) | choose(一覧から選ぶ) | perm(許可待ち) | ok | lost(フォルダが見当たらない) | error | unsupported
+  base: null,       // 親フォルダの取っ手（中山事務所）
+  relPath: '',      // 親からの相対パス（一覧から選んだとき）
+  permTarget: null, // 許可を求める相手（親か案件フォルダ）
+  chooser: null,    // 一覧から選ぶときの状態
   root: null,       // 結び付けたフォルダの取っ手
   path: [],         // 下位フォルダに入っているときの名前の列
   dir: null,        // いま見ているフォルダの取っ手
@@ -7334,22 +7339,159 @@ function setTaskPanelTab(tab) {
   _applyCaseFilesPlace();
 }
 
+/* 結び付け方は 2 段構え（8.5.5）。
+     (1) 親フォルダ（Dropbox の「中山事務所」など）を一度だけ結び付け（IndexedDB `caseFilesRoot`）、
+         案件ごとは「区分のフォルダの中から 1 クリック」で選ぶ。選んだ相対パスは
+         localStorage の `caseFilesMap_v1`（{案件id: "不動産登記案件/〇〇"}）に覚える
+     (2) 8.5.4 の「案件ごとにフォルダを直接選ぶ」（IndexedDB `caseDir:<案件id>`）も残してある。
+         あればこちらを優先する。共有リンク（dropboxUrl）からは辿れない（末尾が無作為な文字列で
+         フォルダ名を含まない。2026 年 9 月 15 日に 51 件すべてで確認） */
+const CASE_FILES_MAP_KEY = 'caseFilesMap_v1';
+function _cfMapAll() { try { return JSON.parse(localStorage.getItem(CASE_FILES_MAP_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function _cfMapGet(id) { return _cfMapAll()[id] || ''; }
+function _cfMapSet(id, rel) {
+  const m = _cfMapAll(); if (rel) m[id] = rel; else delete m[id];
+  try { localStorage.setItem(CASE_FILES_MAP_KEY, JSON.stringify(m)); } catch (e) {}
+}
+async function _idbDel(key) {
+  const db = await _idbOpen();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').delete(key);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+
 /* 案件詳細を描くたびに呼ばれる。同じ案件を描き直しただけなら読み直さない（↻ で読み直す） */
 async function renderCaseFiles(caseId) {
   if (_cf.caseId === caseId && _cf.status === 'ok') { _cfRender(); return; }
-  Object.assign(_cf, { caseId, status: 'loading', root: null, path: [], dir: null, entries: [], filter: '' });
+  Object.assign(_cf, { caseId, status: 'loading', root: null, base: null, relPath: '', permTarget: null, path: [], dir: null, entries: [], filter: '', chooser: null });
   _cfRender();
   if (!window.showDirectoryPicker) { _cf.status = 'unsupported'; _cfRender(); return; }
+  // (2) 直接結び付けた取っ手があればそれを使う
   let h = null;
   try { h = await _idbGet('caseDir:' + caseId); } catch (e) {}
   if (_cf.caseId !== caseId) return;          // 読んでいる間に別の案件へ移った
-  if (!h) { _cf.status = 'none'; _cfRender(); return; }
-  _cf.root = h;
-  let perm = 'prompt';
-  try { perm = await h.queryPermission({ mode: 'readwrite' }); } catch (e) {}
+  if (h) {
+    _cf.root = h;
+    if (!(await _cfPermOk(h, caseId))) return;
+    await _cfLoad(); return;
+  }
+  // (1) 親フォルダ＋相対パス
+  let base = null;
+  try { base = await _idbGet('caseFilesRoot'); } catch (e) {}
   if (_cf.caseId !== caseId) return;
-  if (perm !== 'granted') { _cf.status = 'perm'; _cfRender(); return; }
-  await _cfLoad();
+  if (!base) { _cf.status = 'noroot'; _cfRender(); return; }
+  _cf.base = base;
+  if (!(await _cfPermOk(base, caseId))) return;
+  const rel = _cfMapGet(caseId);
+  if (!rel) { _cf.status = 'choose'; _cfRender(); _cfLoadChooser(); return; }
+  try {
+    _cf.root = await _cfResolve(base, rel);
+    _cf.relPath = rel;
+    await _cfLoad();
+  } catch (e) {
+    if (_cf.caseId !== caseId) return;
+    _cf.relPath = rel; _cf.status = 'lost'; _cfRender();
+  }
+}
+async function _cfResolve(base, rel) {
+  let d = base;
+  for (const seg of rel.split('/').filter(Boolean)) d = await d.getDirectoryHandle(seg);
+  return d;
+}
+/* 許可が無ければ 'perm' にして false を返す（自動では聞けないので、押してもらう） */
+async function _cfPermOk(handle, caseId) {
+  let perm = 'prompt';
+  try { perm = await handle.queryPermission({ mode: 'readwrite' }); } catch (e) {}
+  if (_cf.caseId !== caseId) return false;
+  if (perm === 'granted') return true;
+  _cf.permTarget = handle; _cf.status = 'perm'; _cfRender();
+  return false;
+}
+
+/* ---- 1 クリックで選ぶ一覧（chooser） ---- */
+function _cfCategoryFolder(c) { return c && c.category === '商業・法人登記' ? '商業・法人登記案件' : '不動産登記案件'; }
+/* 依頼者名・社名の先頭 2 文字。一覧の先頭に寄せるための手がかり（当てにはしない） */
+function _cfNameKeys(c) {
+  const norm = s => String(s || '').replace(/[\s　]/g, '').replace(/様|さん|殿|株式会社|有限会社|合同会社|（株）|\(株\)/g, '');
+  const k = new Set();
+  for (const f of [c && c.client_name, c && c.company_name]) { const n = norm(f); if (n.length >= 2) k.add(n.slice(0, 2)); }
+  return [...k];
+}
+async function _cfLoadChooser(parentName) {
+  const caseId = _cf.caseId;
+  const c = cases.find(x => x.id === caseId);
+  const parent = parentName || (_cf.chooser && _cf.chooser.parent) || _cfCategoryFolder(c);
+  const filter = (_cf.chooser && _cf.chooser.filter) || '';
+  _cf.chooser = { parent, items: [], tops: [], keys: [], filter, loading: true, missing: false };
+  _cfRender();
+  try {
+    const tops = [];
+    for await (const [n, h] of _cf.base.entries()) if (h.kind === 'directory' && !n.startsWith('.')) tops.push(n);
+    tops.sort((a, b) => a.localeCompare(b, 'ja'));
+    const items = []; let missing = false;
+    try {
+      const pd = await _cf.base.getDirectoryHandle(parent);
+      for await (const [n, h] of pd.entries()) if (h.kind === 'directory' && !n.startsWith('.')) items.push(n);
+    } catch (e) { missing = true; }
+    const keys = _cfNameKeys(c);
+    const hit = n => keys.some(k => n.includes(k));
+    items.sort((a, b) => { const am = hit(a), bm = hit(b); if (am !== bm) return am ? -1 : 1; return a.localeCompare(b, 'ja'); });
+    if (_cf.caseId !== caseId) return;
+    _cf.chooser = { parent, items, tops, keys, filter, loading: false, missing };
+  } catch (e) {
+    if (_cf.caseId !== caseId) return;
+    _cf.chooser.loading = false; _cf.chooser.error = e.message;
+  }
+  _cfRender();
+}
+function cfChooserParent(name) { _cfLoadChooser(name); }
+function cfChooserFilter(v) {
+  if (!_cf.chooser) return;
+  _cf.chooser.filter = v;
+  const before = _cfHost().querySelector('.cf-tools input'); const pos = before ? before.selectionStart : null;
+  _cfRender();
+  const after = _cfHost().querySelector('.cf-tools input');
+  if (after) { after.focus(); if (pos != null) try { after.setSelectionRange(pos, pos); } catch (e) {} }
+}
+async function cfBind(i) {
+  const ch = _cf.chooser; if (!ch || !ch.items[i] || !_cf.base) return;
+  const caseId = _cf.caseId; const rel = ch.parent + '/' + ch.items[i];
+  try {
+    const d = await _cfResolve(_cf.base, rel);
+    if (_cf.caseId !== caseId) return;
+    _cfMapSet(caseId, rel);
+    try { await _idbDel('caseDir:' + caseId); } catch (e) {}   // 直接の結び付けが残っていれば外す
+    Object.assign(_cf, { root: d, relPath: rel, path: [], entries: [], filter: '', chooser: null });
+    toast(`この案件に「${ch.items[i]}」を結び付けました`, 'success');
+    await _cfLoad();
+  } catch (e) { toast(`結び付けられませんでした（${e.message}）`, 'error'); }
+}
+/* 「選び直す」。親があれば一覧から、無ければ直接選ぶ */
+function cfRebind() {
+  if (!_cf.base) { cfConnect(); return; }
+  Object.assign(_cf, { status: 'choose', root: null, relPath: '', path: [], entries: [], filter: '', chooser: null });
+  _cfRender(); _cfLoadChooser();
+}
+/* 親フォルダ（一度だけ） */
+async function cfConnectRoot() {
+  if (!window.showDirectoryPicker) { toast('このブラウザではフォルダに接続できません', 'error'); return; }
+  const caseId = _cf.caseId;
+  try {
+    const opts = { mode: 'readwrite' };
+    try { const near = await _idbGet('backupDir'); if (near) opts.startIn = near; } catch (e) {}
+    const handle = await window.showDirectoryPicker(opts);
+    await _idbSet('caseFilesRoot', handle);
+    toast(`親フォルダを「${handle.name}」にしました。以後は一覧から選ぶだけです`, 'success');
+    if (_cf.caseId !== caseId) return;
+    _cf.caseId = null;               // 最初から解決し直す
+    await renderCaseFiles(caseId);
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+    toast(`フォルダを選べませんでした（${e.message}）`, 'error');
+  }
 }
 
 /* いま見ているフォルダ（root から path をたどった先）を読む */
@@ -7448,7 +7590,7 @@ function _cfRender() {
           <button class="btn btn-primary btn-xs cf-write" onclick="cfAdd()">＋ 追加</button>
           <button class="btn btn-secondary btn-xs cf-write" onclick="cfNewFolder()">📂 新しいフォルダ</button>
           <button class="btn btn-secondary btn-xs" onclick="_cfLoad()" title="読み直す">↻</button>` : ''}
-        ${_cf.status !== 'loading' && _cf.status !== 'unsupported' ? `<button class="btn btn-secondary btn-xs" onclick="cfConnect()" title="別のフォルダに結び付け直す">🔗 ${_cf.status === 'none' ? 'フォルダを選ぶ' : '選び直す'}</button>` : ''}
+        ${_cf.status === 'ok' || _cf.status === 'lost' ? `<button class="btn btn-secondary btn-xs" onclick="cfRebind()" title="別のフォルダに結び付け直す">🔗 選び直す</button>` : ''}
         ${!inPanel ? `<button class="btn btn-secondary btn-xs cf-move-to-panel" onclick="setCaseFilesPlace('panel')" title="一覧を右のパネルへ移す">⇄ 右パネルへ</button>` : ''}
       </div>
     </div>`;
@@ -7457,9 +7599,26 @@ function _cfRender() {
   switch (_cf.status) {
     case 'loading': body = `<div class="cf-empty">読み込み中…</div>`; break;
     case 'unsupported': body = `<div class="cf-empty">このブラウザではフォルダに接続できません。<br>パソコンの Chrome か Edge で開いてください。</div>`; break;
-    case 'none': body = `<div class="cf-empty">この案件の Dropbox フォルダは、まだ結び付けていません。<br><button class="btn btn-primary btn-sm" onclick="cfConnect()">📂 フォルダを選ぶ</button></div>`; break;
-    case 'perm': body = `<div class="cf-empty">「${escHtml(rootName)}」を読むには、ブラウザの許可が要ります。<br><button class="btn btn-primary btn-sm" onclick="cfGrant()">🔓 許可する</button><div style="font-size:10px;margin-top:6px">確認の窓で「今後も許可」を選ぶと、次から聞かれません</div></div>`; break;
-    case 'lost': body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(rootName)}」が見当たりません。<br>名前が変わったか、移動したか、消えた可能性があります。<br><button class="btn btn-primary btn-sm" onclick="cfConnect()">📂 選び直す</button></div>`; break;
+    case 'noroot': body = `<div class="cf-empty">はじめに、案件フォルダの親（Dropbox の「中山事務所」）を一度だけ結び付けてください。<br>以後は、案件ごとに一覧から押すだけになります。<br><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">📂 親フォルダを選ぶ</button><div style="font-size:10px;margin-top:8px"><a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">この案件のフォルダを直接選ぶ</a></div></div>`; break;
+    case 'perm': { const tn = _cf.permTarget ? _cf.permTarget.name : rootName; body = `<div class="cf-empty">「${escHtml(tn)}」を読むには、ブラウザの許可が要ります。<br><button class="btn btn-primary btn-sm" onclick="cfGrant()">🔓 許可する</button><div style="font-size:10px;margin-top:6px">確認の窓で「今後も許可」を選ぶと、次から聞かれません</div></div>`; break; }
+    case 'lost': body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath || rootName)}」が見当たりません。<br>名前が変わったか、移動したか、消えた可能性があります。<br><button class="btn btn-primary btn-sm" onclick="cfRebind()">🔗 選び直す</button></div>`; break;
+    case 'choose': {
+      const ch = _cf.chooser;
+      if (!ch || ch.loading) { body = `<div class="cf-empty">フォルダの一覧を読んでいます…</div>`; break; }
+      const q = (ch.filter || '').trim().toLowerCase();
+      const items = ch.items.filter(n => !q || n.toLowerCase().includes(q));
+      const hit = n => ch.keys.some(k => n.includes(k));
+      const rows = items.map(n => { const i = ch.items.indexOf(n); return `<div class="cf-row is-dir" onclick="cfBind(${i})"><span class="cf-ic dir">📁</span><span class="cf-name" title="${escHtml(n)}">${escHtml(n)}</span><span class="cf-meta">${hit(n) ? '★ 依頼者名と一致' : ''}</span><span class="cf-meta r cf-size"></span><span class="cf-acts"><button onclick="event.stopPropagation();cfBind(${i})">これにする</button></span></div>`; }).join('');
+      body = `
+        <div class="cf-tools" style="flex-wrap:wrap">
+          <span style="white-space:nowrap">この案件のフォルダを選んでください：</span>
+          <select onchange="cfChooserParent(this.value)" title="親の中のどのフォルダから選ぶか">${ch.tops.map(t => `<option value="${escHtml(t)}"${t === ch.parent ? ' selected' : ''}>${escHtml(t)}</option>`).join('')}</select>
+          <input type="search" placeholder="名前で絞り込み" value="${escHtml(ch.filter || '')}" oninput="cfChooserFilter(this.value)">
+        </div>
+        <div class="cf-list">${ch.missing ? `<div class="cf-empty">「${escHtml(ch.parent)}」が親フォルダの中に見当たりません。上で別のフォルダを選んでください</div>` : rows || `<div class="cf-empty">${q ? '該当するものがありません' : 'この中にフォルダがありません'}</div>`}</div>
+        <div class="cf-foot">押すとこの案件に結び付き、次からは自動で出ます。<a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">一覧に無い場所を直接選ぶ</a></div>`;
+      break;
+    }
     case 'error': body = `<div class="cf-empty">読めませんでした。<br><span style="font-size:10px">${escHtml(_cf.errorMsg || '')}</span><br><button class="btn btn-secondary btn-sm" onclick="_cfLoad()">↻ 読み直す</button></div>`; break;
     case 'ok': {
       const list = _cfSortedEntries();
@@ -7493,8 +7652,9 @@ async function cfConnect() {
     try { const near = await _idbGet('backupDir'); if (near) opts.startIn = near; } catch (e) {}
     const handle = await window.showDirectoryPicker(opts);
     await _idbSet('caseDir:' + caseId, handle);
+    _cfMapSet(caseId, '');   // 一覧で選んだ相対パスが残っていれば外す（直接の取っ手を優先するため）
     if (_cf.caseId !== caseId) return;
-    Object.assign(_cf, { root: handle, path: [], dir: null, entries: [], filter: '' });
+    Object.assign(_cf, { root: handle, relPath: '', path: [], dir: null, entries: [], filter: '', chooser: null, status: 'loading' });
     toast(`この案件に「${handle.name}」を結び付けました`, 'success');
     await _cfLoad();
   } catch (e) {
@@ -7503,11 +7663,13 @@ async function cfConnect() {
   }
 }
 async function cfGrant() {
-  if (!_cf.root) return;
+  const target = _cf.permTarget || _cf.base || _cf.root;
+  if (!target) return;
   try {
-    const p = await _cf.root.requestPermission({ mode: 'readwrite' });
-    if (p === 'granted') await _cfLoad();
-    else toast('許可されなかったので、一覧は出せません', 'info');
+    const p = await target.requestPermission({ mode: 'readwrite' });
+    if (p !== 'granted') { toast('許可されなかったので、一覧は出せません', 'info'); return; }
+    const caseId = _cf.caseId; _cf.caseId = null;   // 最初から解決し直す
+    await renderCaseFiles(caseId);
   } catch (e) { toast(`許可を求められませんでした（${e.message}）`, 'error'); }
 }
 function cfSort(k) { _cf.sort = k; _cfRender(); }
