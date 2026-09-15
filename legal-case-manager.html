@@ -2843,11 +2843,105 @@ body.viewer-mode .ctp-actions { display: none; }
 body.task-panel-open #view-case-detail { padding-right: 348px; }
 body.task-panel-open #scroll-top-btn { right: 348px; }
 
+
+/* =====================================================
+   案件フォルダのファイル一覧（8.5.4）
+   置き場所は「本文の右列」か「右パネルの中」の切り替え式。
+   部品は 1 つ（_cfRender）で、入れ物だけを変える。印刷には出さない。
+   ===================================================== */
+/* 本文側：受付台帳の下から左右 2 列。右列に一覧を貼り付ける */
+.cd-cols { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; align-items: start; }
+.cd-cols-left { min-width: 0; }
+#case-files-host {
+  position: sticky; top: calc(var(--header-height) + 12px);
+  max-height: calc(100vh - var(--header-height) - 40px);
+  display: flex; min-width: 0;
+}
+#case-files-host .cf-panel { flex: 1; min-width: 0; }
+body.files-in-panel .cd-cols { display: block; }
+body.files-in-panel #case-files-host { display: none; }
+
+/* パネル側：幅を 400px に広げ、タブで「タスク／ファイル」を切り替える */
+body.files-in-panel #case-task-panel { width: 400px; }
+body.files-in-panel.task-panel-open #view-case-detail { padding-right: 428px; }
+body.files-in-panel.task-panel-open #scroll-top-btn { right: 428px; }
+.ctp-tabs { display: none; align-items: flex-end; gap: 4px; padding: 6px 12px 0; border-bottom: 1px solid var(--border-light); flex-shrink: 0; }
+body.files-in-panel .ctp-tabs { display: flex; }
+.ctp-tab {
+  background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: inherit;
+  padding: 6px 10px; font-size: 12px; font-weight: 700; color: var(--text-muted);
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.ctp-tab.on { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+.ctp-tab-badge { background: var(--text-muted); color: #fff; border-radius: 9px; padding: 0 6px; font-size: 10px; line-height: 16px; }
+.ctp-tab.on .ctp-tab-badge { background: var(--color-primary); }
+.ctp-tabs .btn { margin-left: auto; margin-bottom: 5px; }
+#case-files-panel-host { display: none; flex: 1; min-height: 0; flex-direction: column; }
+body.files-in-panel #case-task-panel[data-tab="files"] .ctp-actions,
+body.files-in-panel #case-task-panel[data-tab="files"] .ctp-list { display: none; }
+body.files-in-panel #case-task-panel[data-tab="files"] #case-files-panel-host { display: flex; }
+#case-files-panel-host .cf-panel { flex: 1; border: none; box-shadow: none; border-radius: 0; background: transparent; }
+#case-files-panel-host .cf-row { grid-template-columns: 26px minmax(0,1fr) 84px 76px; }
+#case-files-panel-host .cf-row .cf-size,
+#case-files-panel-host .cf-head-left { display: none; }   /* 見出しと件数はタブが受け持つ */
+#case-files-panel-host .cf-move-to-panel { display: none; }
+
+/* 一覧の部品 */
+.cf-panel {
+  display: flex; flex-direction: column; min-height: 0;
+  background: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.7);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.cf-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border-color); font-size: 12px; font-weight: 700; color: var(--text-secondary); flex-wrap: wrap; flex-shrink: 0; }
+.cf-head-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.cf-path { font-weight: 500; color: var(--text-muted); font-size: 11px; }
+.cf-path b { color: var(--text-primary); font-weight: 700; }
+.cf-count { background: var(--color-primary); color: #fff; border-radius: 10px; padding: 0 7px; font-size: 11px; line-height: 18px; }
+.cf-head-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.cf-tools { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-bottom: 1px solid var(--border-light); font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+.cf-tools input { flex: 1; min-width: 80px; font-family: inherit; font-size: 12px; padding: 4px 9px; border: 1px solid var(--border-color); border-radius: 7px; background: rgba(255,255,255,0.7); color: var(--text-primary); }
+.cf-sort { display: flex; gap: 2px; }
+.cf-sort span { padding: 3px 8px; border-radius: 6px; cursor: pointer; }
+.cf-sort span.on { background: var(--color-primary); color: #fff; font-weight: 700; }
+.cf-list { overflow-y: auto; flex: 1; min-height: 0; }
+.cf-row {
+  display: grid; grid-template-columns: 30px minmax(0,1fr) 96px 64px 88px; align-items: center; gap: 8px;
+  padding: 6px 14px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 12px; color: var(--text-primary); cursor: default;
+}
+.cf-row:hover { background: rgba(37,99,235,0.06); }
+.cf-row.is-dir { font-weight: 700; cursor: pointer; }
+.cf-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cf-meta { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.cf-meta.r { text-align: right; }
+.cf-acts { display: flex; gap: 3px; justify-content: flex-end; opacity: 0; transition: opacity .12s; }
+.cf-row:hover .cf-acts, .cf-row:focus-within .cf-acts { opacity: 1; }
+.cf-acts button { font-family: inherit; font-size: 11px; padding: 2px 7px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.8); cursor: pointer; color: var(--text-secondary); }
+.cf-acts button:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.cf-ic { width: 22px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; color: #fff; letter-spacing: .3px; }
+.cf-ic.pdf { background: #dc2626; } .cf-ic.doc { background: #2563eb; } .cf-ic.img { background: #16a34a; }
+.cf-ic.web { background: #64748b; } .cf-ic.xls { background: #15803d; } .cf-ic.ppt { background: #c2410c; } .cf-ic.etc { background: #94a3b8; }
+.cf-ic.dir { background: transparent; color: var(--color-primary); font-size: 18px; }
+.cf-drop { margin: 10px 14px 12px; padding: 12px; border: 1.5px dashed rgba(37,99,235,0.45); border-radius: 10px; text-align: center; font-size: 11px; color: var(--text-muted); background: rgba(37,99,235,0.04); flex-shrink: 0; }
+.cf-drop b { color: var(--color-primary); }
+.cf-drop.over { background: rgba(37,99,235,0.12); border-style: solid; }
+.cf-foot { padding: 6px 14px 8px; font-size: 10px; color: var(--text-muted); border-top: 1px solid var(--border-light); line-height: 1.6; flex-shrink: 0; }
+.cf-empty { padding: 28px 16px; text-align: center; font-size: 12px; color: var(--text-muted); line-height: 1.8; }
+.cf-empty .btn { margin-top: 8px; }
+body.viewer-mode .cf-write { display: none !important; }
+
+@media (max-width: 900px) {
+  .cd-cols { display: block; }
+  #case-files-host { position: static; max-height: none; margin-bottom: 16px; }
+}
+
 @media (max-width: 768px) {
   #case-task-panel { width: min(86vw, 340px); top: calc(var(--header-height) + 4px); bottom: 8px; }
   #view-case-detail,
   body.task-panel-open #view-case-detail { padding-right: 40px; }
   body.task-panel-open #scroll-top-btn { right: 16px; }
+  body.files-in-panel #case-task-panel { width: min(86vw, 340px); }
+  body.files-in-panel.task-panel-open #view-case-detail { padding-right: 40px; }
+  body.files-in-panel.task-panel-open #scroll-top-btn { right: 16px; }
 }
 
 /* ===== スクロールトップボタン ===== */
@@ -3358,7 +3452,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.3</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3556,10 +3650,17 @@ tr.row-waiting:hover > td {
             <div class="ctp-title" id="case-task-panel-title"></div>
             <button type="button" class="ctp-close" onclick="toggleTaskPanel()" aria-label="タスク一覧を閉じる">✕</button>
           </div>
+          <!-- ファイル一覧を右パネルに置いたときだけ出るタブ（body.files-in-panel） -->
+          <div class="ctp-tabs no-print">
+            <button type="button" class="ctp-tab on" data-tab="tasks" onclick="setTaskPanelTab('tasks')">✅ タスク <span class="ctp-tab-badge" id="ctp-tab-tasks-count">0</span></button>
+            <button type="button" class="ctp-tab" data-tab="files" onclick="setTaskPanelTab('files')">📁 ファイル <span class="ctp-tab-badge" id="ctp-tab-files-count">–</span></button>
+            <button type="button" class="btn btn-secondary btn-xs" onclick="setCaseFilesPlace('body')" title="一覧を本文の右列へ戻す">⇄ 本文へ</button>
+          </div>
           <div class="ctp-actions">
             <button class="btn btn-primary btn-xs" id="case-task-add-btn" onclick="">＋ タスク追加</button>
           </div>
           <div class="ctp-list" id="case-task-list"></div>
+          <div id="case-files-panel-host" class="no-print"></div>
         </div>
       </div>
 
@@ -5062,6 +5163,11 @@ function _setupViewerMode() {
   window.openTaskModal = noop;
   window.saveCase = noop;
   window.saveTask = noop;
+  // 案件フォルダへの書き込み（追加・名前変更・フォルダ作成）も止める。一覧を見るのは可
+  window.cfAdd = noop;
+  window.cfRename = noop;
+  window.cfNewFolder = noop;
+  window.cfDrop = async (ev) => { ev.preventDefault(); noop(); };
   // 閲覧専用バナー
   const banner = document.createElement('div');
   banner.id = 'viewer-banner';
@@ -6923,6 +7029,10 @@ function renderCaseDetail(caseId) {
     <!-- 受付台帳・不動産一覧（カレンダーと基本情報の間） -->
     ${renderLedger(c)}
 
+    <!-- 受付台帳の下から左右 2 列（8.5.4）。右列はファイル一覧。
+         一覧を右パネルに置く設定（body.files-in-panel）のときは 1 列に戻る -->
+    <div class="cd-cols">
+    <div class="cd-cols-left">
     <!-- Info grid -->
     <div class="case-detail-grid">
       <!-- Basic info -->
@@ -7026,6 +7136,9 @@ function renderCaseDetail(caseId) {
     <div class="no-print" style="margin-top:32px;padding-top:16px;border-top:1px solid var(--border-color);display:flex;justify-content:flex-end">
       <button class="btn btn-danger btn-sm" onclick="confirmAction('案件「${escHtml(c.case_name)}」を削除しますか？関連タスクも削除されます。', () => { deleteCase('${c.id}'); showView('cases'); })">🗑 この案件を削除</button>
     </div>
+    </div><!-- /cd-cols-left -->
+    <div id="case-files-host" class="no-print"></div>
+    </div><!-- /cd-cols -->
   `;
 
   // タスクの右サイドパネルを更新
@@ -7039,6 +7152,10 @@ function renderCaseDetail(caseId) {
 
   // 案件詳細画面の入力欄に追従ボタンをセットアップ
   _setupInlineSaveForDetail(caseId);
+
+  // 案件フォルダのファイル一覧（置き場所の設定を反映してから描く）
+  _applyCaseFilesPlace();
+  renderCaseFiles(caseId);
 }
 
 function togglePrintDropdown(e) {
@@ -7152,7 +7269,362 @@ function updateCaseTaskPanel(caseId) {
   const list  = document.getElementById('case-task-list');
   if (title) title.textContent = `タスク一覧（${all.length}件 / 未完了 ${undone}件）`;
   if (count) { count.textContent = undone; count.classList.toggle('zero', undone === 0); }
+  const tabCount = document.getElementById('ctp-tab-tasks-count');
+  if (tabCount) tabCount.textContent = undone;
   if (list)  list.innerHTML = renderCaseTasks(caseId);
+}
+
+/* =====================================================
+   案件フォルダのファイル一覧（8.5.4）
+
+   案件ごとに Dropbox の中のフォルダを 1 つ結び付け、案件詳細に一覧を出す。
+   読み書きは、バックアップ先の指定と同じ「ブラウザにフォルダを接続する仕組み」
+   （File System Access API）。フォルダの取っ手は IndexedDB（caseflow_backup / handles）に
+   `caseDir:<案件id>` で覚える。案件データ（cases_v1）には何も足していない。
+
+   置き場所は 2 つ。部品（_cfRender）は 1 つで、入れ物だけを変える。
+     'body'  … 受付台帳の下、本文の右列（#case-files-host。下へ送っても右に留まる）
+     'panel' … 右のタスクパネルの中の「ファイル」タブ（#case-files-panel-host。幅 400px）
+   どちらも印刷には出ない（印刷は #print-area だけを別に組み立てる作り。念のため no-print も付けてある）。
+
+   できないこと（ブラウザの決まり。作りでは越えられない）：
+     Finder やアプリで直接開く／削除（付けていない。消すときは Dropbox か Finder で）
+   ===================================================== */
+const CASE_FILES_PLACE_KEY = 'caseFilesPlace_v1';   // 'body' | 'panel'
+const TASK_PANEL_TAB_KEY   = 'caseTaskPanelTab_v1'; // 'tasks' | 'files'
+let caseFilesPlace = (() => { try { return localStorage.getItem(CASE_FILES_PLACE_KEY) === 'panel' ? 'panel' : 'body'; } catch (e) { return 'body'; } })();
+let taskPanelTab   = (() => { try { return localStorage.getItem(TASK_PANEL_TAB_KEY) === 'files' ? 'files' : 'tasks'; } catch (e) { return 'tasks'; } })();
+
+const _cf = {
+  caseId: null,
+  status: 'idle',   // idle | loading | none(未接続) | perm(許可待ち) | ok | lost(フォルダが見当たらない) | unsupported
+  root: null,       // 結び付けたフォルダの取っ手
+  path: [],         // 下位フォルダに入っているときの名前の列
+  dir: null,        // いま見ているフォルダの取っ手
+  entries: [],      // { name, kind:'file'|'dir', handle, size, mtime, ext }
+  sort: 'date',     // 'date' | 'name'
+  filter: '',
+  busy: false,
+};
+const _CF_SKIP = new Set(['.DS_Store', 'Icon\r', 'desktop.ini', 'Thumbs.db']);
+
+function _applyCaseFilesPlace() {
+  const inPanel = caseFilesPlace === 'panel';
+  document.body.classList.toggle('files-in-panel', inPanel);
+  const panel = document.getElementById('case-task-panel');
+  if (panel) {
+    panel.dataset.tab = inPanel ? taskPanelTab : 'tasks';
+    panel.querySelectorAll('.ctp-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === panel.dataset.tab));
+  }
+}
+function setCaseFilesPlace(place) {
+  caseFilesPlace = place === 'panel' ? 'panel' : 'body';
+  try { localStorage.setItem(CASE_FILES_PLACE_KEY, caseFilesPlace); } catch (e) {}
+  if (caseFilesPlace === 'panel') {
+    taskPanelTab = 'files';
+    try { localStorage.setItem(TASK_PANEL_TAB_KEY, taskPanelTab); } catch (e) {}
+    if (!taskPanelOpen) toggleTaskPanel();   // 移した先が閉じていては見えない
+  }
+  _applyCaseFilesPlace();
+  _cfRender();
+}
+function setTaskPanelTab(tab) {
+  taskPanelTab = tab === 'files' ? 'files' : 'tasks';
+  try { localStorage.setItem(TASK_PANEL_TAB_KEY, taskPanelTab); } catch (e) {}
+  _applyCaseFilesPlace();
+}
+
+/* 案件詳細を描くたびに呼ばれる。同じ案件を描き直しただけなら読み直さない（↻ で読み直す） */
+async function renderCaseFiles(caseId) {
+  if (_cf.caseId === caseId && _cf.status === 'ok') { _cfRender(); return; }
+  Object.assign(_cf, { caseId, status: 'loading', root: null, path: [], dir: null, entries: [], filter: '' });
+  _cfRender();
+  if (!window.showDirectoryPicker) { _cf.status = 'unsupported'; _cfRender(); return; }
+  let h = null;
+  try { h = await _idbGet('caseDir:' + caseId); } catch (e) {}
+  if (_cf.caseId !== caseId) return;          // 読んでいる間に別の案件へ移った
+  if (!h) { _cf.status = 'none'; _cfRender(); return; }
+  _cf.root = h;
+  let perm = 'prompt';
+  try { perm = await h.queryPermission({ mode: 'readwrite' }); } catch (e) {}
+  if (_cf.caseId !== caseId) return;
+  if (perm !== 'granted') { _cf.status = 'perm'; _cfRender(); return; }
+  await _cfLoad();
+}
+
+/* いま見ているフォルダ（root から path をたどった先）を読む */
+async function _cfLoad() {
+  const caseId = _cf.caseId;
+  _cf.status = 'loading'; _cfRender();
+  try {
+    let dir = _cf.root;
+    for (const seg of _cf.path) dir = await dir.getDirectoryHandle(seg);
+    const list = [];
+    for await (const [name, handle] of dir.entries()) {
+      if (_CF_SKIP.has(name) || name.startsWith('._')) continue;
+      if (handle.kind === 'directory') { list.push({ name, kind: 'dir', handle, size: 0, mtime: 0, ext: '' }); continue; }
+      let size = 0, mtime = 0;
+      try { const f = await handle.getFile(); size = f.size; mtime = f.lastModified; } catch (e) {}
+      const m = name.match(/\.([A-Za-z0-9]{1,8})$/);   // webloc（6字）や numbers（7字）も拾う
+      list.push({ name, kind: 'file', handle, size, mtime, ext: m ? m[1].toLowerCase() : '' });
+    }
+    if (_cf.caseId !== caseId) return;
+    _cf.dir = dir; _cf.entries = list; _cf.status = 'ok';
+  } catch (e) {
+    if (_cf.caseId !== caseId) return;
+    console.warn('案件フォルダの読み取りに失敗', e);
+    _cf.status = (e && e.name === 'NotFoundError') ? 'lost' : 'error';
+    _cf.errorMsg = e && e.message ? e.message : String(e);
+  }
+  _cfRender();
+}
+
+function _cfHost() {
+  const body  = document.getElementById('case-files-host');
+  const panel = document.getElementById('case-files-panel-host');
+  const inPanel = caseFilesPlace === 'panel';
+  if (body  && inPanel)  body.innerHTML  = '';
+  if (panel && !inPanel) panel.innerHTML = '';
+  return inPanel ? panel : body;
+}
+function _cfSize(n) {
+  if (!n) return '';
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return Math.round(n / 1024) + ' KB';
+  return (n / 1024 / 1024).toFixed(1) + ' MB';
+}
+function _cfDate(t) {
+  if (!t) return '—';
+  const d = new Date(t), z = v => String(v).padStart(2, '0');
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
+}
+function _cfIcon(e) {
+  if (e.kind === 'dir') return '<span class="cf-ic dir">📁</span>';
+  const x = e.ext;
+  const cls = x === 'pdf' ? 'pdf'
+    : /^(docx?|rtf|odt)$/.test(x) ? 'doc'
+    : /^(xlsx?|xlsm|csv|numbers)$/.test(x) ? 'xls'
+    : /^(pptx?|key)$/.test(x) ? 'ppt'
+    : /^(jpe?g|png|gif|heic|webp|tiff?|bmp)$/.test(x) ? 'img'
+    : /^(webloc|url|html?)$/.test(x) ? 'web' : 'etc';
+  const label = x === 'webloc' ? 'URL' : /^(jpe?g)$/.test(x) ? 'JPG' : (x || '?').toUpperCase().slice(0, 4);
+  return `<span class="cf-ic ${cls}">${escHtml(label)}</span>`;
+}
+function _cfSortedEntries() {
+  const q = _cf.filter.trim().toLowerCase();
+  let list = _cf.entries.filter(e => !q || e.name.toLowerCase().includes(q));
+  const byName = (a, b) => a.name.localeCompare(b.name, 'ja');
+  list.sort((a, b) => {
+    if (a.kind !== b.kind) return a.kind === 'dir' ? -1 : 1;   // フォルダを先に
+    if (_cf.sort === 'date') return (b.mtime - a.mtime) || byName(a, b);
+    return byName(a, b);
+  });
+  return list;
+}
+
+function _cfRender() {
+  const host = _cfHost();
+  if (!host) return;
+  const inPanel = caseFilesPlace === 'panel';
+  const fileCount = _cf.status === 'ok' ? _cf.entries.filter(e => e.kind === 'file').length : null;
+  const tabCount = document.getElementById('ctp-tab-files-count');
+  if (tabCount) tabCount.textContent = fileCount == null ? '–' : fileCount;
+
+  const rootName = _cf.root ? _cf.root.name : '';
+  const crumbs = _cf.status === 'ok'
+    ? `<span class="cf-path">${_cf.path.length ? `<span style="cursor:pointer" onclick="cfGoto(-1)">${escHtml(rootName)}</span>` : `<b>${escHtml(rootName)}</b>`}${
+        _cf.path.map((s, i) => ` › ${i === _cf.path.length - 1 ? `<b>${escHtml(s)}</b>` : `<span style="cursor:pointer" onclick="cfGoto(${i})">${escHtml(s)}</span>`}`).join('')}</span>`
+    : '';
+  const head = `
+    <div class="cf-head">
+      <div class="cf-head-left">
+        <span>📁 ファイル</span>
+        ${fileCount != null ? `<span class="cf-count">${fileCount}</span>` : ''}
+        ${crumbs}
+      </div>
+      <div class="cf-head-actions">
+        ${_cf.status === 'ok' ? `
+          ${_cf.path.length ? `<button class="btn btn-secondary btn-xs" onclick="cfGoto(${_cf.path.length - 2})">↑ 上へ</button>` : ''}
+          <button class="btn btn-primary btn-xs cf-write" onclick="cfAdd()">＋ 追加</button>
+          <button class="btn btn-secondary btn-xs cf-write" onclick="cfNewFolder()">📂 新しいフォルダ</button>
+          <button class="btn btn-secondary btn-xs" onclick="_cfLoad()" title="読み直す">↻</button>` : ''}
+        ${_cf.status !== 'loading' && _cf.status !== 'unsupported' ? `<button class="btn btn-secondary btn-xs" onclick="cfConnect()" title="別のフォルダに結び付け直す">🔗 ${_cf.status === 'none' ? 'フォルダを選ぶ' : '選び直す'}</button>` : ''}
+        ${!inPanel ? `<button class="btn btn-secondary btn-xs cf-move-to-panel" onclick="setCaseFilesPlace('panel')" title="一覧を右のパネルへ移す">⇄ 右パネルへ</button>` : ''}
+      </div>
+    </div>`;
+
+  let body = '';
+  switch (_cf.status) {
+    case 'loading': body = `<div class="cf-empty">読み込み中…</div>`; break;
+    case 'unsupported': body = `<div class="cf-empty">このブラウザではフォルダに接続できません。<br>パソコンの Chrome か Edge で開いてください。</div>`; break;
+    case 'none': body = `<div class="cf-empty">この案件の Dropbox フォルダは、まだ結び付けていません。<br><button class="btn btn-primary btn-sm" onclick="cfConnect()">📂 フォルダを選ぶ</button></div>`; break;
+    case 'perm': body = `<div class="cf-empty">「${escHtml(rootName)}」を読むには、ブラウザの許可が要ります。<br><button class="btn btn-primary btn-sm" onclick="cfGrant()">🔓 許可する</button><div style="font-size:10px;margin-top:6px">確認の窓で「今後も許可」を選ぶと、次から聞かれません</div></div>`; break;
+    case 'lost': body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(rootName)}」が見当たりません。<br>名前が変わったか、移動したか、消えた可能性があります。<br><button class="btn btn-primary btn-sm" onclick="cfConnect()">📂 選び直す</button></div>`; break;
+    case 'error': body = `<div class="cf-empty">読めませんでした。<br><span style="font-size:10px">${escHtml(_cf.errorMsg || '')}</span><br><button class="btn btn-secondary btn-sm" onclick="_cfLoad()">↻ 読み直す</button></div>`; break;
+    case 'ok': {
+      const list = _cfSortedEntries();
+      const rows = list.map(e => {
+        const idx = _cf.entries.indexOf(e);
+        if (e.kind === 'dir') {
+          return `<div class="cf-row is-dir" onclick="cfEnter(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">—</span><span class="cf-meta r cf-size"></span><span class="cf-acts"><button onclick="event.stopPropagation();cfEnter(${idx})">開く</button></span></div>`;
+        }
+        return `<div class="cf-row" ondblclick="cfOpen(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">${_cfDate(e.mtime)}</span><span class="cf-meta r cf-size">${_cfSize(e.size)}</span><span class="cf-acts"><button onclick="cfOpen(${idx})">開く</button><button class="cf-write" onclick="cfRename(${idx})">名前</button></span></div>`;
+      }).join('');
+      body = `
+        <div class="cf-tools">
+          <input type="search" placeholder="名前で絞り込み" value="${escHtml(_cf.filter)}" oninput="cfFilter(this.value)">
+          <span class="cf-sort"><span class="${_cf.sort === 'name' ? 'on' : ''}" onclick="cfSort('name')">名前</span><span class="${_cf.sort === 'date' ? 'on' : ''}" onclick="cfSort('date')">更新日</span></span>
+        </div>
+        <div class="cf-list">${rows || `<div class="cf-empty">${_cf.filter ? '該当するものがありません' : 'このフォルダは空です'}</div>`}</div>
+        <div class="cf-drop cf-write" ondragover="cfDragOver(event)" ondragleave="this.classList.remove('over')" ondrop="cfDrop(event)">ここにファイルを落とすと、<b>このフォルダに追加</b>されます</div>
+        <div class="cf-foot">PDF・画像はその場で開きます。Word などはダウンロードになります。削除はここからはできません（Dropbox か Finder で）。</div>`;
+      break;
+    }
+  }
+  host.innerHTML = `<div class="cf-panel no-print">${head}${body}</div>`;
+}
+
+/* ---- 操作 ---- */
+async function cfConnect() {
+  if (!window.showDirectoryPicker) { toast('このブラウザではフォルダに接続できません', 'error'); return; }
+  const caseId = _cf.caseId;
+  try {
+    const opts = { mode: 'readwrite' };
+    try { const near = await _idbGet('backupDir'); if (near) opts.startIn = near; } catch (e) {}
+    const handle = await window.showDirectoryPicker(opts);
+    await _idbSet('caseDir:' + caseId, handle);
+    if (_cf.caseId !== caseId) return;
+    Object.assign(_cf, { root: handle, path: [], dir: null, entries: [], filter: '' });
+    toast(`この案件に「${handle.name}」を結び付けました`, 'success');
+    await _cfLoad();
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;   // 選ばずに閉じた
+    toast(`フォルダを選べませんでした（${e.message}）`, 'error');
+  }
+}
+async function cfGrant() {
+  if (!_cf.root) return;
+  try {
+    const p = await _cf.root.requestPermission({ mode: 'readwrite' });
+    if (p === 'granted') await _cfLoad();
+    else toast('許可されなかったので、一覧は出せません', 'info');
+  } catch (e) { toast(`許可を求められませんでした（${e.message}）`, 'error'); }
+}
+function cfSort(k) { _cf.sort = k; _cfRender(); }
+function cfFilter(v) {
+  _cf.filter = v;
+  const host = _cfHost(); if (!host) return;
+  const listEl = host.querySelector('.cf-list');
+  const before = host.querySelector('.cf-tools input');
+  const pos = before ? before.selectionStart : null;
+  _cfRender();
+  const after = _cfHost().querySelector('.cf-tools input');
+  if (after) { after.focus(); if (pos != null) try { after.setSelectionRange(pos, pos); } catch (e) {} }
+}
+function cfEnter(idx) { const e = _cf.entries[idx]; if (!e || e.kind !== 'dir') return; _cf.path.push(e.name); _cf.filter = ''; _cfLoad(); }
+function cfGoto(i) { _cf.path = i < 0 ? [] : _cf.path.slice(0, i + 1); _cf.filter = ''; _cfLoad(); }
+
+async function cfOpen(idx) {
+  const e = _cf.entries[idx]; if (!e || e.kind !== 'file') return;
+  try {
+    const f = await e.handle.getFile();
+    if (e.ext === 'webloc') {
+      /* Mac のリンクファイル（plist）。中の URL を取り出して開く */
+      const txt = await f.text();
+      const m = txt.match(/<key>URL<\/key>\s*<string>([^<]+)<\/string>/);
+      if (m) { window.open(m[1].trim(), '_blank', 'noopener'); return; }
+      toast('このリンクファイルから URL を読み取れませんでした', 'error'); return;
+    }
+    const inline = /^(pdf|jpe?g|png|gif|webp|txt|html?)$/.test(e.ext);
+    const url = URL.createObjectURL(f);
+    if (inline) {
+      const w = window.open(url, '_blank');
+      if (!w) toast('ポップアップが塞がれました。このサイトのポップアップを許可してください', 'error');
+    } else {
+      const a = document.createElement('a'); a.href = url; a.download = e.name; document.body.appendChild(a); a.click(); a.remove();
+      toast(`「${e.name}」をダウンロードしました（このブラウザではアプリで直接開けません）`, 'info');
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (err) { toast(`開けませんでした（${err.message}）`, 'error'); }
+}
+
+async function cfRename(idx) {
+  const e = _cf.entries[idx]; if (!e || e.kind !== 'file' || !_cf.dir) return;
+  const name = prompt('新しい名前', e.name);
+  if (name == null) return;
+  const nn = name.trim();
+  if (!nn || nn === e.name) return;
+  if (/[\/\\:]/.test(nn)) { toast('名前に / \\ : は使えません', 'error'); return; }
+  if (_cf.entries.some(x => x.name === nn)) { toast('同じ名前のものがすでにあります', 'error'); return; }
+  if (_cf.busy) return; _cf.busy = true;
+  try {
+    if (typeof e.handle.move === 'function') {
+      await e.handle.move(nn);
+    } else {
+      /* move が使えない Chrome 向け：写してから、写しの大きさを確かめて、元を消す */
+      const src = await e.handle.getFile();
+      const dst = await _cf.dir.getFileHandle(nn, { create: true });
+      const w = await dst.createWritable(); await w.write(src); await w.close();
+      const chk = await (await _cf.dir.getFileHandle(nn)).getFile();
+      if (chk.size !== src.size) throw new Error('写しの大きさが合いません。元は残してあります');
+      await _cf.dir.removeEntry(e.name);
+    }
+    toast(`「${e.name}」→「${nn}」に変えました`, 'success');
+    await _cfLoad();
+  } catch (err) { toast(`名前を変えられませんでした（${err.message}）`, 'error'); }
+  finally { _cf.busy = false; }
+}
+
+async function cfNewFolder() {
+  if (!_cf.dir) return;
+  const name = prompt('新しいフォルダの名前');
+  if (name == null) return;
+  const nn = name.trim();
+  if (!nn) return;
+  if (/[\/\\:]/.test(nn)) { toast('名前に / \\ : は使えません', 'error'); return; }
+  if (_cf.entries.some(x => x.name === nn)) { toast('同じ名前のものがすでにあります', 'error'); return; }
+  try { await _cf.dir.getDirectoryHandle(nn, { create: true }); toast(`フォルダ「${nn}」を作りました`, 'success'); await _cfLoad(); }
+  catch (err) { toast(`フォルダを作れませんでした（${err.message}）`, 'error'); }
+}
+
+/* 追加：同じ名前があるものは上書きせず飛ばす（中身を見ずに上書きしない） */
+async function _cfWriteFiles(files) {
+  if (!_cf.dir || !files || !files.length) return;
+  if (_cf.busy) { toast('別の作業が終わるまでお待ちください', 'info'); return; }
+  _cf.busy = true;
+  let ok = 0; const skipped = [], failed = [];
+  try {
+    for (const f of files) {
+      if (_cf.entries.some(x => x.name === f.name)) { skipped.push(f.name); continue; }
+      try {
+        const h = await _cf.dir.getFileHandle(f.name, { create: true });
+        const w = await h.createWritable(); await w.write(f); await w.close();
+        ok++;
+      } catch (err) { failed.push(f.name); console.warn('書き込み失敗', f.name, err); }
+    }
+  } finally { _cf.busy = false; }
+  const parts = [];
+  if (ok) parts.push(`${ok}件を追加しました`);
+  if (skipped.length) parts.push(`同じ名前があるため飛ばしました：${skipped.join('、')}`);
+  if (failed.length) parts.push(`追加できませんでした：${failed.join('、')}`);
+  toast(parts.join('。'), failed.length ? 'error' : skipped.length ? 'info' : 'success');
+  await _cfLoad();
+}
+async function cfAdd() {
+  if (!window.showOpenFilePicker) { toast('このブラウザでは追加できません', 'error'); return; }
+  try {
+    const hs = await window.showOpenFilePicker({ multiple: true });
+    const files = [];
+    for (const h of hs) files.push(await h.getFile());
+    await _cfWriteFiles(files);
+  } catch (e) { if (e && e.name !== 'AbortError') toast(`追加できませんでした（${e.message}）`, 'error'); }
+}
+function cfDragOver(ev) { ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy'; ev.currentTarget.classList.add('over'); }
+async function cfDrop(ev) {
+  ev.preventDefault(); ev.currentTarget.classList.remove('over');
+  const files = Array.from(ev.dataTransfer.files || []);
+  if (!files.length) { toast('ファイルを落としてください（フォルダは追加できません）', 'info'); return; }
+  await _cfWriteFiles(files);
 }
 
 function infoRow(label, value) {
