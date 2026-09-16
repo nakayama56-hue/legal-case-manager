@@ -3460,7 +3460,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.5.9</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3949,10 +3949,6 @@ tr.row-waiting:hover > td {
           <div class="form-group full">
             <label class="form-label">備考・メモ</label>
               <textarea class="form-control" id="f-memo" placeholder="その他特記事項"></textarea>
-          </div>
-          <div class="form-group full">
-            <label class="form-label">📦 Dropboxフォルダ URL</label>
-            <input class="form-control" id="f-dropbox-url" type="url" placeholder="https://www.dropbox.com/home/...">
           </div>
           <div class="form-group full">
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-primary)">
@@ -7029,9 +7025,6 @@ function renderCaseDetail(caseId) {
           </button>
           <button class="btn btn-secondary btn-sm" onclick="printCaseSimple('${c.id}')">🖨 簡易印刷</button>
           <button class="btn btn-secondary btn-sm" onclick="printCaseDetail('${c.id}')">🖨 印刷</button>
-        ${c.dropboxUrl
-          ? `<a href="${escHtml(c.dropboxUrl)}" target="_blank" rel="noopener" class="btn btn-sm" style="background:#0061ff;color:#fff;border-color:#0061ff;text-decoration:none">📦 Dropboxで開く</a>`
-          : `<span class="btn btn-sm" style="background:#f1f5f9;color:#94a3b8;border-color:#cbd5e1;cursor:default;pointer-events:none" title="この案件にはDropbox URLが未設定です">📦 Dropbox未設定</span>`}
         <span class="btn btn-sm" style="cursor:default;opacity:0.7;pointer-events:none">
           ${c.category==='商業・法人登記'?'🏢 商業・法人登記':'🏠 不動産登記'}
         </span>
@@ -10128,7 +10121,6 @@ function openCaseModal(caseId, scrollTo) {
   });
   document.getElementById('f-case-type-text').value = '';
   document.getElementById('f-hoteisozoku').checked = false;
-  document.getElementById('f-dropbox-url').value = '';
   const souzokuChk = document.getElementById('f-souzoku-tracker-enabled');
   if (souzokuChk) souzokuChk.checked = false;
   onCaseCategoryChange('不動産登記');
@@ -10181,7 +10173,6 @@ function openCaseModal(caseId, scrollTo) {
     document.getElementById('f-case-status').value = c.status || '新規受付';
     document.getElementById('f-received-date').value = c.received_date || '';
     document.getElementById('f-memo').value = c.memo || '';
-    document.getElementById('f-dropbox-url').value = c.dropboxUrl || '';
     document.getElementById('f-souzoku-tracker-enabled').checked = !!c.souzoku_tracker_enabled;
     document.getElementById('f-hoteisozoku').checked = c.hoteisozoku || false;
 
@@ -10816,7 +10807,6 @@ function saveCase() {
     other_contact:contacts[1]?.tel   || '',
     received_date:    document.getElementById('f-received-date').value,
     memo:        document.getElementById('f-memo').value.trim(),
-    dropboxUrl:  document.getElementById('f-dropbox-url').value.trim(),
     souzoku_tracker_enabled: document.getElementById('f-souzoku-tracker-enabled').checked,
     hoteisozoku: document.getElementById('f-hoteisozoku').checked,
   };
