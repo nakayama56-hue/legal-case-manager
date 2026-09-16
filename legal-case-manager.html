@@ -3460,7 +3460,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.1</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.2</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -9327,7 +9327,11 @@ function renderLedger(c) {
 
 
 /* 不動産一覧表 */
-const PROP_NUMS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮'];
+/* 丸数字は Unicode に 3 か所に分かれて 50 まである（①〜⑳ U+2460／㉑〜㉟ U+3251／㊱〜㊿ U+32B1）。
+   8.6.1 までは ①〜⑮ の 15 個を手で並べていたため、16 件目から素の数字になっていた。
+   51 件目以降は丸数字が存在しないので、呼び出し側で素の数字に落ちる */
+const PROP_NUMS = Array.from({ length: 50 }, (_, i) => String.fromCodePoint(
+  i < 20 ? 0x2460 + i : i < 35 ? 0x3251 + (i - 20) : 0x32B1 + (i - 35)));
 
 function renderPropertyList(c) {
   const cid = c.id;
