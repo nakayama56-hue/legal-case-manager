@@ -2934,6 +2934,10 @@ body.files-in-panel #case-task-panel[data-tab="files"] #case-files-panel-host { 
 .cf-drop.over { background: rgba(37,99,235,0.12); border-style: solid; }
 .cf-foot { padding: 6px 14px 8px; font-size: 10px; color: var(--text-muted); border-top: 1px solid var(--border-light); line-height: 1.6; flex-shrink: 0; }
 .cf-empty { padding: 28px 16px; text-align: center; font-size: 12px; color: var(--text-muted); line-height: 1.8; }
+/* 見当たらないときの候補（8.6.3）。名前の違いを見比べるので、切らずに折り返す */
+.cf-row.cf-suggest { grid-template-columns: 30px minmax(0,1fr) auto; }
+.cf-suggest .cf-name { white-space: normal; word-break: normal; overflow-wrap: break-word; line-break: strict; }
+.cf-suggest .cf-name .cf-meta { display: block; font-weight: 400; white-space: normal; }
 .cf-empty .btn { margin-top: 8px; }
 body.viewer-mode .cf-write { display: none !important; }
 
@@ -3460,7 +3464,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.2</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.3</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7313,11 +7317,13 @@ let taskPanelTab   = (() => { try { return localStorage.getItem(TASK_PANEL_TAB_K
 
 const _cf = {
   caseId: null,
-  status: 'idle',   // idle | loading | noroot(親フォルダ未設定) | choose(一覧から選ぶ) | perm(許可待ち) | ok | lost(フォルダが見当たらない) | error | unsupported
+  gen: 0,           // renderCaseFiles の呼び出しごとに 1 増やす。古い呼び出しの続きが、新しい状態を上書きしないため（8.6.3）
+  status: 'idle',   // idle | loading | noroot(親フォルダ未設定) | choose(一覧から選ぶ) | perm(許可待ち) | ok | seeking(名前を変えた先を探している) | lost(フォルダが見当たらない) | error | unsupported
   base: null,       // 親フォルダの取っ手（中山事務所）
   relPath: '',      // 親からの相対パス（一覧から選んだとき）
   permTarget: null, // 許可を求める相手（親か案件フォルダ）
   chooser: null,    // 一覧から選ぶときの状態
+  suggest: [],      // 見当たらないときに出す、名前の似たフォルダ（親からの道のりの配列の配列）
   root: null,       // 結び付けたフォルダの取っ手
   path: [],         // 下位フォルダに入っているときの名前の列
   dir: null,        // いま見ているフォルダの取っ手
@@ -7381,17 +7387,22 @@ async function _idbDel(key) {
 /* 案件詳細を描くたびに呼ばれる。同じ案件を描き直しただけなら読み直さない（↻ で読み直す） */
 async function renderCaseFiles(caseId) {
   if (_cf.caseId === caseId && _cf.status === 'ok') { _cfRender(); return; }
-  Object.assign(_cf, { caseId, status: 'loading', root: null, base: null, relPath: '', permTarget: null, path: [], dir: null, entries: [], filter: '', chooser: null });
+  const gen = ++_cf.gen;
+  /* 読んでいる間に別の案件へ移った、または同じ案件がもう一度描き直された。
+     8.6.2 までは、フォルダを探し終えたあとにこの確認が無く、素早く案件を切り替えると
+     前の案件のフォルダが次の案件の欄に出ることがあった */
+  const stale = () => _cf.gen !== gen || _cf.caseId !== caseId;
+  Object.assign(_cf, { caseId, status: 'loading', root: null, base: null, relPath: '', permTarget: null, path: [], dir: null, entries: [], filter: '', chooser: null, suggest: [] });
   _cfRender();
   if (!window.showDirectoryPicker) { _cf.status = 'unsupported'; _cfRender(); return; }
   // (2) 直接結び付けた取っ手があればそれを使う
   let h = null;
   try { h = await _idbGet('caseDir:' + caseId); } catch (e) {}
-  if (_cf.caseId !== caseId) return;          // 読んでいる間に別の案件へ移った
+  if (stale()) return;
   // (1) 親フォルダ＋相対パス
   let base = null;
   try { base = await _idbGet('caseFilesRoot'); } catch (e) {}
-  if (_cf.caseId !== caseId) return;
+  if (stale()) return;
   if (h && base) {
     /* 8.5.4 で直接結び付けたフォルダが親の下にあれば、相対パスに移し替える（8.5.7）。
        取っ手ごとに許可が要るので、親の 1 つにまとめないと Chrome を開き直すたびに案件ごとに聞かれる */
@@ -7399,29 +7410,172 @@ async function renderCaseFiles(caseId) {
       const segs = await base.resolve(h);
       if (segs && segs.length) { _cfMapSet(caseId, segs.join('/')); await _idbDel('caseDir:' + caseId); h = null; }
     } catch (e) {}
-    if (_cf.caseId !== caseId) return;
+    if (stale()) return;
   }
   if (h) {
     _cf.root = h;
-    if (!(await _cfPermOk(h, caseId))) return;
+    if (!(await _cfPermOk(h, caseId)) || stale()) return;
     await _cfLoad(); return;
   }
   if (!base) { _cf.status = 'noroot'; _cfRender(); return; }
   _cf.base = base;
-  if (!(await _cfPermOk(base, caseId))) return;
-  const rel = _cfMapGet(caseId);
+  if (!(await _cfPermOk(base, caseId)) || stale()) return;
+  let rel = _cfMapGet(caseId);
   if (!rel) { _cf.status = 'choose'; _cfRender(); _cfLoadChooser(); return; }
+  let root = null;
   try {
-    _cf.root = await _cfResolve(base, rel);
-    _cf.relPath = rel;
-    _cf.path = _cfSubGet(caseId).split('/').filter(Boolean);   // 最後に開いていた下位フォルダ
-    await _cfLoad();
-    if (_cf.caseId === caseId && _cf.status !== 'ok' && _cf.path.length) {   // 下位が消えていたら根に戻る
-      _cf.path = []; _cfSubSet(caseId, ''); await _cfLoad();
-    }
+    root = await _cfResolve(base, rel);
   } catch (e) {
-    if (_cf.caseId !== caseId) return;
-    _cf.relPath = rel; _cf.status = 'lost'; _cfRender();
+    if (stale()) return;
+    _cf.relPath = rel;
+    if (!e || e.name !== 'NotFoundError') { _cf.status = 'lost'; _cfRender(); return; }
+    /* 見当たらない。ご本人はフォルダの名前をよく変えるので、変えた先を探す（8.6.3） */
+    _cf.status = 'seeking'; _cfRender();
+    let found = null;
+    try { found = await _cfFindMoved(base, rel, caseId); } catch (e2) { console.warn('名前を変えた先の検索に失敗', e2); }
+    if (stale()) return;
+    if (!found || !found.auto) { _cf.suggest = found ? found.suggest : []; _cf.status = 'lost'; _cfRender(); return; }
+    const newRel = found.auto.join('/');
+    _cfMapSet(caseId, newRel);
+    toast(`フォルダの名前が変わっていたので、「${found.auto[found.auto.length - 1]}」につなぎ直しました`, 'success');
+    rel = newRel;
+    try { root = await _cfResolve(base, rel); } catch (e3) { if (stale()) return; _cf.relPath = rel; _cf.status = 'lost'; _cfRender(); return; }
+    if (stale()) return;
+  }
+  if (stale()) return;
+  _cf.root = root;
+  _cf.relPath = rel;
+  _cf.path = _cfSubGet(caseId).split('/').filter(Boolean);   // 最後に開いていた下位フォルダ
+  await _cfLoad();
+  /* 下位が消えていたら根に戻る。忘れるのは「見当たらない」ときだけ（8.6.3）。
+     8.6.2 までは読み取りのどんな失敗でも忘れていた */
+  if (!stale() && _cf.status === 'lost' && _cf.path.length) {
+    _cf.path = []; _cfSubSet(caseId, ''); await _cfLoad();
+  }
+}
+/* ---- フォルダの名前が変わったとき、つなぎ直す（8.6.3） ----
+   ご本人はフォルダの名前をよく変える（例：頭の「202603」を「202609」に）。変えると相対パスで引けず、
+   「見当たりません」になっていた（2026 年 9 月 17 日、実際に 1 件で起きた）。
+
+   名前だけで当ててはいけない。同じ会社の別の年の手続が
+   `202404㈱〇〇_役員変更_…` と `202409㈱〇〇_役員変更_…` のように名前違いで並んでおり、
+   取り違えると別の案件のフォルダにファイルを入れることになる。
+   そこで、前に開いたときの中身の控え（ファイル名と大きさ。caseFilesSig_v1）と照らし合わせ、
+   「合うファイルが 3 件以上かつ控えの 9 割以上」のフォルダが **1 つだけ** のときに限って自動でつなぎ直す。
+   名前を変えただけなら中身は 10 割合う。9 割にしたのは実データで測ったため（2026 年 9 月 17 日、
+   ファイル 3 件以上の 1,064 フォルダ）：ほかのフォルダと 6 割以上重なるものが 46 あった（ひな形の委任状・
+   送付案内などが同じ大きさのまま入っている）。9 割以上はそのうち 9 で、9 つとも中身まで同じ複製だった
+   （複製は「1 つだけ」の条件で外れる）。複製でないものの最大は 8 割 9 分だった。
+   2 つ以上合う（フォルダを複製した等）・1 つも合わない・控えが無いときは、つながずに
+   名前の似たフォルダを候補として並べ、押して選んでもらう。
+   ほかの案件に結び付いているフォルダは、どちらの場合も候補から外す。 */
+const CASE_FILES_SIG_KEY = 'caseFilesSig_v1';
+const CF_SIG_MAX = 40;        // 控えに残すファイルの数（大きい順）。ひな形の小さいファイルは別の案件にも同じものがあるため
+const CF_SIG_MIN_HITS = 3;    // 自動でつなぐのに要る、合うファイルの最少件数
+const CF_SIG_MIN_RATE = 0.9;  // 控えのうち、合わなければならない割合（上の測定を参照。下げないこと）
+const CF_SEEK_MAX_DIRS = 3000; // 探すフォルダの上限（これを超えたら打ち切る。いまは区分 1 つで 700 件あまり）
+function _cfHash(str) {
+  str = String(str).normalize('NFC');
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return (h >>> 0).toString(36);
+}
+function _cfSigAll() { try { return JSON.parse(localStorage.getItem(CASE_FILES_SIG_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function _cfSigGet(id) { return _cfSigAll()[id] || ''; }
+function _cfSigSet(id, sig) {
+  const m = _cfSigAll();
+  if ((m[id] || '') === (sig || '')) return;
+  if (sig) m[id] = sig; else delete m[id];
+  try { localStorage.setItem(CASE_FILES_SIG_KEY, JSON.stringify(m)); } catch (e) {}
+}
+/* 控えは「名前のハッシュ:大きさ」を空白でつないだ文字列。名前そのものは残さない */
+function _cfSigFrom(files) {
+  return files.filter(f => f.size > 0)
+    .sort((a, b) => b.size - a.size || (a.name < b.name ? -1 : 1))
+    .slice(0, CF_SIG_MAX)
+    .map(f => _cfHash(f.name) + ':' + f.size).sort().join(' ');
+}
+/* 名前の似かた。頭の日付の数字と区切り記号を外し、2 文字ずつの組がどれだけ共通するか（0〜1） */
+function _cfNameCore(n) { return String(n).normalize('NFKC').toLowerCase().replace(/^[\d\s_\-.]+/, '').replace(/[\s_\-・.,、，()（）]/g, ''); }
+function _cfSimilar(a, b) {
+  a = _cfNameCore(a); b = _cfNameCore(b);
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  const grams = t => { const m = new Map(); for (let i = 0; i < t.length - 1; i++) { const g = t.slice(i, i + 2); m.set(g, (m.get(g) || 0) + 1); } return m; };
+  const ga = grams(a), gb = grams(b);
+  let common = 0, na = 0, nb = 0;
+  for (const v of ga.values()) na += v;
+  for (const v of gb.values()) nb += v;
+  for (const [g, v] of ga) if (gb.has(g)) common += Math.min(v, gb.get(g));
+  return na + nb ? (2 * common) / (na + nb) : 0;
+}
+/* 見当たらない rel の、名前を変えた先を探す。{ auto: 道のり|null, suggest: [道のり…] }
+   探すのは区分のフォルダ（不動産登記案件／商業・法人登記案件）の中ぜんぶ、4 段下まで。
+   名前を変えた・別の依頼元のフォルダへ移した・一つ上へ出した、のどれでも拾うため。
+   2026 年 9 月 17 日に数えて、区分 1 つあたり 4 段下までで 700 件あまり（不動産 735・商業 460）。
+   一覧を読むついでに中身も照らし合わせるので、1 回たどるだけで済む */
+async function _cfFindMoved(base, rel, caseId) {
+  const segs = rel.split('/').filter(Boolean);
+  const oldName = segs[segs.length - 1] || '';
+  let start = base, startPath = [];
+  if (segs.length > 1) {
+    try { start = await base.getDirectoryHandle(segs[0]); startPath = [segs[0]]; } catch (e) {}
+  }
+  if (_cf.caseId !== caseId) return null;
+  const maxDepth = startPath.length ? 4 : 2;
+  const bound = new Set(Object.entries(_cfMapAll()).filter(([id]) => id !== caseId).map(([, r]) => r));
+  const sig = _cfSigGet(caseId);
+  const want = new Map(sig ? sig.split(' ').map(t => { const i = t.lastIndexOf(':'); return [t.slice(0, i), Number(t.slice(i + 1))]; }) : []);
+  const useSig = want.size >= CF_SIG_MIN_HITS;
+  const need = Math.max(CF_SIG_MIN_HITS, Math.ceil(want.size * CF_SIG_MIN_RATE));
+
+  const found = [];   // { path, sim, hits }
+  const queue = [{ h: start, path: startPath, d: 0 }];
+  let seen = 0;
+  while (queue.length && seen < CF_SEEK_MAX_DIRS) {
+    const { h, path, d } = queue.shift();
+    seen++;
+    let hits = 0;
+    try {
+      for await (const [n, ch] of h.entries()) {
+        if (ch.kind === 'directory') {
+          if (!n.startsWith('.') && d < maxDepth) queue.push({ h: ch, path: [...path, n], d: d + 1 });
+          continue;
+        }
+        if (!useSig || !d) continue;
+        const size = want.get(_cfHash(n));
+        if (size == null) continue;
+        try { if ((await ch.getFile()).size === size) hits++; } catch (e) {}
+      }
+    } catch (e) {}
+    if (!d || bound.has(path.join('/'))) continue;   // 区分のフォルダそのもの・ほかの案件のフォルダは候補にしない
+    found.push({ path, sim: _cfSimilar(oldName, path[path.length - 1]), hits });
+  }
+  if (_cf.caseId !== caseId) return null;
+  const matched = useSig ? found.filter(x => x.hits >= need) : [];
+  const auto = matched.length === 1 ? matched[0].path : null;
+  const suggest = found.filter(x => x.sim >= 0.5).sort((a, b) => b.sim - a.sim).slice(0, 5).map(x => x.path);
+  return { auto, suggest };
+}
+/* 結び付いている全案件の中身の控えを、起動後に一度だけ裏で作り直す。
+   控えは案件を開いたときにも更新されるが、しばらく開いていない案件の名前が変わったときに備える */
+let _cfSigRefreshed = false;
+async function _cfRefreshAllSigs(base) {
+  if (_cfSigRefreshed || !base) return;
+  _cfSigRefreshed = true;
+  for (const [id, rel] of Object.entries(_cfMapAll())) {
+    try {
+      const d = await _cfResolve(base, rel);
+      const files = [];
+      for await (const [n, fh] of d.entries()) {
+        if (fh.kind !== 'file' || _CF_SKIP.has(n) || n.startsWith('._')) continue;
+        try { files.push({ name: n, size: (await fh.getFile()).size }); } catch (e) {}
+      }
+      if (_cfMapGet(id) !== rel) continue;   // 裏で作っている間に結び付け直された
+      const sig = _cfSigFrom(files);
+      if (sig) _cfSigSet(id, sig);
+    } catch (e) {}                              // 見当たらないものは控えを残したままにする（つなぎ直しに使う）
+    await new Promise(r => setTimeout(r, 20));  // 画面の操作を邪魔しない
   }
 }
 async function _cfResolve(base, rel) {
@@ -7437,8 +7591,9 @@ async function _cfRequestRootOnFirstGesture() {
   if (!base) return;
   let perm = 'prompt';
   try { perm = await base.queryPermission({ mode: 'readwrite' }); } catch (e) {}
-  if (perm === 'granted') return;
+  if (perm === 'granted') { _cfRefreshAllSigs(base); return; }
   try { perm = await base.requestPermission({ mode: 'readwrite' }); } catch (e) { return; }
+  if (perm === 'granted') _cfRefreshAllSigs(base);
   // 案件詳細を開いていて許可待ちだったなら、そのまま描き直す
   if (perm === 'granted' && _cf.caseId && _cf.status === 'perm') { const id = _cf.caseId; _cf.caseId = null; renderCaseFiles(id); }
 }
@@ -7508,14 +7663,24 @@ async function cfBind(i) {
   const ch = _cf.chooser; if (!ch || !_cf.base) return;
   const segs = (i == null) ? ch.path : [...ch.path, ch.items[i]];
   if (!segs.length || (i != null && !ch.items[i])) return;
+  await _cfBindSegs(segs);
+}
+/* 「見当たりません」の画面の候補から選ぶ（8.6.3） */
+async function cfBindSuggest(i) {
+  const segs = _cf.suggest && _cf.suggest[i];
+  if (!segs || !_cf.base) return;
+  await _cfBindSegs(segs);
+}
+async function _cfBindSegs(segs) {
   const caseId = _cf.caseId; const rel = segs.join('/');
   try {
     const d = await _cfResolve(_cf.base, rel);
     if (_cf.caseId !== caseId) return;
+    if (_cfMapGet(caseId) !== rel) _cfSigSet(caseId, '');   // 別のフォルダになったので、前の中身の控えは使えない
     _cfMapSet(caseId, rel);
     _cfSubSet(caseId, '');
     try { await _idbDel('caseDir:' + caseId); } catch (e) {}   // 直接の結び付けが残っていれば外す
-    Object.assign(_cf, { root: d, relPath: rel, path: [], entries: [], filter: '', chooser: null });
+    Object.assign(_cf, { root: d, relPath: rel, path: [], entries: [], filter: '', chooser: null, suggest: [] });
     toast(`この案件に「${segs[segs.length - 1]}」を結び付けました`, 'success');
     await _cfLoad();
   } catch (e) { toast(`結び付けられませんでした（${e.message}）`, 'error'); }
@@ -7525,7 +7690,7 @@ function cfRebind() {
   if (!_cf.base) { cfConnect(); return; }
   const cur = (_cf.relPath || '').split('/').filter(Boolean);
   const start = cur.length > 1 ? cur.slice(0, -1) : null;
-  Object.assign(_cf, { status: 'choose', root: null, relPath: '', path: [], entries: [], filter: '', chooser: null });
+  Object.assign(_cf, { status: 'choose', root: null, relPath: '', path: [], entries: [], filter: '', chooser: null, suggest: [] });
   _cfRender(); _cfLoadChooser(start);
 }
 /* 最後に開いていた下位フォルダを案件ごとに覚える（8.5.8。「次回からそのフォルダが開きっぱなしに」とのご指示） */
@@ -7573,11 +7738,24 @@ async function _cfLoad() {
     }
     if (_cf.caseId !== caseId) return;
     _cf.dir = dir; _cf.entries = list; _cf.status = 'ok';
+    // 名前が変わったときの照らし合わせ用に、中身の控えを取る（結び付けたフォルダの直下を見たときだけ。8.6.3）
+    if (_cf.relPath && !_cf.path.length && _cfMapGet(caseId) === _cf.relPath) {
+      const sig = _cfSigFrom(list.filter(e => e.kind === 'file'));
+      if (sig) _cfSigSet(caseId, sig);
+    }
   } catch (e) {
     if (_cf.caseId !== caseId) return;
     console.warn('案件フォルダの読み取りに失敗', e);
     _cf.status = (e && e.name === 'NotFoundError') ? 'lost' : 'error';
     _cf.errorMsg = e && e.message ? e.message : String(e);
+    /* 開いている間に、結び付けたフォルダそのものの名前が変わった（↻ や下位への移動で気づく）。
+       最初から解決し直して、変えた先を探す（8.6.3）。下位だけが消えたときは、ここでは何もしない */
+    if (_cf.status === 'lost' && _cf.base && _cf.relPath && _cfMapGet(caseId) === _cf.relPath) {
+      let rootGone = false;
+      try { await _cfResolve(_cf.base, _cf.relPath); } catch (e2) { rootGone = !!(e2 && e2.name === 'NotFoundError'); }
+      if (_cf.caseId !== caseId) return;
+      if (rootGone) { _cf.caseId = null; renderCaseFiles(caseId); return; }
+    }
   }
   _cfRender();
 }
@@ -7686,7 +7864,15 @@ function _cfRender() {
     case 'unsupported': body = `<div class="cf-empty">このブラウザではフォルダに接続できません。<br>パソコンの Chrome か Edge で開いてください。</div>`; break;
     case 'noroot': body = `<div class="cf-empty">はじめに、案件フォルダの親（Dropbox の「中山事務所」）を一度だけ結び付けてください。<br>以後は、案件ごとに一覧から押すだけになります。<br><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">📂 親フォルダを選ぶ</button><div style="font-size:10px;margin-top:8px"><a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">この案件のフォルダを直接選ぶ</a></div></div>`; break;
     case 'perm': { const tn = _cf.permTarget ? _cf.permTarget.name : rootName; body = `<div class="cf-empty">「${escHtml(tn)}」を読むには、ブラウザの許可が要ります。<br><button class="btn btn-primary btn-sm" onclick="cfGrant()">🔓 許可する</button><div style="font-size:10px;margin-top:6px;line-height:1.6">Chrome の確認の窓に「今回のみ」と「毎回（今後も）許可」があれば、<b>毎回のほう</b>を選んでください。次から聞かれなくなります</div></div>`; break; }
-    case 'lost': body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath || rootName)}」が見当たりません。<br>名前が変わったか、移動したか、消えた可能性があります。<br><button class="btn btn-primary btn-sm" onclick="cfRebind()">🔗 選び直す</button></div>`; break;
+    case 'seeking': body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath)}」が見当たりません。<br>名前を変えた先を探しています…</div>`; break;
+    case 'lost': {
+      const sg = _cf.suggest || [];
+      body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath || rootName)}」が見当たりません。<br>名前が変わったか、移動したか、消えた可能性があります。${sg.length ? '<br>中身で確かめられなかったので、自動ではつないでいません。' : ''}<br><button class="btn btn-primary btn-sm" onclick="cfRebind()">🔗 選び直す</button></div>`;
+      if (sg.length) {
+        body += `<div class="cf-tools"><span class="cf-path">名前の似たフォルダ</span></div><div class="cf-list">${sg.map((p, i) => `<div class="cf-row cf-suggest is-dir" onclick="cfBindSuggest(${i})" title="押すとこのフォルダに結び付けます"><span class="cf-ic dir">📁</span><span class="cf-name">${escHtml(p[p.length - 1])}<span class="cf-meta">${escHtml(p.slice(0, -1).join(' › '))}</span></span><span class="cf-acts" style="opacity:1"><button onclick="event.stopPropagation();cfBindSuggest(${i})">これにする</button></span></div>`).join('')}</div>`;
+      }
+      break;
+    }
     case 'choose': {
       const ch = _cf.chooser;
       if (!ch || ch.loading) { body = `<div class="cf-empty">フォルダの一覧を読んでいます…</div>`; break; }
@@ -7731,6 +7917,7 @@ async function cfConnect() {
     const handle = await window.showDirectoryPicker(opts);
     await _idbSet('caseDir:' + caseId, handle);
     _cfMapSet(caseId, '');   // 一覧で選んだ相対パスが残っていれば外す（直接の取っ手を優先するため）
+    _cfSigSet(caseId, '');
     if (_cf.caseId !== caseId) return;
     Object.assign(_cf, { root: handle, relPath: '', path: [], dir: null, entries: [], filter: '', chooser: null, status: 'loading' });
     toast(`この案件に「${handle.name}」を結び付けました`, 'success');
@@ -7746,6 +7933,7 @@ async function cfGrant() {
   try {
     const p = await target.requestPermission({ mode: 'readwrite' });
     if (p !== 'granted') { toast('許可されなかったので、一覧は出せません', 'info'); return; }
+    if (target === _cf.base) _cfRefreshAllSigs(target);   // 中身の控えを裏で作り直す（8.6.3）
     const caseId = _cf.caseId; _cf.caseId = null;   // 最初から解決し直す
     await renderCaseFiles(caseId);
   } catch (e) { toast(`許可を求められませんでした（${e.message}）`, 'error'); }
