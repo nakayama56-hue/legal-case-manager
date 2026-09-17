@@ -2341,6 +2341,7 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   }
   .cal-day { min-height: 36px; padding: 1px 1px; width: 100%; box-sizing: border-box; }
   .cal-event { font-size: 7px; padding: 1px 2px; width: 100%; max-width: 100%; }
+  .touki-line { font-size: 7px; padding: 0 2px; }
   .cal-day-num { font-size: 9px; }
   .cal-day.today .cal-day-num { width: 14px; height: 14px; font-size: 8px; }
 }
@@ -2352,6 +2353,7 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   }
   .cal-day { min-height: 28px; padding: 1px; box-sizing: border-box; }
   .cal-event { font-size: 7px; padding: 1px 2px; width: 100%; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .touki-line { font-size: 7px; padding: 0 2px; }
   .cal-day-num { font-size: 9px; }
   .cal-dow { font-size: 8px; padding: 2px 0; }
   .shinsei-timeline { font-size: 10px; }
@@ -3408,6 +3410,35 @@ tr.row-waiting:hover > td {
 .cal-ext-banner .ceb-ico { flex: 0 0 auto; opacity: 0.85; }
 .cal-ext-banner .ceb-text { flex: 0 1 auto; min-width: 0; }
 .cal-ext-banner .ceb-out { flex: 0 0 auto; opacity: 0.6; }
+/* --- 登記情報提供サービスの利用時間・メンテナンス（2026年9月18日、8.6.4）。
+       日付のマスのいちばん下に細い行を1本。Googleカレンダー `08_登記情報提供サービス` と
+       同じ文面を出す（元はこのMacの見張りが作る touki-maintenance.json）。
+
+       **案件・タスクの予定より控えめにすること。** 字は 8px（.cal-event は 9px）、
+       色は淡い地＋濃い字で、既存の .cal-event と同じ作り方にそろえてある。
+       テーマは frost／ginnezu／kohaku の3つとも明るい配色なので、
+       この固定色でどれでも読める（暗いテーマは 8.4.8 で全廃。6-6章）。
+       印刷には出さない（no-print）。 --- */
+.touki-line {
+  font-size: 8px; line-height: 1.55; font-weight: 600;
+  padding: 0 3px; border-radius: 2px; margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  cursor: pointer; letter-spacing: -0.01em;
+}
+.touki-line:hover { filter: brightness(0.95); }
+.touki-line.tk-normal { background: #eef2f6; color: #4a5568; }
+.touki-line.tk-closed { background: #fde2e2; color: #9b1c1c; }
+.touki-line.tk-warn   { background: #fdf0c8; color: #8a5a00; }
+/* マスの最後に足すだけ。**`.cal-day` の display は触らない**（既存の予定の並びを崩さないため）。
+
+   ★ `width: 0; min-width: 100%` を外さないこと。
+   `#case-calendar` の列は `repeat(7, 1fr)` で、**`minmax(0, 1fr)` ではない**（狭い画面の
+   規則だけが minmax を使っている）。そのため列の最小幅は中身の「折り返さない幅」で決まる。
+   この行は白 nowrap の長い題名なので、素のまま置くと**列が広がって表 7 列が横にはみ出す**
+   （実測：599px → 1647px）。既存の `.cal-event` が無事なのは、JS 側で案件名を 6 文字に
+   切っているから。幅 0 ＋ 最小幅 100% にすると、列の幅の計算には 0 として数えられ、
+   実際には親の幅いっぱいに広がる。2026年9月18日に実際に踏んで直した */
+.touki-stack { margin-top: 1px; width: 0; min-width: 100%; }
 /* --- 未完了タスクのバッジ（2026年9月8日）。置き場所は枠の右上
        （8.4.2 でご本人のご指示により、8.4.0〜8.4.1 の「右端の中央」から戻した）。
 
@@ -3464,7 +3495,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.3</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.4</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -4057,6 +4088,27 @@ tr.row-waiting:hover > td {
 </div>
 
 <!-- 簡易印刷設定モーダル -->
+<!-- 登記情報提供サービスの説明（2026年9月18日、8.6.4）。
+     Googleカレンダーの説明欄と同じ文字列をそのまま出す。読むだけなので入力欄は無い -->
+<div id="touki-info-modal" class="modal-overlay no-print" style="display:none;z-index:1100" onclick="closeToukiInfo(event)">
+  <div class="modal" style="max-width:480px;width:92%">
+    <div class="modal-header">
+      <div class="modal-title" id="touki-info-title" style="font-size:14px;line-height:1.5"></div>
+      <button class="modal-close" onclick="closeToukiInfo()">×</button>
+    </div>
+    <div class="modal-body" style="padding:16px">
+      <div id="touki-info-date" style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:10px"></div>
+      <div id="touki-info-body" style="font-size:12px;line-height:1.75;color:var(--text-primary);white-space:pre-wrap;word-break:normal;overflow-wrap:break-word;line-break:strict;max-height:52vh;overflow-y:auto"></div>
+      <div style="margin-top:14px;font-size:11px;color:var(--text-muted)">
+        登記情報提供サービスの掲載をもとに自動で作っています。Googleカレンダー「08_登記情報提供サービス」と同じ内容です。
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px">
+        <button class="btn btn-secondary" onclick="closeToukiInfo()">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="simple-print-modal" class="modal-overlay" style="display:none;z-index:1100" onclick="closeSimplePrintModal(event)">
   <div class="modal" style="max-width:360px;width:90%">
     <div class="modal-header">
@@ -5937,6 +5989,171 @@ async function fetchGCalEvents(silent) {
   }
 }
 
+/* =====================================================
+   登記情報提供サービスの利用時間・メンテナンス（2026年9月18日、8.6.4）
+
+   ゴロウさんの「Googleカレンダーに出しているものを、CaseFlowにも出してほしい」。
+   Googleカレンダー `08_登記情報提供サービス` と**まったく同じ文面**を、
+   日付のマスに1行ずつ出す。停止のない日も出す（ご本人のご指示）。
+
+   【なぜ直接読まないか】掲載元 www1.touki.or.jp はブラウザからの直接の読み取り（CORS）を
+   許していない。そこで、このMacの見張り（~/secretary/discord-bridge/touki/）が読んだ結果を
+   `nakayama56-hue.github.io/zen-koku/touki-maintenance.json` に置き、**同じ出どころ**から読む。
+   外部CDNではない（4章の禁止事項に触れない）。案件データは一切送らない・受け取らない。
+
+   【読めないときは何も出さない。】前に読めた写しが localStorage にあればそれを使い、
+   それも無ければ黙って出さない。**警告もエラーも出さない**（壊れたように見せないため）。
+   ===================================================== */
+const TOUKI_MAINT_URL = 'https://nakayama56-hue.github.io/zen-koku/touki-maintenance.json';
+const TOUKI_MAINT_KEY = 'touki_maint_v1';   // localStorage の写し。**キーは1つだけ**（9KBほど）
+const TOUKI_MAINT_REFRESH_MS = 30 * 60 * 1000;   // 取り直す間隔
+
+let _toukiMaint = null;      // いま使っている中身
+let _toukiFetchedAt = 0;     // 最後に取りに行った時刻
+let _toukiFetching = false;
+
+// 試験用：localStorage の `touki_maint_url` があればそこから読む
+function _toukiUrl() {
+  try { return localStorage.getItem('touki_maint_url') || TOUKI_MAINT_URL; }
+  catch (e) { return TOUKI_MAINT_URL; }
+}
+
+// 形が違うものを掴まない（掲載の形が変わったときに画面を壊さないため）
+function _toukiValid(j) {
+  return !!j && j.version === 1 && typeof j.days === 'object' && j.days !== null;
+}
+
+function _toukiFromCache() {
+  try {
+    const raw = localStorage.getItem(TOUKI_MAINT_KEY);
+    if (!raw) return null;
+    const j = JSON.parse(raw);
+    return _toukiValid(j) ? j : null;
+  } catch (e) { return null; }
+}
+
+async function loadToukiMaint(force) {
+  if (_toukiFetching) return;
+  if (!force && Date.now() - _toukiFetchedAt < TOUKI_MAINT_REFRESH_MS) return;
+  _toukiFetching = true;
+  _toukiFetchedAt = Date.now();
+  // まず前に読めた写しを出す（つながらなくても、前の中身は見えるように）
+  if (!_toukiMaint) _toukiMaint = _toukiFromCache();
+  const 前 = _toukiMaint ? _toukiMaint.generatedAt : null;
+  try {
+    const res = await fetch(_toukiUrl() + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error(String(res.status));
+    const j = await res.json();
+    if (!_toukiValid(j)) throw new Error('形が違います');
+    _toukiMaint = j;
+    // 次に読めなかったときのための写し。容量で断られたら諦めて記憶だけで動く
+    try { localStorage.setItem(TOUKI_MAINT_KEY, JSON.stringify(j)); } catch (e) {}
+  } catch (e) {
+    // 取れなかった。前に読めた写しがあればそれを使う。無ければ何も出さない
+    if (!_toukiMaint) _toukiMaint = _toukiFromCache();
+  } finally {
+    _toukiFetching = false;
+  }
+  // 中身が入れ替わったときだけ描き直す（堂々巡りにしない）
+  if (_toukiMaint && _toukiMaint.generatedAt !== 前) {
+    try { if (calViewMode === 'week') renderWeekCalendar(); else renderCalendar(); } catch (e) {}
+  }
+}
+
+// 年末年始（"12-29"〜"01-03"。年をまたぐ）
+function _toukiIsNenmatsu(dateStr, h) {
+  if (!h || !h.from || !h.to) return false;
+  const md = dateStr.slice(5);
+  return h.from > h.to ? (md >= h.from || md <= h.to) : (md >= h.from && md <= h.to);
+}
+
+// その日に出す行（Googleカレンダーの予定と同じ並び）。
+// 例外の日は days から、そうでない日は利用時間の3件から選ぶ。
+function toukiLinesFor(dateStr) {
+  const m = _toukiMaint;
+  if (!m) return [];
+  const ex = Array.isArray(m.days[dateStr]) ? m.days[dateStr] : [];
+  const 利用時間を消す = ex.some(e => e && e.replacesHours);
+  const lines = [];
+
+  if (!利用時間を消す && m.hours) {
+    let h = null;
+    if (_toukiIsNenmatsu(dateStr, m.hours.nenmatsu)) {
+      h = m.hours.nenmatsu;
+    } else {
+      const dow = new Date(dateStr + 'T12:00:00').getDay();
+      // 祝日の写しは holidaysUntil までしか無い。その先は曜日だけで決める
+      const 祝日 = Array.isArray(m.holidays) && m.holidays.indexOf(dateStr) >= 0;
+      h = (dow === 0 || dow === 6 || 祝日) ? m.hours.weekend : m.hours.weekday;
+    }
+    if (h && h.title) lines.push({ kind: 'normal', title: h.title, desc: h.desc || '' });
+  }
+  ex.forEach(e => {
+    if (e && e.title) lines.push({ kind: e.kind || 'stop', title: e.title, desc: e.desc || '' });
+  });
+  return lines;
+}
+
+const _TOUKI_CLS = { normal: 'tk-normal', closed: 'tk-closed', partial: 'tk-warn', stop: 'tk-warn', view: 'tk-warn' };
+
+// マスの中だけ短く出す（2026年9月18日、ゴロウさんのご指示）。マスは約83pxしかなく、
+// 題名そのままだと「登記情報 利…」までしか見えなかったため。
+// title 属性とモーダルには元の題名（Googleカレンダーと同じ文字列）を使うので、データは変えない。
+//   🕘 登記情報 利用 8:30〜23:00                      → 🕘 8:30〜23:00
+//   🕘 登記情報 利用 8:30〜18:00（地図・図面なし）      → 🕘 8:30〜18:00
+//   ⛔ 登記情報 終日利用不可（地図・図面を含む／停止 …）→ ⛔ 終日利用不可
+//   ⚠️ 登記情報 利用 8:30〜21:00のみ（停止 21:00〜23:00）→ ⚠️ 8:30〜21:00のみ
+//   ⚠️ 登記情報 一部閲覧不可 8:30〜18:00               → ⚠️ 一部閲覧不可 8:30〜18:00
+//   🛠 登記情報 停止 21:00〜23:00                      → 🛠 停止 21:00〜23:00
+//   ⛔ 登記情報 休業（年末年始）                        → ⛔ 休業（年末年始）
+function toukiShortLabel(title) {
+  let s = String(title || '').replace('登記情報 ', '');
+  if (s.startsWith('⛔ 休業')) return s;                 // 年末年始は括弧を残す
+  s = s.replace(/【備考あり】/g, '');
+  s = s.replace(/（[\s\S]*$/, '');                      // 最初の「（」以降を落とす
+  s = s.replace(/^(\S+) 利用 (?=\d)/, '$1 ');            // 時刻が続く「利用 」を落とす
+  return s.trim();
+}
+
+// マスに足す HTML。既存の予定のあと（いちばん下）に置く
+function toukiLineHtml(dateStr) {
+  const lines = toukiLinesFor(dateStr);
+  if (!lines.length) return '';
+  const inner = lines.map((l, i) =>
+    `<div class="touki-line ${_TOUKI_CLS[l.kind] || 'tk-warn'}" title="${escHtml(l.title)}"
+      onclick="event.stopPropagation();openToukiInfo('${dateStr}',${i})">${escHtml(toukiShortLabel(l.title))}</div>`
+  ).join('');
+  return `<div class="touki-stack no-print">${inner}</div>`;
+}
+
+// 押したときに説明の全文を出す（Googleカレンダーの説明欄と同じ文字列）
+function openToukiInfo(dateStr, idx) {
+  const lines = toukiLinesFor(dateStr);
+  const l = lines[idx];
+  if (!l) return;
+  const t = document.getElementById('touki-info-title');
+  const d = document.getElementById('touki-info-date');
+  const b = document.getElementById('touki-info-body');
+  const m = document.getElementById('touki-info-modal');
+  if (!t || !d || !b || !m) return;
+  const dow = ['日','月','火','水','木','金','土'][new Date(dateStr + 'T12:00:00').getDay()];
+  t.textContent = l.title;
+  d.textContent = `${dateStr.slice(0,4)}年${Number(dateStr.slice(5,7))}月${Number(dateStr.slice(8,10))}日（${dow}）`;
+  b.textContent = l.desc || '（説明はありません）';
+  // ★ 既存のモーダルと同じ開き方。`.modal-overlay` は既定で `opacity: 0` なので、
+  //   display を flex にするだけでは**何も見えない**（2026年9月18日にこれで一度つまずいた）。
+  //   `show` を付けて初めて浮かび上がる
+  m.style.display = 'flex';
+  requestAnimationFrame(() => m.classList.add('show'));
+}
+function closeToukiInfo(e) {
+  if (e && e.target !== e.currentTarget) return;
+  const m = document.getElementById('touki-info-modal');
+  if (!m) return;
+  m.classList.remove('show');
+  setTimeout(() => { m.style.display = 'none'; }, 150);
+}
+
 function renderCalendar() {
   const el = document.getElementById('case-calendar');
   const lbl = document.getElementById('cal-label');
@@ -5998,11 +6215,13 @@ function renderCalendar() {
     html += `<div class="${cls}" data-date="${dateStr}"
       onclick="openGCalEventModal('${dateStr}')"
       ondragover="calDragOver(event)" ondrop="calDrop(event)" ondragleave="calDragLeave(event)">
-      <div class="cal-day-num">${d}</div>${holidayHtml}${evs}</div>`;
+      <div class="cal-day-num">${d}</div>${holidayHtml}${evs}${toukiLineHtml(dateStr)}</div>`;
   }
   const remain = (7-(first+last)%7)%7;
   for (let i=0;i<remain;i++) html += '<div class="cal-day other-month"></div>';
   el.innerHTML = html;
+  // 必要なら裏で取り直す（30分に1回まで）。入れ替わったら描き直す
+  try { loadToukiMaint(); } catch(e) {}
   renderCaseTimeline();
 }
 
@@ -6705,6 +6924,7 @@ function renderWeekCalendar() {
     evs.forEach(e=>{
       aday+=`<div class="cal-event ${e.cls}" onclick="${e.onclick}" title="${escHtml(e.name)}" style="width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${e.tag?e.tag+' ':''}${escHtml(e.name.length>7?e.name.slice(0,7)+'…':e.name)}</div>`;
     });
+    aday+=toukiLineHtml(ds);
     aday+=`</div>`;
   });
   aday+=`</div>`;
@@ -6738,6 +6958,7 @@ function renderWeekCalendar() {
     body+=`</div>`;
   });
 
+  try { loadToukiMaint(); } catch(e) {}
   el.innerHTML=`<div style="border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;background:var(--bg-secondary)">
     ${hdr}${aday}
     <div id="week-scroll" style="overflow-y:scroll;max-height:480px">${body}</div>
