@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>書類送付案内 作成アプリ</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600&family=Noto+Sans+JP:wght@300;400;500;600&display=swap');
+/* 外部CDNは使わない（Macに入っている書体だけで組む） */
 
 :root {
   --navy:     #152540;
@@ -27,7 +27,7 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+body { font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
 
 /* ── HEADER ── */
 .app-header {
@@ -43,7 +43,7 @@ body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: va
   border-radius: 6px; display: flex; align-items: center; justify-content: center;
   font-size: 15px; flex-shrink: 0;
 }
-.h-title { font-family: 'Noto Serif JP', serif; font-size: 15px; font-weight: 600; letter-spacing: 0.06em; }
+.h-title { font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif; font-size: 15px; font-weight: 600; letter-spacing: 0.06em; }
 .h-ver   { font-size: 10px; color: #6a8fb8; margin-top: 1px; }
 .h-div   { width: 1px; height: 24px; background: rgba(255,255,255,0.12); }
 .h-office { font-size: 11px; color: #7a9cc8; letter-spacing: 0.06em; }
@@ -71,7 +71,7 @@ label { display: block; font-size: 11px; font-weight: 500; color: var(--ink-mid)
 input[type="text"], input[type="date"], input[type="number"], textarea {
   width: 100%; padding: 7px 10px;
   border: 1px solid var(--border); border-radius: 5px;
-  background: var(--white); font-family: 'Noto Sans JP', sans-serif;
+  background: var(--white); font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', sans-serif;
   font-size: 13px; color: var(--ink); margin-bottom: 10px;
   transition: border-color .15s, box-shadow .15s;
 }
@@ -118,7 +118,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
   width: 100%; padding: 6px;
   border: 1px dashed var(--blue-mid); border-radius: 5px;
   background: none; color: var(--blue);
-  font-family: 'Noto Sans JP', sans-serif; font-size: 12px;
+  font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', sans-serif; font-size: 12px;
   cursor: pointer; transition: background .12s;
 }
 .btn-add-doc:hover { background: var(--blue-xlt); }
@@ -146,10 +146,11 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
 .s-item .sdel  { background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; padding: 0 2px; }
 .s-item .sdel:hover { color: #ef4444; }
 
-
+/* ── ボタン ── */
+.btn {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 7px 15px; border-radius: 5px; border: none;
-  font-family: 'Noto Sans JP', sans-serif; font-size: 12px; font-weight: 500;
+  font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', sans-serif; font-size: 12px; font-weight: 500;
   cursor: pointer; transition: all .14s; white-space: nowrap;
 }
 .btn-blue  { background: var(--blue); color: white; }
@@ -166,113 +167,145 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
 /* ── PREVIEW ── */
 .preview-panel {
   background: #c8d6e8; padding: 32px 36px;
-  overflow-y: auto; display: flex; flex-direction: column; align-items: center;
+  overflow: auto; display: flex; flex-direction: column; align-items: safe center;
 }
 .preview-lbl { font-size: 10px; color: #7090b0; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
 
-/* ── DOCUMENT ── */
+/* 画面が狭いときは用紙を縮めて全体を見せる（印刷には影響しない）。
+   左の入力欄420px＋左右の余白72pxを引いた幅に、794pxの用紙が収まるかで決めている。
+   zoom は中の組み方を変えずに見た目だけ縮めるので、プレビューは紙と同じまま。
+   ★ 必ず screen に限ること。media type を省くと印刷にも当たり、
+   用紙幅（794px）が max-width に引っかかって紙面が縮んでしまう。 */
+@media screen and (max-width: 1285px) { .document { zoom: 0.81; } }
+@media screen and (max-width: 1139px) { .document { zoom: 0.63; } }
+@media screen and (max-width:  999px) { .document { zoom: 0.45; } }
+
+
+/* ── DOCUMENT（出来上がり書面） ──
+   書類送付案内（kanryo_soushu.html）と同じ体裁。項目が多いので行間と余白を少し詰めてある。
+   書体は --doc-font（書体ボタンで差し替える） */
 .document {
-  background: white; width: 596px; min-height: 842px;
+  background: white; width: 794px; min-height: 1123px; flex-shrink: 0;
   box-shadow: 0 6px 32px rgba(0,0,0,0.2);
+  font-family: var(--doc-font, 'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN', 'Yu Mincho', 'YuMincho', serif);
   color: #111;
   display: flex; flex-direction: column;
+  /* 日本語の禁則を保つ（anywhere は使わない） */
+  word-break: normal; overflow-wrap: break-word; line-break: strict;
+  /* Chrome は既定で背景色を印刷しない。黒帯の見出しを消さないため */
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 
-/* タイトルブロック：太線2本で挟む */
-.doc-hbar {
-  padding: 32px 52px 20px;
-  border-top: 3px solid #111;
-  border-bottom: 1px solid #111;
-  display: flex; align-items: baseline; justify-content: space-between;
+/* レターヘッド（事務所名＋所在地。下に細線＋太線の二重線） */
+.doc-head { padding: 36px 62px 0; }
+.doc-head-in {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  padding-bottom: 12px; border-bottom: 1px solid #111; position: relative;
 }
-.doc-title {
-  font-size: 19px; font-weight: 600;
-  letter-spacing: 0.44em; margin-right: -0.44em;
+.doc-head-in::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -5px;
+  height: 2.5px; background: #111;
 }
-.doc-hbar-date {
-  font-size: 12px; color: #333;
-  font-weight: 400;
-  letter-spacing: 0.04em; white-space: nowrap;
+.doc-office { font-size: 20px; font-weight: 600; letter-spacing: 0.22em; }
+.doc-addr {
+  white-space: nowrap; text-align: right;
+  font-size: 10.5px; line-height: 1.75;
 }
 
 /* 本文エリア */
-.doc-main { padding: 26px 52px 40px; flex: 1; }
+.doc-main { padding: 26px 62px 0; flex: 1; }
 
-/* 宛名（左上）＋送付元（右上）横並び */
-.doc-meta-row {
-  display: flex; justify-content: space-between;
-  align-items: flex-start; margin-bottom: 24px; gap: 12px;
+.doc-date { text-align: right; font-size: 13px; }
+.doc-rcpt { font-size: 19px; font-weight: 600; letter-spacing: 0.08em; margin-top: 10px; }
+.doc-who  { text-align: right; font-size: 13.5px; margin-top: 14px; letter-spacing: 0.12em; }
+.doc-who b { font-size: 15px; letter-spacing: 0.24em; }
+
+/* 表題（左右に細線） */
+.doc-title {
+  text-align: center; margin: 22px 0 16px;
+  font-size: 21px; font-weight: 600;
+  letter-spacing: 0.5em; padding-left: 0.5em;
+  display: flex; align-items: center; gap: 16px;
 }
-.doc-rcpt-block { flex: 1; }
-.doc-rcpt-addr {
-  font-size: 11px; color: #444; line-height: 1.8; margin-bottom: 4px;
-}
-.doc-rcpt-name {
-  font-size: 18px; font-weight: 600; letter-spacing: 0.04em;
-  line-height: 1.5; padding-bottom: 5px;
-  border-bottom: 1px solid #555; display: inline-block;
-}
-.doc-sender-block {
-  text-align: right; flex-shrink: 0;
-  font-size: 13.5px; line-height: 2.0; color: #222;
-  padding-top: 6em;
+.doc-title::before, .doc-title::after {
+  content: ''; flex: 1; height: 1px; background: #111; opacity: 0.55;
 }
 
 /* 件名 */
 .doc-subject {
-  font-size: 15px; font-weight: 600;
-  text-align: center; letter-spacing: 0.08em;
-  margin-bottom: 18px; padding: 8px 0;
-  border-bottom: 1px solid #ccc;
+  text-align: center; font-size: 14.5px; font-weight: 600;
+  letter-spacing: 0.08em; margin-bottom: 14px;
 }
 
 /* 本文 */
-.doc-body-block { margin-bottom: 4px; }
-.doc-greeting { font-size: 14px; line-height: 2.0; text-indent: 1em; margin-bottom: 4px; }
-.doc-body-txt { font-size: 14px; line-height: 2.0; text-indent: 1em; }
-.doc-closing  { font-size: 14px; text-align: right; line-height: 2; margin: 10px 0 18px; }
+.doc-p { font-size: 13.5px; line-height: 1.95; text-indent: 1em; text-align: justify; }
+.doc-closing { text-align: right; font-size: 13.5px; margin: 6px 0 16px; letter-spacing: 0.6em; }
+.doc-ki { text-align: center; font-size: 14px; margin-bottom: 10px; }
+.doc-ijou { text-align: right; font-size: 13.5px; margin-top: 12px; letter-spacing: 0.6em; }
 
-/* 送付書類 */
-.doc-section { border-top: 1.5px solid #111; padding-top: 12px; margin-bottom: 14px; }
-.doc-section-title {
-  font-size: 14px; font-weight: 600; letter-spacing: 0.06em;
-  margin-bottom: 8px;
-  display: flex; align-items: center; gap: 8px;
+/* 「１　送付書類の内容」などの小見出し */
+.doc-sec-t {
+  font-size: 13.5px; font-weight: 600; letter-spacing: 0.12em;
+  margin: 16px 0 8px; display: flex; align-items: center; gap: 10px;
 }
-.doc-section-title::after {
-  content: ''; flex: 1; height: 1px; background: #bbb;
-}
-.doc-attach-row { display: flex; align-items: baseline; font-size: 13.5px; line-height: 1.9; margin-bottom: 2px; }
-.dan      { min-width: 20px; flex-shrink: 0; }
-.dnm      { flex: 1; padding-right: 4px; }
-.dct      { white-space: nowrap; }
-.doc-note { font-size: 12px; color: #555; margin-left: 20px; line-height: 1.7; margin-bottom: 6px; }
+.doc-sec-t::after { content: ''; flex: 1; height: 1px; background: #111; }
+.doc-intro { font-size: 12.5px; line-height: 1.9; margin-bottom: 6px; text-indent: 0; }
 
-/* 返送書類 */
-.doc-return-intro { font-size: 13.5px; line-height: 1.9; margin-bottom: 8px; color: #333; }
-.doc-return-row { display: flex; align-items: baseline; font-size: 13.5px; line-height: 1.9; margin-bottom: 2px; }
-.ret-bullet { min-width: 14px; flex-shrink: 0; }
+/* 書類の表（見出しは塗らず、上を太線・下を細線で組む。トナーのむらを避けるため） */
+.doc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.doc-table th {
+  white-space: nowrap; background: none; color: #111;
+  font-weight: 600; font-size: 11.5px; letter-spacing: 0.2em; padding: 7px 10px;
+  border-top: 1.5px solid #111; border-bottom: 1px solid #111;
+}
+.doc-table th.nm { text-align: left; }
+.doc-table td { border-bottom: 1px solid #777; padding: 6px 10px; vertical-align: top; }
+.doc-table td.no  { width: 56px; text-align: center; }
+.doc-table td.cnt { width: 84px; text-align: center; white-space: nowrap; }
+.doc-table td.chk { width: 56px; text-align: center; font-size: 15px; }
+.doc-table td small { display: block; font-size: 11px; margin-top: 2px; }
+.doc-table tr:last-child td { border-bottom: 1.5px solid #111; }
+.doc-empty { color: #aaa; font-size: 12px; font-style: italic; }
+
+/* フッター */
+.doc-foot {
+  margin: 22px 62px 0; padding: 10px 0 26px;
+  border-top: 1px solid #111;
+  font-size: 9.5px; letter-spacing: 0.2em;
+  display: flex; justify-content: space-between;
+}
 
 /* ── TOAST ── */
 .toast {
   position: fixed; bottom: 26px; right: 26px;
   background: var(--navy); color: #ddeeff;
   padding: 9px 18px; border-radius: 6px;
-  font-size: 13px; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px; font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', sans-serif;
   box-shadow: 0 4px 20px rgba(0,0,0,0.28);
   opacity: 0; transform: translateY(8px);
   transition: all .22s; pointer-events: none; z-index: 999;
 }
 .toast.show { opacity: 1; transform: translateY(0); }
 
-/* ── PRINT ── */
+/* ── PRINT ──
+   プレビューの用紙はA4の実寸（96dpiで794×1123px）なので、印刷は等倍でよい。
+   拡大縮小を入れると、画面で1枚に収まって見えても紙では2枚になる。
+   min-height を残すと末尾に白紙が1枚出るので、必ず auto に戻すこと。 */
 @media print {
   @page { size: A4 portrait; margin: 0; }
   html, body { background: white !important; min-height: 0 !important; height: auto !important; }
   .app-header, .form-panel, .preview-lbl, .toast { display: none !important; }
   .main-layout { display: block !important; min-height: 0 !important; height: auto !important; }
   .preview-panel { background: white !important; padding: 0 !important; display: block !important; min-height: 0 !important; max-height: none !important; height: auto !important; overflow: visible !important; }
-  .document { box-shadow: none !important; width: 100% !important; min-height: auto !important; margin: 0 !important; page-break-after: avoid; break-after: avoid; }
+  .document {
+    box-shadow: none !important; width: 100% !important;
+    /* 用紙の高さ（A4＝約1122.5px）より少しだけ低くする。
+       これでフッターが下端近くまで押し下がり、なおかつ白紙の2枚目が出ない。
+       1122.5px を超える値を書くと2枚目が出るので上げないこと。 */
+    min-height: 1110px !important;
+    margin: 0 !important;
+    page-break-after: avoid; break-after: avoid;
+  }
 }
 </style>
 </head>
@@ -283,7 +316,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
     <div class="h-badge">📄</div>
     <div>
       <div class="h-title">書類送付案内　作成</div>
-      <div class="h-ver">ver.1.1.1</div>
+      <div class="h-ver">ver.1.1.2</div>
     </div>
     <div class="h-div"></div>
     <div class="h-office">中山司法書士事務所</div>
@@ -306,9 +339,8 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
     <div class="sec">
       <div class="sec-head"><div class="sec-lbl">🔤 フォント</div></div>
       <div class="font-btns" id="fontBtns">
-        <button class="font-btn" data-font="'Noto Serif JP', serif" onclick="setFont(this)">Noto Serif JP</button>
-        <button class="font-btn" data-font="'Noto Sans JP', sans-serif" onclick="setFont(this)">Noto Sans JP</button>
-        <button class="font-btn active" data-font="'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro', sans-serif" onclick="setFont(this)">ヒラギノ角ゴ Pro</button>
+        <button class="font-btn active" data-font="'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN', 'Yu Mincho', 'YuMincho', serif" onclick="setFont(this)">ヒラギノ明朝</button>
+        <button class="font-btn" data-font="'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro', sans-serif" onclick="setFont(this)">ヒラギノ角ゴ Pro</button>
         <button class="font-btn" data-font="'Yu Mincho', 'YuMincho', '游明朝', serif" onclick="setFont(this)">游明朝</button>
         <button class="font-btn" data-font="'Yu Gothic', 'YuGothic', '游ゴシック', sans-serif" onclick="setFont(this)">游ゴシック</button>
         <button class="font-btn" data-font="'MS Mincho', 'ＭＳ 明朝', serif" onclick="setFont(this)">MS明朝</button>
@@ -390,7 +422,8 @@ const DEFAULT_GREETING = '拝啓、ますますご清栄のこととお慶び申
 const DEFAULT_BODY = 'さて、当職はご依頼を受け、手続きを承っております。つきましては、本手続きに必要となる下記の書類を送付いたしましたので、内容をご確認の上、ご対応くださいますようお願い申し上げます。ご多忙の折、誠に恐縮ではございますが、何卒よろしくお願い申し上げます。';
 
 let sendDocs = [], retDocs = [], nextId = 10;
-let currentFont = "'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro', sans-serif";
+// 既定は明朝体。紙面全体（レターヘッド・フッターを含む）に --doc-font として渡す
+let currentFont = "'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN', 'Yu Mincho', 'YuMincho', serif";
 
 function init() {
   document.getElementById('sendDate').value = '2026-03-24';
@@ -496,75 +529,90 @@ function renderRetList() {
 function renderPreview() {
   const dateVal  = document.getElementById('sendDate').value;
   const name     = document.getElementById('recipientName').value.trim() || '　　　　　　';
-  const subject  = document.getElementById('subjectLine').value.trim() || '　';
+  const subjectRaw = document.getElementById('subjectLine').value.trim();
   const greeting = document.getElementById('greetingText').value.trim();
   const bodyTxt  = document.getElementById('bodyText').value.trim();
   const dateStr  = dateVal ? formatDate(dateVal) : '　　年　月　日';
 
-  // 送付書類HTML
+  // 送付書類の表（番号は連番。1〜9は全角、10以上は半角）
   let sendHtml = '';
   if (!sendDocs.length) {
-    sendHtml = '<div style="color:#aaa;font-size:12px;font-style:italic;">（書類が未入力です）</div>';
+    sendHtml = '<div class="doc-empty">（書類が未入力です）</div>';
   } else {
+    let rows = '';
     sendDocs.forEach((item, idx) => {
       const nameStr = escHtml(item.name || '（書類名未入力）');
-      const noteStr = item.note ? `<div class="doc-note">※${escHtml(item.note)}</div>` : '';
-      sendHtml += `<div class="doc-attach-row">
-        <span class="dan">${idx+1}．</span>
-        <span class="dnm">${nameStr}</span>
-        <span class="dct">${item.count}　通</span>
-      </div>${noteStr}`;
+      const noteStr = item.note ? `<small>※${escHtml(item.note)}</small>` : '';
+      rows += `<tr>
+        <td class="no">${numJa(idx + 1)}</td>
+        <td>${nameStr}${noteStr}</td>
+        <td class="cnt">${numJa(item.count)}通</td>
+      </tr>`;
     });
+    sendHtml = `<table class="doc-table">
+      <tr><th>番号</th><th class="nm">書類名</th><th>数量</th></tr>
+      ${rows}
+    </table>`;
   }
 
-  // 返送書類HTML
+  // 返送書類の表（先頭に□のチェック欄）
   let retHtml = '';
   if (!retDocs.length) {
-    retHtml = '<div style="color:#aaa;font-size:12px;font-style:italic;">（書類が未入力です）</div>';
+    retHtml = '<div class="doc-empty">（書類が未入力です）</div>';
   } else {
+    let rows = '';
     retDocs.forEach(item => {
-      retHtml += `<div class="doc-return-row">
-        <span class="ret-bullet">・</span>
-        <span>${escHtml(item.text || '（未入力）')}</span>
-      </div>`;
+      rows += `<tr>
+        <td class="chk">□</td>
+        <td>${escHtml(item.text || '（未入力）')}</td>
+      </tr>`;
     });
+    retHtml = `<table class="doc-table">
+      <tr><th>確認</th><th class="nm">書類名</th></tr>
+      ${rows}
+    </table>`;
   }
 
   const returnIntro = '恐れ入りますが、以下の書類がすべて揃いましたら、同封のレターパックで当事務所までご送付いただけますと幸いです。';
 
-  document.getElementById('docPreview').innerHTML = `
-    <div class="doc-hbar" style="font-family:${currentFont};">
-      <div class="doc-title" style="font-family:${currentFont};">書　類　送　付　案　内</div>
-      <div class="doc-hbar-date" style="font-family:${currentFont};">${escHtml(dateStr)}</div>
+  // 件名は入力があるときだけ出す
+  const subjectHtml = subjectRaw
+    ? `<div class="doc-subject">${escHtml(subjectRaw)}</div>`
+    : '';
+
+  const prev = document.getElementById('docPreview');
+  // 書体は変数で紙面全体に渡す（レターヘッドとフッターも同じ書体になる）
+  prev.style.setProperty('--doc-font', currentFont);
+  prev.innerHTML = `
+    <div class="doc-head">
+      <div class="doc-head-in">
+        <div class="doc-office">中山司法書士事務所</div>
+        <div class="doc-addr">〒175-0082 東京都板橋区高島平3-10-12-505<br>電話 03-5997-5356</div>
+      </div>
     </div>
-    <div class="doc-main" style="font-family:${currentFont};">
-      <div class="doc-meta-row">
-        <div class="doc-rcpt-block">
-          <div class="doc-rcpt-name" style="font-family:${currentFont};">${escHtml(name)}　様</div>
-        </div>
-        <div class="doc-sender-block" style="font-family:${currentFont};">
-          東京都板橋区高島平３－１０－１２－５０５<br>
-          中山司法書士事務所　司法書士　中山吾郎<br>
-          電話　０３－５９９７－５３５６
-        </div>
-      </div>
-      <div class="doc-subject" style="font-family:${currentFont};">${escHtml(subject)}</div>
-      <div class="doc-body-block">
-        <div class="doc-greeting" style="font-family:${currentFont};">${escHtml(greeting)}</div>
-        <div class="doc-body-txt" style="font-family:${currentFont};">${escHtml(bodyTxt)}</div>
-      </div>
-      <div class="doc-closing" style="font-family:${currentFont};">敬　具</div>
+    <div class="doc-main">
+      <div class="doc-date">${escHtml(dateStr)}</div>
+      <div class="doc-rcpt">${escHtml(name)}　様</div>
+      <div class="doc-who">司法書士　<b>中山 吾郎</b></div>
+      <div class="doc-title">書類送付のご案内</div>
+      ${subjectHtml}
+      <div class="doc-p">${escHtml(greeting)}</div>
+      <div class="doc-p">${escHtml(bodyTxt)}</div>
+      <div class="doc-closing">敬具</div>
+      <div class="doc-ki">記</div>
 
-      <div class="doc-section">
-        <div class="doc-section-title" style="font-family:${currentFont};">１．送付書類の内容</div>
-        ${sendHtml}
-      </div>
+      <div class="doc-sec-t">１　送付書類の内容</div>
+      ${sendHtml}
 
-      <div class="doc-section">
-        <div class="doc-section-title" style="font-family:${currentFont};">２．ご返送いただく書類</div>
-        <div class="doc-return-intro" style="font-family:${currentFont};">${returnIntro}</div>
-        ${retHtml}
-      </div>
+      <div class="doc-sec-t">２　ご返送いただく書類</div>
+      <div class="doc-intro">${returnIntro}</div>
+      ${retHtml}
+
+      <div class="doc-ijou">以上</div>
+    </div>
+    <div class="doc-foot">
+      <span>中山司法書士事務所</span>
+      <span>不動産登記 ・ 商業法人登記 ・ 相続</span>
     </div>`;
 }
 
@@ -590,6 +638,13 @@ function formatDate(val) {
 }
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+// 1〜9は全角数字、10以上は半角のまま（紙面の見栄えをそろえるため）
+const ZEN_SUJI = '０１２３４５６７８９';
+function numJa(n) {
+  const v = parseInt(n, 10);
+  if (!Number.isFinite(v)) return String(n);
+  return (v >= 1 && v <= 9) ? ZEN_SUJI[v] : String(v);
 }
 function showToast(msg, type) {
   const t=document.getElementById('toast');
@@ -631,7 +686,7 @@ function loadSavedTemplates() {
   tpls.slice().reverse().forEach(t => {
     const d = document.createElement('div');
     d.className = 's-item';
-    d.innerHTML = `<span class="sname">${t.name}</span><span class="sdate">${t.saved}</span>
+    d.innerHTML = `<span class="sname">${escHtml(t.name)}</span><span class="sdate">${escHtml(t.saved)}</span>
       <button class="sdel" onclick="deleteTpl(${t.id},event)">×</button>`;
     d.addEventListener('click', e => { if (!e.target.classList.contains('sdel')) loadTemplate(t); });
     list.appendChild(d);
