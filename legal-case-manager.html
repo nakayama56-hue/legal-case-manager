@@ -2936,6 +2936,11 @@ body.files-in-panel #case-task-panel[data-tab="files"] #case-files-panel-host { 
 .cf-drop.over { background: rgba(37,99,235,0.12); border-style: solid; }
 .cf-foot { padding: 6px 14px 8px; font-size: 10px; color: var(--text-muted); border-top: 1px solid var(--border-light); line-height: 1.6; flex-shrink: 0; }
 .cf-empty { padding: 28px 16px; text-align: center; font-size: 12px; color: var(--text-muted); line-height: 1.8; }
+/* 親フォルダの選び直し（8.6.5）。ふだんは目立たせない */
+.cf-sub { font-size: 10px; margin-top: 10px; line-height: 1.7; }
+.cf-sub a { color: var(--text-muted); }
+.cf-warn { margin: 12px 14px; padding: 10px 12px; border: 1px solid #f59e0b; background: #fffbeb; border-radius: 8px; font-size: 12px; line-height: 1.8; color: #78350f; word-break: normal; overflow-wrap: break-word; line-break: strict; }
+.cf-warn-btns { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
 /* 見当たらないときの候補（8.6.3）。名前の違いを見比べるので、切らずに折り返す */
 .cf-row.cf-suggest { grid-template-columns: 30px minmax(0,1fr) auto; }
 .cf-suggest .cf-name { white-space: normal; word-break: normal; overflow-wrap: break-word; line-break: strict; }
@@ -3495,7 +3500,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7930,15 +7935,45 @@ async function cfConnectRoot() {
     const opts = { mode: 'readwrite' };
     try { const near = await _idbGet('backupDir'); if (near) opts.startIn = near; } catch (e) {}
     const handle = await window.showDirectoryPicker(opts);
-    await _idbSet('caseFilesRoot', handle);
-    toast(`親フォルダを「${handle.name}」にしました。以後は一覧から選ぶだけです`, 'success');
-    if (_cf.caseId !== caseId) return;
-    _cf.caseId = null;               // 最初から解決し直す
-    await renderCaseFiles(caseId);
+    // 親らしくないフォルダ（区分のフォルダがどちらも無い）なら、覚える前に確かめる（8.6.5）。
+    // 案件フォルダそのものを親に選ぶと、全案件が「見当たりません」になるため
+    if (!(await _cfLooksLikeRoot(handle))) {
+      if (_cf.caseId !== caseId) return;
+      _cf.pendingRoot = handle; _cf.status = 'rootcheck'; _cfRender();
+      return;
+    }
+    await _cfSaveRoot(handle, caseId);
   } catch (e) {
     if (e && e.name === 'AbortError') return;
     toast(`フォルダを選べませんでした（${e.message}）`, 'error');
   }
+}
+/* 区分のフォルダが 1 つでもあれば親とみなす。確かめられなかったとき（読めない等）は止めない */
+async function _cfLooksLikeRoot(handle) {
+  let notFound = 0;
+  for (const name of ['不動産登記案件', '商業・法人登記案件']) {
+    try { await handle.getDirectoryHandle(name); return true; }
+    catch (e) { if (e && (e.name === 'NotFoundError' || e.name === 'TypeMismatchError')) notFound++; else return true; }
+  }
+  return notFound < 2;
+}
+async function _cfSaveRoot(handle, caseId) {
+  await _idbSet('caseFilesRoot', handle);
+  toast(`親フォルダを「${handle.name}」にしました。以後は一覧から選ぶだけです`, 'success');
+  if (_cf.caseId !== caseId) return;
+  _cf.caseId = null;               // 最初から解決し直す
+  await renderCaseFiles(caseId);
+}
+/* 「このまま使う」：確かめの画面で、選んだフォルダをそのまま親にする */
+async function cfRootAccept() {
+  const h = _cf.pendingRoot, caseId = _cf.caseId; if (!h) return;
+  _cf.pendingRoot = null;
+  try { await _cfSaveRoot(h, caseId); } catch (e) { toast(`親フォルダを覚えられませんでした（${e.message}）`, 'error'); }
+}
+/* 確かめの画面をやめて、元の表示に戻る（親は変えていない） */
+async function cfRootCancel() {
+  const caseId = _cf.caseId; _cf.pendingRoot = null;
+  _cf.caseId = null; await renderCaseFiles(caseId);
 }
 
 /* いま見ているフォルダ（root から path をたどった先）を読む */
@@ -8037,9 +8072,15 @@ function _cfListHtml() {
   }).join('');
   return rows || `<div class="cf-empty">${_cf.filter ? '該当するものがありません' : 'このフォルダは空です'}</div>`;
 }
+/* いまの親フォルダの名前と、親の選び直しの入口（8.6.5）。
+   「見当たりません」の画面から親を直せず、行き止まりになっていた */
+function _cfRootSubHtml() {
+  if (!_cf.base || document.body.classList.contains('viewer-mode')) return '';
+  return `<div class="cf-sub">いまの親フォルダ：<b>${escHtml(_cf.base.name)}</b><br><a href="#" onclick="cfConnectRoot();return false">親フォルダ（Dropbox の「中山事務所」）を選び直す</a></div>`;
+}
 function _cfChooserListHtml() {
   const ch = _cf.chooser; if (!ch) return '';
-  if (ch.missing) return `<div class="cf-empty">「${escHtml(ch.path.join('/'))}」が見当たりません。上で別のフォルダを選んでください</div>`;
+  if (ch.missing) return `<div class="cf-empty">「${escHtml(ch.path.join('/'))}」が見当たりません。上で別のフォルダを選んでください${_cfRootSubHtml()}</div>`;
   const q = (ch.filter || '').trim().toLowerCase();
   const items = ch.items.filter(n => !q || n.toLowerCase().includes(q));
   const hit = n => ch.keys.some(k => n.includes(k));
@@ -8085,10 +8126,15 @@ function _cfRender() {
     case 'unsupported': body = `<div class="cf-empty">このブラウザではフォルダに接続できません。<br>パソコンの Chrome か Edge で開いてください。</div>`; break;
     case 'noroot': body = `<div class="cf-empty">はじめに、案件フォルダの親（Dropbox の「中山事務所」）を一度だけ結び付けてください。<br>以後は、案件ごとに一覧から押すだけになります。<br><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">📂 親フォルダを選ぶ</button><div style="font-size:10px;margin-top:8px"><a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">この案件のフォルダを直接選ぶ</a></div></div>`; break;
     case 'perm': { const tn = _cf.permTarget ? _cf.permTarget.name : rootName; body = `<div class="cf-empty">「${escHtml(tn)}」を読むには、ブラウザの許可が要ります。<br><button class="btn btn-primary btn-sm" onclick="cfGrant()">🔓 許可する</button><div style="font-size:10px;margin-top:6px;line-height:1.6">Chrome の確認の窓に「今回のみ」と「毎回（今後も）許可」があれば、<b>毎回のほう</b>を選んでください。次から聞かれなくなります</div></div>`; break; }
+    case 'rootcheck': {
+      const pn = _cf.pendingRoot ? _cf.pendingRoot.name : '';
+      body = `<div class="cf-warn">⚠️ 選んだフォルダ「${escHtml(pn)}」の中に、<b>「不動産登記案件」「商業・法人登記案件」のどちらも見当たりません。</b><br>親フォルダ（Dropbox の「中山事務所」）で合っていますか。<div class="cf-warn-btns"><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">📂 選び直す</button><button class="btn btn-secondary btn-sm" onclick="cfRootAccept()">このまま使う</button><button class="btn btn-secondary btn-sm" onclick="cfRootCancel()">やめる</button></div></div>`;
+      break;
+    }
     case 'seeking': body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath)}」が見当たりません。<br>名前を変えた先を探しています…</div>`; break;
     case 'lost': {
       const sg = _cf.suggest || [];
-      body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath || rootName)}」が見当たりません。<br>名前が変わったか、移動したか、消えた可能性があります。${sg.length ? '<br>中身で確かめられなかったので、自動ではつないでいません。' : ''}<br><button class="btn btn-primary btn-sm" onclick="cfRebind()">🔗 選び直す</button></div>`;
+      body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath || rootName)}」が見当たりません。<br>名前が変わったか、移動したか、消えた可能性があります。${sg.length ? '<br>中身で確かめられなかったので、自動ではつないでいません。' : ''}<br><button class="btn btn-primary btn-sm" onclick="cfRebind()">🔗 選び直す</button>${_cfRootSubHtml()}</div>`;
       if (sg.length) {
         body += `<div class="cf-tools"><span class="cf-path">名前の似たフォルダ</span></div><div class="cf-list">${sg.map((p, i) => `<div class="cf-row cf-suggest is-dir" onclick="cfBindSuggest(${i})" title="押すとこのフォルダに結び付けます"><span class="cf-ic dir">📁</span><span class="cf-name">${escHtml(p[p.length - 1])}<span class="cf-meta">${escHtml(p.slice(0, -1).join(' › '))}</span></span><span class="cf-acts" style="opacity:1"><button onclick="event.stopPropagation();cfBindSuggest(${i})">これにする</button></span></div>`).join('')}</div>`;
       }
