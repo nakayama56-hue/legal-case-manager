@@ -2311,7 +2311,12 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
   background: #1e3a8a; color: #fff; text-align: center;
   font-size: 12px; font-weight: 700; padding: 5px 10px; letter-spacing: 0.02em;
 }
-body.viewer-mode #content, body.viewer-mode #main { padding-top: 30px; }
+body.viewer-mode #content, body.viewer-mode #main { padding-top: var(--viewer-banner-h, 30px); }
+/* 「Macアプリへ引っ越し済み」の帯（8.6.6）。見るだけ＝薄い赤、一時的に解除中＝濃い赤 */
+#viewer-banner.migrated { background: #fef2f2; color: #991b1b; border-bottom: 2px solid #b91c1c; padding: 6px 12px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; line-height: 1.5; }
+#viewer-banner.migrated-open { background: #b91c1c; color: #fff; padding: 5px 12px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; line-height: 1.5; }
+#viewer-banner.migrated button, #viewer-banner.migrated-open button { font-family: inherit; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 6px; border: 1px solid currentColor; background: rgba(255,255,255,0.85); color: #991b1b; cursor: pointer; }
+body.migrated-open #content, body.migrated-open #main { padding-top: var(--viewer-banner-h, 30px); }
 body.viewer-mode #btn-header-backup,
 body.viewer-mode #btn-cloud-load,
 body.viewer-mode #btn-cloud-save,
@@ -3500,7 +3505,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 8.6.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3754,10 +3759,16 @@ tr.row-waiting:hover > td {
             <div id="backup-folder-label" style="font-size:11px;color:var(--text-muted);margin-bottom:6px">保存先：ダウンロードフォルダ（未設定）</div>
             <button class="btn btn-secondary btn-sm" onclick="selectBackupFolder()">📁 保存フォルダを選択（PCのみ）</button>
           </div>
+          <div class="data-card" id="migrated-card">
+            <div class="icon">🚚</div>
+            <div class="label">Macアプリへの引っ越し</div>
+            <div class="desc">引っ越したあと、このChrome版を見るだけにします（データは消しません）</div>
+            <div id="migrated-status"></div>
+          </div>
           <div class="data-card">
             <div class="icon">📊</div>
             <div class="label">ストレージ使用状況</div>
-            <div class="desc">localStorageの使用量を表示します</div>
+            <div class="desc" id="storage-desc">localStorageの使用量を表示します</div>
             <div id="storage-status" style="text-align:left;width:100%"></div>
             <button class="btn btn-secondary btn-sm" onclick="renderStorageStatus()" style="margin-top:6px">🔄 更新</button>
           </div>
@@ -5214,9 +5225,18 @@ function initAppearance() {
 
 function _setupViewerMode() {
   if (!window.__VIEWER_MODE__) return;
+  _applyReadOnly('閲覧専用モードです（このファイルでは編集・保存はできません）');
+  // 閲覧専用バナー
+  const banner = document.createElement('div');
+  banner.id = 'viewer-banner';
+  banner.textContent = '👁 閲覧専用モード（このファイルは表示のみ・編集や保存はできません）';
+  document.body.appendChild(banner);
+}
+/* 書き込み系を止める。閲覧用HTMLと「引っ越し済み」（8.6.6）で共用。二重実装しない */
+function _applyReadOnly(msg) {
   document.body.classList.add('viewer-mode');
   // 書き込み・保存・ファイル生成・破壊的操作を無効化
-  const noop = () => { try { toast('閲覧専用モードです（このファイルでは編集・保存はできません）', 'info'); } catch(e){} };
+  const noop = () => { try { toast(msg, 'info'); } catch(e){} };
   const silentNoop = () => {};
   window.saveToStorage = silentNoop;
   window.cloudSave = async () => {};
@@ -5239,15 +5259,75 @@ function _setupViewerMode() {
   window.cfRename = noop;
   window.cfNewFolder = noop;
   window.cfDrop = async (ev) => { ev.preventDefault(); noop(); };
-  // 閲覧専用バナー
+}
+
+/* =====================================================
+   Macアプリへ引っ越したあとの Chrome 版（8.6.6。2026 年 9 月 20 日）
+   引っ越し後にうっかり Chrome 版へ入力すると、どちらが本当か分からなくなる。
+   データ管理で「引っ越し済み」にすると、Chrome 版は見るだけになる（閲覧専用モードと同じ仕組み）。
+   ・印は localStorage `migrated_to_app_v1`（{date}）。データは消さない。取り消せば元どおり
+   ・「一時的に解除」は sessionStorage。タブを閉じれば見るだけに戻る。解除中も濃い赤の帯を出す
+   ・Macアプリ（caseflow:）の中では一切働かない。引っ越しの写しに印が混じっていても無視する
+   ===================================================== */
+const MIGRATED_KEY = 'migrated_to_app_v1';
+function _isNativeApp() { return location.protocol === 'caseflow:'; }
+function _migratedInfo() {
+  if (_isNativeApp() || window.__VIEWER_MODE__) return null;
+  try { const v = JSON.parse(localStorage.getItem(MIGRATED_KEY) || 'null'); return v && v.date ? v : null; } catch (e) { return null; }
+}
+function _migratedLocked() {
+  if (!_migratedInfo()) return false;
+  try { return sessionStorage.getItem('migrated_unlock') !== '1'; } catch (e) { return true; }
+}
+function _migratedDateJa(d) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''); return m ? `${+m[1]}年${+m[2]}月${+m[3]}日` : (d || ''); }
+function _setupMigratedMode() {
+  const info = _migratedInfo(); if (!info) return;
+  const locked = _migratedLocked();
   const banner = document.createElement('div');
   banner.id = 'viewer-banner';
-  banner.textContent = '👁 閲覧専用モード（このファイルは表示のみ・編集や保存はできません）';
+  const when = escHtml(_migratedDateJa(info.date));
+  if (locked) {
+    _applyReadOnly('このChrome版は Macアプリへ引っ越し済みです（見るだけになっています）');
+    banner.className = 'migrated';
+    banner.innerHTML = `<span>⛔ このChrome版は ${when} に Macアプリへ引っ越し済みです。<b>見るだけ</b>になっています（新規・編集・削除・保存は出ません）</span><button onclick="migratedUnlock()">一時的に解除</button>`;
+  } else {
+    document.body.classList.add('migrated-open');
+    banner.className = 'migrated-open';
+    banner.innerHTML = `<span>⚠️ 引っ越し済み（${when}）のChrome版を一時的に解除中です。ここに入力したものは、Macアプリには入りません</span><button onclick="migratedRelock()">見るだけに戻す</button>`;
+  }
   document.body.appendChild(banner);
+  // 帯が折り返しても本文が下に潜らないよう、実際の高さを渡す
+  const fit = () => document.body.style.setProperty('--viewer-banner-h', banner.offsetHeight + 'px');
+  fit(); window.addEventListener('resize', fit);
+}
+function migratedUnlock() { try { sessionStorage.setItem('migrated_unlock', '1'); } catch (e) {} location.reload(); }
+function migratedRelock() { try { sessionStorage.removeItem('migrated_unlock'); } catch (e) {} location.reload(); }
+function migratedMark() {
+  if (_isNativeApp()) return;
+  if (!confirm('このChrome版を「Macアプリへ引っ越し済み」にします。\n\n・以後、このChrome版は見るだけになります（新規・編集・削除・保存が出ません）\n・データは消しません。「取り消す」でいつでも元に戻せます\n\nよろしいですか？')) return;
+  localStorage.setItem(MIGRATED_KEY, JSON.stringify({ date: today() }));
+  try { sessionStorage.removeItem('migrated_unlock'); } catch (e) {}
+  location.reload();
+}
+function migratedUnmark() {
+  if (!confirm('「引っ越し済み」を取り消して、このChrome版をふつうに使える状態へ戻します。\nよろしいですか？')) return;
+  localStorage.removeItem(MIGRATED_KEY);
+  try { sessionStorage.removeItem('migrated_unlock'); } catch (e) {}
+  location.reload();
+}
+function renderMigratedCard() {
+  const card = document.getElementById('migrated-card'), el = document.getElementById('migrated-status');
+  if (!card || !el) return;
+  if (_isNativeApp() || window.__VIEWER_MODE__) { card.style.display = 'none'; return; }
+  const info = _migratedInfo();
+  el.innerHTML = info
+    ? `<div style="font-size:12px;font-weight:700;color:#991b1b;margin-bottom:6px">${escHtml(_migratedDateJa(info.date))} に引っ越し済み</div><button class="btn btn-secondary btn-sm" onclick="migratedUnmark()">↩ 引っ越し済みを取り消す</button>`
+    : `<button class="btn btn-secondary btn-sm" onclick="migratedMark()">🚚 このChrome版を引っ越し済みにする</button>`;
 }
 
 function init() {
   _setupViewerMode();
+  _setupMigratedMode();
   try { loadFromStorage(); } catch(e) { cases = []; tasks = []; }
   // 旧形式のledgerデータ移行（一度だけ実行）
   if (!localStorage.getItem('ledger_migrated')) {
@@ -11611,6 +11691,7 @@ function _buildBackupData() {
 
 // 自動バックアップ実行（日次）
 async function runDailyAutoBackup() {
+  if (_migratedLocked()) return;   // 引っ越し済みで見るだけの間は取らない（8.6.6。_startupAutoBackup と同じ理由）
   if (localStorage.getItem('auto_backup_enabled') !== '1') return;
   const todayStr = today();
   if (localStorage.getItem('last_auto_backup') === todayStr) return; // 今日は実施済み
@@ -11704,12 +11785,24 @@ function renderStorageStatus() {
   const barColor = pct > 80 ? '#ef4444' : pct > 60 ? '#f59e0b' : '#10b981';
   const fmt = b => b > 1024*1024 ? (b/1024/1024).toFixed(2)+' MB' : (b/1024).toFixed(1)+' KB';
 
+  renderMigratedCard();
   const top5 = items.slice(0,5).map(it =>
     `<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);padding:1px 0">
       <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${escHtml(it.key)}</span>
       <span>${fmt(it.bytes)}</span>
     </div>`).join('');
 
+  // Macアプリはファイルに保存するので 5MB の上限が無い。比べる相手が無いのでバーを出さない（8.6.6）
+  if (_isNativeApp()) {
+    const d = document.getElementById('storage-desc'); if (d) d.textContent = 'データの大きさを表示します';
+    el.innerHTML = `
+    <div style="font-size:13px;font-weight:700;margin-bottom:6px">データの大きさ：${fmt(total)}</div>
+    <div style="font-size:11px;color:#047857;font-weight:700;margin-bottom:8px">✅ Macアプリはファイルに保存するため、5MBの上限はありません</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">内訳（上位5件）：</div>
+    ${top5}
+    <div style="font-size:10px;color:var(--text-muted);margin-top:6px">案件数：${cases.length}件 ／ タスク数：${tasks.length}件</div>`;
+    return;
+  }
   el.innerHTML = `
     <div style="font-size:13px;font-weight:700;margin-bottom:6px">使用量：${fmt(total)} / 約${limitMB} MB（${pct.toFixed(1)}%）</div>
     <div style="background:var(--bg-secondary);border-radius:6px;height:10px;overflow:hidden;margin-bottom:8px">
@@ -13732,6 +13825,9 @@ function _notifyBackupDone(filename, location) {
 
 async function _startupAutoBackup() {
   if (localStorage.getItem('auto_backup_enabled') !== '1') return;
+  // 引っ越し済みで見るだけの間は取らない（8.6.6）。中身は引っ越しの日のままなのに今日の日付の控えができ、
+  // 早見表の保険（新しい控えを探す）が古い中身を新しいものと取り違えるため
+  if (_migratedLocked()) return;
   const todayStr = today();
   if (localStorage.getItem('last_auto_backup') === todayStr) return; // 今日は実施済み
   if (!cases || cases.length === 0) return;
