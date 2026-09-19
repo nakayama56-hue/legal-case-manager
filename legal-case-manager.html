@@ -2932,6 +2932,12 @@ body.files-in-panel #case-task-panel[data-tab="files"] #case-files-panel-host { 
 .cf-row:hover .cf-acts, .cf-row:focus-within .cf-acts { opacity: 1; }
 .cf-acts button { font-family: inherit; font-size: 11px; padding: 2px 7px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.8); cursor: pointer; color: var(--text-secondary); }
 .cf-acts button:hover { border-color: var(--color-primary); color: var(--color-primary); }
+/* Macアプリでは各行に「Finder」ボタンが1つ増えるので、操作の列を広げる（10.0.1）。
+   上の 2 つの grid 定義（本文置き・右パネル置き）と対。片方だけ足すとボタンが列からはみ出す。
+   幅は実測で決めた（本文置き＝開く38＋Finder50＋名前38＋隙間6＝132／右パネル置きは印だけなので 111）。
+   目分量で足さないこと */
+.cf-panel.cf-native .cf-row { grid-template-columns: 30px minmax(0,1fr) 96px 64px 134px; }
+#case-files-panel-host .cf-panel.cf-native .cf-row { grid-template-columns: 26px minmax(0,1fr) 84px 113px; }
 .cf-ic { width: 22px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; color: #fff; letter-spacing: .3px; }
 .cf-ic.pdf { background: #dc2626; } .cf-ic.doc { background: #2563eb; } .cf-ic.img { background: #16a34a; }
 .cf-ic.web { background: #64748b; } .cf-ic.xls { background: #15803d; } .cf-ic.ppt { background: #c2410c; } .cf-ic.etc { background: #94a3b8; }
@@ -3505,7 +3511,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 10.0.0</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 10.0.1</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7639,6 +7645,19 @@ const _cf = {
   busy: false,
 };
 const _CF_SKIP = new Set(['.DS_Store', 'Icon\r', 'desktop.ini', 'Thumbs.db']);
+/* Macアプリでは、ファイルを Mac の既定のアプリで開く（10.0.1）。
+   ただし「開くと何かが走りうる」種類だけは開かず、Finder で表示するだけにする。
+   拡張子が無いものも同じ扱い（中身が何か分からないため）。ここ1か所で決める */
+const _CF_EXEC_EXT = new Set([
+  'app', 'command', 'sh', 'bash', 'zsh', 'csh', 'ksh', 'tool', 'pkg', 'mpkg', 'dmg',
+  'workflow', 'scpt', 'scptd', 'applescript', 'terminal', 'jar', 'py', 'rb', 'pl',
+  'php', 'action', 'prefpane', 'osax', 'kext', 'appex', 'xpc', 'bundle', 'plugin',
+  'exe', 'bat', 'cmd', 'msi', 'vbs', 'ps1', 'js', 'jse', 'wsf', 'scr',
+]);
+/* Macアプリの殻が「既定のアプリで開く／Finder で表示」の口を用意しているか */
+function _cfNative() { return _isNativeApp() && !!(window.CaseFlowNative); }
+/* その取っ手が殻の取っ手か（_root を持つ）。Chrome 版の本物の取っ手には _root が無い */
+function _cfNativeHandle(h) { return _cfNative() && !!h && h._root != null; }
 
 function _applyCaseFilesPlace() {
   const inPanel = caseFilesPlace === 'panel';
@@ -8143,12 +8162,20 @@ function _cfSortedEntries() {
    （8.5.9。全体を描き直すと日本語入力の変換中に入力欄が消え、文字が二重になる・変換が途切れる） */
 function _cfListHtml() {
   const list = _cfSortedEntries();
+  /* Macアプリのときだけ「Finder」を足す（10.0.1）。
+     ・フォルダの行は onclick で中に入るので、押した分が伝わらないよう stopPropagation。
+       ファイルの行は ondblclick なので、素早く2回押して開いてしまわないよう、こちらにも付ける
+     ・右パネル置き（幅400px）は名前の欄が狭いので、字ではなく印だけにする。
+       何の印かは見出しの「📂 Finder」で分かる（どちらも title を付けてある） */
+  const nat = _cfNative();
+  const flabel = caseFilesPlace === 'panel' ? '📂' : 'Finder';
+  const fbtn = idx => nat ? `<button onclick="event.stopPropagation();cfReveal(${idx})" title="Finder で表示">${flabel}</button>` : '';
   const rows = list.map(e => {
     const idx = _cf.entries.indexOf(e);
     if (e.kind === 'dir') {
-      return `<div class="cf-row is-dir" onclick="cfEnter(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">—</span><span class="cf-meta r cf-size"></span><span class="cf-acts"><button onclick="event.stopPropagation();cfEnter(${idx})">開く</button></span></div>`;
+      return `<div class="cf-row is-dir" onclick="cfEnter(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">—</span><span class="cf-meta r cf-size"></span><span class="cf-acts"><button onclick="event.stopPropagation();cfEnter(${idx})">開く</button>${fbtn(idx)}</span></div>`;
     }
-    return `<div class="cf-row" ondblclick="cfOpen(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">${_cfDate(e.mtime)}</span><span class="cf-meta r cf-size">${_cfSize(e.size)}</span><span class="cf-acts"><button onclick="cfOpen(${idx})">開く</button><button class="cf-write" onclick="cfRename(${idx})">名前</button></span></div>`;
+    return `<div class="cf-row" ondblclick="cfOpen(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">${_cfDate(e.mtime)}</span><span class="cf-meta r cf-size">${_cfSize(e.size)}</span><span class="cf-acts"><button onclick="cfOpen(${idx})">開く</button>${fbtn(idx)}<button class="cf-write" onclick="cfRename(${idx})">名前</button></span></div>`;
   }).join('');
   return rows || `<div class="cf-empty">${_cf.filter ? '該当するものがありません' : 'このフォルダは空です'}</div>`;
 }
@@ -8194,7 +8221,7 @@ function _cfRender() {
           ${_cf.path.length ? `<button class="btn btn-secondary btn-xs" onclick="cfGoto(${_cf.path.length - 2})">↑ 上へ</button>` : ''}
           <button class="btn btn-primary btn-xs cf-write" onclick="cfAdd()">＋ 追加</button>
           <button class="btn btn-secondary btn-xs cf-write" onclick="cfNewFolder()">📂 新しいフォルダ</button>
-          <button class="btn btn-secondary btn-xs" onclick="_cfLoad()" title="読み直す">↻</button>` : ''}
+          <button class="btn btn-secondary btn-xs" onclick="_cfLoad()" title="読み直す">↻</button>${_cfNative() ? `<button class="btn btn-secondary btn-xs" onclick="cfRevealHere()" title="このフォルダを Finder で開く">📂 Finder</button>` : ''}` : ''}
         ${_cf.status === 'ok' || _cf.status === 'lost' ? `<button class="btn btn-secondary btn-xs" onclick="cfRebind()" title="別のフォルダに結び付け直す">🔗 選び直す</button>` : ''}
         ${!inPanel ? `<button class="btn btn-secondary btn-xs cf-move-to-panel" onclick="setCaseFilesPlace('panel')" title="一覧を右のパネルへ移す">⇄ 右パネルへ</button>` : ''}
       </div>
@@ -8247,11 +8274,14 @@ function _cfRender() {
         </div>
         <div class="cf-list">${_cfListHtml()}</div>
         <div class="cf-drop cf-write" ondragover="cfDragOver(event)" ondragleave="this.classList.remove('over')" ondrop="cfDrop(event)">ここにファイルを落とすと、<b>このフォルダに追加</b>されます</div>
-        <div class="cf-foot">PDF・画像はその場で開きます。Word などはダウンロードになります。削除はここからはできません（Dropbox か Finder で）。</div>`;
+        <div class="cf-foot">${_cfNative()
+          ? 'ファイルは Mac のアプリで開きます（元のファイルそのものです）。削除はここからはできません（Finder で）。'
+          : 'PDF・画像はその場で開きます。Word などはダウンロードになります。削除はここからはできません（Dropbox か Finder で）。'}</div>`;
       break;
     }
   }
-  host.innerHTML = `<div class="cf-panel no-print">${head}${body}</div>`;
+  /* Macアプリのときは行に「Finder」が1つ増えるので、操作の列を広げる（CSS の .cf-native。10.0.1） */
+  host.innerHTML = `<div class="cf-panel no-print${_cfNative() ? ' cf-native' : ''}">${head}${body}</div>`;
 }
 
 /* ---- 操作 ---- */
@@ -8298,6 +8328,21 @@ function cfGoto(i) { _cf.path = i < 0 ? [] : _cf.path.slice(0, i + 1); _cf.filte
 
 async function cfOpen(idx) {
   const e = _cf.entries[idx]; if (!e || e.kind !== 'file') return;
+  /* Macアプリ（10.0.1）：写しやblobではなく、元のファイルそのものを Mac の既定のアプリで開く。
+     ・.webloc だけは今までどおり（中の URL を開く。殻が既定のブラウザへ回す。試験済みの道）
+     ・実行されうる種類と拡張子の無いものは開かず、Finder で表示するだけにする */
+  if (_cfNativeHandle(e.handle) && e.ext !== 'webloc') {
+    if (!e.ext || _CF_EXEC_EXT.has(e.ext)) {
+      try {
+        await window.CaseFlowNative.revealInFinder(e.handle);
+        toast(`「${e.name}」は安全のため Finder で表示しました`, 'info');
+      } catch (err) { toast(`Finder で表示できませんでした（${err.message}）`, 'error'); }
+      return;
+    }
+    try { await window.CaseFlowNative.openInDefaultApp(e.handle); }
+    catch (err) { toast(`開けませんでした（${err.message}）`, 'error'); }
+    return;
+  }
   try {
     const f = await e.handle.getFile();
     if (e.ext === 'webloc') {
@@ -8318,6 +8363,23 @@ async function cfOpen(idx) {
     }
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   } catch (err) { toast(`開けませんでした（${err.message}）`, 'error'); }
+}
+
+/* その行（ファイルでもフォルダでも）を Finder で選んだ状態で表示する（10.0.1）。
+   Macアプリ以外では何もしない（ボタンもそもそも出さない） */
+async function cfReveal(idx) {
+  const e = _cf.entries[idx]; if (!e) return;
+  if (!_cfNativeHandle(e.handle)) return;
+  try { await window.CaseFlowNative.revealInFinder(e.handle); }
+  catch (err) { toast(`Finder で表示できませんでした（${err.message}）`, 'error'); }
+}
+/* いま開いているフォルダを Finder で開く（10.0.1）。
+   revealInFinder だと「親の窓でこのフォルダが選ばれる」動きになるので、
+   中を開きたいここでは openInDefaultApp（＝Finder がそのフォルダを開く）を使う */
+async function cfRevealHere() {
+  const d = _cf.dir; if (!_cfNativeHandle(d)) return;
+  try { await window.CaseFlowNative.openInDefaultApp(d); }
+  catch (err) { toast(`Finder で開けませんでした（${err.message}）`, 'error'); }
 }
 
 async function cfRename(idx) {
