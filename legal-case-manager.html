@@ -3511,7 +3511,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 10.0.4</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 10.0.5</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -7624,6 +7624,7 @@ function updateCaseTaskPanel(caseId) {
    ===================================================== */
 const CASE_FILES_PLACE_KEY = 'caseFilesPlace_v1';   // 'body' | 'panel'
 const TASK_PANEL_TAB_KEY   = 'caseTaskPanelTab_v1'; // 'tasks' | 'files'
+const CASE_FILES_SORT_KEY  = 'caseFilesSort_v1';    // 'date' | 'name' | 'type'（全案件で1つ。案件ごとには持たない）
 let caseFilesPlace = (() => { try { return localStorage.getItem(CASE_FILES_PLACE_KEY) === 'panel' ? 'panel' : 'body'; } catch (e) { return 'body'; } })();
 let taskPanelTab   = (() => { try { return localStorage.getItem(TASK_PANEL_TAB_KEY) === 'files' ? 'files' : 'tasks'; } catch (e) { return 'tasks'; } })();
 
@@ -7640,7 +7641,9 @@ const _cf = {
   path: [],         // 下位フォルダに入っているときの名前の列
   dir: null,        // いま見ているフォルダの取っ手
   entries: [],      // { name, kind:'file'|'dir', handle, size, mtime, ext }
-  sort: 'date',     // 'date' | 'name' | 'type'
+  // 前に選んだ並び順（10.0.5）。知らない値は既定の 'date' に読み替える
+  // （消したテーマ名がそのまま渡って真っ白になった事故と同じ型を避けるため。6-6章）
+  sort: (() => { try { const v = localStorage.getItem(CASE_FILES_SORT_KEY); return (v === 'name' || v === 'type') ? v : 'date'; } catch (e) { return 'date'; } })(),   // 'date' | 'name' | 'type'
   filter: '',
   busy: false,
 };
@@ -8327,7 +8330,11 @@ async function cfGrant() {
     await renderCaseFiles(caseId);
   } catch (e) { toast(`許可を求められませんでした（${e.message}）`, 'error'); }
 }
-function cfSort(k) { _cf.sort = k; _cfRender(); }
+function cfSort(k) {
+  _cf.sort = (k === 'name' || k === 'type') ? k : 'date';
+  try { localStorage.setItem(CASE_FILES_SORT_KEY, _cf.sort); } catch (e) {}   // 次に開いたときも同じ並びで出す
+  _cfRender();
+}
 /* 絞り込み。入力欄は触らず、一覧だけ差し替える（日本語入力の変換を壊さないため） */
 function cfFilter(v) {
   _cf.filter = v;
