@@ -3410,6 +3410,44 @@ tr.row-waiting:hover > td {
               0 1px 3px rgba(20,30,60,0.22);
   pointer-events: none;
 }
+
+/* =====================================================
+   スマホから届いた追跡番号（10.0.8。2026 年 9 月 20 日）
+   追跡番号の欄の「📦 追跡」の左に「📥②」を出し、押すと一覧が開く。
+   **Mac アプリのときだけ働く。** Chrome 版・閲覧用では要素そのものを作らないので、
+   ここの規則はどれにも当たらない（見た目は 10.0.7 と 1 ピクセルも変わらない）。
+   ===================================================== */
+.tn-btn { position: relative; display: inline-flex; flex-shrink: 0; }
+.tn-btn .tn-open {
+  white-space: nowrap;
+  border-color: #f5b56b; background: #fff7ed; color: #7c3a06;
+}
+.tn-btn .tn-open:hover { background: #ffedd5; }
+.tn-btn .cnt {
+  background: var(--color-accent); color: #fff; border-radius: 999px;
+  min-width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; padding: 0 4px; margin-left: 4px; font-weight: 700;
+}
+/* 一覧は body の直下に置き、position: fixed で置く。
+   ★ モーダルの中に入れると .modal-body の overflow に切られる（1611 行目）。
+      右パネルの中でも同じことが起きる。だから中に置かない */
+#tn-menu {
+  position: fixed; z-index: 4000; display: none;
+  background: var(--bg-primary, #fff); border: 1px solid var(--border-color);
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.16);
+  min-width: 250px; max-width: 320px; max-height: 60vh; overflow-y: auto; padding: 6px;
+}
+#tn-menu.open { display: block; }
+#tn-menu .hd { font-size: 11px; color: var(--text-muted); padding: 4px 8px 6px; }
+#tn-menu .it {
+  display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+  padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 13px;
+}
+#tn-menu .it:hover { background: #fff7ed; }
+#tn-menu .it b { letter-spacing: .03em; }
+#tn-menu .it small { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
+.tn-filled { animation: tn-flash 1.4s ease-out 1; }
+@keyframes tn-flash { from { background: #fdba74; } to { background: transparent; } }
 </style>
 <!-- generated: 1774151282.3539512 -->
 </head>
@@ -3628,7 +3666,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.0.7</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.0.8</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7345,6 +7383,9 @@ function renderCaseDetail(caseId) {
   // 案件フォルダのファイル一覧（置き場所の設定を反映してから描く）
   _applyCaseFilesPlace();
   renderCaseFiles(caseId);
+
+  // 相続人手配の表は innerHTML で作り直されるので、そのたびに「📥」を差し直す
+  _tnSyncSoon();
 }
 
 function togglePrintDropdown(e) {
@@ -10693,6 +10734,8 @@ function openCaseModal(caseId, scrollTo) {
     const body = modal.querySelector('.modal-body');
     if (body) {
       body.scrollTop = 0;
+      // スマホから届いた追跡番号の「📥」を出す（Macアプリのときだけ働く）
+      _tnSyncSoon();
       if (scrollTo) {
         const target = document.getElementById(scrollTo);
         if (target) setTimeout(() => {
@@ -10712,6 +10755,7 @@ function closeCaseModal(event) {
   if (event && event.target !== document.getElementById('case-modal')) return;
   const modal = document.getElementById('case-modal');
   modal.classList.remove('show');
+  _tnCloseMenu();
   _hideInlineSave();
   setTimeout(() => { modal.style.display = 'none'; }, 150);
 }
@@ -12098,6 +12142,7 @@ function addShinseiRow(r, idx) {
     </div>`;
   list.appendChild(div);
   renumberShinseiRows();
+  _tnSyncSoon();
 }
 
 function removeShinseiRow(btn) {
@@ -12273,6 +12318,7 @@ function addDeliveryRow(d, idx) {
     </div>`;
   list.appendChild(div);
   renumberDeliveryRows();
+  _tnSyncSoon();
 }
 
 function addDvTrackingRow(btn) {
@@ -12286,6 +12332,7 @@ function addDvTrackingRow(btn) {
   `;
   list.appendChild(div);
   div.querySelector('input').focus();
+  _tnSyncSoon();   // 増えた行にも「📥」を付ける
 }
 
 function dvTrackThis(btn) {
@@ -12345,6 +12392,7 @@ function dvMethodChange(sel) {
   const trackingEl = item.querySelector('[data-tracking]');
   if (handoverEl) handoverEl.style.display = isHandover ? 'block' : 'none';
   if (trackingEl) trackingEl.style.display = isHandover ? 'none' : 'block';
+  _tnSyncSoon();
 }
 
 /** 追跡番号で日本郵便追跡ページを開く */
@@ -12361,6 +12409,233 @@ function dvTrackReturn(btn) {
   if (!num) { toast('返信追跡番号を入力してください', 'error'); return; }
   window.open(`https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${num}&searchKind=S002&locale=ja`, '_blank');
 }
+
+/* =====================================================
+   スマホから届いた追跡番号を、入力欄で選ぶ（10.0.8。2026 年 9 月 20 日）
+
+   スマホ（Telegram）へ控えの写真を送ると、常駐が番号を読んで
+   受け取り箱（~/secretary/discord-bridge/tsuiseki/uketori.json）に貯める。
+   ここはそれを **読むだけ**。案件に番号が入るのは、いつもどおり「保存」を押したとき
+   （相続人手配だけは、今までの作りどおり選んだ時点で保存される）。
+
+   ★ Mac アプリのときだけ働く（`_tnNative()`）。Chrome 版・閲覧用では
+     ボタンの入れ物すら作らないので、画面は 10.0.7 と変わらない。
+     ファイル一覧の `_cfNative()` と同じ型（7 章）。
+
+   ★ **入力欄を作り直さない。** 差し替えるのは、入力欄の隣に置いた
+     入れ物（.tn-btn）の中身だけ。日本語入力の変換中に欄を作り直すと
+     文字が二重になる（8.5.9 で踏んだ。同じ道をたどらない）。
+
+   ★ 一覧（#tn-menu）は body の直下に置き、position: fixed で開く。
+     モーダルや右パネルの中に置くと overflow に切られる。
+   ===================================================== */
+
+/** 5 秒おきに尋ねる。対象の欄が画面にある間だけ */
+const TN_INTERVAL_MS = 5000;
+/* 付ける欄は 3 か所・6 種類。
+   相続人手配の 2 つはクラスを持たないので onchange で拾う。
+   **わざとクラスを足していない**：足すと Chrome 版の DOM も変わってしまうため */
+const TN_SEL = '.dv-tracking-input, .dv-tracking-return, .sh-tracking, .sh-tracking-return, input[onchange*="souzokuUpdateTracking"]';
+
+const _tn = { items: [], timer: null, openFor: null, asking: false };
+
+function _tnNative() {
+  return _isNativeApp()
+    && !!(window.CaseFlowNative && typeof window.CaseFlowNative.readTrackingInbox === 'function');
+}
+/** 見るだけのモード（閲覧用・引っ越し済み）では出さない */
+function _tnMuted() {
+  return !!window.__VIEWER_MODE__ || document.body.classList.contains('viewer-mode');
+}
+
+/** いま画面に出ている追跡番号の欄 */
+function _tnTargets() {
+  if (!_tnNative() || _tnMuted()) return [];
+  return [...document.querySelectorAll(TN_SEL)].filter(el => el.offsetParent !== null);
+}
+
+const _tnDigits = (s) => String(s || '').replace(/[^0-9]/g, '');
+
+/** すでに案件に入っている番号（全案件） */
+function _tnSavedNums() {
+  const set = new Set();
+  const add = (v) => { const d = _tnDigits(v); if (d) set.add(d); };
+  (cases || []).forEach(c => {
+    (c.deliveries || []).forEach(d => {
+      (d.trackings || []).forEach(add);
+      add(d.tracking); add(d.tracking_return);
+    });
+    (c.shinsei_dates || []).forEach(s => {
+      (s.trackings || []).forEach(add);
+      add(s.tracking); add(s.tracking_return);
+    });
+    ((c.souzoku_tracker && c.souzoku_tracker.rows) || []).forEach(row => {
+      Object.values(row.trackings || {}).forEach(t => {
+        if (!t) return; add(t.tracking); add(t.tracking_return);
+      });
+    });
+  });
+  return set;
+}
+
+/** 候補＝箱の番号 −（案件に入っている番号）−（いま開いている欄に入っている番号） */
+function _tnCandidates() {
+  const 除く = _tnSavedNums();
+  document.querySelectorAll(TN_SEL).forEach(el => {
+    const d = _tnDigits(el.value);
+    if (d) 除く.add(d);
+  });
+  return _tn.items.filter(it => !除く.has(it.num));
+}
+
+/** 受け取った時刻（今日 15:02 ／ 9/19 15:02） */
+function _tnWhen(at) {
+  const d = new Date(at);
+  if (isNaN(d.getTime())) return '';
+  const hm = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+  const t = new Date();
+  const 同じ日 = d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+  return 同じ日 ? ('今日 ' + hm) : ((d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm);
+}
+
+/** 見せる形（3384-1514-3953）。箱の中は数字だけ */
+function _tnMitame(num) {
+  const s = String(num);
+  return (s.length === 11 || s.length === 12)
+    ? s.slice(0, 4) + '-' + s.slice(4, 8) + '-' + s.slice(8)
+    : s;
+}
+
+/** 入力欄の隣の入れ物（無ければ作る）。**入力欄そのものは触らない** */
+function _tnAnchor(input) {
+  let a = input.nextElementSibling;
+  if (a && a.classList && a.classList.contains('tn-btn')) return a;
+  a = document.createElement('span');
+  a.className = 'tn-btn no-print';
+  input.insertAdjacentElement('afterend', a);
+  return a;
+}
+
+/** ボタンの出し入れ。差し替えるのは入れ物の中身だけ */
+function _tnSync() {
+  if (!_tnNative() || _tnMuted()) return;
+  const 欄 = _tnTargets();
+  if (欄.length === 0) { _tnCloseMenu(); return; }
+  const 候補 = _tnCandidates();
+  const 中身 = 候補.length
+    ? '<button type="button" class="btn btn-secondary btn-xs tn-open" title="スマホから届いた追跡番号から選ぶ"'
+      + ' onclick="_tnToggleMenu(this,event)">📥<span class="cnt">' + 候補.length + '</span></button>'
+    : '';
+  欄.forEach(el => {
+    const a = _tnAnchor(el);
+    if (a.innerHTML !== 中身) a.innerHTML = 中身;   // 同じなら触らない（押している最中に消えないように）
+  });
+  // 開いている一覧も、候補が変わったら作り直す
+  if (_tn.openFor && 欄.includes(_tn.openFor)) _tnFillMenu();
+  else if (_tn.openFor) _tnCloseMenu();
+}
+
+/** 受け取り箱を1回尋ねて、変わっていれば描き直す */
+async function _tnAsk() {
+  if (!_tnNative() || _tnMuted()) return;
+  if (_tn.asking) return;
+  if (_tnTargets().length === 0) return;   // 見えていないときは尋ねない
+  _tn.asking = true;
+  try {
+    const r = await window.CaseFlowNative.readTrackingInbox();
+    // 壊れているときは黙って何も出さない（画面を止めない）
+    _tn.items = (r && r.ok && Array.isArray(r.items)) ? r.items.filter(it => it && /^\d{11,13}$/.test(it.num)) : [];
+  } catch (e) {
+    _tn.items = [];
+  } finally {
+    _tn.asking = false;
+  }
+  _tnSync();
+}
+
+/** 欄が出てきたとき（モーダルを開いた・案件詳細を描き直した・行を足した）に呼ぶ */
+function _tnSyncSoon() {
+  if (!_tnNative() || _tnMuted()) return;
+  if (!_tn.timer) _tn.timer = setInterval(_tnAsk, TN_INTERVAL_MS);
+  setTimeout(() => { _tnSync(); _tnAsk(); }, 0);
+}
+
+/* ---- 一覧（body 直下・position: fixed。切られないため） ---- */
+
+function _tnMenuEl() {
+  let m = document.getElementById('tn-menu');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'tn-menu';
+    m.className = 'no-print';
+    document.body.appendChild(m);
+  }
+  return m;
+}
+
+function _tnFillMenu() {
+  const m = _tnMenuEl();
+  const 候補 = _tnCandidates();
+  if (候補.length === 0) { _tnCloseMenu(); return; }
+  m.innerHTML = '<div class="hd">📥 スマホから届いた番号</div>'
+    + 候補.map((it, i) =>
+        '<div class="it" onclick="_tnPick(' + i + ')"><b>' + escHtml(_tnMitame(it.num)) + '</b>'
+        + '<small>' + escHtml(_tnWhen(it.at)) + '</small></div>').join('');
+  m._list = 候補;
+}
+
+function _tnToggleMenu(btn, ev) {
+  if (ev) ev.stopPropagation();
+  const input = btn.closest('.tn-btn')?.previousElementSibling;
+  if (!input) return;
+  const m = _tnMenuEl();
+  if (_tn.openFor === input && m.classList.contains('open')) { _tnCloseMenu(); return; }
+  _tn.openFor = input;
+  _tnFillMenu();
+  m.classList.add('open');
+  // 押したボタンの下。画面からはみ出すときは上か内側へ寄せる
+  const r = btn.getBoundingClientRect();
+  m.style.left = '0px'; m.style.top = '0px';     // いったん既定に戻してから測る
+  const w = m.offsetWidth, h = m.offsetHeight;
+  let left = Math.min(r.right - w, window.innerWidth - w - 8);
+  left = Math.max(8, left);
+  let top = r.bottom + 4;
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
+  m.style.left = left + 'px';
+  m.style.top = top + 'px';
+}
+
+function _tnCloseMenu() {
+  const m = document.getElementById('tn-menu');
+  if (m) { m.classList.remove('open'); m._list = null; }
+  _tn.openFor = null;
+}
+
+/** 選んだ番号を欄に入れる。**選んだだけでは保存しない**
+    （相続人手配だけは、欄の onchange が今までどおり保存する） */
+function _tnPick(i) {
+  const m = document.getElementById('tn-menu');
+  const it = m && m._list && m._list[i];
+  const input = _tn.openFor;
+  _tnCloseMenu();
+  if (!it || !input) return;
+  input.value = it.num;
+  input.classList.remove('tn-filled'); void input.offsetWidth; input.classList.add('tn-filled');
+  // 欄に直接書かれた onchange（相続人手配の souzokuUpdateTracking）を、
+  // 手で打ったときと同じように走らせる
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  // 相続人手配だけは onchange がその場で保存する。ほかは「保存」を押すまで入らない
+  const 即保存 = (input.getAttribute('onchange') || '').includes('souzokuUpdateTracking');
+  toast(即保存 ? '追跡番号を入れました' : '追跡番号を入れました（保存は「保存」で）', 'info');
+  setTimeout(_tnSync, 0);
+}
+
+document.addEventListener('click', () => _tnCloseMenu());
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') _tnCloseMenu(); });
+// 一覧は fixed なので、下の画面が動いたら閉じる（ずれたまま残さない）
+document.addEventListener('scroll', () => { if (_tn.openFor) _tnCloseMenu(); }, true);
+window.addEventListener('resize', () => _tnCloseMenu());
 
 /** 郵便番号→住所検索（zipcloud API） */
 async function dvZipSearch(btn) {
