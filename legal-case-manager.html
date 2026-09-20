@@ -20,8 +20,6 @@
 :root {
   --bg-primary: #f0f2f5;
   --bg-secondary: rgba(255,255,255,0.75);
-  --bg-sidebar: rgba(20,28,46,0.82);
-  --bg-sidebar-hover: rgba(255,255,255,0.12);
   --bg-header: rgba(255,255,255,0.72);
 
   --color-primary: #2563a8;
@@ -38,7 +36,6 @@
   --text-secondary: #4b5563;
   --text-muted: #9ca3af;
   --text-white: #ffffff;
-  --text-sidebar: #e2e8f0;
 
   --border-color: rgba(200,210,230,0.6);
   --border-light: rgba(220,228,240,0.5);
@@ -55,8 +52,6 @@
   --radius-lg: 16px;
   --radius-xl: 22px;
 
-  --sidebar-width: 220px;
-  --sidebar-collapsed: 56px;
   --header-height: 56px;
 
   --status-new: #6366f1;
@@ -72,15 +67,10 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* サイドバートグルスイッチ */
-.sidebar-toggle-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 7px 14px; font-size: 11px; color: var(--text-sidebar);
-  white-space: nowrap; overflow: hidden;
-  opacity: 0; transition: opacity 0.15s;
-}
-#sidebar:not(.sidebar-click-mode):hover .sidebar-toggle-row,
-#sidebar.sidebar-open-click .sidebar-toggle-row { opacity: 1; }
+/* 小さなトグルスイッチ（汎用）。
+   2026 年 9 月 20 日（10.0.7）にサイドバーを廃止し、これを使っていた
+   「サイドバー自動展開」の段も無くなったので、いまは使い手がいない。
+   部品としては素直なので、次に要るときのために残してある */
 .toggle-switch {
   position: relative; width: 32px; height: 18px; flex-shrink: 0;
 }
@@ -220,9 +210,6 @@ body[data-theme="kohaku"] {
   --shadow-sm: 0 1px 3px rgba(90,68,40,0.12);
   --shadow-md: 0 4px 16px rgba(90,68,40,0.16);
   --shadow-lg: 0 12px 32px rgba(90,68,40,0.22);
-  /* サイドバーも暖色の暗色に。既定の紺のままだと地とちぐはぐになる
-     （銀鼠は寒色なので既定の紺のままでよい） */
-  --bg-sidebar: rgba(56,44,30,0.88);
 }
 
 /* 琥珀：ガラス面を白く、影を深く。対象は銀鼠と同じ組 */
@@ -599,41 +586,64 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   border-radius: 10px;
 }
 
-/* テーマピッカー */
-.theme-picker {
-  display: none;
-  padding: 8px 10px;
-  border-top: 1px solid rgba(255,255,255,0.10);
+/* テーマ（設定画面のカード）
+   2026 年 9 月 20 日（10.0.7）に、サイドバーの中のテーマピッカーから移した。
+   丸を押して setTheme() を呼び、選ばれた丸に .active が付く仕組みは
+   そのまま使っている（.theme-swatch[data-theme] という形さえ保てば動く）。
+
+   ★ 置き場所が「暗いサイドバーの上」から「白いカードの上」に変わったので、
+     かつての .active（白い枠＋白いぼかし）は地に溶けて見えない。
+     いまはテーマ色の枠＋輪＋✓ で示す。
+   ★ .active は [data-theme] の3つより「後ろ」に置くこと。詳しさが同じなので、
+     前に置くと [data-theme] の border-color に負けて枠が変わらない
+     （かつて枠が変わらなかったのはこれが理由） */
+.theme-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 20px;
 }
-#sidebar:not(.sidebar-click-mode):hover .theme-picker,
-#sidebar.sidebar-open-click .theme-picker { display: block; }
-.theme-picker-label {
-  font-size: 10px;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-  margin-bottom: 6px;
-  padding-left: 2px;
-}
-.theme-swatches {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.theme-swatch {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.25);
+.theme-card-note { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+.theme-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.theme-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-primary);
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
+  transition: border-color 0.15s;
 }
-.theme-swatch:hover { transform: scale(1.2); border-color: rgba(255,255,255,0.7); }
-.theme-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.4); }
-.theme-swatch[data-theme="frost"]   { background: linear-gradient(135deg, #e4effd 0%, #f3f8ff 55%, #ffffff 100%); border-color: rgba(180,210,255,0.6); }
-.theme-swatch[data-theme="ginnezu"] { background: linear-gradient(135deg, #9daabc 0%, #b2bccb 52%, #c8d1dd 100%); border-color: rgba(255,255,255,0.55); }
-.theme-swatch[data-theme="kohaku"]  { background: linear-gradient(135deg, #bfae95 0%, #cebda0 52%, #dccdb4 100%); border-color: rgba(255,252,246,0.55); }
+.theme-item:hover { border-color: var(--color-primary); }
+.theme-item:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.theme-name { font-size: 13px; font-weight: 700; color: var(--text-primary); line-height: 1.25; }
+.theme-name span { display: block; font-size: 10px; font-weight: 400; color: var(--text-muted); }
+.theme-swatch {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(30,45,75,0.20);
+  box-shadow: inset 0 1px 2px rgba(30,45,75,0.10);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+.theme-swatch:hover { border-color: rgba(30,45,75,0.45); }
+.theme-swatch[data-theme="frost"]   { background: linear-gradient(135deg, #e4effd 0%, #f3f8ff 55%, #ffffff 100%); }
+.theme-swatch[data-theme="ginnezu"] { background: linear-gradient(135deg, #9daabc 0%, #b2bccb 52%, #c8d1dd 100%); }
+.theme-swatch[data-theme="kohaku"]  { background: linear-gradient(135deg, #bfae95 0%, #cebda0 52%, #dccdb4 100%); }
+.theme-swatch.active {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+.theme-swatch.active::after {
+  content: '\2713';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: #1e2d4b;
+}
 
 
 /* 送付追跡パネル */
@@ -645,128 +655,16 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
    ===================================================== */
 #app { display: flex; min-height: 100vh; }
 
-/* Sidebar
-   開き方は2通り。設定「サイドバー自動展開」で切り替える。
-   ・オン（既定）… カーソルを乗せると開く（#sidebar:hover）
-   ・オフ　　　　… #sidebar に .sidebar-click-mode が付き、hover では開かない。
-     　　　　　　　たたんだ帯を押したときだけ .sidebar-open-click が付いて開く
-
-   ★ どちらの方式でも、たたんだ幅（56px）が基準。オフでも出しっぱなしにしない
-     （2026 年 9 月 14 日、8.5.3 でこの形にした。それまでオフは幅 220px で固定され、
-      本文も 220px 右へ寄っていた）。
-   ★ 開いた見た目を決める規則は「:not(.sidebar-click-mode):hover」と
-     「.sidebar-open-click」の2本立てで9か所ある。1本だけ足すと、
-     ラベルは出るのに幅が変わらない、といった半端な状態になる */
-#sidebar {
-  width: var(--sidebar-width);
-  background: var(--bg-sidebar);
-  backdrop-filter: blur(24px) saturate(1.6);
-  -webkit-backdrop-filter: blur(24px) saturate(1.6);
-  border-right: 1px solid var(--glass-border-dark);
-  min-height: 100vh;
-  position: fixed;
-  left: 0; top: 0; bottom: 0;
-  display: flex; flex-direction: column;
-  z-index: 100;
-  overflow: hidden;
-  width: var(--sidebar-collapsed);
-  transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
-}
-#sidebar:not(.sidebar-click-mode):hover,
-#sidebar.sidebar-open-click {
-  width: var(--sidebar-width);
-  box-shadow: 4px 0 32px rgba(0,0,0,0.22);
-}
-
-.sidebar-header {
-  padding: 16px 12px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.sidebar-logo {
-  color: var(--text-white);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.3;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  white-space: nowrap;
-}
-#sidebar:not(.sidebar-click-mode):hover .sidebar-logo,
-#sidebar.sidebar-open-click .sidebar-logo { opacity: 1; }
-.sidebar-logo span { color: #7dd3fc; font-size: 11px; font-weight: 400; display: block; margin-top: 2px; }
-
-/* アイコンだけ常に表示 */
-.sidebar-icon-only {
-  display: flex; align-items: center; justify-content: center;
-  height: 36px;
-  color: var(--text-white);
-  font-size: 18px;
-  transition: opacity 0.15s;
-}
-#sidebar:not(.sidebar-click-mode):hover .sidebar-icon-only,
-#sidebar.sidebar-open-click .sidebar-icon-only { display: none; }
-
-.sidebar-nav { flex: 1; padding: 8px 0; overflow: hidden; }
-
-.nav-section-label {
-  padding: 12px 16px 4px;
-  font-size: 10px;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-#sidebar:not(.sidebar-click-mode):hover .nav-section-label,
-#sidebar.sidebar-open-click .nav-section-label { opacity: 1; }
-
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 0 9px 11px;
-  color: var(--text-sidebar);
-  cursor: pointer;
-  transition: all 0.15s;
-  font-size: 13px;
-  border-left: 3px solid transparent;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.nav-item:hover { background: var(--bg-sidebar-hover); color: #fff; border-radius: 10px; margin: 0 6px; padding-left: 5px; }
-.nav-item.active { background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); color: #fff; border-left-color: #7dd3fc; border-radius: 10px; margin: 0 6px; padding-left: 5px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.15); }
-.nav-item .nav-icon { width: 36px; text-align: center; font-size: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.nav-item .nav-label { opacity: 0; transition: opacity 0.15s; }
-#sidebar:not(.sidebar-click-mode):hover .nav-item .nav-label,
-#sidebar.sidebar-open-click .nav-item .nav-label { opacity: 1; }
-.nav-badge {
-  margin-left: auto; background: var(--color-danger);
-  color: #fff; font-size: 10px; font-weight: 700;
-  padding: 2px 6px; border-radius: 10px; min-width: 20px; text-align: center;
-  margin-right: 8px;
-  opacity: 0; transition: opacity 0.15s;
-}
-#sidebar:not(.sidebar-click-mode):hover .nav-badge,
-#sidebar.sidebar-open-click .nav-badge { opacity: 1; }
-.nav-badge.warn { background: var(--color-warning); }
-
-.sidebar-footer {
-  padding: 12px 16px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  font-size: 11px; color: #64748b;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-#sidebar:not(.sidebar-click-mode):hover .sidebar-footer,
-#sidebar.sidebar-open-click .sidebar-footer { opacity: 1; }
+/* サイドバーは 2026 年 9 月 20 日（10.0.7）に廃止した。
+   左端の帯（56px）と、開いた見た目を決める9か所の2本立ての規則、
+   携帯用のスライドインと覆い、☰ ボタン、設定の「サイドバー自動展開」まで
+   まとめて取り除いてある。行き先は
+   ・案件一覧へ戻る … 左上のロゴ（.logo-home）
+   ・データ管理・設定 … ヘッダー右端の歯車（#btn-settings）
+   ・テーマ … 設定画面の「🎨 テーマ」のカード（.theme-card） */
 
 /* Main content */
 #main {
-  margin-left: var(--sidebar-collapsed);
   flex: 1;
   display: flex; flex-direction: column;
   min-width: 0;
@@ -831,7 +729,59 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   white-space: nowrap;
 }
 
+/* ── 左上のロゴ＝案件一覧へ戻る入口（10.0.7）────────────────────
+   .header-title は flex:1 でヘッダーいっぱいに広がるので、そこに onclick を
+   付けるとヘッダーの何も無い所を押しても戻ってしまう。
+   押せる範囲は「印＋ワードマーク」だけに絞ってある。
+   ★ 印の SVG は #header-logo-text の「外」に置いたまま。span の中へ入れると
+     showView() の textContent の書き換えで印ごと消える（7章）。
+   ★ 大きさと色は .app-logo-mark / .app-logo-word / .app-logo-heading の
+     3クラスが持つ。ここでは位置と押したときの地だけを決める */
+.logo-home {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 3px 9px;
+  margin-left: -9px;
+  transition: background 0.15s;
+  min-width: 0;
+}
+.logo-home:hover  { background: rgba(120,140,180,0.15); }
+.logo-home:active { background: rgba(120,140,180,0.24); }
+.logo-home:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+/* 文字どうしはベースラインでそろえたいので親は baseline。印だけ中央そろえ */
+.logo-home .app-logo-mark { align-self: center; }
+
 .header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ── ヘッダー右端の丸い設定ボタン（10.0.7。サイドバーの置き換え）────
+   歯車は内製のインライン SVG（線画・currentColor）。外部の読み込みはしない（4章） */
+.hdr-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; padding: 0;
+  border: none; background: none; border-radius: 999px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.hdr-icon-btn:hover  { background: rgba(120,140,180,0.16); color: var(--text-primary); }
+.hdr-icon-btn:active { background: rgba(120,140,180,0.26); }
+.hdr-icon-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+/* 設定画面を開いている間は、押された状態をはっきり見せる。
+   地・字・輪の3つで差を付けてあるのは、3テーマ（霜・銀鼠・琥珀）とも
+   ヘッダーがほぼ白く、薄い地の色だけでは違いが分からないため。
+   色はテーマの --color-primary から作るので、テーマを替えれば自動で追従する */
+.hdr-icon-btn.on {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-primary) 55%, transparent);
+}
+.hdr-icon-btn.on:hover { background: color-mix(in srgb, var(--color-primary) 26%, transparent); }
+.hdr-gear { width: 20px; height: 20px; display: block; flex-shrink: 0; }
 
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -2059,54 +2009,24 @@ textarea.form-control { resize: vertical; min-height: 72px; }
    RESPONSIVE – Mobile / Tablet
    ===================================================== */
 
-/* Sidebar overlay (mobile) */
-#sidebar-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 99;
-}
-
 /* ---- Tablet landscape (768px – 1023px) ---- */
 @media (max-width: 1023px) {
-  :root { --sidebar-width: 200px; --sidebar-collapsed: 56px; }
   #content { padding: 14px 16px; }
 }
 
 /* ---- Mobile / Tablet portrait (< 768px) ---- */
 @media (max-width: 767px) {
-  :root { --sidebar-width: 240px; --sidebar-collapsed: 56px; }
-
-  /* Sidebar slides in/out */
-  #sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.22s ease;
-    z-index: 200;
-  }
-  #sidebar.open { transform: translateX(0); }
-  #sidebar-overlay.show { display: block; }
-
-  /* Main takes full width */
-  #main { margin-left: 0; }
-
   /* Header */
   #header { padding: 0 12px; gap: 8px; height: 52px; }
   .header-title { font-size: 14px; gap: 7px; }
+  /* ヘッダーが 52px に縮むぶん、ロゴの押せる範囲の余白も詰める（10.0.7） */
+  .logo-home { gap: 7px; padding: 3px 6px; margin-left: -6px; }
   /* ロゴは span 側で大きさを持っているので、.header-title の font-size では
      届かない。狭い画面ではヘッダーが 52px に縮むぶん、ここで明示的に下げる */
   .app-logo-mark { width: 24px; height: 24px; }
   .app-logo-word { font-size: 21px; }
   .app-logo-heading { font-size: 16px; }
   .btn-primary { padding: 6px 10px; font-size: 12px; }
-
-  /* Hamburger button */
-  #hamburger {
-    display: flex; align-items: center; justify-content: center;
-    width: 36px; height: 36px;
-    background: none; border: none; cursor: pointer;
-    font-size: 20px; color: var(--text-primary);
-    flex-shrink: 0; padding: 0;
-  }
 
   /* Content padding */
   #content { padding: 12px; }
@@ -2184,12 +2104,6 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 
   /* Bottom navigation bar */
   }
-
-/* ---- Desktop: hide mobile-only elements ---- */
-@media (min-width: 768px) {
-  #hamburger { display: none; }
-  #sidebar-overlay { display: none !important; }
-}
 
 /* Bottom nav items */
 
@@ -3504,45 +3418,24 @@ tr.row-waiting:hover > td {
 <button id="scroll-top-btn" onclick="_scrollToTop()" title="ページトップへ">↑</button>
 
 <div id="app">
-  <!-- Mobile sidebar overlay -->
-  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
-
-  <!-- =========== SIDEBAR =========== -->
-  <aside id="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 10.0.6</span>
-      </div>
-    </div>
-    <nav class="sidebar-nav">
-      <div class="nav-item" onclick="showView('cases')" id="nav-cases">
-        <span class="nav-icon"><svg width="26" height="26" viewBox="0 0 26 26" style="vertical-align:middle;flex-shrink:0" aria-hidden="true"><circle cx="13" cy="13" r="13" fill="#fff"/><g transform="translate(13 13) scale(0.72) translate(-13 -13)"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></g></svg></span><span class="nav-label"> CaseFlow</span>
-      </div>
-      <div class="nav-item" onclick="showView('settings')" id="nav-settings">
-        <span class="nav-icon"><span style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">⚙</span></span><span class="nav-label"> データ管理・設定</span>
-      </div>
-      <!-- テーマピッカー -->
-      <div class="theme-picker">
-        <div class="theme-picker-label">🎨 テーマ</div>
-        <div class="theme-swatches">
-          <div class="theme-swatch" data-theme="frost"   onclick="setTheme('frost')"   title="霜（しも）"></div>
-          <div class="theme-swatch" data-theme="ginnezu" onclick="setTheme('ginnezu')" title="銀鼠（ぎんねず）"></div>
-          <div class="theme-swatch" data-theme="kohaku"  onclick="setTheme('kohaku')"  title="琥珀（こはく）"></div>
-        </div>
-      </div>
-    </nav>
-  </aside>
+  <!-- サイドバーは 10.0.7 で廃止。行き先は左上のロゴと、ヘッダー右端の歯車 -->
 
   <!-- =========== MAIN =========== -->
   <div id="main">
     <header id="header">
-      <!-- Hamburger (mobile only) -->
-      <button id="hamburger" onclick="openSidebar()" aria-label="メニュー">☰</button>
-      <div class="header-title" id="header-title"><svg class="app-logo-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></svg><span id="header-logo-text" class="app-logo-word">CaseFlow</span></div>
+      <div class="header-title" id="header-title"><!--
+        10.0.7：押せるのは印とワードマークだけ。.header-title 全体に付けると
+        ヘッダーの何も無い所を押しても案件一覧へ戻ってしまう。
+        キーボードでも押せるように role/tabindex と Enter・space を持たせてある -->
+        <span class="logo-home" onclick="showView('cases')" title="案件一覧へ戻る" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('cases');}"><svg class="app-logo-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></svg><span id="header-logo-text" class="app-logo-word">CaseFlow</span></span></div>
       <div class="header-actions">
         <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存" style="padding:5px 12px;font-size:12px;font-weight:700">💾<span class="btn-header-backup-label" style="margin-left:5px">保存</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
         <button class="btn btn-secondary" onclick="cloudSaveWithCheck()" id="btn-cloud-save" title="クラウドへ保存" style="padding:4px 10px;font-size:12px;display:none">⬆ 保存</button>
+        <!-- 10.0.7：データ管理・設定への唯一の入口。閲覧専用モードと
+             「引っ越し済み」のときも隠さない（設定画面へ行けなくなるため）。
+             説明（title / aria-label）の版は、起動時に設定画面の先頭から読む -->
+        <button id="btn-settings" class="hdr-icon-btn" onclick="showView('settings')" title="設定" aria-label="設定"><svg class="hdr-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.2 14.9a1.6 1.6 0 0 0 .32 1.77l.06.06a1.95 1.95 0 1 1-2.76 2.76l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-.97 1.47v.17a1.95 1.95 0 1 1-3.9 0v-.09a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.77.32l-.06.06a1.95 1.95 0 1 1-2.76-2.76l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-.97H3.2a1.95 1.95 0 1 1 0-3.9h.09a1.6 1.6 0 0 0 1.47-1.05 1.6 1.6 0 0 0-.32-1.77l-.06-.06a1.95 1.95 0 1 1 2.76-2.76l.06.06a1.6 1.6 0 0 0 1.77.32h.08a1.6 1.6 0 0 0 .97-1.47V3.2a1.95 1.95 0 1 1 3.9 0v.09a1.6 1.6 0 0 0 .97 1.47 1.6 1.6 0 0 0 1.77-.32l.06-.06a1.95 1.95 0 1 1 2.76 2.76l-.06.06a1.6 1.6 0 0 0-.32 1.77v.08a1.6 1.6 0 0 0 1.47.97h.17a1.95 1.95 0 1 1 0 3.9h-.09a1.6 1.6 0 0 0-1.47.97z"/></svg></button>
       </div>
     </header>
 
@@ -3731,6 +3624,33 @@ tr.row-waiting:hover > td {
 
 <!-- ===== SETTINGS VIEW ===== -->
       <div id="view-settings" class="view">
+        <!-- ★ 版の数字を書くのはここ1か所だけ（10.0.7）。
+             ヘッダーの設定ボタンの説明は起動時にこの span から読む。
+             pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
+             正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.0.7</span></div>
+
+        <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
+             setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
+        <div class="section-title">🎨 テーマ</div>
+        <div class="theme-card">
+          <div class="theme-card-note">画面全体の配色です。選ぶとすぐ切り替わり、次に開いたときも覚えています。</div>
+          <div class="theme-row">
+            <div class="theme-item" onclick="setTheme('frost')" title="霜（しも）" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setTheme('frost');}">
+              <div class="theme-swatch" data-theme="frost"></div>
+              <div class="theme-name">霜<span>しも・軽い寒色</span></div>
+            </div>
+            <div class="theme-item" onclick="setTheme('ginnezu')" title="銀鼠（ぎんねず）" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setTheme('ginnezu');}">
+              <div class="theme-swatch" data-theme="ginnezu"></div>
+              <div class="theme-name">銀鼠<span>ぎんねず・締まる寒色</span></div>
+            </div>
+            <div class="theme-item" onclick="setTheme('kohaku')" title="琥珀（こはく）" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setTheme('kohaku');}">
+              <div class="theme-swatch" data-theme="kohaku"></div>
+              <div class="theme-name">琥珀<span>こはく・締まる暖色</span></div>
+            </div>
+          </div>
+        </div>
+
         <div class="section-title">💾 ローカルデータ管理</div>
         <div class="data-mgmt-grid">
           <div class="data-card" style="border:1.5px solid var(--color-primary,#2563eb)">
@@ -3827,19 +3747,9 @@ tr.row-waiting:hover > td {
           </div>
         </div>
 
-        <div class="section-title">アプリ設定</div>
-        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px;display:flex;flex-direction:column;gap:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text-primary)">サイドバー自動展開</div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">オン：カーソルを乗せると開く　／　オフ：帯を押したときだけ開く</div>
-            </div>
-            <label class="toggle-switch" style="flex-shrink:0">
-              <input type="checkbox" id="toggle-hover-sidebar" checked onchange="toggleHoverSidebar(this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
+        <!-- 「アプリ設定（サイドバー自動展開）」の段は、サイドバーの廃止にあわせて
+             10.0.7 で取り除いた。localStorage の sidebar_hover は読まなくなるだけで、
+             消しには行っていない -->
 
         <div class="section-title">📋 定型文管理</div>
         <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px">
@@ -4910,55 +4820,9 @@ function openSoushuFromForm(btn) {
   }
 }
 
-/* サイドバーの開き方の切り替え。
-   オン  … カーソルを乗せると開く
-   オフ  … たたんだ帯を押したときだけ開く（2026 年 9 月 14 日、8.5.3）
-   どちらもたたんだ幅が基準なので、本文の左余白は常に 56px。
-   以前のオフは幅 220px で固定し、ラベルの opacity まで直書きで 1 にしていたが、
-   「オフでも出しっぱなしにしない」とのご指示でこの形にした。
-   見た目の切り替えは CSS のクラス 2 つに任せ、ここでは直書きの style を全部戻す */
-function toggleHoverSidebar(enabled) {
-  const sidebar = document.getElementById('sidebar');
-  const main = document.getElementById('main');
-  const isMobile = window.innerWidth <= 768;
-  if (!sidebar) return;
-
-  sidebar.style.width = '';
-  sidebar.classList.remove(SIDEBAR_OPEN_CLICK);          // 方式を変えたら必ずたたむ
-  sidebar.classList.toggle(SIDEBAR_CLICK_MODE, !enabled);
-  if (main) main.style.marginLeft = isMobile ? '' : 'var(--sidebar-collapsed)';
-  document.querySelectorAll('.nav-label,.nav-badge,.sidebar-logo,.nav-section-label,.sidebar-toggle-row').forEach(el => {
-    el.style.opacity = '';
-  });
-  const iconOnly = document.querySelector('.sidebar-icon-only');
-  if (iconOnly) iconOnly.style.display = '';
-
-  localStorage.setItem('sidebar_hover', enabled ? '1' : '0');
-}
-
-/* 押して開く方式のときの開閉。
-   ★ 捕捉（capture）フェーズで拾っていること。たたんだ帯を押したときは
-     「開くだけ」にして、下にある項目（CaseFlow・設定のアイコン）を押させない。
-     たたんだ状態のアイコンは、自動展開オンのときは
-     「乗せた時点で開いてしまう」ため、そもそも押せた試しがない。
-     だから押し分けの機会を失うことにはならない。
-   ★ 外を押したら閉じる。カーソルが離れただけでは閉じない（それは hover の作法）。
-   ★ 項目を選んで画面が変わるときは showView → closeSidebar() が閉じる */
-document.addEventListener('click', e => {
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar || !sidebar.classList.contains(SIDEBAR_CLICK_MODE)) return;
-  const isOpen = sidebar.classList.contains(SIDEBAR_OPEN_CLICK);
-  const inside = (e.target instanceof Node) && sidebar.contains(e.target);
-  if (inside) {
-    if (!isOpen) {                       // たたんだ帯を押した → 開くだけ
-      sidebar.classList.add(SIDEBAR_OPEN_CLICK);
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    return;                              // 開いている間は中身を普通に使える
-  }
-  if (isOpen) sidebar.classList.remove(SIDEBAR_OPEN_CLICK);   // 外を押した → 閉じる
-}, true);
+/* サイドバーの開き方の切り替え（toggleHoverSidebar）と、たたんだ帯を押したときに
+   「開くだけ」にしていた捕捉フェーズのリスナーは、サイドバーの廃止にあわせて
+   10.0.7 で取り除いた */
 
 function setCaseViewMode(mode) {
   caseViewMode = mode;
@@ -5200,22 +5064,25 @@ function isLightTheme(theme) {
   return LIGHT_THEMES.includes(THEMES.includes(theme) ? theme : DEFAULT_THEME);
 }
 
-/* サイドバーの状態を表すクラス。CSS 側の9か所の規則と対になっている */
-const SIDEBAR_CLICK_MODE = 'sidebar-click-mode';   // 押して開く方式
-const SIDEBAR_OPEN_CLICK = 'sidebar-open-click';   // その方式で今開いている
+/* ヘッダーの設定ボタンの説明（title / aria-label）に版を入れる（10.0.7）。
+   版の数字は設定画面の先頭の span（#app-version）1か所だけに書いてあり、
+   ここはそれを読むだけ。2か所に手書きすると片方だけ直し忘れる。
+   読めなかったときは「設定」だけにする（版を作り話にしない） */
+function _applySettingsButtonLabel() {
+  const btn = document.getElementById('btn-settings');
+  if (!btn) return;
+  const src = document.getElementById('app-version');
+  const m = src && (src.textContent || '').match(/ver\.\s*\d+(?:\.\d+)*/);
+  const label = m ? ('設定（' + m[0] + '）') : '設定';
+  btn.title = label;
+  btn.setAttribute('aria-label', label);
+}
 
 function initAppearance() {
-  const hoverSidebar = localStorage.getItem('sidebar_hover') !== '0';
-  const hsToggle = document.getElementById('toggle-hover-sidebar');
-  if (hsToggle) hsToggle.checked = hoverSidebar;
   // テーマ初期化（知らない名前は setTheme が既定へ読み替える）
   const savedTheme = localStorage.getItem('app_theme') || DEFAULT_THEME;
   setTheme(savedTheme);
-  // モバイル（768px以下）ではサイドバー設定を適用しない
-  if (window.innerWidth > 768) {
-    if (!hoverSidebar) toggleHoverSidebar(false);
-    else toggleHoverSidebar(true);
-  }
+  _applySettingsButtonLabel();
 
   // カレンダートグルの状態を反映
   const calToggle = document.getElementById('toggle-cal-hidden');
@@ -5590,10 +5457,11 @@ function deadlineBadge(dateStr, status) {
    ===================================================== */
 function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
-  const navEl = document.getElementById('nav-' + name);
-  if (navEl) navEl.classList.add('active');
+  // サイドバーの nav-item は 10.0.7 で廃止した。いまどの画面にいるかを示すのは
+  // ヘッダー右端の設定ボタンだけ（設定画面のときに押された状態にする）
+  const gearBtn = document.getElementById('btn-settings');
+  if (gearBtn) gearBtn.classList.toggle('on', name === 'settings');
 
   // スクロールトップボタンをリセット
   document.getElementById('scroll-top-btn')?.classList.remove('visible');
@@ -5624,8 +5492,6 @@ function showView(name) {
     _logoTxt.textContent = _isLogo ? 'CaseFlow' : _title;
   }
 
-  // Mobile: close sidebar, update bottom nav
-  closeSidebar();
   updateBottomNav(name);
 
   if (name === 'cases') {
@@ -13491,23 +13357,8 @@ async function cloudCheck() {
   }
 }
 
-/* =====================================================
-   MOBILE SIDEBAR
-   ===================================================== */
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('sidebar-overlay').classList.add('show');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  sidebar.classList.remove('open');
-  // 押して開く方式のときも、項目を選んで画面が変わったらたたむ
-  sidebar.classList.remove(SIDEBAR_OPEN_CLICK);
-  document.getElementById('sidebar-overlay').classList.remove('show');
-  document.body.style.overflow = '';
-}
+/* openSidebar / closeSidebar（携帯用のスライドイン）は、サイドバーの廃止に
+   あわせて 10.0.7 で取り除いた */
 
 /* =====================================================
    BOTTOM NAV SYNC
