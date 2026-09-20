@@ -721,17 +721,19 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
 }
 /* ワードマークの後ろ半分「Flow」。色は印の3本目と同じ橙。テーマに追従する */
 .app-logo-word .app-logo-flow { color: var(--color-accent); }
-/* 案件詳細などの見出しに切り替わったとき。印はそのまま残る */
+/* 案件詳細などの見出しに切り替わったとき。印はそのまま残る。
+   10.1.0 でロゴと雰囲気をそろえた：凸版文久ゴシック（Mac に入っている。
+   無ければヒラギノ角ゴ）・ロゴと同じ太さ・前半＝青／後半＝橙 */
 .app-logo-heading {
-  font-family: 'Avenir Next','Avenir',sans-serif;
-  font-weight: 500;
-  font-size: 19px;
-  letter-spacing: 0.08em;
+  font-family: 'Toppan Bunkyu Gothic','Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;
+  font-weight: 600;
+  font-size: 23px;
+  letter-spacing: 0.06em;
   color: var(--color-primary);
-  opacity: 0.82;
   text-shadow: none;
   white-space: nowrap;
 }
+.app-logo-heading .app-logo-flow { color: var(--color-accent); }
 
 /* ── 左上のロゴ＝案件一覧へ戻る入口（10.0.7）────────────────────
    .header-title は flex:1 でヘッダーいっぱいに広がるので、そこに onclick を
@@ -2029,7 +2031,7 @@ textarea.form-control { resize: vertical; min-height: 72px; }
      届かない。狭い画面ではヘッダーが 52px に縮むぶん、ここで明示的に下げる */
   .app-logo-mark { width: 24px; height: 24px; }
   .app-logo-word { font-size: 21px; }
-  .app-logo-heading { font-size: 16px; }
+  .app-logo-heading { font-size: 18px; }
   .btn-primary { padding: 6px 10px; font-size: 12px; }
 
   /* Content padding */
@@ -3670,7 +3672,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.0.9</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.0</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5523,6 +5525,9 @@ function showView(name) {
     cases: 'CaseFlow', 'case-detail': '案件詳細',
     settings: 'データ管理'
   };
+  // 見出しの二色の塗り分け（前半＝青／後半＝橙）。ロゴの Case／Flow と同じ。
+  // 見出しを足すときはここにも足す。無い見出しは青一色で出る
+  const titleSplit = { '案件詳細': ['案件', '詳細'], 'データ管理': ['データ', '管理'] };
   const _title = titles[name] || '';
   const _logoTxt = document.getElementById('header-logo-text');
   if (_logoTxt) {
@@ -5534,6 +5539,7 @@ function showView(name) {
     // ロゴは二色（Case＝青／Flow＝橙）なので、戻すときは中の span ごと入れ直す。
     // 中身は固定の文字列だけ。見出しのほうは今までどおり textContent
     if (_isLogo) _logoTxt.innerHTML = 'Case<span class="app-logo-flow">Flow</span>';
+    else if (titleSplit[_title]) _logoTxt.innerHTML = titleSplit[_title][0] + '<span class="app-logo-flow">' + titleSplit[_title][1] + '</span>';
     else _logoTxt.textContent = _title;
   }
 
