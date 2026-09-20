@@ -697,6 +697,8 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
    かつては 'Comfortaa' を Google Fonts から読み込んでいたが、これは
    4章の「外部CDN禁止」に反していた（オフラインでも崩れる）。
    Mac に必ず入っている Avenir Next に替え、link ごと外してある。
+   10.0.9 でワードマークを Gill Sans（これも Mac に必ず入っている）に替え、
+   Case＝青／Flow＝橙 の二色にした。印の3本線と同じ2色。
 
    色は --color-primary / --color-accent をそのまま使う。テーマを替えれば
    自動で追従するので、JS で色を塗り直す必要がない
@@ -709,14 +711,16 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   flex-shrink: 0;
 }
 .app-logo-word {
-  font-family: 'Avenir Next','Avenir',sans-serif;
+  font-family: 'Gill Sans','Avenir Next','Avenir',sans-serif;
   font-weight: 600;
-  font-size: 27px;
+  font-size: 28px;
   letter-spacing: 0.05em;
   color: var(--color-primary);
   text-shadow: none;
   white-space: nowrap;
 }
+/* ワードマークの後ろ半分「Flow」。色は印の3本目と同じ橙。テーマに追従する */
+.app-logo-word .app-logo-flow { color: var(--color-accent); }
 /* 案件詳細などの見出しに切り替わったとき。印はそのまま残る */
 .app-logo-heading {
   font-family: 'Avenir Next','Avenir',sans-serif;
@@ -3465,7 +3469,7 @@ tr.row-waiting:hover > td {
         10.0.7：押せるのは印とワードマークだけ。.header-title 全体に付けると
         ヘッダーの何も無い所を押しても案件一覧へ戻ってしまう。
         キーボードでも押せるように role/tabindex と Enter・space を持たせてある -->
-        <span class="logo-home" onclick="showView('cases')" title="案件一覧へ戻る" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('cases');}"><svg class="app-logo-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></svg><span id="header-logo-text" class="app-logo-word">CaseFlow</span></span></div>
+        <span class="logo-home" onclick="showView('cases')" title="案件一覧へ戻る" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('cases');}"><svg class="app-logo-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></svg><span id="header-logo-text" class="app-logo-word">Case<span class="app-logo-flow">Flow</span></span></span></div>
       <div class="header-actions">
         <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存" style="padding:5px 12px;font-size:12px;font-weight:700">💾<span class="btn-header-backup-label" style="margin-left:5px">保存</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
@@ -3666,7 +3670,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.0.8</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.0.9</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5527,7 +5531,10 @@ function showView(name) {
     // 直し忘れの元になる（書体の指定が3か所にあったのがまさにこれ）
     const _isLogo = (!_title || _title === 'CaseFlow');
     _logoTxt.className = _isLogo ? 'app-logo-word' : 'app-logo-heading';
-    _logoTxt.textContent = _isLogo ? 'CaseFlow' : _title;
+    // ロゴは二色（Case＝青／Flow＝橙）なので、戻すときは中の span ごと入れ直す。
+    // 中身は固定の文字列だけ。見出しのほうは今までどおり textContent
+    if (_isLogo) _logoTxt.innerHTML = 'Case<span class="app-logo-flow">Flow</span>';
+    else _logoTxt.textContent = _title;
   }
 
   updateBottomNav(name);
@@ -14309,7 +14316,7 @@ if ('serviceWorker' in navigator && !window.__VIEWER_MODE__) {
 ">
   <div style="text-align:center">
     <div style="font-size:52px;margin-bottom:12px">☁</div>
-    <div style="font-family:'Avenir Next','Avenir',sans-serif;font-size:28px;font-weight:600;color:#fff;letter-spacing:0.05em;margin-bottom:6px">CaseFlow</div>
+    <div style="font-family:'Gill Sans','Avenir Next','Avenir',sans-serif;font-size:28px;font-weight:600;color:#fff;letter-spacing:0.05em;margin-bottom:6px">CaseFlow</div>
     <div style="font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:0.04em">操作を開始する前にクラウドから読み込んでください</div>
   </div>
   <button id="startup-load-btn"
