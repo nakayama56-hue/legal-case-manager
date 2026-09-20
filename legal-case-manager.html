@@ -3511,7 +3511,7 @@ tr.row-waiting:hover > td {
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 10.0.5</span>
+        <span style="color:#2dd4bf;font-size:11px;font-weight:500">ver. 10.0.6</span>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -3763,7 +3763,7 @@ tr.row-waiting:hover > td {
               <span>自動バックアップを有効にする</span>
             </label>
             <div id="backup-folder-label" style="font-size:11px;color:var(--text-muted);margin-bottom:6px">保存先：ダウンロードフォルダ（未設定）</div>
-            <button class="btn btn-secondary btn-sm" onclick="selectBackupFolder()">📁 保存フォルダを選択（PCのみ）</button>
+            <button class="btn btn-secondary btn-sm" onclick="selectBackupFolder()">📁 保存フォルダを選択</button>
           </div>
           <div class="data-card" id="migrated-card">
             <div class="icon">🚚</div>
@@ -11878,7 +11878,6 @@ function renderStorageStatus() {
     const d = document.getElementById('storage-desc'); if (d) d.textContent = 'データの大きさを表示します';
     el.innerHTML = `
     <div style="font-size:13px;font-weight:700;margin-bottom:6px">データの大きさ：${fmt(total)}</div>
-    <div style="font-size:11px;color:#047857;font-weight:700;margin-bottom:8px">✅ Macアプリはファイルに保存するため、5MBの上限はありません</div>
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">内訳（上位5件）：</div>
     ${top5}
     <div style="font-size:10px;color:var(--text-muted);margin-top:6px">案件数：${cases.length}件 ／ タスク数：${tasks.length}件</div>`;
@@ -13668,6 +13667,9 @@ function _hideInlineSave() {
 }
 
 function _showInlineSaveNear(el, saveTarget) {
+  // 入力欄に追従する「⬆ 保存」ボタンは廃止（10.0.6、ご本人のご指示）。各入力画面に自前の保存ボタンがある。
+  // 戻すときはこの return を 1 行消すだけ
+  return;
   const btn = document.getElementById('inline-save-btn');
   if (!btn || !el) return;
   clearTimeout(_inlineSaveHideTimer);
