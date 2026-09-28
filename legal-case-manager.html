@@ -3672,7 +3672,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.1</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.2</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -6472,6 +6472,60 @@ function _markArrived(key) {
   setTimeout(() => cloudSave(false), 300);
 }
 
+/* 到着済の取り消し（10.1.2）。_markArrived が立てた印を、独立マップと旧形式の両方から外す */
+function _unmarkArrived(key) {
+  if (document.body.classList.contains('viewer-mode')) return;
+  const m = key.match(/^(.+?)_(dv|dvr|sh|sr|szt|szr)_(.+)$/);
+  if (!m) return;
+  const [, caseId, type, num] = m;
+  const c = cases.find(c => c.id === caseId);
+  if (!c) return;
+  if (!confirm('「到着済」を取り消して、未到着に戻しますか？')) return;
+
+  // szt/szr は実際の追跡番号を解決する（_markArrived と同じ）
+  let realNum = num;
+  let szDoc = null, szRow = null;
+  if (type === 'szt' || type === 'szr') {
+    const parts = num.split('_');
+    const ridx = parseInt(parts[0]);
+    szDoc = SOUZOKU_DOC_TYPES.find(d => d.replace(/[・ ]/g,'_') === parts.slice(1).join('_')) || null;
+    szRow = (c.souzoku_tracker && c.souzoku_tracker.rows && c.souzoku_tracker.rows[ridx]) || null;
+    if (szRow && szRow.trackings && szDoc) {
+      const t = szRow.trackings[szDoc];
+      realNum = (type === 'szt' ? t?.tracking : t?.tracking_return) || num;
+    }
+  }
+  if (c.arrived_tracking) {
+    delete c.arrived_tracking[realNum];
+    if (realNum !== num) delete c.arrived_tracking[num];
+  }
+
+  if (type === 'dv') {
+    (c.deliveries || []).forEach(d => {
+      if (d.arrived_nums) d.arrived_nums = d.arrived_nums.filter(n => n !== num);
+    });
+  } else if (type === 'dvr') {
+    (c.deliveries || []).forEach(d => {
+      if (d.tracking_return === num) delete d.tracking_return_arrived;
+    });
+  } else if (type === 'sh') {
+    (c.shinsei_dates || []).forEach(s => {
+      if (s.tracking === num) delete s.tracking_arrived;
+    });
+  } else if (type === 'sr') {
+    (c.shinsei_dates || []).forEach(s => {
+      if (s.tracking_return === num) delete s.tracking_return_arrived;
+    });
+  } else if (szRow && szRow.trackings && szDoc && szRow.trackings[szDoc]) {
+    delete szRow.trackings[szDoc][type === 'szt' ? 'tracking_arrived' : 'tracking_return_arrived'];
+  }
+
+  saveToStorage();
+  renderTrackingSummary();
+  try { renderPaymentPending(); } catch(e) {}
+  try { toast('到着済を取り消しました', 'info'); } catch(e) {}
+}
+
 function _isArrived(caseId, type, num) {
   const c = cases.find(c => c.id === caseId);
   if (!c) return false;
@@ -6683,7 +6737,7 @@ function renderTrackingSummary() {
     const keyEsc = item.key.replace(/'/g, "\\'");
     const opacity = arrived ? 'opacity:0.55;' : '';
     const statusBtn = arrived
-      ? '<span style="flex-shrink:0;width:72px;font-size:10px;background:#d1fae5;color:#065f46;border-radius:4px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">✓ 到着済</span>'
+      ? '<button class="tracking-arrived-btn" title="押すと到着済を取り消します" onclick="event.stopPropagation();_unmarkArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;font-size:10px;background:#d1fae5;color:#065f46;border:none;border-radius:4px;cursor:pointer;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">✓ 到着済</button>'
       : '<button onclick="event.stopPropagation();_markArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;background:#1d4ed8;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">📬 到着</button>';
     const rowClick = 'onclick="window.open(\'' + url + '\',\'_blank\')"';
     return '<div class="tracking-row" ' + rowClick + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
