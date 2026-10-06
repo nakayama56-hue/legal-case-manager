@@ -3721,7 +3721,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.5</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.6</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -14312,9 +14312,16 @@ window.addEventListener('DOMContentLoaded', () => {
   // 自動バックアップは読込ボタン押下後（_startupAutoBackup）に実行するためここでは呼ばない
   // 【クラウド無効化】起動時の読込オーバーレイは表示せず、ローカルデータで即起動
   _hideStartupOverlay();
-  // 日次自動バックアップは最初のユーザー操作時に一度だけ実行（File System Access はユーザー操作が必須のため）
+  // 日次自動バックアップは、その日の最初のユーザー操作時に実行（File System Access はユーザー操作が必須のため）。
+  // 10.1.5 までは起動後の 1 回だけだった。Mac アプリは何日も開きっぱなしにできるので、日付が変わっても控えが出来なかった
   if (localStorage.getItem('auto_backup_enabled') === '1' && !window.__VIEWER_MODE__) {
-    document.addEventListener('pointerdown', () => { try { _startupAutoBackup(); } catch(e){} }, { once: true });
+    let _abRunning = false;   // 続けて押したときに二重に走らせない
+    document.addEventListener('pointerdown', () => {
+      if (_abRunning || localStorage.getItem('last_auto_backup') === today()) return;
+      _abRunning = true;
+      try { _startupAutoBackup().catch(() => {}).finally(() => { _abRunning = false; }); }
+      catch(e) { _abRunning = false; }
+    });
   }
   // 案件フォルダの親の許可も、最初の操作のときに一度だけ求める（8.5.7）。
   // Chrome を開き直すと許可が消えることがあり、そのたびに「🔓 許可する」を探して押すのは手間なため。
