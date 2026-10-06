@@ -3450,12 +3450,13 @@ tr.row-waiting:hover > td {
 .case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs {
   position: absolute !important; top: 14.645%; left: 14.645%;
   transform: translate(-50%, -50%);
-  /* 形と色はご本人のご指示（同日）：大きめ・長方形・黒・明朝体の横書き */
+  /* 形と色はご本人のご指示（同日）：大きめ・長方形・黒。
+     書体は 10.1.5（10月7日）で明朝からヒラギノ角ゴの太字へ（「他の文字とミスマッチ」。案件名と同じ書体。見本 3 案から案A） */
   background: #fff !important;
   color: #000 !important;
   border: 2.5px solid #000 !important;
   border-radius: 2px !important;
-  font-family: 'Hiragino Mincho ProN','Hiragino Mincho Pro','Yu Mincho','YuMincho',serif !important;
+  font-family: 'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic UI','Meiryo',sans-serif !important;
   font-size: 16px !important; font-weight: 700 !important;
   letter-spacing: 0.12em !important;
   padding: 3px 8px 3px 10px !important;
@@ -3720,7 +3721,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
