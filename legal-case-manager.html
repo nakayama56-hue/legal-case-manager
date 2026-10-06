@@ -2845,6 +2845,8 @@ body.files-in-panel #case-task-panel[data-tab="files"] #case-files-panel-host { 
 }
 .cf-row:hover { background: rgba(37,99,235,0.06); }
 .cf-row.is-dir { font-weight: 700; cursor: pointer; }
+/* のぞき見（Quick Look）のために選んだ行（10.1.7。Macアプリだけ） */
+.cf-row.cf-sel, .cf-row.cf-sel:hover { background: rgba(37,99,235,0.16); box-shadow: inset 3px 0 0 var(--color-primary); }
 .cf-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cf-meta { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
 .cf-meta.r { text-align: right; }
@@ -3721,7 +3723,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.6</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.7</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7687,6 +7689,47 @@ function _cfNative() { return _isNativeApp() && !!(window.CaseFlowNative); }
 /* その取っ手が殻の取っ手か（_root を持つ）。Chrome 版の本物の取っ手には _root が無い */
 function _cfNativeHandle(h) { return _cfNative() && !!h && h._root != null; }
 
+/* ---- のぞき見（Quick Look。10.1.7。Macアプリだけ）----
+   ファイルの行を1回押すと選ぶ（青く残る）。スペースで Finder と同じのぞき見の窓が出る。↑↓ で選ぶ行を移す。
+   窓の中では ← → ↑ ↓ で前後のファイルへ、スペースか Esc で閉じる（殻の QuickLook.swift）。
+   見せるだけで、ファイルは書き換えない。選んだ行は名前で覚える（一覧を描き直しても残す。別の案件・フォルダでは外れる） */
+function _cfQL() { return _cfNative() && typeof window.CaseFlowNative.quickLook === 'function'; }
+function _cfSelWhere() { return _cf.caseId + '\u0000' + (_cf.path || []).join('/'); }
+function _cfIsSel(e) { return !!_cf.sel && _cf.sel.where === _cfSelWhere() && _cf.sel.name === e.name; }
+function cfSelect(idx) {
+  const e = _cf.entries[idx]; if (!e || e.kind !== 'file') return;
+  _cf.sel = { where: _cfSelWhere(), name: e.name };
+  document.querySelectorAll('.cf-row.cf-sel').forEach(r => r.classList.remove('cf-sel'));
+  document.querySelectorAll(`.cf-row[data-cfi="${idx}"]`).forEach(r => r.classList.add('cf-sel'));
+}
+function _cfVisibleFiles() { return _cfSortedEntries().filter(e => e.kind === 'file' && _cfNativeHandle(e.handle)); }
+async function cfQuickLook() {
+  const files = _cfVisibleFiles();
+  const i = files.findIndex(_cfIsSel);
+  if (i < 0) return false;
+  try { await window.CaseFlowNative.quickLook(files.map(e => e.handle), i); }
+  catch (err) { toast(`のぞき見できませんでした（${err.message}）`, 'error'); }
+  return true;
+}
+document.addEventListener('keydown', ev => {
+  if (!_cfQL() || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  if (ev.key !== ' ' && ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return;
+  const t = ev.target;
+  if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(t.tagName))) return;
+  if (document.querySelector('.modal-overlay.show')) return;
+  if (!document.querySelector('.cf-row.cf-sel')) return;     // 画面に選んだ行が無いときは何もしない
+  const files = _cfVisibleFiles();
+  const i = files.findIndex(_cfIsSel);
+  if (i < 0) return;
+  ev.preventDefault();   // 効いたときは必ず止める（Macアプリの警告音とページの送りを防ぐ。5-5章）
+  if (ev.key === ' ') { cfQuickLook(); return; }
+  const j = Math.max(0, Math.min(files.length - 1, i + (ev.key === 'ArrowDown' ? 1 : -1)));
+  const idx = _cf.entries.indexOf(files[j]);
+  cfSelect(idx);
+  const row = document.querySelector(`.cf-row[data-cfi="${idx}"]`);
+  if (row) row.scrollIntoView({ block: 'nearest' });
+});
+
 function _applyCaseFilesPlace() {
   const inPanel = caseFilesPlace === 'panel';
   document.body.classList.toggle('files-in-panel', inPanel);
@@ -8210,12 +8253,14 @@ function _cfListHtml() {
   const nat = _cfNative();
   const flabel = caseFilesPlace === 'panel' ? '📂' : 'Finder';
   const fbtn = idx => nat ? `<button onclick="event.stopPropagation();cfReveal(${idx})" title="Finder で表示">${flabel}</button>` : '';
+  const ql = _cfQL();
   const rows = list.map(e => {
     const idx = _cf.entries.indexOf(e);
     if (e.kind === 'dir') {
       return `<div class="cf-row is-dir" onclick="cfEnter(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">—</span><span class="cf-meta r cf-size"></span><span class="cf-acts"><button onclick="event.stopPropagation();cfEnter(${idx})">開く</button>${fbtn(idx)}</span></div>`;
     }
-    return `<div class="cf-row" ondblclick="cfOpen(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">${_cfDate(e.mtime)}</span><span class="cf-meta r cf-size">${_cfSize(e.size)}</span><span class="cf-acts"><button onclick="cfOpen(${idx})">開く</button>${fbtn(idx)}<button class="cf-write" onclick="cfRename(${idx})">名前</button></span></div>`;
+    const sel = ql && _cfIsSel(e) ? ' cf-sel' : '';
+    return `<div class="cf-row${sel}" data-cfi="${idx}" ${ql ? `onclick="cfSelect(${idx})" title="スペースキーで中身をのぞけます"` : ''} ondblclick="cfOpen(${idx})">${_cfIcon(e)}<span class="cf-name" title="${escHtml(e.name)}">${escHtml(e.name)}</span><span class="cf-meta">${_cfDate(e.mtime)}</span><span class="cf-meta r cf-size">${_cfSize(e.size)}</span><span class="cf-acts"><button onclick="cfOpen(${idx})">開く</button>${fbtn(idx)}<button class="cf-write" onclick="cfRename(${idx})">名前</button></span></div>`;
   }).join('');
   return rows || `<div class="cf-empty">${_cf.filter ? '該当するものがありません' : 'このフォルダは空です'}</div>`;
 }
