@@ -3723,7 +3723,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.0</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.1</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -10336,9 +10336,18 @@ function _doPrintSimple(caseId) {
   const row = (label, value) => value
     ? `<tr><th>${label}</th><td>${value}</td></tr>` : '';
 
-  const clientName = (c.contacts && c.contacts.length > 0)
-    ? c.contacts[0].name || c.client_name || ''
-    : c.client_name || '';
+  /* 見出しの名前（10.2.1）：役割に「依頼者」を含む連絡先 → 1人目（紹介者でなければ） → 「依頼者名」の欄 → 1人目。
+     紹介者（役割に「紹介」を含む、または「顧問税理士」）は見出しの下に小さく添える。 */
+  const cts = (c.contacts || []).filter(ct => ct && ct.name);
+  const isReferrer = ct => /紹介|顧問税理士/.test(ct.role || '');
+  const mainCt = cts.find(ct => (ct.role || '').includes('依頼者'))
+    || (cts[0] && !isReferrer(cts[0]) ? cts[0] : null)
+    || (c.client_name ? { name: c.client_name, role: '依頼者' } : null)
+    || cts[0] || null;
+  const clientName = mainCt ? mainCt.name : '';
+  const clientRole = (mainCt && mainCt.role) || '依頼者';
+  const referrers = cts.filter(ct => ct !== mainCt && isReferrer(ct))
+    .map(ct => `${escHtml(withKeisho(ct.name, ct.role))}（${escHtml(ct.role)}）`);
 
   const ps = loadPrintSettings();
   const show = (key) => ps[key] !== false;
@@ -10371,6 +10380,7 @@ function _doPrintSimple(caseId) {
   .header-row { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2.5px solid #111; flex-wrap: wrap; }
   .case-name { font-size: 22pt; font-weight: 700; line-height: 1.2; }
   .client-name { font-size: 16pt; font-weight: 700; color: #333; }
+  .referrer { font-size: 9pt; color: #555; margin: -4px 0 10px; }
   .info-table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 10px; }
   .info-table th { width: 32%; background: #f0f0f0; padding: 5px 10px; text-align: left; font-weight: 700; border: 1px solid #ccc; vertical-align: top; }
   .info-table td { padding: 5px 10px; border: 1px solid #ccc; vertical-align: top; line-height: 1.5; }
@@ -10381,8 +10391,9 @@ function _doPrintSimple(caseId) {
   <div class="case-num">案件番号：${escHtml(c.case_num||'—')}</div>
   <div class="header-row">
     ${show('casename') ? `<div class="case-name">${escHtml(c.case_name)}</div>` : ''}
-    ${show('client') && clientName ? `<div class="client-name">${escHtml(withKeisho(clientName, (c.contacts && c.contacts[0] && c.contacts[0].role) || '依頼者'))}</div>` : ''}
+    ${show('client') && clientName ? `<div class="client-name">${escHtml(withKeisho(clientName, clientRole))}</div>` : ''}
   </div>
+  ${show('client') && referrers.length > 0 ? `<div class="referrer">紹介：${referrers.join('、')}</div>` : ''}
   <table class="info-table">
     ${basicInfo}
     ${show('category') ? row('区分', c.category === '商業・法人登記' ? '商業・法人登記' : '不動産登記') : ''}
