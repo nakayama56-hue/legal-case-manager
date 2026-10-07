@@ -3723,7 +3723,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.8</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.1.9</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -3966,6 +3966,8 @@ tr.row-waiting:hover > td {
       <div class="form-section" id="section-contacts">
         <div class="form-section-title">📞 連絡先情報（複数登録可）</div>
         <div id="f-contacts-list"></div>
+        <!-- 役割・続柄の候補。中身は _fillRoleOptions() が案件モーダルを開くたびに入れる（10.1.9） -->
+        <datalist id="ct-role-list"></datalist>
         <button type="button" class="contact-add-btn" onclick="addContactRow()">＋ 連絡先を追加</button>
       </div>
       <!-- Section 3: Dates -->
@@ -10793,6 +10795,7 @@ function onCaseCategoryChange(cat) {
 function openCaseModal(caseId, scrollTo) {
   currentCaseId = caseId;
   const modal = document.getElementById('case-modal');
+  _fillRoleOptions();
   document.getElementById('case-modal-title').textContent = caseId ? '案件編集' : '新規案件';
 
   // Clear static fields
@@ -11135,6 +11138,23 @@ function readInvoiceRows() {
 /* ---- Contact row helpers ---- */
 
 /** Render the full contact list from an array of contact objects */
+/** 役割・続柄の候補（10.1.9）。よく使う言葉を先に、続けていまの案件で実際に使われている言葉を多い順に並べる。
+ *  自由入力はそのまま（候補に無い言葉も入れられる）。 */
+const ROLE_PRESETS = ['依頼者','紹介者・税理士','紹介者','相続人','依頼者・相続人','代表取締役','依頼者・代表取締役','取締役',
+                      '登記名義人','売主','買主','贈与者','受贈者','関係者','銀行担当'];
+function _fillRoleOptions() {
+  const dl = document.getElementById('ct-role-list');
+  if (!dl) return;
+  const count = {};
+  (cases || []).forEach(c => (c.contacts || []).forEach(ct => {
+    const r = String(ct.role || '').trim();
+    if (r) count[r] = (count[r] || 0) + 1;
+  }));
+  const used = Object.keys(count).filter(r => !ROLE_PRESETS.includes(r))
+    .sort((a, b) => count[b] - count[a] || a.localeCompare(b, 'ja'));
+  dl.innerHTML = [...ROLE_PRESETS, ...used].map(r => `<option value="${escHtml(r)}"></option>`).join('');
+}
+
 function renderContactRows(contacts) {
   const list = document.getElementById('f-contacts-list');
   list.innerHTML = '';
@@ -11214,7 +11234,7 @@ function addContactRow(ct, idx) {
     <div class="contact-list-grid">
       <div class="form-group">
         <label class="form-label">役割・続柄</label>
-        <input class="form-control ct-role" placeholder="例：依頼者・売主・銀行担当" value="${escHtml(ct?.role||'')}">
+        <input class="form-control ct-role" list="ct-role-list" placeholder="例：依頼者・売主・銀行担当" value="${escHtml(ct?.role||'')}">
       </div>
       <div class="form-group">
         <label class="form-label">氏名・名称</label>
