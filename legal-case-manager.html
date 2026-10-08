@@ -3723,7 +3723,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.1</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.2</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5032,7 +5032,7 @@ function renderCaseTiles() {
         // 面談記録
         ...(c.interviews||[]).map(iv => [iv.content||'', iv.place||'', iv.party||'', iv.azukari||''].join(' ')),
         // 書類送付先
-        ...(c.deliveries||[]).map(d => [d.name||'', d.address||'', d.docs||'', d.memo||''].join(' ')),
+        ...(c.deliveries||[]).map(d => [d.name||'', d.role||'', d.address||'', d.docs||'', d.memo||''].join(' ')),
         // 申請日・完了予定日・管轄
         ...(c.shinsei_dates||[]).map(s => [s.kankatsu||'', s.shinsei||'', s.yotei||''].join(' ')),
         // 取得証明書等
@@ -7200,7 +7200,7 @@ function renderCaseTable() {
         // 面談記録
         ...(c.interviews || []).map(iv => [iv.content, iv.place, iv.party, iv.azukari].join(' ')),
         // 書類送付先
-        ...(c.deliveries || []).map(d => [d.name, d.address, d.docs, d.memo].join(' ')),
+        ...(c.deliveries || []).map(d => [d.name, d.role, d.address, d.docs, d.memo].join(' ')),
         // 申請日・完了予定日・管轄
         ...(c.shinsei_dates || []).map(s => [s.kankatsu, s.shinsei, s.yotei].join(' ')),
       ].join(' ').toLowerCase();
@@ -10737,7 +10737,7 @@ function printCaseDetail(caseId) {
 
     ${(c.deliveries||[]).length > 0 ? sect(`書類送付先（${c.deliveries.length}件）`, c.deliveries.map((d, i) => `
       <table class="print-tasks" style="${i > 0 ? 'margin-top:2mm' : ''}">
-        <thead><tr><th colspan="2">${i+1}. ${escHtml(d.name||'送付先'+(i+1))}</th></tr></thead>
+        <thead><tr><th colspan="2">${i+1}. ${escHtml(d.name||'送付先'+(i+1))}${d.role ? `（${escHtml(d.role)}）` : ''}</th></tr></thead>
         <tbody>
           <tr><td style="width:26mm;color:#555">送付方法</td><td>${escHtml(d.method||'—')}</td></tr>
           ${d.zip||d.address ? `<tr><td style="color:#555">住所</td><td>${d.zip?`〒${escHtml(d.zip)} `:''}${escHtml(d.address||'')}</td></tr>` : ''}
@@ -11149,7 +11149,7 @@ function readInvoiceRows() {
 /* ---- Contact row helpers ---- */
 
 /** Render the full contact list from an array of contact objects */
-/** 役割・続柄の候補（10.1.9）。よく使う言葉を先に、続けていまの案件で実際に使われている言葉を多い順に並べる。
+/** 役割・続柄の候補（10.1.9。10.2.2 から書類送付先の「肩書・役割」とも共用）。よく使う言葉を先に、続けていまの案件で実際に使われている言葉を多い順に並べる。
  *  自由入力はそのまま（候補に無い言葉も入れられる）。 */
 const ROLE_PRESETS = ['依頼者','紹介者・税理士','顧問税理士','紹介者・窓口','紹介者','相続人','依頼者・相続人','代表取締役','依頼者・代表取締役','取締役',
                       '登記名義人','売主','買主','贈与者','受贈者','関係者','銀行担当'];
@@ -11157,8 +11157,8 @@ function _fillRoleOptions() {
   const dl = document.getElementById('ct-role-list');
   if (!dl) return;
   const count = {};
-  (cases || []).forEach(c => (c.contacts || []).forEach(ct => {
-    const r = String(ct.role || '').trim();
+  (cases || []).forEach(c => [...(c.contacts || []), ...(c.deliveries || [])].forEach(ct => {
+    const r = String((ct && ct.role) || '').trim();
     if (r) count[r] = (count[r] || 0) + 1;
   }));
   const used = Object.keys(count).filter(r => !ROLE_PRESETS.includes(r))
@@ -12428,6 +12428,10 @@ function addDeliveryRow(d, idx) {
         <input class="form-control dv-name" placeholder="例：○○法務局、山田 花子" value="${escHtml(d?.name||'')}">
       </div>
       <div class="form-group">
+        <label class="form-label">肩書・役割</label>
+        <input class="form-control dv-role" list="ct-role-list" placeholder="例：依頼者・紹介者・税理士" value="${escHtml(d?.role||'')}">
+      </div>
+      <div class="form-group">
         <label class="form-label">送付方法</label>
         <select class="form-control dv-method" onchange="dvMethodChange(this)">
           <option ${(d?.method||'郵送')==='郵送'?'selected':''}>郵送</option>
@@ -12550,6 +12554,7 @@ function renumberDeliveryRows() {
 function readDeliveryRows() {
   return [...document.querySelectorAll('#f-delivery-list .delivery-item')].map(row => ({
     name:    (row.querySelector('.dv-name')?.value    || '').trim(),
+    role:    (row.querySelector('.dv-role')?.value    || '').trim(),
     method:  (row.querySelector('.dv-method')?.value  || '').trim(),
     zip:     (row.querySelector('.dv-zip')?.value     || '').trim(),
     address: (row.querySelector('.dv-address')?.value || '').trim(),
@@ -12878,6 +12883,7 @@ function renderDeliverySection(c) {
     <div style="border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;background:var(--bg-primary);font-size:12px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
         <span style="font-weight:700;color:var(--text-primary)">📬 ${escHtml(d.name||'送付先'+(i+1))}</span>
+        ${d.role ? `<span style="font-size:11px;color:var(--text-muted)">${escHtml(d.role)}</span>` : ''}
         <span style="font-size:11px;padding:1px 6px;border-radius:4px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">${escHtml(d.method||'郵送')}</span>
         ${d.date ? `<span style="font-size:11px;color:var(--text-muted)">📅 送付：${escHtml(d.date)}</span>` : ''}
         ${d.handover ? `<span style="font-size:11px;color:#0369a1;font-weight:600">🤝 手渡し：${escHtml(d.handover)}</span>` : ''}
