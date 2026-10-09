@@ -3337,6 +3337,30 @@ tr.row-waiting:hover > td {
 .case-tile-card .tile-badge-waiting {
   background: rgba(128,128,128,0.16) !important; color: var(--text-secondary) !important;
 }
+/* 「一覧図 未手配」（10.2.3）。法定相続情報一覧図の手配を忘れないための印。手配済みで消える。
+   色は保留と同じ琥珀の系統（不動産の青・商業の橙・要確認の赤と被らせない）。
+   要確認ほど強くはせず、静かな印よりは目に入る中間の強さ */
+.case-tile-card .tile-hs-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; font-weight: 800; line-height: 1.3; white-space: nowrap;
+  padding: 2.5px 8px 2.5px 6px; border-radius: 4px;
+  background: #fef3c7; color: #92400e;
+  border: 1.5px solid #d97706;
+  letter-spacing: 0.03em;
+}
+.case-tile-card .tile-hs-badge::before { content: '📄'; font-size: 11px; }
+/* 案件詳細の帯 */
+.hs-band {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 4px 12px 10px; padding: 8px 14px; border-radius: 8px;
+  font-size: 13.5px; font-weight: 700;
+}
+.hs-band.hs-pending { background: #fef3c7; color: #92400e; border: 1.5px solid #d97706; }
+.hs-band.hs-done    { background: #ecfdf5; color: #166534; border: 1px solid #a7f3d0; }
+.hs-band .hs-band-btn { background: #d97706; color: #fff; border: none; font-weight: 700; }
+.hs-band .hs-band-btn:hover { background: #b45309; }
+.hs-band .hs-band-undo { background: transparent; color: var(--text-muted); border: 1px solid rgba(128,128,128,0.3); font-weight: 500; }
+.viewer-mode .hs-band button { display: none; }
 .case-tile-card .tile-pin { font-size: 12px !important; line-height: 1; }
 
 /* --- 区分マーク（面）と印を上の行にそろえる。
@@ -3723,7 +3747,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.2</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.3</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -4015,10 +4039,19 @@ tr.row-waiting:hover > td {
               <textarea class="form-control" id="f-memo" placeholder="その他特記事項"></textarea>
           </div>
           <div class="form-group full">
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-primary)">
-              <input type="checkbox" id="f-hoteisozoku" style="width:18px;height:18px;cursor:pointer;accent-color:var(--color-primary)">
-              法定相続情報一覧図の取得あり
-            </label>
+            <!-- 法定相続情報一覧図は「手配を忘れない」ためのリマインダー（10.2.3）。
+                 左のチェック＝この案件では手配する。右の「手配済み」を入れるまで、タイルと案件詳細に「未手配」の印が出る -->
+            <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-primary)">
+                <input type="checkbox" id="f-hoteisozoku" style="width:18px;height:18px;cursor:pointer;accent-color:var(--color-primary)" onchange="_hsSyncForm()">
+                法定相続情報一覧図を手配する
+              </label>
+              <label id="f-hoteisozoku-tehai-wrap" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-secondary)">
+                <input type="checkbox" id="f-hoteisozoku-tehai" style="width:16px;height:16px;cursor:pointer;accent-color:var(--color-primary)" onchange="_hsSyncForm()">
+                手配済み
+                <input type="date" id="f-hoteisozoku-tehai-date" class="form-control" style="width:auto;padding:3px 6px;font-size:12px" title="手配した日">
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -4946,6 +4979,62 @@ function setCaseViewMode(mode) {
 }
 
 
+/* ===== 法定相続情報一覧図の「手配」リマインダー（10.2.3。2026年10月9日）=====
+   hoteisozoku（手配する）が立っていて hoteisozoku_tehai（手配済み）が無い間だけ「未手配」の印を出す。
+   取得・交付待ちは追わない（ご本人の趣旨は「手配を忘れない」）。
+   印の置き場：案件一覧のタイル（.tile-hs-badge）、案件詳細の備考カードの下（_hsBandHtml）、フル印刷の表の1行 */
+function _hsPending(c) { return !!(c && c.hoteisozoku && !c.hoteisozoku_tehai); }
+function _hsBandHtml(c) {
+  if (!c.hoteisozoku) return '';
+  if (_hsPending(c)) {
+    return `<div class="hs-band hs-pending">
+      <span class="hs-band-text">⚠ 法定相続情報一覧図 未手配</span>
+      <button class="btn btn-xs hs-band-btn no-print" onclick="hsMarkTehai('${c.id}')">手配済みにする</button>
+    </div>`;
+  }
+  const d = c.hoteisozoku_tehai_date ? `（${formatDate(c.hoteisozoku_tehai_date)}）` : '';
+  return `<div class="hs-band hs-done">
+    <span class="hs-band-text">✅ 法定相続情報一覧図 手配済み${d}</span>
+    <button class="btn btn-xs hs-band-undo no-print" onclick="hsUnmarkTehai('${c.id}')" title="押し間違えたときに未手配へ戻す">取り消す</button>
+  </div>`;
+}
+function _hsAfterChange(id) {
+  saveToStorage();
+  if (typeof renderCaseDetail === 'function') renderCaseDetail(id);
+  if (document.getElementById('case-tile-grid')) renderCaseTiles();
+}
+function hsMarkTehai(id) {
+  const c = cases.find(x => x.id === id);
+  if (!c || !c.hoteisozoku) return;
+  c.hoteisozoku_tehai = true;
+  c.hoteisozoku_tehai_date = today();
+  _hsAfterChange(id);
+  toast('法定相続情報一覧図を「手配済み」にしました', 'success');
+}
+function hsUnmarkTehai(id) {
+  const c = cases.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm('法定相続情報一覧図を「未手配」に戻しますか？')) return;
+  c.hoteisozoku_tehai = false;
+  c.hoteisozoku_tehai_date = '';
+  _hsAfterChange(id);
+  toast('「未手配」に戻しました', 'info');
+}
+// 編集画面：「手配する」が外れていれば「手配済み」は押せない。手配済みを入れて日付が空なら今日を入れる
+function _hsSyncForm() {
+  const main = document.getElementById('f-hoteisozoku');
+  const tehai = document.getElementById('f-hoteisozoku-tehai');
+  const date = document.getElementById('f-hoteisozoku-tehai-date');
+  const wrap = document.getElementById('f-hoteisozoku-tehai-wrap');
+  if (!main || !tehai || !date || !wrap) return;
+  const on = main.checked;
+  if (!on) { tehai.checked = false; date.value = ''; }
+  tehai.disabled = !on;
+  date.disabled = !on || !tehai.checked;
+  wrap.style.opacity = on ? '' : '0.45';
+  if (on && tehai.checked && !date.value) date.value = today();
+}
+
 function _hasMarker(c) {
   if (c.interview_content && c.interview_content.includes('<mark')) return true;
   if (c.memos && c.memos.some(m => m.text && m.text.includes('<mark'))) return true;
@@ -5084,6 +5173,7 @@ function renderCaseTiles() {
       sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '',
       c.waiting ? '<span class="tile-badge-waiting">Waiting</span>' : '',
       isImportant ? '<span class="tile-important-badge-abs">要確認</span>' : '',
+      _hsPending(c) ? '<span class="tile-hs-badge" title="法定相続情報一覧図の手配がまだです">一覧図 未手配</span>' : '',
       c.pinned ? '<span class="tile-pin">📌</span>' : '',
     ].filter(Boolean).join('');
     return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" data-cat="${_isCorp ? 'corp' : 'real'}" onclick="showCaseDetail('${c.id}')">
@@ -5209,6 +5299,8 @@ function _applyReadOnly(msg) {
   const noop = () => { try { toast(msg, 'info'); } catch(e){} };
   const silentNoop = () => {};
   window.saveToStorage = silentNoop;
+  window.hsMarkTehai = noop;
+  window.hsUnmarkTehai = noop;
   window.cloudSave = async () => {};
   window.cloudLoad = async () => {};
   window.manualBackupToFolder = noop;
@@ -7458,10 +7550,7 @@ function renderCaseDetail(caseId) {
       <div id="memo-list-${c.id}" style="padding:8px 12px;min-height:36px">
         ${renderMemoList(c)}
       </div>
-      ${c.hoteisozoku ? `
-      <div style="padding:6px 14px 10px;font-size:13px;font-weight:700;color:#0369a1">
-        ✅ 法定相続情報一覧図の取得あり
-      </div>` : ''}
+      ${_hsBandHtml(c)}
     </div>
 
     <!-- Contacts (multi-person) -->
@@ -10659,7 +10748,7 @@ function printCaseDetail(caseId) {
         <tr><th>種別</th><td>${escHtml(c.type||'—')}</td></tr>
         <tr><th>受付日</th><td>${formatDate(c.received_date)}</td></tr>
         ${c.kanryo_yotei_date ? `<tr><th>登記完了予定日</th><td>${formatDate(c.kanryo_yotei_date)}</td></tr>` : ''}
-        ${c.hoteisozoku ? `<tr><th>法定相続情報一覧図</th><td>✅ 取得あり</td></tr>` : ''}
+        ${c.hoteisozoku ? `<tr><th>法定相続情報一覧図</th><td>${_hsPending(c) ? '⚠ 手配する（未手配）' : '✅ 手配済み' + (c.hoteisozoku_tehai_date ? '（' + formatDate(c.hoteisozoku_tehai_date) + '）' : '')}</td></tr>` : ''}
       </table>`)}
 
     ${(c.touki_list||[]).length > 0 ? sect(`登記事項証明書取得（${c.touki_list.length}件）`, `
@@ -10825,6 +10914,9 @@ function openCaseModal(caseId, scrollTo) {
   });
   document.getElementById('f-case-type-text').value = '';
   document.getElementById('f-hoteisozoku').checked = false;
+  document.getElementById('f-hoteisozoku-tehai').checked = false;
+  document.getElementById('f-hoteisozoku-tehai-date').value = '';
+  _hsSyncForm();
   const souzokuChk = document.getElementById('f-souzoku-tracker-enabled');
   if (souzokuChk) souzokuChk.checked = false;
   onCaseCategoryChange('不動産登記');
@@ -10879,6 +10971,9 @@ function openCaseModal(caseId, scrollTo) {
     document.getElementById('f-memo').value = c.memo || '';
     document.getElementById('f-souzoku-tracker-enabled').checked = !!c.souzoku_tracker_enabled;
     document.getElementById('f-hoteisozoku').checked = c.hoteisozoku || false;
+    document.getElementById('f-hoteisozoku-tehai').checked = !!c.hoteisozoku_tehai;
+    document.getElementById('f-hoteisozoku-tehai-date').value = c.hoteisozoku_tehai_date || '';
+    _hsSyncForm();
 
     // Load contacts — migrate legacy fields if contacts array is empty
     let contacts = (c.contacts && c.contacts.length > 0) ? c.contacts : [];
@@ -11533,6 +11628,9 @@ function saveCase() {
     memo:        document.getElementById('f-memo').value.trim(),
     souzoku_tracker_enabled: document.getElementById('f-souzoku-tracker-enabled').checked,
     hoteisozoku: document.getElementById('f-hoteisozoku').checked,
+    hoteisozoku_tehai: document.getElementById('f-hoteisozoku').checked && document.getElementById('f-hoteisozoku-tehai').checked,
+    hoteisozoku_tehai_date: (document.getElementById('f-hoteisozoku').checked && document.getElementById('f-hoteisozoku-tehai').checked)
+      ? (document.getElementById('f-hoteisozoku-tehai-date').value || today()) : '',
   };
 
   if (currentCaseId) {
