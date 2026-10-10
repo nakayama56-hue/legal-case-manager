@@ -3747,7 +3747,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.3</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.4</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -10213,6 +10213,16 @@ function refreshLedgerSection(caseId) {
   tmp.remove();
 }
 
+/** 複製のあと、同じ段の No. を上から 1, 2, 3… に振り直す（10.2.4）。
+    複製した行はすぐ下に入るので「元の番号＋1」になり、その下の行は 1 つずつ繰り下がる。
+    数字だけ・空欄の No. だけを振り直し、手で書いた「1-2」などの文字は触らない */
+function _renumberLedgerGroup(arr, gid) {
+  arr.filter(r => r.group === gid).forEach((r, i) => {
+    const v = String(r.row_no ?? '').trim();
+    if (v === '' || /^\d+$/.test(v)) r.row_no = String(i + 1);
+  });
+}
+
 function duplicateLedgerRow(caseId, rowId) {
   const c = cases.find(c => c.id === caseId);
   if (!c || !c.ledger) return;
@@ -10221,6 +10231,7 @@ function duplicateLedgerRow(caseId, rowId) {
   const copy = JSON.parse(JSON.stringify(c.ledger[idx]));
   copy.id = genId();
   c.ledger.splice(idx + 1, 0, copy);
+  _renumberLedgerGroup(c.ledger, copy.group);
   saveToStorage();
   refreshLedgerSection(caseId);
 }
@@ -10233,6 +10244,7 @@ function duplicateLedgerLowerRow(caseId, rowId) {
   const copy = JSON.parse(JSON.stringify(c.ledger_lower[idx]));
   copy.id = genId();
   c.ledger_lower.splice(idx + 1, 0, copy);
+  _renumberLedgerGroup(c.ledger_lower, copy.group);
   saveToStorage();
   refreshLedgerSection(caseId);
 }
