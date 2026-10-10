@@ -3747,7 +3747,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -10213,8 +10213,9 @@ function refreshLedgerSection(caseId) {
   tmp.remove();
 }
 
-/** 複製のあと、同じ段の No. を上から 1, 2, 3… に振り直す（10.2.4）。
+/** 複製・削除のあと、同じ段の No. を上から 1, 2, 3… に振り直す（複製 10.2.4、削除 10.2.5）。
     複製した行はすぐ下に入るので「元の番号＋1」になり、その下の行は 1 つずつ繰り下がる。
+    行を消すと、その下の行が 1 つずつ繰り上がる。
     数字だけ・空欄の No. だけを振り直し、手で書いた「1-2」などの文字は触らない */
 function _renumberLedgerGroup(arr, gid) {
   arr.filter(r => r.group === gid).forEach((r, i) => {
@@ -10295,7 +10296,9 @@ function addLedgerGroup(caseId, type) {
 function deleteLedgerLowerRow(caseId, rowId) {
   const c = cases.find(c => c.id === caseId);
   if (!c || !c.ledger_lower) return;
+  const gone = c.ledger_lower.find(r => r.id === rowId);
   c.ledger_lower = c.ledger_lower.filter(r => r.id !== rowId);
+  if (gone) _renumberLedgerGroup(c.ledger_lower, gone.group);
   saveToStorage();
   refreshLedgerSection(caseId);
 }
@@ -10322,7 +10325,9 @@ function updateLedgerLowerArray(caseId, rowId, field, idx, value) {
 function deleteLedgerRow(caseId, rowId) {
   const c = cases.find(c => c.id === caseId);
   if (!c || !c.ledger) return;
+  const gone = c.ledger.find(r => r.id === rowId);
   c.ledger = c.ledger.filter(r => r.id !== rowId);
+  if (gone) _renumberLedgerGroup(c.ledger, gone.group);
   saveToStorage();
   refreshLedgerSection(caseId);
 }
