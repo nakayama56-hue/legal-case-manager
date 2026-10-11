@@ -2633,12 +2633,18 @@ textarea:focus::placeholder { color: transparent; }
 }
 .complete-check-icon {
   position: absolute;
-  font-size: 22px;
+  width: 26px; height: 26px;
+  fill: none; stroke: #16a34a; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
   animation: checkPop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards,
              fadeCheck 0.4s ease 0.5s forwards;
-  color: #10b981;
-  line-height: 1;
 }
+/* チェックの線は 0.3 秒で描き込む（10.2.9。見本「動きのある印」b） */
+.complete-check-icon .complete-check-tick {
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: completeTickDraw 0.3s ease-out 0.08s forwards;
+}
+@keyframes completeTickDraw { to { stroke-dashoffset: 0; } }
 
 
 /* ===== 折りたたみスムーズアニメーション ===== */
@@ -3324,8 +3330,48 @@ tr.row-waiting:hover > td {
   70%  { box-shadow: 0 1px 3px rgba(150,20,20,0.35), 0 0 0 7px color-mix(in srgb, var(--color-danger) 0%, transparent); }
   100% { box-shadow: 0 1px 3px rgba(150,20,20,0.35), 0 0 0 0 color-mix(in srgb, var(--color-danger) 0%, transparent); }
 }
+/* ===== 💾保存の成否（10.2.9。見本「動きのある印」c）=====
+   .btn-primary の地はグラデーション（background-image）なので、background-color を動かしても見えない。
+   内側の影（inset）で地の上を一瞬塗る。外側の影は .btn-primary と同じものを並べて残す。
+   .ico の規則（fill:none）は変えず、このボタンの中だけ上書きする */
+#btn-header-backup.saved-ok { animation: saveFlashOk 1.2s ease-out; }
+#btn-header-backup.saved-ok .ico { animation: saveIcoFill 0.9s ease-out; }
+#btn-header-backup.saved-fail { animation: saveFlashNg 0.6s ease-out, saveShake 0.5s ease-in-out; }
+@keyframes saveFlashOk {
+  0%   { box-shadow: 0 2px 6px rgba(37,99,235,0.35), inset 0 0 0 999px rgba(22,163,74,0); }
+  20%, 45% { box-shadow: 0 2px 6px rgba(22,163,74,0.35), inset 0 0 0 999px rgba(22,163,74,1); }
+  100% { box-shadow: 0 2px 6px rgba(37,99,235,0.35), inset 0 0 0 999px rgba(22,163,74,0); }
+}
+@keyframes saveIcoFill {
+  0%   { fill: rgba(255,255,255,0); }
+  35%  { fill: rgba(255,255,255,0.45); }
+  100% { fill: rgba(255,255,255,0); }
+}
+@keyframes saveFlashNg {
+  0%   { box-shadow: 0 2px 6px rgba(37,99,235,0.35), inset 0 0 0 999px color-mix(in srgb, var(--color-danger) 0%, transparent); }
+  20%, 60% { box-shadow: 0 2px 6px rgba(150,20,20,0.35), inset 0 0 0 999px var(--color-danger); }
+  100% { box-shadow: 0 2px 6px rgba(37,99,235,0.35), inset 0 0 0 999px color-mix(in srgb, var(--color-danger) 0%, transparent); }
+}
+@keyframes saveShake {
+  0%, 100% { transform: translateX(0); }
+  12.5% { transform: translateX(-3px); }
+  37.5% { transform: translateX(3px); }
+  62.5% { transform: translateX(-3px); }
+  87.5% { transform: translateX(3px); }
+}
+/* 「視差効果を減らす」では動きを止め、結果だけ（トーストと、タスクの完了の印）を出す。
+   10.2.9 で足した動きの規則には、このブロックより後ろに書いてあるもの（.tn-btn）があるので !important で止める */
 @media (prefers-reduced-motion: reduce) {
   .case-tile-card .tile-important-badge-abs { animation: none; }
+  .tn-btn .tn-open.tn-new .tn-arrow,
+  .tn-btn .tn-open.tn-new .cnt,
+  #btn-header-backup.saved-ok,
+  #btn-header-backup.saved-ok .ico,
+  #btn-header-backup.saved-fail,
+  .complete-ripple-wrap .complete-check-icon { animation: none !important; }
+  .complete-ripple-wrap .complete-ripple,
+  .complete-ripple-wrap .complete-ripple2 { animation: none !important; opacity: 0 !important; }
+  .complete-ripple-wrap .complete-check-tick { animation: none !important; stroke-dashoffset: 0 !important; }
 }
 .case-tile-card .tile-badge-waiting {
   background: rgba(128,128,128,0.16) !important; color: var(--text-secondary) !important;
@@ -3501,6 +3547,21 @@ tr.row-waiting:hover > td {
   background: var(--color-accent); color: #fff; border-radius: 999px;
   min-width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;
   font-size: 10px; padding: 0 4px; margin-left: 4px; font-weight: 700;
+}
+/* 番号が届いた瞬間（10.2.9。見本「動きのある印」a）。編集中に候補が増えたときだけ _tnMarkNew が tn-new を付け、1 回で外す。
+   矢印は上から落ちて入り（0.5 秒）、件数の丸が 1 回ふくらむ（0.4 秒）。「視差効果を減らす」では止める（reduced-motion のブロック） */
+.tn-btn .tn-open .tn-arrow { transform-box: fill-box; transform-origin: center; }
+.tn-btn .tn-open.tn-new .tn-arrow { animation: tnArrowDrop 0.5s cubic-bezier(.3,.7,.4,1) both; }
+.tn-btn .tn-open.tn-new .cnt { animation: tnCntPop 0.4s ease-out 0.38s both; }
+@keyframes tnArrowDrop {
+  0%   { transform: translateY(-9px); opacity: 0; }
+  55%  { opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes tnCntPop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
 }
 /* 一覧は body の直下に置き、position: fixed で置く。
    ★ モーダルの中に入れると .modal-body の overflow に切られる（1611 行目）。
@@ -3791,7 +3852,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.8</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.9</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -8813,7 +8874,7 @@ function taskCard(tk) {
   return `
     <div class="task-card ${cardClass}" id="task-card-${tk.id}">
       <div class="task-card-header" onclick="toggleTaskCard('${tk.id}')">
-        <div class="task-check ${checked?'checked':''}" onclick="event.stopPropagation();toggleTaskDone('${tk.id}')">${checked?'✓':''}</div>
+        <div class="task-check ${checked?'checked':''}" onclick="event.stopPropagation();toggleTaskDone('${tk.id}',this)">${checked?'✓':''}</div>
         <div class="task-card-name">${escHtml(tk.name)}</div>
         <div class="task-card-meta">
           ${statusBadge(tk.status)}
@@ -8891,7 +8952,9 @@ function checkTouhonAutoComplete(tk) {
   }
 }
 
-function toggleTaskDone(taskId) {
+/* el＝押したチェックの要素（10.2.9）。未完了→完了のときだけ、そこへ完了の動きを出す。
+   位置は一覧を描き直す前に取る（描き直すと el は画面から外れる） */
+function toggleTaskDone(taskId, el) {
   const tk = tasks.find(t => t.id === taskId);
   if (!tk) return;
   if (tk.status === '完了') {
@@ -8900,6 +8963,7 @@ function toggleTaskDone(taskId) {
   } else {
     tk.status = '完了';
     tk.done_at = today();
+    if (el && el.isConnected) showCompleteAnim(el);
   }
   saveToStorage();
   updateNavBadges();
@@ -12302,7 +12366,23 @@ async function saveAll() {
   parts.push('バックアップ' + (b ? `→${b}` : '（失敗）'));
   parts.push('閲覧用' + (v ? `→${v}` : '（失敗）'));
   const kind = (b || v) ? 'success' : 'error';
+  _flashSaveButton(!!(b || v));
   toast('保存しました（' + parts.join(' / ') + '）', kind);
+}
+
+/* 💾保存の成否をボタンに1回だけ出す（10.2.9。見本「動きのある印」c）。
+   成功＝印の中が一瞬塗られ、地が一瞬緑（saved-ok、1.4 秒）。失敗＝地が一瞬赤くなって小さく震える（saved-fail、0.6 秒）。
+   saveAll（手で押す保存）だけ。自動保存（saveToStorage）では動かさない */
+let _saveFlashTimer = null;
+function _flashSaveButton(ok) {
+  const btn = document.getElementById('btn-header-backup');
+  if (!btn) return;
+  clearTimeout(_saveFlashTimer);
+  btn.classList.remove('saved-ok', 'saved-fail');
+  void btn.offsetWidth;   // 連打でも頭から動かし直す
+  const cls = ok ? 'saved-ok' : 'saved-fail';
+  btn.classList.add(cls);
+  _saveFlashTimer = setTimeout(() => btn.classList.remove(cls), ok ? 1400 : 600);
 }
 
 function exportJSON() {
@@ -12809,7 +12889,11 @@ const TN_INTERVAL_MS = 5000;
    **わざとクラスを足していない**：足すと Chrome 版の DOM も変わってしまうため */
 const TN_SEL = '.dv-tracking-input, .dv-tracking-return, .sh-tracking, .sh-tracking-return, input[onchange*="souzokuUpdateTracking"]';
 
-const _tn = { items: [], timer: null, openFor: null, asking: false };
+const _tn = { items: [], timer: null, openFor: null, asking: false,
+  /* 10.2.9「動きのある印」：直前に出した候補の数。null は「まだ数えていない」。
+     fresh は「欄が出てから、受け取り箱を読めたか」。読めるまでは数えない
+     （古い items で数えると、開いた直後の読み込みが「届いた」に見えるため） */
+  prevBox: null, fresh: false };
 
 function _tnNative() {
   return _isNativeApp()
@@ -12888,6 +12972,15 @@ function _tnAnchor(input) {
   return a;
 }
 
+/* トレイの印。ふだんの ico('tray-in') と同じ形・同じ 24 格子・線 1.8（symbol i-tray-in と同じ path）。
+   **ここだけ <use> を使わない**：<use> の中は CSS で個別に動かせないので、
+   番号が届いたときに矢印（.tn-arrow）だけを落とすため、トレイと矢印を分けて書いてある（10.2.9）。
+   ★ <path …></path> と閉じて書くこと。innerHTML はそう書き出すので、<path …/> だと _tnSync の
+     「同じなら触らない」の比べ合わせが毎回食い違い、5 秒おきにボタンが作り直される */
+const TN_TRAY_SVG = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">'
+  + '<g class="tn-tray"><path d="M3.5 13.5v5c0 .8.7 1.5 1.5 1.5h14c.8 0 1.5-.7 1.5-1.5v-5"></path><path d="M3.5 13.5H8l1.5 2.5h5l1.5-2.5h4.5"></path></g>'
+  + '<g class="tn-arrow"><path d="M12 3.5V11M8.8 7.8 12 11l3.2-3.2"></path></g></svg>';
+
 /** ボタンの出し入れ。差し替えるのは入れ物の中身だけ */
 function _tnSync() {
   if (!_tnNative() || _tnMuted()) return;
@@ -12896,15 +12989,38 @@ function _tnSync() {
   const 候補 = _tnCandidates();
   const 中身 = 候補.length
     ? '<button type="button" class="btn btn-secondary btn-xs tn-open" title="スマホから届いた追跡番号から選ぶ"'
-      + ' onclick="_tnToggleMenu(this,event)">' + ico('tray-in') + '<span class="cnt">' + 候補.length + '</span></button>'
+      + ' onclick="_tnToggleMenu(this,event)">' + TN_TRAY_SVG + '<span class="cnt">' + 候補.length + '</span></button>'
     : '';
+  // 編集中に候補が増えたときだけ動かす（10.2.9）。初回の表示（null → N）は動かさない
+  // 比べるのは候補の数ではなく「箱に新しい番号が現れたか」。候補の数で比べると、
+  // 欄の番号を消して候補に戻っただけでも「増えた」と見なして動いてしまう
+  let 増えた = false;
+  if (_tn.fresh) {
+    const 箱 = new Set(_tn.items.map(it => it.num));
+    増えた = _tn.prevBox !== null && [...箱].some(n => !_tn.prevBox.has(n));
+    _tn.prevBox = 箱;
+  }
   欄.forEach(el => {
     const a = _tnAnchor(el);
-    if (a.innerHTML !== 中身) a.innerHTML = 中身;   // 同じなら触らない（押している最中に消えないように）
+    // 比べるときは動きの印（tn-new）を除く。付いたままでも作り直さない
+    if (a.innerHTML.replace(' tn-new', '') !== 中身) {
+      a.innerHTML = 中身;   // 同じなら触らない（押している最中に消えないように）
+      if (増えた) _tnMarkNew(a.querySelector('.tn-open'));
+    }
   });
   // 開いている一覧も、候補が変わったら作り直す
   if (_tn.openFor && 欄.includes(_tn.openFor)) _tnFillMenu();
   else if (_tn.openFor) _tnCloseMenu();
+}
+
+/** 番号が届いた瞬間の動き（矢印が落ちて入る＋件数の丸が1回ふくらむ）。1回きりで外す。
+    入力欄には触らない。「視差効果を減らす」では animationend が来ないので、時計でも外す */
+function _tnMarkNew(btn) {
+  if (!btn) return;
+  btn.classList.add('tn-new');
+  const 外す = () => btn.classList.remove('tn-new');
+  btn.addEventListener('animationend', (e) => { if (e.target.classList && e.target.classList.contains('cnt')) 外す(); });
+  setTimeout(外す, 1200);
 }
 
 /** 受け取り箱を1回尋ねて、変わっていれば描き直す */
@@ -12916,9 +13032,13 @@ async function _tnAsk() {
   try {
     const r = await window.CaseFlowNative.readTrackingInbox();
     // 壊れているときは黙って何も出さない（画面を止めない）
-    _tn.items = (r && r.ok && Array.isArray(r.items)) ? r.items.filter(it => it && /^\d{11,13}$/.test(it.num)) : [];
+    const ok = !!(r && r.ok && Array.isArray(r.items));
+    _tn.items = ok ? r.items.filter(it => it && /^\d{11,13}$/.test(it.num)) : [];
+    // 読めなかった回は数え直し（直ったときの「0 → N」を「届いた」と見ないため）
+    if (ok) _tn.fresh = true; else { _tn.fresh = false; _tn.prevBox = null; }
   } catch (e) {
     _tn.items = [];
+    _tn.fresh = false; _tn.prevBox = null;
   } finally {
     _tn.asking = false;
   }
@@ -12929,6 +13049,7 @@ async function _tnAsk() {
 function _tnSyncSoon() {
   if (!_tnNative() || _tnMuted()) return;
   if (!_tn.timer) _tn.timer = setInterval(_tnAsk, TN_INTERVAL_MS);
+  _tn.prevBox = null; _tn.fresh = false;   // 数え直し（欄が出た直後の表示は動かさない）
   setTimeout(() => { _tnSync(); _tnAsk(); }, 0);
 }
 
@@ -14264,6 +14385,8 @@ function _initScrollTopBtn() {
   document.getElementById('view-case-detail')?.addEventListener('scroll', onScroll, { passive: true });
 }
 
+/* タスクを完了にした瞬間の動き。波紋 2 つ＋緑の丸の中にチェックの線が描き込まれる（10.2.9 から toggleTaskDone が呼ぶ。
+   それまでは作ってあるのに呼び手が無かった）。線は pathLength="1" の path の stroke-dashoffset を 1→0 */
 function showCompleteAnim(btn) {
   const rect = btn.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
@@ -14277,7 +14400,7 @@ function showCompleteAnim(btn) {
   wrap.innerHTML = `
     <div class="complete-ripple"></div>
     <div class="complete-ripple2"></div>
-    <span class="complete-check-icon">✓</span>
+    <svg class="complete-check-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path class="complete-check-tick" pathLength="1" d="m8 12.3 2.8 2.8 5.4-5.5"></path></svg>
   `;
   document.body.appendChild(wrap);
   setTimeout(() => wrap.remove(), 900);
