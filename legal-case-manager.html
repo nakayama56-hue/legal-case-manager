@@ -3369,6 +3369,8 @@ tr.row-waiting:hover > td {
 @media (prefers-reduced-motion: reduce) {
   .case-tile-card .tile-important-badge-abs { animation: none; }
   .case-tile-card .tile-hs-badge { animation: none; }
+  .case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs,
+  .case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs::after { animation: none; }
   .tn-btn .tn-open.tn-new .tn-arrow,
   .tn-btn .tn-open.tn-new .cnt,
   #btn-header-backup.saved-ok,
@@ -3542,6 +3544,27 @@ tr.row-waiting:hover > td {
   box-shadow: 0 0 0 2px var(--tile-badge-ring, rgba(255,255,255,0.92)),
               0 1px 3px rgba(20,30,60,0.18) !important;
   pointer-events: none;
+  /* 10.3.3（2026年10月12日、ご本人の「申請中のアイコンはキラッと光る演出がほしい」）：
+     3.2 秒に 1 回、金色の光の筋が左から右へさっと横切り（::after を translateX で走らせる）、
+     同じ瞬間に札がほんのり光る（filter の drop-shadow）。box-shadow は !important 付きなので動かせない（10.3.0 の教訓）。
+     filter と ::after の transform には !important の規則が無い。光の筋は overflow:hidden で札の中だけに収める */
+  overflow: hidden;
+  animation: shinseiGlow 3.2s ease-in-out infinite;
+}
+.case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs::after {
+  content: ''; position: absolute; top: -30%; bottom: -30%; left: 0; width: 40%;
+  background: linear-gradient(105deg, rgba(255,214,64,0) 15%, rgba(255,214,64,0.85) 50%, rgba(255,214,64,0) 85%);
+  transform: translateX(-180%) skewX(-18deg);
+  animation: shinseiShine 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes shinseiShine {
+  0%, 62%   { transform: translateX(-180%) skewX(-18deg); }
+  84%, 100% { transform: translateX(380%) skewX(-18deg); }
+}
+@keyframes shinseiGlow {
+  0%, 60%, 90%, 100% { filter: drop-shadow(0 0 0 rgba(255,200,0,0)); }
+  73%                { filter: drop-shadow(0 0 7px rgba(255,200,0,0.95)); }
 }
 
 /* =====================================================
@@ -3865,7 +3888,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.2</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.3</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
