@@ -3326,13 +3326,14 @@ tr.row-waiting:hover > td {
      （2026年10月11日、ご本人の「要確認ボタンは点滅していない」で判明。10.3.0 で直した）。
      上の「印：小さく、静かに」の box-shadow は同じ強さで前にあるので、!important 無しでもこちらが勝つ */
   box-shadow: 0 1px 3px rgba(150,20,20,0.35);
-  animation: tileImportantPulse 2s ease-out infinite;
+  animation: tileImportantPulse 1.4s ease-in-out infinite;
 }
 /* 「⚠」は 10.2.8 から renderCaseTiles() の中の SVG（ico('warn')）。白い字の currentColor で白く出る */
+/* 10.3.1（2026年10月11日、ご本人の「もっと強く点滅させて」）：輪を濃く大きく（55%・7px → 80%・10px）し、
+   印そのものも明滅させる（opacity 1 ↔ 0.4、1.4秒周期）。opacity に !important の規則は無い（付けないこと） */
 @keyframes tileImportantPulse {
-  0%   { box-shadow: 0 1px 3px rgba(150,20,20,0.35), 0 0 0 0 color-mix(in srgb, var(--color-danger) 55%, transparent); }
-  70%  { box-shadow: 0 1px 3px rgba(150,20,20,0.35), 0 0 0 7px color-mix(in srgb, var(--color-danger) 0%, transparent); }
-  100% { box-shadow: 0 1px 3px rgba(150,20,20,0.35), 0 0 0 0 color-mix(in srgb, var(--color-danger) 0%, transparent); }
+  0%, 100% { box-shadow: 0 1px 3px rgba(150,20,20,0.35), 0 0 0 0 color-mix(in srgb, var(--color-danger) 80%, transparent); opacity: 1; }
+  50%      { box-shadow: 0 1px 3px rgba(150,20,20,0.35), 0 0 0 10px color-mix(in srgb, var(--color-danger) 0%, transparent); opacity: 0.4; }
 }
 /* ===== 💾保存の成否（10.2.9。見本「動きのある印」c）=====
    .btn-primary の地はグラデーション（background-image）なので、background-color を動かしても見えない。
@@ -3856,7 +3857,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.0</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.1</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
