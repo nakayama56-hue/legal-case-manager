@@ -3273,6 +3273,19 @@ tr.row-waiting:hover > td {
 /* --- 絵文字をやめ、細線のアイコンに --- */
 .tile-ico { width: 12px; height: 12px; flex: 0 0 12px; opacity: 0.62; }
 
+/* --- 画面の印（10.2.8）。絵文字の代わりの SVG 一式（<body> 直後の #cf-icons）。
+       大きさは字の大きさ（1em）。色は文字色を継承し、意味のある所だけ下の 3 色 --- */
+.ico{width:1em;height:1em;vertical-align:-0.15em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;display:inline-block}
+.ico-danger{color:var(--color-danger)}
+.ico-amber{color:#ca8a04}
+.ico-ok{color:#16a34a}
+#print-area .ico{stroke-width:1.8}
+/* 区分の面の印を、タイルの外（案件一覧の表・案件詳細の見出しの行）でも字の大きさで出す。タイルの中は下の .case-tile-card .cat-ico が勝つ */
+.cat-ico{width:1.15em;height:1.15em;vertical-align:-0.2em;display:inline-block}
+/* 検索欄の虫めがね（placeholder の 🔍 の代わり）。data: の SVG で外部読み込みはしない。
+   .search-input:focus などが background を一括指定で塗り直すので !important */
+.has-search-ico{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6'/%3E%3Cpath d='m15 15 5.5 5.5'/%3E%3C/svg%3E") !important;background-repeat:no-repeat !important;background-position:10px center !important;background-size:16px !important;padding-left:32px !important}
+
 /* --- 印：小さく、静かに --- */
 .case-tile-card .tile-status,
 .case-tile-card .tile-badge-waiting,
@@ -3305,7 +3318,7 @@ tr.row-waiting:hover > td {
   box-shadow: 0 1px 3px rgba(150,20,20,0.35) !important;
   animation: tileImportantPulse 2s ease-out infinite;
 }
-.case-tile-card .tile-important-badge-abs::before { content: '⚠ '; }
+/* 「⚠」は 10.2.8 から renderCaseTiles() の中の SVG（ico('warn')）。白い字の currentColor で白く出る */
 @keyframes tileImportantPulse {
   0%   { box-shadow: 0 1px 3px rgba(150,20,20,0.35), 0 0 0 0 color-mix(in srgb, var(--color-danger) 55%, transparent); }
   70%  { box-shadow: 0 1px 3px rgba(150,20,20,0.35), 0 0 0 7px color-mix(in srgb, var(--color-danger) 0%, transparent); }
@@ -3328,7 +3341,7 @@ tr.row-waiting:hover > td {
   border: 1.5px solid #d97706;
   letter-spacing: 0.03em;
 }
-.case-tile-card .tile-hs-badge::before { content: '📄'; font-size: 11px; }
+/* 「📄」は 10.2.8 から renderCaseTiles() の中の SVG（ico('doc')） */
 /* 案件詳細の帯 */
 .hs-band {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -3513,6 +3526,57 @@ tr.row-waiting:hover > td {
 <!-- generated: 1774151282.3539512 -->
 </head>
 <body>
+<!-- 画面の印（10.2.8）。絵文字をやめ、24格子・線1.8の SVG 一式に。使う側は <svg class="ico"><use href="#i-名前"></use></svg>、
+     JS では ico('名前')。symbol の中に fill/stroke を書かない（.ico から継承させる） -->
+<svg id="cf-icons" aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h3.2l1.6 4-2 1.3a11 11 0 0 0 6.9 6.9l1.3-2 4 1.6V19a1.6 1.6 0 0 1-1.6 1.6A16 16 0 0 1 3.4 5.6 1.6 1.6 0 0 1 5 4z"/></symbol><!-- 電話（固定） -->
+  <symbol id="i-mobile" viewBox="0 0 24 24"><rect x="7" y="2.8" width="10" height="18.4" rx="2.2"/><path d="M10.5 17.8h3"/></symbol><!-- 携帯 -->
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 10.5h2M13 10.5h2M9 14h2M13 14h2M10.5 21v-3.5h3V21"/></symbol><!-- 会社の電話（ビル1棟） -->
+  <symbol id="i-fax" viewBox="0 0 24 24"><rect x="8" y="8" width="12.5" height="12" rx="1.6"/><path d="M10.5 8V3.5h6.5V8"/><path d="M4.5 8.5v10.5a1.5 1.5 0 0 0 3 0V8.5a1.5 1.5 0 0 0-3 0z"/><path d="M12 12.5h5M12 16h1.5M15.5 16h1.5"/></symbol><!-- FAX -->
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.8 7 8.2 6 8.2-6"/></symbol><!-- メール・返信待ち -->
+  <symbol id="i-pin-map" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></symbol><!-- 住所・場所 -->
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7.8" r="3.9"/><path d="M4.2 20.4c0-4 3.4-6.6 7.8-6.6s7.8 2.6 7.8 6.6"/></symbol><!-- 人・依頼者 -->
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c0-3.3 2.7-5.4 6-5.4s6 2.1 6 5.4"/><path d="M15.5 4.9a3.2 3.2 0 0 1 0 6.2M17.5 14.3c2.1.5 3.5 2.3 3.5 5.2"/></symbol><!-- 出席者 -->
+  <symbol id="i-handshake" viewBox="0 0 24 24"><circle cx="7.5" cy="8" r="3"/><circle cx="16.5" cy="8" r="3"/><path d="M2.5 19c0-3 2.2-5 5-5 1.6 0 3 .6 4 1.7 1-1.1 2.4-1.7 4-1.7 2.8 0 5 2 5 5"/></symbol><!-- 手渡しの相手 -->
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.8 9.4V20h12.4V9.4"/><path d="M10 20v-5h4v5"/></symbol><!-- 不動産一覧の見出し（線の家） -->
+  <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2"/><rect x="9" y="2.8" width="6" height="3.4" rx="1"/><path d="M8.5 10.5h7M8.5 14h7M8.5 17.5h4"/></symbol><!-- 一覧・見出し・定型文 -->
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.2c0-1 .8-1.7 1.7-1.7h4.6l2 2.2h7.9c1 0 1.8.8 1.8 1.7v8.9c0 1-.8 1.7-1.8 1.7H4.7c-.9 0-1.7-.8-1.7-1.7z"/></symbol><!-- フォルダ・案件一覧 -->
+  <symbol id="i-folder-open" viewBox="0 0 24 24"><path d="M3 17.5V7.2c0-1 .8-1.7 1.7-1.7h4.6l2 2.2h6.6c1 0 1.7.8 1.7 1.7v1.2"/><path d="M3 18.3l2.6-6.7c.2-.6.8-1 1.4-1h13.4c.7 0 1.2.7.9 1.4l-2.4 6.3c-.2.6-.8 1-1.4 1H4.4c-.8 0-1.6-.3-1.4-1z"/></symbol><!-- 開いたフォルダ・Finder -->
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6.5 2.8h7.3l4.7 4.7v12.2c0 .8-.7 1.5-1.5 1.5H6.5c-.8 0-1.5-.7-1.5-1.5V4.3c0-.8.7-1.5 1.5-1.5z"/><path d="M13.5 2.8v5h5"/><path d="M8.5 12.5h7M8.5 16h5"/></symbol><!-- 書類・一覧図 -->
+  <symbol id="i-ledger" viewBox="0 0 24 24"><path d="M5 19.3V4.5c0-.9.7-1.7 1.7-1.7H19v15.4H6.7c-.9 0-1.7.7-1.7 1.6s.8 1.7 1.7 1.7H19"/><path d="M9 7.5h6M9 11h6"/></symbol><!-- 受付台帳・アドレス帳 -->
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M13.5 3.5h-7c-.8 0-1.5.7-1.5 1.5v14.5c0 .8.7 1.5 1.5 1.5h11c.8 0 1.5-.7 1.5-1.5V12.5"/><path d="M8.5 9h4M8.5 12.5h3M8.5 16h6"/><path d="m15.2 11.6 5.4-5.4a1.5 1.5 0 0 0-2.1-2.1l-5.4 5.4-.6 2.7z"/></symbol><!-- 備考・メモ・面談記録 -->
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 2.8h12v18.4l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4z"/><path d="M9 7.5h6M9 11h6M9 14.5h3.5"/></symbol><!-- 請求情報 -->
+  <symbol id="i-package" viewBox="0 0 24 24"><path d="M12 2.8 20.5 7v10L12 21.2 3.5 17V7z"/><path d="M3.5 7 12 11.2 20.5 7M12 11.2v10"/><path d="m7.8 4.9 8.5 4.2"/></symbol><!-- 追跡・預かったもの -->
+  <symbol id="i-mailbox" viewBox="0 0 24 24"><rect x="2.8" y="8" width="14.5" height="11" rx="1.8"/><path d="m3.6 9.4 6.4 4.8 6.4-4.8"/><path d="M20.2 20V3.5"/><path d="M20.2 3.5h1.9v3.2h-1.9"/></symbol><!-- 書類送付先・到着・送付追跡 -->
+  <symbol id="i-tray-out" viewBox="0 0 24 24"><path d="M3.5 13.5v5c0 .8.7 1.5 1.5 1.5h14c.8 0 1.5-.7 1.5-1.5v-5"/><path d="M3.5 13.5H8l1.5 2.5h5l1.5-2.5h4.5"/><path d="M12 11V3.5M8.8 6.7 12 3.5l3.2 3.2"/></symbol><!-- 発送済・手配中・CSV書き出し -->
+  <symbol id="i-tray-in" viewBox="0 0 24 24"><path d="M3.5 13.5v5c0 .8.7 1.5 1.5 1.5h14c.8 0 1.5-.7 1.5-1.5v-5"/><path d="M3.5 13.5H8l1.5 2.5h5l1.5-2.5h4.5"/><path d="M12 3.5V11M8.8 7.8 12 11l3.2-3.2"/></symbol><!-- スマホから届いた番号・取得済・読込 -->
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3.5h11.2l3.3 3.3V19c0 .8-.7 1.5-1.5 1.5H5c-.8 0-1.5-.7-1.5-1.5V5c0-.8.7-1.5 1.5-1.5z"/><path d="M7.5 3.5v5h8v-5"/><rect x="7" y="13" width="10" height="7.5" rx="1"/></symbol><!-- 保存 -->
+  <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 8.5v-5h10v5"/><rect x="3" y="8.5" width="18" height="8.5" rx="1.8"/><path d="M7 14h10v6.5H7z"/><path d="M17 11.5h.01"/></symbol><!-- 印刷 -->
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20l1-4.3L15.6 5.1a2 2 0 0 1 2.8 0l.5.5a2 2 0 0 1 0 2.8L8.3 19z"/><path d="m13.8 6.9 3.3 3.3"/></symbol><!-- 編集・マーカーの見出し -->
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6.5h16M9.5 6.5V4.3c0-.5.4-.8.8-.8h3.4c.4 0 .8.3.8.8v2.2"/><path d="M6 6.5l.9 12.7c.1.8.7 1.3 1.5 1.3h7.2c.8 0 1.4-.5 1.5-1.3L18 6.5"/><path d="M10 10.5v6M14 10.5v6"/></symbol><!-- 削除 -->
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5.5 5.5"/></symbol><!-- 検索 -->
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.6-5.9l2.4 2.4"/><path d="M20.5 3.8v4.7h-4.7"/><path d="M20.5 12a8.5 8.5 0 0 1-14.6 5.9l-2.4-2.4"/><path d="M3.5 20.2v-4.7h4.7"/></symbol><!-- 更新・自動スナップショット -->
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3.1-3.1a4 4 0 0 0-5.7-5.7l-1.3 1.3"/><path d="M14 10a4 4 0 0 0-5.7 0l-3.1 3.1a4 4 0 0 0 5.7 5.7l1.3-1.3"/></symbol><!-- 選び直す -->
+  <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 7.7-1.5"/><path d="M12 14.5V17"/></symbol><!-- 許可する -->
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 3.5h6l-1 5.5 3.5 3.5V14h-11v-1.5L10 9z"/><path d="M12 14v6.5"/></symbol><!-- ピン留め -->
+  <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8 12.3 2.8 2.8 5.4-5.5"/></symbol><!-- 完了・手配済み・成功の知らせ -->
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 4.2a2 2 0 0 1 3.4 0l7.4 12.8a2 2 0 0 1-1.7 3H4.6a2 2 0 0 1-1.7-3z"/><path d="M12 9.5v4.2M12 16.8h.01"/></symbol><!-- 要確認・注意・未手配・未着手 -->
+  <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M6.5 3.5h11M6.5 20.5h11"/><path d="M7.5 3.5c0 4 4.5 5.5 4.5 8.5s-4.5 4.5-4.5 8.5M16.5 3.5c0 4-4.5 5.5-4.5 8.5s4.5 4.5 4.5 8.5"/></symbol><!-- Waiting -->
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></symbol><!-- 今日が期限 -->
+  <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M7.5 12h9"/></symbol><!-- 利用不可・引っ越し済み -->
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12H8"/></symbol><!-- 利用時間・自動バックアップ・タスクの期限 -->
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.6 6.4a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.6-3.6a5.8 5.8 0 0 1-7.6 7.6L7 20a2 2 0 0 1-2.8-2.8l6.6-6.6a5.8 5.8 0 0 1 7.6-7.6z"/></symbol><!-- 停止 -->
+  <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6.5 3.5h11v17L12 16.6l-5.5 3.9z"/></symbol><!-- 保留 -->
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12h.01"/></symbol><!-- 進捗情報 -->
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.6" y="5.4" width="16.8" height="15" rx="2.4"/><path d="M3.6 10.2h16.8M8.4 3.6v3.6M15.6 3.6v3.6"/></symbol><!-- 期日・カレンダー -->
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4.5 7.5h3L9 5h6l1.5 2.5h3c.8 0 1.5.7 1.5 1.5v9.5c0 .8-.7 1.5-1.5 1.5h-15c-.8 0-1.5-.7-1.5-1.5V9c0-.8.7-1.5 1.5-1.5z"/><circle cx="12" cy="13.5" r="3.5"/></symbol><!-- スナップショット・写真 -->
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.2 0 1.8-.8 1.8-1.7 0-1.2-1-1.6-1-2.6 0-.9.7-1.6 1.6-1.6h2.1a4 4 0 0 0 4-4c0-4-3.8-7.1-8.5-7.1z"/><circle cx="7.8" cy="11" r=".9"/><circle cx="10.5" cy="7.4" r=".9"/><circle cx="15" cy="7.8" r=".9"/></symbol><!-- テーマ -->
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol><!-- 閲覧専用 -->
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M2.5 6.5h11v9.8"/><path d="M2.5 6.5v9.8h2.2M8.3 16.3h6.9"/><path d="M13.5 9.5h4l3 3.5v3.3h-1.7"/><circle cx="6.5" cy="17.3" r="1.8"/><circle cx="17" cy="17.3" r="1.8"/></symbol><!-- 引っ越し -->
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3.5 20.5h17"/><path d="M6.5 16.5v-5M11 16.5v-10M15.5 16.5v-7M19.5 16.5v-3"/></symbol><!-- タイムライン・使用状況 -->
+  <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 7.2 12 12l3.5-4.8M12 12v5M9 12.5h6M9 15h6"/></symbol><!-- 入金待ち -->
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5h10.2a4 4 0 0 0 .5-8 5.6 5.6 0 0 0-10.8 1.4A3.3 3.3 0 0 0 7 18.5z"/></symbol><!-- クラウド（非表示の機能） -->
+</svg>
 <button id="inline-save-btn" onclick="_inlineSaveExec()">⬆ 保存</button>
 <button id="scroll-top-btn" onclick="_scrollToTop()" title="ページトップへ">↑</button>
 
@@ -3528,7 +3592,7 @@ tr.row-waiting:hover > td {
         キーボードでも押せるように role/tabindex と Enter・space を持たせてある -->
         <span class="logo-home" onclick="showView('cases')" title="案件一覧へ戻る" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('cases');}"><svg class="app-logo-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></svg><span id="header-logo-text" class="app-logo-word">Case<span class="app-logo-flow">Flow</span></span></span></div>
       <div class="header-actions">
-        <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存" style="padding:5px 12px;font-size:12px;font-weight:700">💾<span class="btn-header-backup-label" style="margin-left:5px">保存</span></button>
+        <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存" style="padding:5px 12px;font-size:12px;font-weight:700"><svg class="ico" aria-hidden="true"><use href="#i-save"></use></svg><span class="btn-header-backup-label" style="margin-left:5px">保存</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
         <button class="btn btn-secondary" onclick="cloudSaveWithCheck()" id="btn-cloud-save" title="クラウドへ保存" style="padding:4px 10px;font-size:12px;display:none">⬆ 保存</button>
         <!-- 10.0.7：データ管理・設定への唯一の入口。閲覧専用モードと
@@ -3581,7 +3645,7 @@ tr.row-waiting:hover > td {
         <div style="margin-top:12px">
           <div class="table-container">
             <div class="table-toolbar">
-              <span class="toolbar-title-keep" style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0">📋 タスク一覧</span>
+              <span class="toolbar-title-keep" style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0"><svg class="ico" aria-hidden="true"><use href="#i-clipboard"></use></svg> タスク一覧</span>
               <button class="btn btn-primary" style="margin-left:auto" onclick="openTaskAddWithCaseSelect()">＋ タスク追加</button>
             </div>
             <div class="table-wrap task-table-wrap">
@@ -3613,7 +3677,7 @@ tr.row-waiting:hover > td {
         <!-- 期限アラートバナー -->
         <div id="deadline-alert-banner" style="display:none;margin-bottom:10px">
           <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;display:flex;align-items:flex-start;gap:10px">
-            <span style="font-size:15px;flex-shrink:0;line-height:1.5">⚠️</span>
+            <span style="font-size:15px;flex-shrink:0;line-height:1.5"><svg class="ico ico-danger" aria-hidden="true"><use href="#i-warn"></use></svg></span>
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:600;color:#991b1b;margin-bottom:4px" id="alert-banner-title"></div>
               <div style="font-size:12px;color:#b91c1c;line-height:1.7" id="alert-banner-body"></div>
@@ -3623,19 +3687,19 @@ tr.row-waiting:hover > td {
         </div>
         <div class="quick-filters hide-mobile-portrait">
           <button class="qf-btn active" onclick="applyCaseQF('all', this)">進行中案件</button>
-          <button class="qf-btn" onclick="applyCaseQF('保留', this)">🔖 保留</button>
-          <button class="qf-btn" onclick="applyCaseQF('完了', this)">✅ 完了</button>
+          <button class="qf-btn" onclick="applyCaseQF('保留', this)"><svg class="ico ico-amber" aria-hidden="true"><use href="#i-bookmark"></use></svg> 保留</button>
+          <button class="qf-btn" onclick="applyCaseQF('完了', this)"><svg class="ico ico-ok" aria-hidden="true"><use href="#i-check-circle"></use></svg> 完了</button>
         </div>
         <!-- Waitingバナー（進行中案件タブのみ表示） -->
         <div id="waiting-banner" class="hide-mobile-portrait" style="display:none"></div>
         <div class="table-container">
           <div class="table-toolbar">
-            <span class="hide-mobile-portrait" style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0">📁 案件一覧</span>
-            <input type="text" class="search-input hide-mobile-portrait" id="case-search" placeholder="🔍 CaseFlowを検索..." oninput="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()">
+            <span class="hide-mobile-portrait" style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0"><svg class="ico" aria-hidden="true"><use href="#i-folder"></use></svg> 案件一覧</span>
+            <input type="text" class="search-input hide-mobile-portrait has-search-ico" id="case-search" placeholder="CaseFlowを検索..." oninput="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()">
             <select class="filter-select hide-mobile-portrait" id="case-filter-category" onchange="caseViewMode==='tile'?renderCaseTiles():renderCaseTable()" style="min-width:80px">
               <option value="">区分（全て）</option>
-              <option value="不動産登記">🏠 不動産登記</option>
-              <option value="商業・法人登記">🏢 商業・法人登記</option>
+              <option value="不動産登記">不動産登記</option>
+              <option value="商業・法人登記">商業・法人登記</option>
             </select>
             <select class="filter-select" id="case-sort" style="display:none"></select>
             <input type="hidden" id="case-show-completed">
@@ -3709,8 +3773,8 @@ tr.row-waiting:hover > td {
           </div>
           <!-- ファイル一覧を右パネルに置いたときだけ出るタブ（body.files-in-panel） -->
           <div class="ctp-tabs no-print">
-            <button type="button" class="ctp-tab on" data-tab="tasks" onclick="setTaskPanelTab('tasks')">✅ タスク <span class="ctp-tab-badge" id="ctp-tab-tasks-count">0</span></button>
-            <button type="button" class="ctp-tab" data-tab="files" onclick="setTaskPanelTab('files')">📁 ファイル <span class="ctp-tab-badge" id="ctp-tab-files-count">–</span></button>
+            <button type="button" class="ctp-tab on" data-tab="tasks" onclick="setTaskPanelTab('tasks')"><svg class="ico" aria-hidden="true"><use href="#i-check-circle"></use></svg> タスク <span class="ctp-tab-badge" id="ctp-tab-tasks-count">0</span></button>
+            <button type="button" class="ctp-tab" data-tab="files" onclick="setTaskPanelTab('files')"><svg class="ico" aria-hidden="true"><use href="#i-folder"></use></svg> ファイル <span class="ctp-tab-badge" id="ctp-tab-files-count">–</span></button>
             <button type="button" class="btn btn-secondary btn-xs" onclick="setCaseFilesPlace('body')" title="一覧を本文の右列へ戻す">⇄ 本文へ</button>
           </div>
           <div class="ctp-actions">
@@ -3727,11 +3791,11 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.7</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.8</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
-        <div class="section-title">🎨 テーマ</div>
+        <div class="section-title"><svg class="ico" aria-hidden="true"><use href="#i-palette"></use></svg> テーマ</div>
         <div class="theme-card">
           <div class="theme-card-note">画面全体の配色です。選ぶとすぐ切り替わり、次に開いたときも覚えています。</div>
           <div class="theme-row">
@@ -3750,31 +3814,31 @@ tr.row-waiting:hover > td {
           </div>
         </div>
 
-        <div class="section-title">💾 ローカルデータ管理</div>
+        <div class="section-title"><svg class="ico" aria-hidden="true"><use href="#i-save"></use></svg> ローカルデータ管理</div>
         <div class="data-mgmt-grid">
           <div class="data-card" style="border:1.5px solid var(--color-primary,#2563eb)">
-            <div class="icon">👁</div>
+            <div class="icon"><svg class="ico" aria-hidden="true"><use href="#i-eye"></use></svg></div>
             <div class="label">閲覧用に書き出す</div>
             <div class="desc">サブ端末で表示するだけの閲覧専用HTMLを書き出します</div>
             <button class="btn btn-primary" onclick="exportViewerHTML()">閲覧用を書き出す</button>
             <div id="viewer-folder-label" style="font-size:11px;color:var(--text-muted);margin-top:8px">保存先：未指定（押すとダウンロードされます）</div>
-            <button class="btn btn-secondary btn-sm" onclick="selectViewerFolder()" style="margin-top:6px">📁 保存先フォルダを選択（ブラウザ推奨）</button>
+            <button class="btn btn-secondary btn-sm" onclick="selectViewerFolder()" style="margin-top:6px"><svg class="ico" aria-hidden="true"><use href="#i-folder"></use></svg> 保存先フォルダを選択（ブラウザ推奨）</button>
             <div style="font-size:10px;color:var(--text-muted);margin-top:6px;line-height:1.6">フォルダを指定すると、次回から <strong>CaseFlow閲覧.html</strong> を毎回同じ場所に上書きします（ファイル名固定）。Dropbox内のフォルダを指定すると受け渡しが楽になります。</div>
           </div>
           <div class="data-card">
-            <div class="icon">📤</div>
+            <div class="icon"><svg class="ico" aria-hidden="true"><use href="#i-tray-out"></use></svg></div>
             <div class="label">CSVエクスポート</div>
             <div class="desc">案件・タスクデータをCSV形式でダウンロードします</div>
             <button class="btn btn-primary" onclick="exportCSV()">エクスポート</button>
           </div>
           <div class="data-card">
-            <div class="icon">💾</div>
+            <div class="icon"><svg class="ico" aria-hidden="true"><use href="#i-save"></use></svg></div>
             <div class="label">JSONエクスポート（バックアップ）</div>
             <div class="desc">全データをJSON形式で保存します。新しいアプリへの引き継ぎに使います</div>
             <button class="btn btn-primary" onclick="manualBackupToFolder()">バックアップ保存</button>
           </div>
           <div class="data-card">
-            <div class="icon">🕒</div>
+            <div class="icon"><svg class="ico" aria-hidden="true"><use href="#i-clock"></use></svg></div>
             <div class="label">自動バックアップ（1日1回）</div>
             <div class="desc">アプリ起動時に1日1回、JSONバックアップを自動保存します</div>
             <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:8px;cursor:pointer">
@@ -3782,30 +3846,30 @@ tr.row-waiting:hover > td {
               <span>自動バックアップを有効にする</span>
             </label>
             <div id="backup-folder-label" style="font-size:11px;color:var(--text-muted);margin-bottom:6px">保存先：ダウンロードフォルダ（未設定）</div>
-            <button class="btn btn-secondary btn-sm" onclick="selectBackupFolder()">📁 保存フォルダを選択</button>
+            <button class="btn btn-secondary btn-sm" onclick="selectBackupFolder()"><svg class="ico" aria-hidden="true"><use href="#i-folder"></use></svg> 保存フォルダを選択</button>
           </div>
           <div class="data-card" id="migrated-card">
-            <div class="icon">🚚</div>
+            <div class="icon"><svg class="ico" aria-hidden="true"><use href="#i-truck"></use></svg></div>
             <div class="label">Macアプリへの引っ越し</div>
             <div class="desc">引っ越したあと、このChrome版を見るだけにします（データは消しません）</div>
             <div id="migrated-status"></div>
           </div>
           <div class="data-card">
-            <div class="icon">📊</div>
+            <div class="icon"><svg class="ico" aria-hidden="true"><use href="#i-chart"></use></svg></div>
             <div class="label">ストレージ使用状況</div>
             <div class="desc" id="storage-desc">localStorageの使用量を表示します</div>
             <div id="storage-status" style="text-align:left;width:100%"></div>
-            <button class="btn btn-secondary btn-sm" onclick="renderStorageStatus()" style="margin-top:6px">🔄 更新</button>
+            <button class="btn btn-secondary btn-sm" onclick="renderStorageStatus()" style="margin-top:6px"><svg class="ico" aria-hidden="true"><use href="#i-refresh"></use></svg> 更新</button>
           </div>
           <div class="data-card">
-            <div class="icon">📥</div>
+            <div class="icon"><svg class="ico" aria-hidden="true"><use href="#i-tray-in"></use></svg></div>
             <div class="label">バックアップ読込</div>
             <div class="desc">バックアップJSONから案件・タスクを読み込みます（端末間の移行用）</div>
             <input type="file" id="import-file" style="display:none" onchange="importData(this)">
             <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">インポート</button>
           </div>
           <div class="data-card">
-            <div class="icon">🗑</div>
+            <div class="icon"><svg class="ico ico-danger" aria-hidden="true"><use href="#i-trash"></use></svg></div>
             <div class="label">全データ削除</div>
             <div class="desc">保存されているすべてのデータを削除します</div>
             <button class="btn btn-danger" onclick="confirmAction('全データを削除しますか？この操作は取り消せません。', clearAllData)">全削除</button>
@@ -3814,15 +3878,15 @@ tr.row-waiting:hover > td {
 
 
         <!-- Cloud sync status -->
-        <div class="section-title">👤 依頼者ショートカットボタン</div>
+        <div class="section-title"><svg class="ico" aria-hidden="true"><use href="#i-user"></use></svg> 依頼者ショートカットボタン</div>
         <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px">
           <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">案件一覧の検索バー下に表示されるショートカットボタンを最大5つ登録できます。依頼者名を入力してください。</div>
           <div id="shortcut-inputs" style="display:flex;flex-direction:column;gap:8px">
           </div>
-          <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="saveClientShortcuts()">💾 保存</button>
+          <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="saveClientShortcuts()"><svg class="ico" aria-hidden="true"><use href="#i-save"></use></svg> 保存</button>
         </div>
 
-        <div class="section-title">☁ クラウド同期（無効）</div>
+        <div class="section-title"><svg class="ico" aria-hidden="true"><use href="#i-cloud"></use></svg> クラウド同期（無効）</div>
         <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px;font-size:12px;color:var(--text-secondary);line-height:1.8">
           クラウド同期（Google スプレッドシート）は<strong>無効化されています</strong>。データはこの端末内にのみ保存されます。<br><br>
           <strong>基本の使い方（1台運用）</strong><br>
@@ -3835,13 +3899,13 @@ tr.row-waiting:hover > td {
           <span style="color:var(--text-muted)">※ 同じデータを2台で同時に編集しないようご注意ください（あとから読み込んだ方で上書きされます）。</span>
         </div>
 
-        <div class="section-title" style="display:none">☁ クラウド同期（Google スプレッドシート）</div>
+        <div class="section-title" style="display:none"><svg class="ico" aria-hidden="true"><use href="#i-cloud"></use></svg> クラウド同期（Google スプレッドシート）</div>
         <div class="cloud-status-bar" style="display:none">
           <div class="cloud-status-dot" id="cloud-dot"></div>
           <div class="cloud-status-text" id="cloud-status-text">未接続 — 下のボタンで確認できます</div>
           <div class="cloud-btn-group">
-            <button class="btn btn-primary" onclick="cloudSaveWithCheck()">☁ クラウドへ保存</button>
-            <button class="btn btn-secondary" onclick="cloudLoad()">☁ クラウドから読込</button>
+            <button class="btn btn-primary" onclick="cloudSaveWithCheck()"><svg class="ico" aria-hidden="true"><use href="#i-cloud"></use></svg> クラウドへ保存</button>
+            <button class="btn btn-secondary" onclick="cloudLoad()"><svg class="ico" aria-hidden="true"><use href="#i-cloud"></use></svg> クラウドから読込</button>
             <button class="btn btn-secondary" onclick="cloudCheck()">接続確認</button>
           </div>
         </div>
@@ -3850,7 +3914,7 @@ tr.row-waiting:hover > td {
              10.0.7 で取り除いた。localStorage の sidebar_hover は読まなくなるだけで、
              消しには行っていない -->
 
-        <div class="section-title">📋 定型文管理</div>
+        <div class="section-title"><svg class="ico" aria-hidden="true"><use href="#i-clipboard"></use></svg> 定型文管理</div>
         <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;margin-bottom:20px">
           <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">受付台帳の「登記の目的」「登記原因」入力欄でダブルクリックすると定型文を選択できます</div>
           <div id="teikei-settings-body"></div>
@@ -3858,12 +3922,12 @@ tr.row-waiting:hover > td {
         </div>
 
 
-        <div class="section-title" style="margin-top:24px">📸 自動スナップショット</div>
+        <div class="section-title" style="margin-top:24px"><svg class="ico" aria-hidden="true"><use href="#i-camera"></use></svg> 自動スナップショット</div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.7">
           データを保存するたびに自動でスナップショットを作成します。直近 <strong>5件</strong> を保持し（30分ごと）、いつでも復元できます。
         </div>
         <div id="snapshot-list" style="margin-bottom:8px"></div>
-        <button class="btn btn-secondary btn-sm" onclick="takeSnapshot(true)">📸 今すぐスナップショットを作成</button>
+        <button class="btn btn-secondary btn-sm" onclick="takeSnapshot(true)"><svg class="ico" aria-hidden="true"><use href="#i-camera"></use></svg> 今すぐスナップショットを作成</button>
       </div>
 
     </div><!-- /content -->
@@ -3887,7 +3951,7 @@ tr.row-waiting:hover > td {
     <div class="modal-body" id="case-modal-body">
       <!-- Section 1: Basic -->
       <div class="form-section" id="section-basic">
-        <div class="form-section-title">📁 案件基本情報</div>
+        <div class="form-section-title"><svg class="ico" aria-hidden="true"><use href="#i-folder"></use></svg> 案件基本情報</div>
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">管理番号<span class="req">*</span></label>
@@ -3904,8 +3968,8 @@ tr.row-waiting:hover > td {
           <div class="form-group">
             <label class="form-label">登記区分<span class="req">*</span></label>
             <select class="form-control" id="f-case-category" onchange="onCaseCategoryChange(this.value)">
-              <option value="不動産登記">🏠 不動産登記</option>
-              <option value="商業・法人登記">🏢 商業・法人登記</option>
+              <option value="不動産登記">不動産登記</option>
+              <option value="商業・法人登記">商業・法人登記</option>
             </select>
           </div>
           <div class="form-group">
@@ -3962,13 +4026,13 @@ tr.row-waiting:hover > td {
       </div>
       <!-- Section 1b: 書類送付先 -->
       <div class="form-section" id="section-delivery">
-        <div class="form-section-title">📬 書類送付先（複数登録可）</div>
+        <div class="form-section-title"><svg class="ico" aria-hidden="true"><use href="#i-mailbox"></use></svg> 書類送付先（複数登録可）</div>
         <div id="f-delivery-list"></div>
         <button type="button" class="contact-add-btn" style="margin-top:4px" onclick="addDeliveryRow()">＋ 送付先を追加</button>
       </div>
       <!-- Section 2: Contacts (dynamic multi-person) -->
       <div class="form-section" id="section-contacts">
-        <div class="form-section-title">📞 連絡先情報（複数登録可）</div>
+        <div class="form-section-title"><svg class="ico" aria-hidden="true"><use href="#i-phone"></use></svg> 連絡先情報（複数登録可）</div>
         <div id="f-contacts-list"></div>
         <!-- 役割・続柄の候補。中身は _fillRoleOptions() が案件モーダルを開くたびに入れる（10.1.9） -->
         <datalist id="ct-role-list"></datalist>
@@ -3976,7 +4040,7 @@ tr.row-waiting:hover > td {
       </div>
       <!-- Section 3: Dates -->
       <div class="form-section">
-        <div class="form-section-title">📅 期日情報</div>
+        <div class="form-section-title"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg> 期日情報</div>
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">受付日</label>
@@ -3986,32 +4050,32 @@ tr.row-waiting:hover > td {
       </div>
       <!-- Section 4: 管轄別申請日 -->
       <div class="form-section" id="section-shinsei">
-        <div class="form-section-title">📋 管轄別 申請日・完了日（複数登録可）</div>
+        <div class="form-section-title"><svg class="ico" aria-hidden="true"><use href="#i-clipboard"></use></svg> 管轄別 申請日・完了日（複数登録可）</div>
         <div id="f-shinsei-list"></div>
         <button type="button" class="contact-add-btn" onclick="addShinseiRow()">＋ 追加</button>
       </div>
       <!-- Section 5: 登記事項証明書 -->
       <div class="form-section" id="section-touki">
-        <div class="form-section-title">📋 登記事項証明書取得（複数登録可）</div>
+        <div class="form-section-title"><svg class="ico" aria-hidden="true"><use href="#i-clipboard"></use></svg> 登記事項証明書取得（複数登録可）</div>
         <div id="f-touki-list"></div>
         <button type="button" class="contact-add-btn" onclick="addToukiRow()">＋ 追加</button>
       </div>
       <!-- Section 6: 請求情報 -->
       <div class="form-section" id="section-invoice">
         <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between">
-          <span>🧾 請求情報（複数登録可）</span>
+          <span><svg class="ico" aria-hidden="true"><use href="#i-receipt"></use></svg> 請求情報（複数登録可）</span>
         </div>
         <div id="f-invoice-list"></div>
         <button type="button" class="contact-add-btn" onclick="addInvoiceRow()">＋ 請求情報を追加</button>
       </div>
       <!-- Section 6: Progress -->
       <div class="form-section">
-        <div class="form-section-title">🎯 進捗情報</div>
+        <div class="form-section-title"><svg class="ico" aria-hidden="true"><use href="#i-target"></use></svg> 進捗情報</div>
         <div class="form-grid">
           <div class="form-group full">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
               <input type="checkbox" id="f-souzoku-tracker-enabled" style="width:16px;height:16px;cursor:pointer">
-              <span>📋 相続人手配トラッカーを使う（相続登記案件向け）</span>
+              <span><svg class="ico" aria-hidden="true"><use href="#i-clipboard"></use></svg> 相続人手配トラッカーを使う（相続登記案件向け）</span>
             </label>
           </div>
           <div class="form-group full">
@@ -4052,7 +4116,7 @@ tr.row-waiting:hover > td {
       <button class="modal-close" onclick="closeCaseSelectModal()">✕</button>
     </div>
     <div class="modal-body" style="padding:16px">
-      <input type="text" id="case-select-search" class="form-control" placeholder="🔍 案件名・依頼者名で検索..." oninput="renderCaseSelectList()" style="margin-bottom:12px">
+      <input type="text" id="case-select-search" class="form-control has-search-ico" placeholder="案件名・依頼者名で検索..." oninput="renderCaseSelectList()" style="margin-bottom:12px">
       <div id="case-select-list" style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
     </div>
   </div>
@@ -4062,7 +4126,7 @@ tr.row-waiting:hover > td {
 <div id="gcal-edit-modal" class="modal-overlay" style="display:none;z-index:1000;background:rgba(0,0,0,0.7)" onclick="closeGCalEditModal(event)">
   <div class="modal-content" style="max-width:380px;background:var(--bg-primary)" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <h3 class="modal-title">📅 Googleカレンダー予定を編集</h3>
+      <h3 class="modal-title"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg> Googleカレンダー予定を編集</h3>
       <button class="modal-close" onclick="closeGCalEditModalBtn()">×</button>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
@@ -4092,7 +4156,7 @@ tr.row-waiting:hover > td {
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" onclick="deleteGCalEvent()">🗑 削除</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteGCalEvent()"><svg class="ico" aria-hidden="true"><use href="#i-trash"></use></svg> 削除</button>
       <button class="btn btn-secondary" onclick="closeGCalEditModalBtn()">キャンセル</button>
       <button class="btn btn-primary" onclick="updateGCalEvent()">保存</button>
     </div>
@@ -4103,11 +4167,11 @@ tr.row-waiting:hover > td {
 <div id="addrbook-modal" class="modal-overlay" style="display:none;z-index:1000;background:rgba(0,0,0,0.7)" onclick="closeAddrBookModal(event)">
   <div class="modal-content" style="max-width:520px;background:var(--bg-primary)" onclick="event.stopPropagation()">
     <div class="modal-header" style="background:var(--bg-primary)">
-      <h3 class="modal-title">📒 アドレス帳から選択</h3>
+      <h3 class="modal-title"><svg class="ico" aria-hidden="true"><use href="#i-ledger"></use></svg> アドレス帳から選択</h3>
       <button class="modal-close" onclick="closeAddrBookModalBtn()">×</button>
     </div>
     <div style="padding:10px 16px 4px;background:var(--bg-primary)">
-      <input type="text" id="addrbook-search" class="form-control" placeholder="🔍 氏名・ふりがな・電話で検索..." oninput="renderAddrBookList()" style="margin-bottom:8px;font-size:13px">
+      <input type="text" id="addrbook-search" class="form-control has-search-ico" placeholder="氏名・ふりがな・電話で検索..." oninput="renderAddrBookList()" style="margin-bottom:8px;font-size:13px">
     </div>
     <div id="addrbook-list" style="max-height:420px;overflow-y:auto;padding:0 8px 8px;background:var(--bg-primary)"></div>
   </div>
@@ -4118,7 +4182,7 @@ tr.row-waiting:hover > td {
   <!-- 左側：CaseFlow案件詳細 -->
   <div id="kakunin-left" style="flex:1;overflow-y:auto;background:var(--bg-primary);border-right:2px solid #374151;position:relative">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1f2937;position:sticky;top:0;z-index:10">
-      <span style="color:white;font-weight:700;font-size:13px">📁 案件詳細</span>
+      <span style="color:white;font-weight:700;font-size:13px"><svg class="ico" aria-hidden="true"><use href="#i-folder"></use></svg> 案件詳細</span>
       <button onclick="closeKakuninModal()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1">✕ 閉じる</button>
     </div>
     <div id="kakunin-case-content" style="padding:12px"></div>
@@ -4154,7 +4218,7 @@ tr.row-waiting:hover > td {
 <div id="simple-print-modal" class="modal-overlay" style="display:none;z-index:1100" onclick="closeSimplePrintModal(event)">
   <div class="modal" style="max-width:360px;width:90%">
     <div class="modal-header">
-      <div class="modal-title">🖨 簡易印刷 項目設定</div>
+      <div class="modal-title"><svg class="ico" aria-hidden="true"><use href="#i-print"></use></svg> 簡易印刷 項目設定</div>
       <button class="modal-close" onclick="closeSimplePrintModal()">×</button>
     </div>
     <div class="modal-body" style="padding:16px">
@@ -4187,7 +4251,7 @@ tr.row-waiting:hover > td {
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button class="btn btn-secondary" onclick="closeSimplePrintModal()">キャンセル</button>
-        <button class="btn btn-primary" onclick="execSimplePrint()">🖨 印刷実行</button>
+        <button class="btn btn-primary" onclick="execSimplePrint()"><svg class="ico" aria-hidden="true"><use href="#i-print"></use></svg> 印刷実行</button>
       </div>
     </div>
   </div>
@@ -4197,7 +4261,7 @@ tr.row-waiting:hover > td {
 <div id="gcal-event-modal" class="modal-overlay" style="display:none;z-index:1000;background:rgba(0,0,0,0.7)" onclick="closeGCalEventModal(event)">
   <div class="modal-content" style="max-width:380px;background:var(--bg-primary)" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <h3 class="modal-title">📅 Googleカレンダーに予定を追加</h3>
+      <h3 class="modal-title"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg> Googleカレンダーに予定を追加</h3>
       <button class="modal-close" onclick="closeGCalEventModalBtn()">×</button>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
@@ -4248,7 +4312,7 @@ tr.row-waiting:hover > td {
       <input type="hidden" id="f-task-case-id">
       <!-- Section 1: Basic -->
       <div class="form-section">
-        <div class="form-section-title">📋 タスク基本情報</div>
+        <div class="form-section-title"><svg class="ico" aria-hidden="true"><use href="#i-clipboard"></use></svg> タスク基本情報</div>
         <div class="form-grid">
           <div class="form-group full">
             <label class="form-label">タスク名<span class="req">*</span></label>
@@ -4258,7 +4322,7 @@ tr.row-waiting:hover > td {
       </div>
       <!-- Section 3: Dates -->
       <div class="form-section">
-        <div class="form-section-title">📅 期限・進捗</div>
+        <div class="form-section-title"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg> 期限・進捗</div>
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">期限</label>
@@ -4334,7 +4398,7 @@ tr.row-waiting:hover > td {
             <div style="display:flex;gap:4px;align-items:center">
               <input class="form-control" type="text" id="f-doc-date" placeholder="例：2026-04-15" style="flex:1">
               <div style="position:relative;flex-shrink:0">
-                <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px">📅</button>
+                <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg></button>
                 <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="document.getElementById('f-doc-date').value=this.value;this.value=''">
               </div>
             </div>
@@ -4384,11 +4448,11 @@ tr.row-waiting:hover > td {
           <div class="form-group full">
             <label class="form-label">面談内容<span class="req">*</span></label>
             <div class="marker-toolbar">
-              <span style="font-size:11px;color:var(--text-muted);margin-right:2px">🖊️</span>
-              <button type="button" class="marker-btn" style="background:#fef08a" title="黄マーカー" onclick="applyMarker('f-interview-content','hl-yellow')">🟡</button>
-              <button type="button" class="marker-btn" style="background:#bfdbfe" title="青マーカー" onclick="applyMarker('f-interview-content','hl-blue')">🔵</button>
-              <button type="button" class="marker-btn" style="background:#bbf7d0" title="緑マーカー" onclick="applyMarker('f-interview-content','hl-green')">🟢</button>
-              <button type="button" class="marker-btn" style="background:#fecdd3" title="ピンクマーカー" onclick="applyMarker('f-interview-content','hl-pink')">🩷</button>
+              <span style="font-size:11px;color:var(--text-muted);margin-right:2px"><svg class="ico" aria-hidden="true"><use href="#i-edit"></use></svg></span>
+              <button type="button" class="marker-btn" style="background:#fef08a" title="黄マーカー" onclick="applyMarker('f-interview-content','hl-yellow')"><span style="color:#ca8a04">●</span></button>
+              <button type="button" class="marker-btn" style="background:#bfdbfe" title="青マーカー" onclick="applyMarker('f-interview-content','hl-blue')"><span style="color:#2563a8">●</span></button>
+              <button type="button" class="marker-btn" style="background:#bbf7d0" title="緑マーカー" onclick="applyMarker('f-interview-content','hl-green')"><span style="color:#16a34a">●</span></button>
+              <button type="button" class="marker-btn" style="background:#fecdd3" title="ピンクマーカー" onclick="applyMarker('f-interview-content','hl-pink')"><span style="color:#be185d">●</span></button>
               <div class="marker-sep"></div>
               <button type="button" class="marker-btn-clear" onclick="clearMarker('f-interview-content')">消去</button>
             </div>
@@ -4427,11 +4491,11 @@ tr.row-waiting:hover > td {
           <div class="form-group full">
             <label class="form-label">メモ内容<span class="req">*</span></label>
             <div class="marker-toolbar">
-              <span style="font-size:11px;color:var(--text-muted);margin-right:2px">🖊️</span>
-              <button type="button" class="marker-btn" style="background:#fef08a" title="黄マーカー" onclick="applyMarker('f-memo-text','hl-yellow')">🟡</button>
-              <button type="button" class="marker-btn" style="background:#bfdbfe" title="青マーカー" onclick="applyMarker('f-memo-text','hl-blue')">🔵</button>
-              <button type="button" class="marker-btn" style="background:#bbf7d0" title="緑マーカー" onclick="applyMarker('f-memo-text','hl-green')">🟢</button>
-              <button type="button" class="marker-btn" style="background:#fecdd3" title="ピンクマーカー" onclick="applyMarker('f-memo-text','hl-pink')">🩷</button>
+              <span style="font-size:11px;color:var(--text-muted);margin-right:2px"><svg class="ico" aria-hidden="true"><use href="#i-edit"></use></svg></span>
+              <button type="button" class="marker-btn" style="background:#fef08a" title="黄マーカー" onclick="applyMarker('f-memo-text','hl-yellow')"><span style="color:#ca8a04">●</span></button>
+              <button type="button" class="marker-btn" style="background:#bfdbfe" title="青マーカー" onclick="applyMarker('f-memo-text','hl-blue')"><span style="color:#2563a8">●</span></button>
+              <button type="button" class="marker-btn" style="background:#bbf7d0" title="緑マーカー" onclick="applyMarker('f-memo-text','hl-green')"><span style="color:#16a34a">●</span></button>
+              <button type="button" class="marker-btn" style="background:#fecdd3" title="ピンクマーカー" onclick="applyMarker('f-memo-text','hl-pink')"><span style="color:#be185d">●</span></button>
               <div class="marker-sep"></div>
               <button type="button" class="marker-btn-clear" onclick="clearMarker('f-memo-text')">消去</button>
             </div>
@@ -4451,7 +4515,7 @@ tr.row-waiting:hover > td {
 <div id="soushu-select-modal" class="modal-overlay" style="display:none" onclick="closeSoushuSelectModal(event)">
   <div class="modal" style="max-width:360px">
     <div class="modal-header">
-      <div class="modal-title">📬 書類送付先を選択</div>
+      <div class="modal-title"><svg class="ico" aria-hidden="true"><use href="#i-mailbox"></use></svg> 書類送付先を選択</div>
       <button class="modal-close" onclick="closeSoushuSelectModal()">✕</button>
     </div>
     <div class="modal-body" style="padding:12px">
@@ -4464,7 +4528,7 @@ tr.row-waiting:hover > td {
 <div id="sync-warning-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,0.25);max-width:420px;width:100%;overflow:hidden">
     <div style="padding:16px 20px;background:#fef3c7;border-bottom:1px solid #fcd34d;display:flex;align-items:center;gap:8px">
-      <span style="font-size:20px">⚠️</span>
+      <span style="font-size:20px"><svg class="ico ico-amber" aria-hidden="true"><use href="#i-warn"></use></svg></span>
       <span style="font-weight:700;color:#92400e;font-size:14px">データ競合の警告</span>
     </div>
     <div style="padding:20px">
@@ -4679,9 +4743,9 @@ function renderAddrBookList() {
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:14px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(b.name)}${b.furigana?`<span style="font-size:11px;color:var(--text-muted);font-weight:400;margin-left:6px">${escHtml(b.furigana)}</span>`:''}</div>
         ${b.role?`<div style="font-size:11px;color:var(--color-primary);font-weight:600;margin-top:1px">${escHtml(b.role)}</div>`:''}
-        ${tels?`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px">📞 ${escHtml(tels)}</div>`:''}
-        ${emails?`<div style="font-size:11px;color:var(--text-secondary);">✉ ${escHtml(emails)}</div>`:''}
-        ${b.note?`<div style="font-size:11px;color:var(--text-muted);margin-top:1px">📝 ${escHtml(b.note)}</div>`:''}
+        ${tels?`<div style="font-size:12px;color:var(--text-secondary);margin-top:2px">${ico('phone')} ${escHtml(tels)}</div>`:''}
+        ${emails?`<div style="font-size:11px;color:var(--text-secondary);">${ico('mail')} ${escHtml(emails)}</div>`:''}
+        ${b.note?`<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${ico('note')} ${escHtml(b.note)}</div>`:''}
       </div>
       <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteAddrBookEntry(${book.indexOf(b)})" style="flex-shrink:0;opacity:0.7">削除</button>
     </div>`;
@@ -4725,12 +4789,12 @@ function selectAddrBook(idx) {
   const telList = addrBookTargetRow.querySelector('.ct-tel-list');
   if (telList) {
     const TEL_TYPES = ['携帯','固定','会社'];
-    const TEL_ICONS = {'携帯':'📱','固定':'🏠','会社':'🏢'};
+    const TEL_ICONS = {'携帯':'mobile','固定':'phone','会社':'building'};
     const TEL_LABELS = {'携帯':'Mobile','固定':'固定','会社':'勤務先'};
     telList.innerHTML = tels.map(t => {
       const type = t.type||'固定';
       const parts = (t.number||'').split('-');
-      const opts = TEL_TYPES.map(tp=>`<option value="${tp}" ${tp===type?'selected':''}>${TEL_ICONS[tp]} ${TEL_LABELS[tp]||tp}</option>`).join('');
+      const opts = TEL_TYPES.map(tp=>`<option value="${tp}" ${tp===type?'selected':''}>${TEL_LABELS[tp]||tp}</option>`).join('');
       return `<div class="ct-multi-row" style="display:flex;gap:4px;margin-bottom:4px;align-items:center">
         <select class="form-control ct-tel-type" style="width:90px;flex-shrink:0;font-size:12px">${opts}</select>
         <input class="form-control ct-tel-1" style="width:72px;flex-shrink:0;text-align:center" value="${escHtml(parts[0]||'')}" inputmode="tel">
@@ -4750,7 +4814,7 @@ function selectAddrBook(idx) {
     faxList.innerHTML = faxes.map(v => {
       const parts = (v||'').split('-');
       return `<div class="ct-multi-row" style="display:flex;gap:4px;margin-bottom:4px;align-items:center">
-        <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">📠</span>
+        <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">${ico('fax')}</span>
         <input class="form-control ct-fax-1" style="width:72px;flex-shrink:0;text-align:center" value="${escHtml(parts[0]||'')}" inputmode="tel">
         <span style="flex-shrink:0;font-weight:700;color:#666">-</span>
         <input class="form-control ct-fax-2" style="width:68px;flex-shrink:0;text-align:center" value="${escHtml(parts[1]||'')}" inputmode="tel">
@@ -4767,7 +4831,7 @@ function selectAddrBook(idx) {
   if (emailList) {
     emailList.innerHTML = emails.map(v => `
       <div class="ct-multi-row" style="display:flex;gap:4px;margin-bottom:4px;align-items:center">
-        <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">✉</span>
+        <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">${ico('mail')}</span>
         <input class="form-control ct-email" style="flex:1" value="${escHtml(v||'')}" inputmode="email">
         <button type="button" class="btn btn-secondary btn-xs" onclick="removeMultiRow(this)">✕</button>
       </div>`).join('');
@@ -4847,23 +4911,23 @@ function openKakuninFromForm(btn) {
       const cn = document.getElementById('f-case-name')?.value || '';
       const loc = document.getElementById('f-location')?.value || '';
       let html = cn ? `<h3 style="margin:0 0 8px">${escHtml(cn)}</h3>` : '';
-      if (loc) html += `<p style="color:var(--text-muted);font-size:12px">📍 ${escHtml(loc)}</p>`;
+      if (loc) html += `<p style="color:var(--text-muted);font-size:12px">${ico('pin-map')} ${escHtml(loc)}</p>`;
       allContacts.forEach(ct => {
         html += `<div style="background:var(--bg-secondary);border-radius:8px;padding:10px;margin-bottom:8px">
           ${ct.role ? `<div style="font-size:11px;color:var(--color-primary);font-weight:600">${escHtml(ct.role)}</div>` : ''}
           <div style="font-weight:700">${escHtml(ct.name||'')}</div>
           ${ct.furigana ? `<div style="font-size:11px;color:var(--text-muted)">${escHtml(ct.furigana)}</div>` : ''}
-          ${ct.tel  ? `<div style="font-size:12px">📞 ${escHtml(ct.tel)}</div>`  : ''}
-          ${ct.mail ? `<div style="font-size:12px">✉ ${escHtml(ct.mail)}</div>` : ''}
-          ${ct.address ? `<div style="font-size:11px;color:var(--text-muted)">📝 ${escHtml(ct.address)}</div>` : ''}
+          ${ct.tel  ? `<div style="font-size:12px">${ico('phone')} ${escHtml(ct.tel)}</div>`  : ''}
+          ${ct.mail ? `<div style="font-size:12px">${ico('mail')} ${escHtml(ct.mail)}</div>` : ''}
+          ${ct.address ? `<div style="font-size:11px;color:var(--text-muted)">${ico('note')} ${escHtml(ct.address)}</div>` : ''}
         </div>`;
       });
       allDeliveries.forEach(d => {
         html += `<div style="background:var(--bg-secondary);border-radius:8px;padding:10px;margin-bottom:8px">
-          <div style="font-size:11px;color:#f97316;font-weight:600">📬 送付先</div>
+          <div style="font-size:11px;color:#f97316;font-weight:600">${ico('mailbox')} 送付先</div>
           <div style="font-weight:700">${escHtml(d.name||'')}</div>
           ${d.zip     ? `<div style="font-size:11px;color:var(--text-muted)">〒${escHtml(d.zip)}</div>` : ''}
-          ${d.address ? `<div style="font-size:12px">📍 ${escHtml(d.address)}</div>` : ''}
+          ${d.address ? `<div style="font-size:12px">${ico('pin-map')} ${escHtml(d.address)}</div>` : ''}
         </div>`;
       });
       caseContent.innerHTML = html;
@@ -4895,7 +4959,7 @@ function openHenshinFromForm(btn) {
   if (modal && iframe) {
     if (caseContent) {
       let html = caseName ? `<h3 style="margin:0 0 8px">${escHtml(caseName)}</h3>` : '';
-      if (name) html += `<p style="color:var(--text-muted);font-size:12px">👤 ${escHtml(name)}</p>`;
+      if (name) html += `<p style="color:var(--text-muted);font-size:12px">${ico('user')} ${escHtml(name)}</p>`;
       caseContent.innerHTML = html;
     }
     const params = new URLSearchParams({ name });
@@ -4919,7 +4983,7 @@ function openSoushuFromForm(btn) {
   if (modal && iframe) {
     if (caseContent) {
       let html = caseName ? `<h3 style="margin:0 0 8px">${escHtml(caseName)}</h3>` : '';
-      if (name) html += `<p style="color:var(--text-muted);font-size:12px">👤 ${escHtml(name)}</p>`;
+      if (name) html += `<p style="color:var(--text-muted);font-size:12px">${ico('user')} ${escHtml(name)}</p>`;
       caseContent.innerHTML = html;
     }
     const params = new URLSearchParams({ name });
@@ -4968,13 +5032,13 @@ function _hsBandHtml(c) {
   if (!c.hoteisozoku) return '';
   if (_hsPending(c)) {
     return `<div class="hs-band hs-pending">
-      <span class="hs-band-text">⚠ 法定相続情報一覧図 未手配</span>
+      <span class="hs-band-text">${ico('warn')} 法定相続情報一覧図 未手配</span>
       <button class="btn btn-xs hs-band-btn no-print" onclick="hsMarkTehai('${c.id}')">手配済みにする</button>
     </div>`;
   }
   const d = c.hoteisozoku_tehai_date ? `（${formatDate(c.hoteisozoku_tehai_date)}）` : '';
   return `<div class="hs-band hs-done">
-    <span class="hs-band-text">✅ 法定相続情報一覧図 手配済み${d}</span>
+    <span class="hs-band-text">${ico('check-circle')} 法定相続情報一覧図 手配済み${d}</span>
     <button class="btn btn-xs hs-band-undo no-print" onclick="hsUnmarkTehai('${c.id}')" title="押し間違えたときに未手配へ戻す">取り消す</button>
   </div>`;
 }
@@ -5031,6 +5095,9 @@ function _hasMarker(c) {
 
 /* タイル用の細線アイコン（外部読み込みなし・単一HTML内で自己完結） */
 const _svg = p => `<svg class="tile-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+/* 画面の印（10.2.8）。<body> 直後の #cf-icons の symbol を参照する。cls は ico-danger／ico-amber／ico-ok など。
+   escHtml() を通す文字列には入れないこと（<svg が文字で出る） */
+const ico = (n, cls) => '<svg class="ico' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><use href="#i-' + n + '"></use></svg>';
 const ICON_PERSON = _svg('<circle cx="8" cy="5.2" r="2.6"/><path d="M2.8 13.6c0-2.7 2.3-4.4 5.2-4.4s5.2 1.7 5.2 4.4"/>');
 /* 区分マーク（面）。不動産＝地面の線＋建物／商業＝並んだビル。地面線の高さを揃えてある */
 const _catSvg = p => `<svg class="cat-ico" viewBox="0 0 24 24" fill="currentColor" stroke="none">${p}</svg>`;
@@ -5152,9 +5219,9 @@ function renderCaseTiles() {
     const _mark = [
       sc ? `<span class="tile-status" style="background:${sc.bg};color:${sc.color}">${escHtml(c.status)}</span>` : '',
       c.waiting ? '<span class="tile-badge-waiting">Waiting</span>' : '',
-      isImportant ? '<span class="tile-important-badge-abs">要確認</span>' : '',
-      _hsPending(c) ? '<span class="tile-hs-badge" title="法定相続情報一覧図の手配がまだです">一覧図 未手配</span>' : '',
-      c.pinned ? '<span class="tile-pin">📌</span>' : '',
+      isImportant ? '<span class="tile-important-badge-abs">' + ico('warn') + ' 要確認</span>' : '',
+      _hsPending(c) ? '<span class="tile-hs-badge" title="法定相続情報一覧図の手配がまだです">' + ico('doc') + '一覧図 未手配</span>' : '',
+      c.pinned ? '<span class="tile-pin">' + ico('pin') + '</span>' : '',
     ].filter(Boolean).join('');
     return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" data-cat="${_isCorp ? 'corp' : 'real'}" onclick="showCaseDetail('${c.id}')">
       ${isShinseichuu ? '<span class="tile-badge-anchor tile-badge-anchor-l"><span class="tile-shinsei-badge-abs">申請中</span></span>' : ''}
@@ -5269,7 +5336,7 @@ function _setupViewerMode() {
   // 閲覧専用バナー
   const banner = document.createElement('div');
   banner.id = 'viewer-banner';
-  banner.textContent = '👁 閲覧専用モード（このファイルは表示のみ・編集や保存はできません）';
+  banner.innerHTML = ico('eye') + ' 閲覧専用モード（このファイルは表示のみ・編集や保存はできません）';
   document.body.appendChild(banner);
 }
 /* 書き込み系を止める。閲覧用HTMLと「引っ越し済み」（8.6.6）で共用。二重実装しない */
@@ -5331,11 +5398,11 @@ function _setupMigratedMode() {
   if (locked) {
     _applyReadOnly('このChrome版は Macアプリへ引っ越し済みです（見るだけになっています）');
     banner.className = 'migrated';
-    banner.innerHTML = `<span>⛔ このChrome版は ${when} に Macアプリへ引っ越し済みです。<b>見るだけ</b>になっています（新規・編集・削除・保存は出ません）</span><button onclick="migratedUnlock()">一時的に解除</button>`;
+    banner.innerHTML = `<span>${ico('ban')} このChrome版は ${when} に Macアプリへ引っ越し済みです。<b>見るだけ</b>になっています（新規・編集・削除・保存は出ません）</span><button onclick="migratedUnlock()">一時的に解除</button>`;
   } else {
     document.body.classList.add('migrated-open');
     banner.className = 'migrated-open';
-    banner.innerHTML = `<span>⚠️ 引っ越し済み（${when}）のChrome版を一時的に解除中です。ここに入力したものは、Macアプリには入りません</span><button onclick="migratedRelock()">見るだけに戻す</button>`;
+    banner.innerHTML = `<span>${ico('warn')} 引っ越し済み（${when}）のChrome版を一時的に解除中です。ここに入力したものは、Macアプリには入りません</span><button onclick="migratedRelock()">見るだけに戻す</button>`;
   }
   document.body.appendChild(banner);
   // 帯が折り返しても本文が下に潜らないよう、実際の高さを渡す
@@ -5364,7 +5431,7 @@ function renderMigratedCard() {
   const info = _migratedInfo();
   el.innerHTML = info
     ? `<div style="font-size:12px;font-weight:700;color:#991b1b;margin-bottom:6px">${escHtml(_migratedDateJa(info.date))} に引っ越し済み</div><button class="btn btn-secondary btn-sm" onclick="migratedUnmark()">↩ 引っ越し済みを取り消す</button>`
-    : `<button class="btn btn-secondary btn-sm" onclick="migratedMark()">🚚 このChrome版を引っ越し済みにする</button>`;
+    : `<button class="btn btn-secondary btn-sm" onclick="migratedMark()">${ico('truck')} このChrome版を引っ越し済みにする</button>`;
 }
 
 function init() {
@@ -5481,8 +5548,8 @@ function init() {
           if (localSavedAt && cloudSavedAt > localSavedAt) {
             const cloudStr = cloudSavedAt.toLocaleString('ja-JP');
             const localStr = localSavedAt.toLocaleString('ja-JP');
-            setCloudStatus('err', `⚠️ クラウドの方が新しい — クラウド: ${cloudStr}`);
-            toast(`⚠️ クラウドのデータ（${cloudStr}）がこのデバイス（${localStr}）より新しいです。「☁ 読込」を確認してください`, 'error');
+            setCloudStatus('err', `クラウドの方が新しい — クラウド: ${cloudStr}`);
+            toast(`クラウドのデータ（${cloudStr}）がこのデバイス（${localStr}）より新しいです。「クラウドから読込」を確認してください`, 'error', 'warn');
             markUnloaded();
           } else {
             const t = json.data.savedAt ? new Date(json.data.savedAt).toLocaleString('ja-JP') : '';
@@ -5615,8 +5682,8 @@ function deadlineBadge(dateStr, status) {
   if (!dateStr || status === '完了') return formatDate(dateStr);
   const diff = diffDays(dateStr);
   if (diff === null) return '—';
-  if (diff < 0) return `<span class="deadline-overdue">⚠ ${formatDate(dateStr)}</span>`;
-  if (diff === 0) return `<span class="deadline-today">🔔 今日</span>`;
+  if (diff < 0) return `<span class="deadline-overdue">${ico('warn')} ${formatDate(dateStr)}</span>`;
+  if (diff === 0) return `<span class="deadline-today">${ico('bell')} 今日</span>`;
   if (diff <= 3) return `<span class="deadline-soon">${formatDate(dateStr)}</span>`;
   return formatDate(dateStr);
 }
@@ -5742,7 +5809,7 @@ function renderToday() {
 
   const area = document.getElementById('today-task-area');
   if (allTasks.length === 0) {
-    area.innerHTML = '<div class="table-container" style="padding:40px;text-align:center;color:#9ca3af;">今日対応が必要なタスクはありません 🎉</div>';
+    area.innerHTML = '<div class="table-container" style="padding:40px;text-align:center;color:#9ca3af;">今日対応が必要なタスクはありません ' + ico('check-circle', 'ico-ok') + '</div>';
     return;
   }
 
@@ -6247,6 +6314,15 @@ function toukiShortLabel(title) {
   s = s.replace(/^(\S+) 利用 (?=\d)/, '$1 ');            // 時刻が続く「利用 」を落とす
   return s.trim();
 }
+// 先頭の絵文字（JSON の題名の印。入力の判定は絵文字のまま）だけを SVG の印にして出す（10.2.8）。
+// 残りの文字は escHtml を通す。知らない印はそのまま文字で出す
+const _TOUKI_ICO = [['\u26D4', 'ban'], ['\u{1F558}', 'clock'], ['\u26A0\uFE0F', 'warn'], ['\u26A0', 'warn'], ['\u{1F6E0}\uFE0F', 'wrench'], ['\u{1F6E0}', 'wrench']];
+function _toukiLabelHtml(s) {
+  for (const [e, n] of _TOUKI_ICO) {
+    if (s.startsWith(e)) return ico(n) + escHtml(s.slice(e.length));
+  }
+  return escHtml(s);
+}
 
 // マスに足す HTML。既存の予定のあと（いちばん下）に置く
 function toukiLineHtml(dateStr) {
@@ -6254,7 +6330,7 @@ function toukiLineHtml(dateStr) {
   if (!lines.length) return '';
   const inner = lines.map((l, i) =>
     `<div class="touki-line ${_TOUKI_CLS[l.kind] || 'tk-warn'}" title="${escHtml(l.title)}"
-      onclick="event.stopPropagation();openToukiInfo('${dateStr}',${i})">${escHtml(toukiShortLabel(l.title))}</div>`
+      onclick="event.stopPropagation();openToukiInfo('${dateStr}',${i})">${_toukiLabelHtml(toukiShortLabel(l.title))}</div>`
   ).join('');
   return `<div class="touki-stack no-print">${inner}</div>`;
 }
@@ -6429,7 +6505,7 @@ function renderCaseTimeline() {
     : null;
 
   el.innerHTML = `<div class="shinsei-timeline" style="margin-top:10px">
-    <div class="shinsei-timeline-header" id="tl-header-row" style="position:relative"><span class="tl-title">📊 登記申請タイムライン（${visibleRows.length}件）</span></div>
+    <div class="shinsei-timeline-header" id="tl-header-row" style="position:relative"><span class="tl-title">${ico('chart')} 登記申請タイムライン（${visibleRows.length}件）</span></div>
     <div class="shinsei-timeline-body">${rowsHtml}</div>
     <div class="shinsei-tl-dates" id="tl-dates-row" style="min-height:16px"></div>
   </div>`;
@@ -6739,7 +6815,7 @@ function renderPaymentPending() {
 
   el.innerHTML = '<div style="margin-top:10px;border:1px solid #f6d9a8;border-radius:var(--radius-md);background:#fffaf2;overflow:hidden">'
     + '<div style="padding:6px 12px;background:#fff3e0;border-bottom:1px solid #f6d9a8;font-size:11px;font-weight:700;color:#92400e">'
-    + '💰 入金待ち（' + items.length + '件）</div>'
+    + ico('coin') + ' 入金待ち（' + items.length + '件）</div>'
     + '<div>' + rows + '</div>'
     + '</div>';
 }
@@ -6863,7 +6939,7 @@ function renderTrackingSummary() {
     const opacity = arrived ? 'opacity:0.55;' : '';
     const statusBtn = arrived
       ? '<button class="tracking-arrived-btn" title="押すと到着済を取り消します" onclick="event.stopPropagation();_unmarkArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;font-size:10px;background:#d1fae5;color:#065f46;border:none;border-radius:4px;cursor:pointer;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">✓ 到着済</button>'
-      : '<button onclick="event.stopPropagation();_markArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;background:#1d4ed8;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">📬 到着</button>';
+      : '<button onclick="event.stopPropagation();_markArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;background:#1d4ed8;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">' + ico('mailbox') + ' 到着</button>';
     const rowClick = 'onclick="window.open(\'' + url + '\',\'_blank\')"';
     return '<div class="tracking-row" ' + rowClick + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
       + '<span style="flex-shrink:0;width:36px;font-size:11px;color:#94a3b8">' + dateStr + '</span>'
@@ -6912,14 +6988,14 @@ function renderTrackingSummary() {
   };
 
   const sendSection   = buildSection(sendItems,   'tracking-send',   {
-    icon: '📤', label: '発送済', accent: '#0a84ff'
+    icon: ico('tray-out'), label: '発送済', accent: '#0a84ff'
   });
   const returnSection = buildSection(returnItems, 'tracking-return', {
-    icon: '📩', label: '返信待ち', accent: '#30b14e'
+    icon: ico('mail'), label: '返信待ち', accent: '#30b14e'
   });
 
   el.innerHTML = '<div style="margin-top:10px;background:linear-gradient(135deg,#eff6ff 0%,#f0f9ff 100%);border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;overflow:hidden">'
-    + '<div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:4px">📮 直近の送付追跡</div>'
+    + '<div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:4px">' + ico('mailbox') + ' 直近の送付追跡</div>'
     + sendSection
     + returnSection
     + '</div>';
@@ -7363,19 +7439,19 @@ function renderCaseTable() {
     const rowClass = '';
     return `<tr class="${rowClass}${c.pinned ? ' row-pinned' : ''}${c.waiting ? ' row-waiting' : ''}" onclick="openCaseDetail('${c.id}')">
       <td style="text-align:center;padding:4px" onclick="event.stopPropagation()">
-        <button onclick="togglePin('${c.id}')" title="${c.pinned?'ピンを外す':'ピン留め'}" style="background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:0;opacity:${c.pinned?'1':'0.25'}">${c.pinned?'📌':'📌'}</button>
+        <button onclick="togglePin('${c.id}')" title="${c.pinned?'ピンを外す':'ピン留め'}" style="background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:0;opacity:${c.pinned?'1':'0.25'}">${ico('pin')}</button>
       </td>
       <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0"><strong>${escHtml(c.case_num||'')}</strong></td>
       <td class="col-case-name" title="${escHtml(c.case_name)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px">
         ${escHtml(c.case_name)}
-        ${(c.shinsei_dates||[]).some(s => s.shinsei && !s.kanryo) ? '<span class="list-shinsei-badge">申請中</span>' : ''}${_hasMarker(c) ? '<span class="list-important-badge">⚠️ Important</span>' : ''}
-        ${c.waiting ? `<span style="font-size:10px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:10px;padding:1px 6px;font-weight:700;margin-left:4px">⏳</span>` : ''}
+        ${(c.shinsei_dates||[]).some(s => s.shinsei && !s.kanryo) ? '<span class="list-shinsei-badge">申請中</span>' : ''}${_hasMarker(c) ? '<span class="list-important-badge">' + ico('warn') + ' Important</span>' : ''}
+        ${c.waiting ? `<span style="font-size:10px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:10px;padding:1px 6px;font-weight:700;margin-left:4px">${ico('hourglass')}</span>` : ''}
         ${incompleteTasks > 0 ? `<span class="badge badge-進行中" style="margin-left:4px;font-size:10px">${incompleteTasks}件</span>` : ''}
       </td>
       <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
         ${escHtml(withKeisho(c.client_name||'', c.contacts?.[0]?.role || '依頼者'))}
       </td>
-      <td style="white-space:nowrap"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${c.category==='商業・法人登記'?'#fef3c7':'#dbeafe'};color:${c.category==='商業・法人登記'?'#92400e':'#1e40af'}">${c.category==='商業・法人登記'?'🏢 商業':'🏠 不動産'}</span></td>
+      <td style="white-space:nowrap"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${c.category==='商業・法人登記'?'#fef3c7':'#dbeafe'};color:${c.category==='商業・法人登記'?'#92400e':'#1e40af'}">${c.category==='商業・法人登記' ? ICON_CAT_CORP + ' 商業' : ICON_CAT_REAL + ' 不動産'}</span></td>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="badge">${escHtml(c.type||'')}</span></td>
       <td style="white-space:nowrap" onclick="event.stopPropagation()">
         <button class="btn btn-secondary btn-xs" onclick="duplicateCase('${c.id}')" title="この案件を複製">複製</button>
@@ -7414,7 +7490,7 @@ function renderCaseDetail(caseId) {
       <div class="cd-bar-main">
         <div class="cd-bar-title">${escHtml(c.case_name)}</div>
         <div class="cd-bar-meta">
-          <span class="cat">${c.category==='商業・法人登記'?'🏢 商業・法人登記':'🏠 不動産登記'}</span>
+          <span class="cat">${c.category==='商業・法人登記' ? ICON_CAT_CORP + ' 商業・法人登記' : ICON_CAT_REAL + ' 不動産登記'}</span>
           ${c.type ? `<span class="sep">·</span><span>${escHtml(c.type)}</span>` : ''}
           ${c.case_num ? `<span class="sep">·</span><span>No. ${escHtml(c.case_num)}</span>` : ''}
           ${c.received_date ? `<span class="sep">·</span><span>受付 ${formatDate(c.received_date)}</span>` : ''}
@@ -7423,14 +7499,14 @@ function renderCaseDetail(caseId) {
       <div class="cd-bar-tools">
         <div class="cd-status" role="group" aria-label="状態">
           <button class="cd-chip st-go ${c.status!=='保留'&&c.status!=='完了'?'on':''}" onclick="_cdSetStatus('${c.id}','')" title="進行中に戻す">進行中</button>
-          <button class="cd-chip st-wait ${c.waiting?'on':''}" onclick="toggleWaiting('${c.id}')" title="${c.waiting?'Waitingを解除':'Waitingにする'}">⏳ Waiting</button>
+          <button class="cd-chip st-wait ${c.waiting?'on':''}" onclick="toggleWaiting('${c.id}')" title="${c.waiting?'Waitingを解除':'Waitingにする'}">${ico('hourglass')} Waiting</button>
           <button class="cd-chip st-hold ${c.status==='保留'?'on':''}" onclick="_cdSetStatus('${c.id}','保留')" title="保留にする">保留</button>
         </div>
         <div class="cd-status">
           <button class="cd-chip st-done ${c.status==='完了'?'on':''}" onclick="_cdSetStatus('${c.id}','完了')" title="完了にする">完了</button>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="printCaseSimple('${c.id}')">🖨 簡易印刷</button>
-        <button class="btn btn-secondary btn-sm" onclick="printCaseDetail('${c.id}')">🖨 印刷</button>
+        <button class="btn btn-secondary btn-sm" onclick="printCaseSimple('${c.id}')">${ico('print')} 簡易印刷</button>
+        <button class="btn btn-secondary btn-sm" onclick="printCaseDetail('${c.id}')">${ico('print')} 印刷</button>
       </div>
     </div><!-- /cd-bar -->
 
@@ -7446,8 +7522,8 @@ function renderCaseDetail(caseId) {
       <!-- Basic info -->
       <div class="info-card">
         <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
-          <span>📋 案件基本情報</span>
-          <button class="btn btn-secondary btn-xs no-print" onclick="openCaseModal('${c.id}','section-basic')">✏️ 編集</button>
+          <span>${ico('clipboard')} 案件基本情報</span>
+          <button class="btn btn-secondary btn-xs no-print" onclick="openCaseModal('${c.id}','section-basic')">${ico('edit')} 編集</button>
         </div>
         <div class="info-rows">
           ${infoRow('依頼者名', escHtml(c.client_name||'—'))}
@@ -7463,9 +7539,9 @@ function renderCaseDetail(caseId) {
       <!-- 登記事項証明書 -->
       <div class="info-card">
         <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
-          <span>📋 登記事項証明書取得${(c.touki_list && c.touki_list.length > 0) ? `（${c.touki_list.length}件）` : ''}</span>
+          <span>${ico('clipboard')} 登記事項証明書取得${(c.touki_list && c.touki_list.length > 0) ? `（${c.touki_list.length}件）` : ''}</span>
           ${(c.touki_list && c.touki_list.length > 0)
-            ? `<button class="btn btn-secondary btn-xs no-print" onclick="openCaseModal('${c.id}','section-touki')">✏️ 編集</button>`
+            ? `<button class="btn btn-secondary btn-xs no-print" onclick="openCaseModal('${c.id}','section-touki')">${ico('edit')} 編集</button>`
             : `<button class="btn btn-primary btn-xs no-print" onclick="openCaseModal('${c.id}','section-touki')">＋ 追加</button>`}
         </div>
         ${(c.touki_list && c.touki_list.length > 0)
@@ -7489,9 +7565,9 @@ function renderCaseDetail(caseId) {
             : [];
         return `<div class="info-card">
           <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
-            <span>🧾 請求情報${invs.length > 0 ? `（${invs.length}件）` : ''}</span>
+            <span>${ico('receipt')} 請求情報${invs.length > 0 ? `（${invs.length}件）` : ''}</span>
             ${invs.length > 0
-              ? `<button class="btn btn-secondary btn-xs no-print" onclick="openCaseModal('${c.id}','section-invoice')">✏️ 編集</button>`
+              ? `<button class="btn btn-secondary btn-xs no-print" onclick="openCaseModal('${c.id}','section-invoice')">${ico('edit')} 編集</button>`
               : `<button class="btn btn-primary btn-xs no-print" onclick="openCaseModal('${c.id}','section-invoice')">＋ 追加</button>`}
           </div>
           ${invs.length === 0 ? '' : invs.map((inv, i) => `
@@ -7511,7 +7587,7 @@ function renderCaseDetail(caseId) {
     <!-- 備考・メモ（全幅） -->
     <div class="info-card" style="margin-bottom:16px;border-left:4px solid #fbbf24">
       <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
-        <span>📝 備考・メモ</span>
+        <span>${ico('note')} 備考・メモ</span>
         <button class="btn btn-primary btn-xs no-print" onclick="addMemoItem('${c.id}')">＋ 追加</button>
       </div>
       <div id="memo-list-${c.id}" style="padding:8px 12px;min-height:36px">
@@ -7539,7 +7615,7 @@ function renderCaseDetail(caseId) {
     ${renderDeliverySection(c)}
 
     <div class="no-print" style="margin-top:32px;padding-top:16px;border-top:1px solid var(--border-color);display:flex;justify-content:flex-end">
-      <button class="btn btn-danger btn-sm" onclick="confirmAction('案件「${escHtml(c.case_name)}」を削除しますか？関連タスクも削除されます。', () => { deleteCase('${c.id}'); showView('cases'); })">🗑 この案件を削除</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmAction('案件「${escHtml(c.case_name)}」を削除しますか？関連タスクも削除されます。', () => { deleteCase('${c.id}'); showView('cases'); })">${ico('trash')} この案件を削除</button>
     </div>
     </div><!-- /cd-cols-left -->
     <div id="case-files-host" class="no-print"></div>
@@ -8276,7 +8352,7 @@ function _cfKind(x) {
 /* 「種類」順に並べるときの並び。ここで順番を決める */
 const _CF_KIND_ORDER = ['pdf', 'doc', 'xls', 'ppt', 'img', 'web', 'etc'];
 function _cfIcon(e) {
-  if (e.kind === 'dir') return '<span class="cf-ic dir">📁</span>';
+  if (e.kind === 'dir') return '<span class="cf-ic dir">' + ico('folder') + '</span>';
   const x = e.ext;
   const cls = _cfKind(x);
   const label = x === 'webloc' ? 'URL' : /^(jpe?g)$/.test(x) ? 'JPG' : (x || '?').toUpperCase().slice(0, 4);
@@ -8309,7 +8385,7 @@ function _cfListHtml() {
      ・右パネル置き（幅400px）は名前の欄が狭いので、字ではなく印だけにする。
        何の印かは見出しの「📂 Finder」で分かる（どちらも title を付けてある） */
   const nat = _cfNative();
-  const flabel = caseFilesPlace === 'panel' ? '📂' : 'Finder';
+  const flabel = caseFilesPlace === 'panel' ? ico('folder-open') : 'Finder';
   const fbtn = idx => nat ? `<button onclick="event.stopPropagation();cfReveal(${idx})" title="Finder で表示">${flabel}</button>` : '';
   const ql = _cfQL();
   const rows = list.map(e => {
@@ -8334,8 +8410,8 @@ function _cfChooserListHtml() {
   const q = (ch.filter || '').trim().toLowerCase();
   const items = ch.items.filter(n => !q || n.toLowerCase().includes(q));
   const hit = n => ch.keys.some(k => n.includes(k));
-  const rows = items.map(n => { const i = ch.items.indexOf(n); return `<div class="cf-row is-dir" onclick="cfChooserEnter(${i})" title="押すと中に入ります"><span class="cf-ic dir">📁</span><span class="cf-name">${escHtml(n)}</span><span class="cf-meta">${hit(n) ? '★ 依頼者名と一致' : ''}</span><span class="cf-meta r cf-size"></span><span class="cf-acts" style="opacity:1"><button onclick="event.stopPropagation();cfBind(${i})">これにする</button></span></div>`; }).join('');
-  return rows || `<div class="cf-empty">${q ? '該当するものがありません' : 'この中にフォルダはありません。上の「📌 ここにする」でこのフォルダに結び付けられます'}</div>`;
+  const rows = items.map(n => { const i = ch.items.indexOf(n); return `<div class="cf-row is-dir" onclick="cfChooserEnter(${i})" title="押すと中に入ります"><span class="cf-ic dir">${ico('folder')}</span><span class="cf-name">${escHtml(n)}</span><span class="cf-meta">${hit(n) ? '★ 依頼者名と一致' : ''}</span><span class="cf-meta r cf-size"></span><span class="cf-acts" style="opacity:1"><button onclick="event.stopPropagation();cfBind(${i})">これにする</button></span></div>`; }).join('');
+  return rows || `<div class="cf-empty">${q ? '該当するものがありません' : 'この中にフォルダはありません。上の「' + ico('pin') + ' ここにする」でこのフォルダに結び付けられます'}</div>`;
 }
 function _cfRender() {
   const host = _cfHost();
@@ -8355,7 +8431,7 @@ function _cfRender() {
   const head = `
     <div class="cf-head">
       <div class="cf-head-left">
-        <span>📁 ファイル</span>
+        <span>${ico('folder')} ファイル</span>
         ${fileCount != null ? `<span class="cf-count">${fileCount}</span>` : ''}
         ${crumbs}
       </div>
@@ -8363,9 +8439,9 @@ function _cfRender() {
         ${_cf.status === 'ok' ? `
           ${_cf.path.length ? `<button class="btn btn-secondary btn-xs" onclick="cfGoto(${_cf.path.length - 2})">↑ 上へ</button>` : ''}
           <button class="btn btn-primary btn-xs cf-write" onclick="cfAdd()">＋ 追加</button>
-          <button class="btn btn-secondary btn-xs cf-write" onclick="cfNewFolder()">📂 新しいフォルダ</button>
-          <button class="btn btn-secondary btn-xs" onclick="_cfLoad()" title="読み直す">↻</button>${_cfNative() ? `<button class="btn btn-secondary btn-xs" onclick="cfRevealHere()" title="このフォルダを Finder で開く">📂 Finder</button>` : ''}` : ''}
-        ${_cf.status === 'ok' || _cf.status === 'lost' ? `<button class="btn btn-secondary btn-xs" onclick="cfRebind()" title="別のフォルダに結び付け直す">🔗 選び直す</button>` : ''}
+          <button class="btn btn-secondary btn-xs cf-write" onclick="cfNewFolder()">${ico('folder-open')} 新しいフォルダ</button>
+          <button class="btn btn-secondary btn-xs" onclick="_cfLoad()" title="読み直す">↻</button>${_cfNative() ? `<button class="btn btn-secondary btn-xs" onclick="cfRevealHere()" title="このフォルダを Finder で開く">${ico('folder-open')} Finder</button>` : ''}` : ''}
+        ${_cf.status === 'ok' || _cf.status === 'lost' ? `<button class="btn btn-secondary btn-xs" onclick="cfRebind()" title="別のフォルダに結び付け直す">${ico('link')} 選び直す</button>` : ''}
         ${!inPanel ? `<button class="btn btn-secondary btn-xs cf-move-to-panel" onclick="setCaseFilesPlace('panel')" title="一覧を右のパネルへ移す">⇄ 右パネルへ</button>` : ''}
       </div>
     </div>`;
@@ -8374,19 +8450,19 @@ function _cfRender() {
   switch (_cf.status) {
     case 'loading': body = `<div class="cf-empty">読み込み中…</div>`; break;
     case 'unsupported': body = `<div class="cf-empty">このブラウザではフォルダに接続できません。<br>パソコンの Chrome か Edge で開いてください。</div>`; break;
-    case 'noroot': body = `<div class="cf-empty">はじめに、案件フォルダの親（Dropbox の「中山事務所」）を一度だけ結び付けてください。<br>以後は、案件ごとに一覧から押すだけになります。<br><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">📂 親フォルダを選ぶ</button><div style="font-size:10px;margin-top:8px"><a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">この案件のフォルダを直接選ぶ</a></div></div>`; break;
-    case 'perm': { const tn = _cf.permTarget ? _cf.permTarget.name : rootName; body = `<div class="cf-empty">「${escHtml(tn)}」を読むには、ブラウザの許可が要ります。<br><button class="btn btn-primary btn-sm" onclick="cfGrant()">🔓 許可する</button><div style="font-size:10px;margin-top:6px;line-height:1.6">Chrome の確認の窓に「今回のみ」と「毎回（今後も）許可」があれば、<b>毎回のほう</b>を選んでください。次から聞かれなくなります</div></div>`; break; }
+    case 'noroot': body = `<div class="cf-empty">はじめに、案件フォルダの親（Dropbox の「中山事務所」）を一度だけ結び付けてください。<br>以後は、案件ごとに一覧から押すだけになります。<br><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">${ico('folder-open')} 親フォルダを選ぶ</button><div style="font-size:10px;margin-top:8px"><a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">この案件のフォルダを直接選ぶ</a></div></div>`; break;
+    case 'perm': { const tn = _cf.permTarget ? _cf.permTarget.name : rootName; body = `<div class="cf-empty">「${escHtml(tn)}」を読むには、ブラウザの許可が要ります。<br><button class="btn btn-primary btn-sm" onclick="cfGrant()">${ico('unlock')} 許可する</button><div style="font-size:10px;margin-top:6px;line-height:1.6">Chrome の確認の窓に「今回のみ」と「毎回（今後も）許可」があれば、<b>毎回のほう</b>を選んでください。次から聞かれなくなります</div></div>`; break; }
     case 'rootcheck': {
       const pn = _cf.pendingRoot ? _cf.pendingRoot.name : '';
-      body = `<div class="cf-warn">⚠️ 選んだフォルダ「${escHtml(pn)}」の中に、<b>「不動産登記案件」「商業・法人登記案件」のどちらも見当たりません。</b><br>親フォルダ（Dropbox の「中山事務所」）で合っていますか。<div class="cf-warn-btns"><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">📂 選び直す</button><button class="btn btn-secondary btn-sm" onclick="cfRootAccept()">このまま使う</button><button class="btn btn-secondary btn-sm" onclick="cfRootCancel()">やめる</button></div></div>`;
+      body = `<div class="cf-warn">${ico('warn')} 選んだフォルダ「${escHtml(pn)}」の中に、<b>「不動産登記案件」「商業・法人登記案件」のどちらも見当たりません。</b><br>親フォルダ（Dropbox の「中山事務所」）で合っていますか。<div class="cf-warn-btns"><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">${ico('folder-open')} 選び直す</button><button class="btn btn-secondary btn-sm" onclick="cfRootAccept()">このまま使う</button><button class="btn btn-secondary btn-sm" onclick="cfRootCancel()">やめる</button></div></div>`;
       break;
     }
     case 'seeking': body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath)}」が見当たりません。<br>名前を変えた先を探しています…</div>`; break;
     case 'lost': {
       const sg = _cf.suggest || [];
-      body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath || rootName)}」が見当たりません。<br>名前が変わったか、移動したか、消えた可能性があります。${sg.length ? '<br>中身で確かめられなかったので、自動ではつないでいません。' : ''}<br><button class="btn btn-primary btn-sm" onclick="cfRebind()">🔗 選び直す</button>${_cfRootSubHtml()}</div>`;
+      body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath || rootName)}」が見当たりません。<br>名前が変わったか、移動したか、消えた可能性があります。${sg.length ? '<br>中身で確かめられなかったので、自動ではつないでいません。' : ''}<br><button class="btn btn-primary btn-sm" onclick="cfRebind()">${ico('link')} 選び直す</button>${_cfRootSubHtml()}</div>`;
       if (sg.length) {
-        body += `<div class="cf-tools"><span class="cf-path">名前の似たフォルダ</span></div><div class="cf-list">${sg.map((p, i) => `<div class="cf-row cf-suggest is-dir" onclick="cfBindSuggest(${i})" title="押すとこのフォルダに結び付けます"><span class="cf-ic dir">📁</span><span class="cf-name">${escHtml(p[p.length - 1])}<span class="cf-meta">${escHtml(p.slice(0, -1).join(' › '))}</span></span><span class="cf-acts" style="opacity:1"><button onclick="event.stopPropagation();cfBindSuggest(${i})">これにする</button></span></div>`).join('')}</div>`;
+        body += `<div class="cf-tools"><span class="cf-path">名前の似たフォルダ</span></div><div class="cf-list">${sg.map((p, i) => `<div class="cf-row cf-suggest is-dir" onclick="cfBindSuggest(${i})" title="押すとこのフォルダに結び付けます"><span class="cf-ic dir">${ico('folder')}</span><span class="cf-name">${escHtml(p[p.length - 1])}<span class="cf-meta">${escHtml(p.slice(0, -1).join(' › '))}</span></span><span class="cf-acts" style="opacity:1"><button onclick="event.stopPropagation();cfBindSuggest(${i})">これにする</button></span></div>`).join('')}</div>`;
       }
       break;
     }
@@ -8402,10 +8478,10 @@ function _cfRender() {
         <div class="cf-tools" style="flex-wrap:wrap;gap:6px">
           <span class="cf-path" style="flex:1;min-width:0">${crumb}</span>
           ${ch.path.length > 1 ? `<button class="btn btn-secondary btn-xs" onclick="cfChooserGoto(${ch.path.length - 2})">↑ 上へ</button>` : ''}
-          ${ch.path.length > 1 ? `<button class="btn btn-primary btn-xs" onclick="cfBind()" title="いま開いている「${escHtml(ch.path[ch.path.length - 1])}」をこの案件のフォルダにする">📌 ここにする</button>` : ''}
+          ${ch.path.length > 1 ? `<button class="btn btn-primary btn-xs" onclick="cfBind()" title="いま開いている「${escHtml(ch.path[ch.path.length - 1])}」をこの案件のフォルダにする">${ico('pin')} ここにする</button>` : ''}
         </div>
         <div class="cf-list">${_cfChooserListHtml()}</div>
-        <div class="cf-foot">行を押すと中に入ります。「これにする」か「📌 ここにする」で結び付くと、次からは自動で出ます。<a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">一覧に無い場所を直接選ぶ</a></div>`;
+        <div class="cf-foot">行を押すと中に入ります。「これにする」か「${ico('pin')} ここにする」で結び付くと、次からは自動で出ます。<a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">一覧に無い場所を直接選ぶ</a></div>`;
       break;
     }
     case 'error': body = `<div class="cf-empty">読めませんでした。<br><span style="font-size:10px">${escHtml(_cf.errorMsg || '')}</span><br><button class="btn btn-secondary btn-sm" onclick="_cfLoad()">↻ 読み直す</button></div>`; break;
@@ -8631,7 +8707,7 @@ function renderContactCards(c) {
   if (contacts.length === 0) {
     return `<div class="info-card" style="margin-bottom:0;border-left:4px solid #3b82f6">
       <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
-        <span>👤 連絡先情報</span>
+        <span>${ico('user')} 連絡先情報</span>
         <button class="btn btn-primary btn-xs no-print" onclick="openCaseModal('${c.id}','section-contacts')">＋ 追加</button>
       </div>
     </div>`;
@@ -8650,7 +8726,7 @@ function renderContactCards(c) {
       : escHtml(initial);
     const avatarStyle = iconSrc ? `background:${iconCol.bg};border:2px solid ${iconCol.border};overflow:hidden` : '';
 
-    const TEL_ICONS = { '携帯':'📱', '固定':'🏠', '会社':'🏢' };
+    const TEL_ICONS = { '携帯':'mobile', '固定':'phone', '会社':'building' };
     const TEL_LABELS = { '携帯':'Mobile', '固定':'固定', '会社':'勤務先' };
     // 複数電話・FAX・メールに対応（後方互換）
     const tels   = ct.tels   || (ct.tel   ? [{type:'固定', number:ct.tel}] : []);
@@ -8660,13 +8736,13 @@ function renderContactCards(c) {
     const telRows   = tels  .filter(t => t.number||t).map(t => {
       const num  = typeof t === 'object' ? t.number : t;
       const type = typeof t === 'object' ? (t.type||'固定') : '固定';
-      const icon = TEL_ICONS[type] || '📞';
+      const icon = TEL_ICONS[type] || 'phone';
       const label = {'携帯':'Mobile','固定':'固定','会社':'勤務先'}[type] || type;
-      const telIcon = type === '携帯' ? '📱' : type === '会社' ? '🏢' : '📞';
+      const telIcon = ico(TEL_ICONS[type] || 'phone');
       return `<div class="cp-row"><span class="icon icon-tel">${telIcon}</span><a href="tel:${escHtml(num.replace(/[^0-9+]/g,''))}" class="cp-tel" style="text-decoration:none;color:inherit">${escHtml(num)}</a><span style="font-size:10px;color:var(--text-muted);margin-left:4px">${label}</span></div>`;
     }).join('');
-    const faxRows   = faxes .filter(v=>v).map(v => `<div class="cp-row"><span class="icon icon-fax">📠</span><span>${escHtml(v)}</span><span style="font-size:10px;color:var(--text-muted);margin-left:4px">FAX</span></div>`).join('');
-    const emailRows = emails.filter(v=>v).map(v => `<div class="cp-row"><span class="icon icon-email">✉</span><span>${escHtml(v)}</span></div>`).join('');
+    const faxRows   = faxes .filter(v=>v).map(v => `<div class="cp-row"><span class="icon icon-fax">${ico('fax')}</span><span>${escHtml(v)}</span><span style="font-size:10px;color:var(--text-muted);margin-left:4px">FAX</span></div>`).join('');
+    const emailRows = emails.filter(v=>v).map(v => `<div class="cp-row"><span class="icon icon-email">${ico('mail')}</span><span>${escHtml(v)}</span></div>`).join('');
 
     // 確認記録ボタン用URLパラメータ生成
     const firstTel   = tels.find(t => t.number||t);
@@ -8701,8 +8777,8 @@ function renderContactCards(c) {
   return `
     <div class="contacts-section">
       <div class="contacts-section-header">
-        <span>📞 連絡先一覧 （${contacts.length}名）</span>
-        <button class="btn btn-secondary btn-xs" onclick="openCaseModal('${c.id}', 'section-contacts')">✏ 編集</button>
+        <span>${ico('phone')} 連絡先一覧 （${contacts.length}名）</span>
+        <button class="btn btn-secondary btn-xs" onclick="openCaseModal('${c.id}', 'section-contacts')">${ico('edit')} 編集</button>
       </div>
       <div class="contacts-grid">${cards}</div>
     </div>`;
@@ -8741,8 +8817,8 @@ function taskCard(tk) {
         <div class="task-card-name">${escHtml(tk.name)}</div>
         <div class="task-card-meta">
           ${statusBadge(tk.status)}
-          ${tk.deadline ? `<span class="${tk.status!=='完了'&&tk.deadline<t?'deadline-overdue':tk.deadline===t?'deadline-today':''}" style="font-size:11px">⏰ ${formatDate(tk.deadline)}</span>` : ''}
-          <button class="btn btn-danger btn-xs" style="padding:2px 7px;font-size:10px" onclick="event.stopPropagation();confirmAction('このタスクを削除しますか？', () => deleteTask('${tk.id}'))">🗑</button>
+          ${tk.deadline ? `<span class="${tk.status!=='完了'&&tk.deadline<t?'deadline-overdue':tk.deadline===t?'deadline-today':''}" style="font-size:11px">${ico('clock')} ${formatDate(tk.deadline)}</span>` : ''}
+          <button class="btn btn-danger btn-xs" style="padding:2px 7px;font-size:10px" onclick="event.stopPropagation();confirmAction('このタスクを削除しますか？', () => deleteTask('${tk.id}'))">${ico('trash')}</button>
           <span style="font-size:11px;color:#9ca3af">▾</span>
         </div>
       </div>
@@ -8761,7 +8837,7 @@ function taskCard(tk) {
         ${tk.contact_result ? `<div style="font-size:12px;color:#4b5563;background:#fffbeb;padding:8px;border-radius:4px;margin-bottom:8px;border-left:3px solid #f59e0b"><strong>連絡結果：</strong>${escHtml(tk.contact_result)}</div>` : ''}
         ${tk.memo ? `<div style="font-size:12px;color:#6b7280;font-style:italic">メモ: ${escHtml(tk.memo)}</div>` : ''}
         <div class="task-actions">
-          <button class="btn btn-secondary btn-xs" onclick="openTaskModal('${tk.id}', '${tk.case_id}', null)">✏ 編集</button>
+          <button class="btn btn-secondary btn-xs" onclick="openTaskModal('${tk.id}', '${tk.case_id}', null)">${ico('edit')} 編集</button>
           <button class="btn ${tk.status==='完了'?'btn-secondary':'btn-success'} btn-xs" onclick="quickComplete('${tk.id}')">${tk.status==='完了'?'✓ 完了済':'✓ 完了にする'}</button>
           <button class="btn btn-danger btn-xs" onclick="confirmAction('このタスクを削除しますか？', () => deleteTask('${tk.id}'))">削除</button>
           <select class="filter-select" style="font-size:11px;padding:3px 6px" onchange="changeTaskStatus('${tk.id}', this.value)">
@@ -9015,7 +9091,7 @@ function togglePin(caseId) {
   c.pinned = !c.pinned;
   saveToStorage();
   caseViewMode === 'tile' ? renderCaseTiles() : renderCaseTable();
-  toast(c.pinned ? '📌 ピン留めしました' : 'ピンを外しました');
+  toast(c.pinned ? 'ピン留めしました' : 'ピンを外しました', null, c.pinned ? 'pin' : null);
 }
 
 /** メモ一覧をHTMLで返す */
@@ -9034,7 +9110,7 @@ function renderMemoList(c) {
     <div class="memo-card" id="memo-card-${m.id}">
       <div class="memo-card-header">
         <span class="memo-card-date">${formatDate(m.date) || m.date || '日付なし'}</span>
-        <button class="btn btn-secondary btn-xs no-print" onclick="openMemoModal('${c.id}','${m.id}')" style="margin-left:auto">✏ 編集</button>
+        <button class="btn btn-secondary btn-xs no-print" onclick="openMemoModal('${c.id}','${m.id}')" style="margin-left:auto">${ico('edit')} 編集</button>
         <button class="btn btn-xs no-print" onclick="deleteMemoItem('${c.id}','${m.id}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#dc2626">✕</button>
       </div>
       <div class="memo-card-text clamp-text" id="memo-text-${m.id}">${renderHl(m.text||'')}</div>
@@ -9174,15 +9250,15 @@ function editMemoItem(caseId, memoId) {
     <div class="memo-card-header">
       <input type="date" value="${m.date||today()}" id="memo-date-edit-${memoId}"
         style="font-size:11px;border:1px solid var(--border-color);border-radius:4px;padding:2px 6px;background:var(--bg-primary);color:var(--text-primary)">
-      <button class="btn btn-primary btn-xs no-print" onclick="saveMemoItem('${caseId}','${memoId}')" style="margin-left:auto">💾 保存</button>
+      <button class="btn btn-primary btn-xs no-print" onclick="saveMemoItem('${caseId}','${memoId}')" style="margin-left:auto">${ico('save')} 保存</button>
       <button class="btn btn-secondary btn-xs no-print" onclick="cancelMemoEdit('${caseId}','${memoId}')">キャンセル</button>
     </div>
     <div class="marker-toolbar" style="border-radius:4px 4px 0 0">
-      <span style="font-size:11px;color:var(--text-muted);margin-right:2px">🖊️</span>
-      <button type="button" class="marker-btn" style="background:#fef08a" onclick="applyMarker('memo-text-edit-${memoId}','hl-yellow')">🟡</button>
-      <button type="button" class="marker-btn" style="background:#bfdbfe" onclick="applyMarker('memo-text-edit-${memoId}','hl-blue')">🔵</button>
-      <button type="button" class="marker-btn" style="background:#bbf7d0" onclick="applyMarker('memo-text-edit-${memoId}','hl-green')">🟢</button>
-      <button type="button" class="marker-btn" style="background:#fecdd3" onclick="applyMarker('memo-text-edit-${memoId}','hl-pink')">🩷</button>
+      <span style="font-size:11px;color:var(--text-muted);margin-right:2px">${ico('edit')}</span>
+      <button type="button" class="marker-btn" style="background:#fef08a" onclick="applyMarker('memo-text-edit-${memoId}','hl-yellow')"><span style="color:#ca8a04">●</span></button>
+      <button type="button" class="marker-btn" style="background:#bfdbfe" onclick="applyMarker('memo-text-edit-${memoId}','hl-blue')"><span style="color:#2563a8">●</span></button>
+      <button type="button" class="marker-btn" style="background:#bbf7d0" onclick="applyMarker('memo-text-edit-${memoId}','hl-green')"><span style="color:#16a34a">●</span></button>
+      <button type="button" class="marker-btn" style="background:#fecdd3" onclick="applyMarker('memo-text-edit-${memoId}','hl-pink')"><span style="color:#be185d">●</span></button>
       <div class="marker-sep"></div>
       <button type="button" class="marker-btn-clear" onclick="clearMarker('memo-text-edit-${memoId}')">消去</button>
     </div>
@@ -9279,7 +9355,7 @@ function showTeikeiPicker(inputEl, field) {
   picker.id = 'teikei-picker';
 
   const fieldName = field === 'mokuteki' ? '登記の目的' : '登記原因';
-  picker.innerHTML = `<div class="teikei-picker-header">📋 ${fieldName} の定型文</div>`;
+  picker.innerHTML = `<div class="teikei-picker-header">${ico('clipboard')} ${fieldName} の定型文</div>`;
 
   if (items.length === 0) {
     picker.innerHTML += `<div class="teikei-empty">定型文がありません</div>`;
@@ -9336,7 +9412,7 @@ function renderTeikeiSettings() {
     const items = data[field] || [];
     return `
       <div style="margin-bottom:16px">
-        <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px">📋 ${label}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px">${ico('clipboard')} ${label}</div>
         <div id="teikei-list-${field}" data-field="${field}" class="teikei-dnd-list">
           ${items.map((t, i) => `
             <div class="teikei-dnd-item" draggable="true" data-idx="${i}" data-field="${field}"
@@ -9475,15 +9551,15 @@ function checkDeadlineAlert() {
   const items = [
     ...overdueTasks.map(tk => {
       const c = cases.find(c => c.id === tk.case_id);
-      return `⚠ ${c ? escHtml(c.case_name) : '?'} ／ ${escHtml(tk.name)}（期限：${tk.deadline}）`;
+      return `${ico('warn')} ${c ? escHtml(c.case_name) : '?'} ／ ${escHtml(tk.name)}（期限：${tk.deadline}）`;
     }),
     ...todayTasks.map(tk => {
       const c = cases.find(c => c.id === tk.case_id);
-      return `🔔 ${c ? escHtml(c.case_name) : '?'} ／ ${escHtml(tk.name)}（今日が期限）`;
+      return `${ico('bell')} ${c ? escHtml(c.case_name) : '?'} ／ ${escHtml(tk.name)}（今日が期限）`;
     }),
     ...overdueYotei.map(c => {
       const s = (c.shinsei_dates||[]).find(s => s.yotei && s.yotei < t && !s.kanryo);
-      return `📋 ${escHtml(c.case_name)}（完了予定：${s?.yotei}）`;
+      return `${ico('clipboard')} ${escHtml(c.case_name)}（完了予定：${s?.yotei}）`;
     }),
   ].slice(0, 6);
 
@@ -9546,7 +9622,7 @@ function renderWaitingBanner() {
   el.style.display = 'block';
   el.innerHTML = `
     <div style="padding:6px 14px;background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;margin:8px 0 4px;display:flex;align-items:center;flex-wrap:wrap;gap:8px">
-      <span style="font-size:12px;font-weight:700;color:#78350f;flex-shrink:0;background:#fde68a;padding:2px 8px;border-radius:6px">⏳ Waiting</span>
+      <span style="font-size:12px;font-weight:700;color:#78350f;flex-shrink:0;background:#fde68a;padding:2px 8px;border-radius:6px">${ico('hourglass')} Waiting</span>
       ${waitingCases.map(c => `
         <button onclick="showCaseDetail('${c.id}')"
           style="background:#fff;border:1px solid #fcd34d;border-radius:16px;padding:2px 12px;font-size:12px;font-weight:600;color:#78350f;cursor:pointer;white-space:nowrap;transition:all 0.15s"
@@ -10065,7 +10141,7 @@ function renderLedger(c) {
   return `
     <div class="ledger-section">
       <div class="ledger-section-header">
-        <span>📒 受付台帳（上段）</span>
+        <span>${ico('ledger')} 受付台帳（上段）</span>
         <button class="btn btn-primary btn-xs" onclick="addLedgerGroup('${cid}','upper')">＋ 段を追加</button>
       </div>
       ${upperSections}
@@ -10073,7 +10149,7 @@ function renderLedger(c) {
     ${!isCorporate ? `
     <div class="ledger-section" style="margin-top:8px">
       <div class="ledger-section-header">
-        <span>📒 受付台帳（下段：当事者・不動産）</span>
+        <span>${ico('ledger')} 受付台帳（下段：当事者・不動産）</span>
         <button class="btn btn-primary btn-xs" onclick="addLedgerGroup('${cid}','lower')">＋ 段を追加</button>
       </div>
       ${lowerSections}
@@ -10109,7 +10185,7 @@ function renderPropertyList(c) {
   return `
     <div class="ledger-section" style="margin-top:8px">
       <div class="ledger-section-header">
-        <span>🏠 不動産一覧</span>
+        <span>${ico('home')} 不動産一覧</span>
         <button class="btn btn-secondary btn-xs" onclick="addPropertyRow('${cid}')">＋ 行を追加</button>
       </div>
       <div class="ledger-wrap">
@@ -10604,7 +10680,7 @@ function printCaseDetail(caseId) {
     if (c.client_name || c.client_tel) contacts.push({ role:'依頼者', name:c.client_name||'', tels:[{type:'固定',number:c.client_tel||''}], emails:[c.client_email||''], faxes:[], note:'' });
     if (c.other_name) contacts.push({ role:'関係者', name:c.other_name||'', tels:[{type:'固定',number:c.other_contact||''}], emails:[], faxes:[], note:'' });
   }
-  const TEL_ICONS = { '携帯':'📱', '固定':'🏠', '会社':'🏢' };
+  const TEL_ICONS = { '携帯':'mobile', '固定':'phone', '会社':'building' };
   const TEL_LABELS = { '携帯':'Mobile', '固定':'固定', '会社':'勤務先' };
 
   const contactsHtml = contacts.map(ct => {
@@ -10615,14 +10691,14 @@ function printCaseDetail(caseId) {
       <div class="print-contact-role">${escHtml(ct.role||'')}</div>
       <div class="print-contact-name">${escHtml(ct.name||'')}</div>
       ${ct.furigana ? `<div style="font-size:8pt;color:#666">${escHtml(ct.furigana)}</div>` : ''}
-      ${ct.address  ? `<div class="print-contact-row">📍 ${escHtml(ct.address)}</div>` : ''}
+      ${ct.address  ? `<div class="print-contact-row">${ico('pin-map')} ${escHtml(ct.address)}</div>` : ''}
       ${tels.filter(t=>t.number||t).map(t=>{
         const num = typeof t === 'object' ? t.number : t;
         const tp  = typeof t === 'object' ? (t.type||'固定') : '固定';
-        return `<div class="print-contact-row">${TEL_ICONS[tp]||'📞'} ${escHtml(num)} <small>(${TEL_LABELS[tp]||tp})</small></div>`;
+        return `<div class="print-contact-row">${ico(TEL_ICONS[tp]||'phone')} ${escHtml(num)} <small>(${TEL_LABELS[tp]||tp})</small></div>`;
       }).join('')}
-      ${faxes.filter(v=>v).map(v=>`<div class="print-contact-row">📠 ${escHtml(v)}</div>`).join('')}
-      ${emails.filter(v=>v).map(v=>`<div class="print-contact-row">✉ ${escHtml(v)}</div>`).join('')}
+      ${faxes.filter(v=>v).map(v=>`<div class="print-contact-row">${ico('fax')} ${escHtml(v)}</div>`).join('')}
+      ${emails.filter(v=>v).map(v=>`<div class="print-contact-row">${ico('mail')} ${escHtml(v)}</div>`).join('')}
       ${ct.note ? `<div class="print-contact-row" style="color:#666">${escHtml(ct.note)}</div>` : ''}
     </div>`;
   }).join('');
@@ -10694,7 +10770,7 @@ function printCaseDetail(caseId) {
   const docsHtml = `
     ${others.length > 0 ? docTable(others) : ''}
     ${hyoka.length > 0 ? `
-      <div class="print-subhead">📋 評価証明書等（合計 ${docCount(hyoka)}通${docTotal(hyoka) ? ' ／ ¥' + docTotal(hyoka).toLocaleString('ja-JP') : ''}）</div>
+      <div class="print-subhead">${ico('clipboard')} 評価証明書等（合計 ${docCount(hyoka)}通${docTotal(hyoka) ? ' ／ ¥' + docTotal(hyoka).toLocaleString('ja-JP') : ''}）</div>
       ${docTable(hyoka)}` : ''}`;
 
   /* ===== タスク ===== */
@@ -10724,7 +10800,7 @@ function printCaseDetail(caseId) {
       <span>区分：${escHtml(c.category||'不動産登記')}</span>
       <span>種別：${escHtml(c.type||'—')}</span>
       <span>ステータス：${escHtml(c.status||'—')}</span>
-      ${c.waiting ? `<span>⏳ Waiting</span>` : ''}
+      ${c.waiting ? `<span>${ico('hourglass')} Waiting</span>` : ''}
       <span>印刷日：${printDate}</span>
     </div>
 
@@ -10744,7 +10820,7 @@ function printCaseDetail(caseId) {
         <tr><th>種別</th><td>${escHtml(c.type||'—')}</td></tr>
         <tr><th>受付日</th><td>${formatDate(c.received_date)}</td></tr>
         ${c.kanryo_yotei_date ? `<tr><th>登記完了予定日</th><td>${formatDate(c.kanryo_yotei_date)}</td></tr>` : ''}
-        ${c.hoteisozoku ? `<tr><th>法定相続情報一覧図</th><td>${_hsPending(c) ? '⚠ 手配する（未手配）' : '✅ 手配済み' + (c.hoteisozoku_tehai_date ? '（' + formatDate(c.hoteisozoku_tehai_date) + '）' : '')}</td></tr>` : ''}
+        ${c.hoteisozoku ? `<tr><th>法定相続情報一覧図</th><td>${_hsPending(c) ? ico('warn', 'ico-amber') + ' 手配する（未手配）' : ico('check-circle', 'ico-ok') + ' 手配済み' + (c.hoteisozoku_tehai_date ? '（' + formatDate(c.hoteisozoku_tehai_date) + '）' : '')}</td></tr>` : ''}
       </table>`)}
 
     ${(c.touki_list||[]).length > 0 ? sect(`登記事項証明書取得（${c.touki_list.length}件）`, `
@@ -10813,11 +10889,11 @@ function printCaseDetail(caseId) {
       <div class="print-iv">
         <div class="print-iv-head">
           <span class="print-iv-date">${escHtml(formatDatetime(iv.datetime))}</span>
-          ${iv.place ? `<span class="print-iv-meta">📍 ${escHtml(iv.place)}</span>` : ''}
-          ${iv.party ? `<span class="print-iv-meta">👥 ${escHtml(iv.party)}</span>` : ''}
+          ${iv.place ? `<span class="print-iv-meta">${ico('pin-map')} ${escHtml(iv.place)}</span>` : ''}
+          ${iv.party ? `<span class="print-iv-meta">${ico('users')} ${escHtml(iv.party)}</span>` : ''}
         </div>
         <div class="print-iv-body">${renderHl(iv.content||'')}</div>
-        ${iv.azukari ? `<div class="print-iv-azukari"><b>📦 預かったもの：</b>${escHtml(iv.azukari)}</div>` : ''}
+        ${iv.azukari ? `<div class="print-iv-azukari"><b>${ico('package')} 預かったもの：</b>${escHtml(iv.azukari)}</div>` : ''}
       </div>`).join(''), 'allow-break') : ''}
 
     ${(c.deliveries||[]).length > 0 ? sect(`書類送付先（${c.deliveries.length}件）`, c.deliveries.map((d, i) => `
@@ -11203,7 +11279,7 @@ function addInvoiceRow(inv) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control inv-date" type="text" placeholder="例：2026-04-30" style="flex:1" value="${escHtml(d.date||'')}">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px">📅</button>
+            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px">${ico('calendar')}</button>
             <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.closest('.form-group').querySelector('.inv-date').value=this.value;this.value=''">
           </div>
         </div>
@@ -11214,7 +11290,7 @@ function addInvoiceRow(inv) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control inv-paid" type="text" placeholder="例：2026-05-10" style="flex:1" value="${escHtml(d.paid||'')}">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px">📅</button>
+            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px">${ico('calendar')}</button>
             <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.closest('.form-group').querySelector('.inv-paid').value=this.value;this.value=''">
           </div>
         </div>
@@ -11274,7 +11350,7 @@ function addContactRow(ct, idx) {
   const emails = ct?.emails || (ct?.email ? [ct.email] : ['']);
 
   const TEL_TYPES = ['携帯','固定','会社'];
-  const TEL_ICONS = { '携帯':'📱', '固定':'🏠', '会社':'🏢' };
+  const TEL_ICONS = { '携帯':'mobile', '固定':'phone', '会社':'building' };
     const TEL_LABELS = { '携帯':'Mobile', '固定':'固定', '会社':'勤務先' };
 
   const div = document.createElement('div');
@@ -11284,7 +11360,7 @@ function addContactRow(ct, idx) {
   const makeTelRows = (arr) => arr.map((v) => {
     const t = (typeof v === 'object') ? v : { type:'固定', number: v||'' };
     const opts = TEL_TYPES.map(tp =>
-      `<option value="${tp}" ${tp===t.type?'selected':''}>${TEL_ICONS[tp]} ${TEL_LABELS[tp]||tp}</option>`
+      `<option value="${tp}" ${tp===t.type?'selected':''}>${TEL_LABELS[tp]||tp}</option>`
     ).join('');
     // 既存の番号をハイフンで分割
     const parts = (t.number||'').split('-');
@@ -11306,7 +11382,7 @@ function addContactRow(ct, idx) {
     const p1 = parts[0]||'', p2 = parts[1]||'', p3 = parts[2]||'';
     return `
     <div class="ct-multi-row" style="display:flex;gap:4px;margin-bottom:4px;align-items:center">
-      <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">📠</span>
+      <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">${ico('fax')}</span>
       <input class="form-control ct-fax-1" style="width:72px;flex-shrink:0;text-align:center" placeholder="03" maxlength="6" value="${escHtml(p1)}" inputmode="tel">
       <span style="flex-shrink:0;font-weight:700;color:#666">-</span>
       <input class="form-control ct-fax-2" style="width:68px;flex-shrink:0;text-align:center" placeholder="1234" maxlength="4" value="${escHtml(p2)}" inputmode="tel">
@@ -11318,7 +11394,7 @@ function addContactRow(ct, idx) {
 
   const makeEmailRows = (arr) => arr.map((v) => `
     <div class="ct-multi-row" style="display:flex;gap:4px;margin-bottom:4px;align-items:center">
-      <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">✉</span>
+      <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">${ico('mail')}</span>
       <input class="form-control ct-email" style="flex:1" placeholder="例：yamada@example.com" value="${escHtml(v||'')}" inputmode="email">
       <button type="button" class="btn btn-secondary btn-xs" onclick="removeMultiRow(this)" style="flex-shrink:0">✕</button>
     </div>`).join('');
@@ -11326,11 +11402,11 @@ function addContactRow(ct, idx) {
   div.innerHTML = `
     <div class="contact-list-item-header">
       <span class="contact-list-item-num">連絡先 ${i + 1}</span>
-      <button type="button" class="btn btn-secondary btn-xs" onclick="openAddrBookPicker(this)" style="background:#f0fdf4;border-color:#4ade80;color:#166534">📒 アドレス帳</button>
-      <button type="button" class="btn btn-secondary btn-xs" onclick="addToAddrBookFromForm(this)" style="background:#fefce8;border-color:#fbbf24;color:#92400e">⭐ アドレス帳に登録</button>
-      <button type="button" class="btn btn-secondary btn-xs" onclick="openKakuninFromForm(this)" style="background:#eff6ff;border-color:#93c5fd;color:#1e40af">📋 確認記録</button>
-      <button type="button" class="btn btn-secondary btn-xs" onclick="openSoushuFromForm(this)" style="background:#f0fdf4;border-color:#86efac;color:#166534">📬 書類送付</button>
-      <button type="button" class="btn btn-secondary btn-xs" onclick="openHenshinFromForm(this)" style="background:#fdf4ff;border-color:#d8b4fe;color:#7e22ce">📨 返信あり送付</button>
+      <button type="button" class="btn btn-secondary btn-xs" onclick="openAddrBookPicker(this)" style="background:#f0fdf4;border-color:#4ade80;color:#166534">${ico('ledger')} アドレス帳</button>
+      <button type="button" class="btn btn-secondary btn-xs" onclick="addToAddrBookFromForm(this)" style="background:#fefce8;border-color:#fbbf24;color:#92400e">★ アドレス帳に登録</button>
+      <button type="button" class="btn btn-secondary btn-xs" onclick="openKakuninFromForm(this)" style="background:#eff6ff;border-color:#93c5fd;color:#1e40af">${ico('clipboard')} 確認記録</button>
+      <button type="button" class="btn btn-secondary btn-xs" onclick="openSoushuFromForm(this)" style="background:#f0fdf4;border-color:#86efac;color:#166534">${ico('mailbox')} 書類送付</button>
+      <button type="button" class="btn btn-secondary btn-xs" onclick="openHenshinFromForm(this)" style="background:#fdf4ff;border-color:#d8b4fe;color:#7e22ce">${ico('mail')} 返信あり送付</button>
       <button type="button" class="btn btn-danger btn-xs" onclick="removeContactRow(this)">削除</button>
     </div>
     <div class="contact-list-grid">
@@ -11347,11 +11423,11 @@ function addContactRow(ct, idx) {
         <label class="form-label">アイコン</label>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-top:4px">
           <div class="ct-photo-preview" style="width:60px;height:60px;border-radius:50%;overflow:hidden;flex-shrink:0;border:3px solid ${ct?.photo ? 'var(--color-primary)' : '#e2e8f0'};background:#f8fafc;display:flex;align-items:center;justify-content:center">
-            ${ct?.photo ? `<img src="${ct.photo}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:24px;color:#94a3b8">👤</span>`}
+            ${ct?.photo ? `<img src="${ct.photo}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:24px;color:#94a3b8">${ico('user')}</span>`}
           </div>
           <div style="display:flex;flex-direction:column;gap:6px">
             <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-primary)">
-              📷 写真をアップロード
+              ${ico('camera')} 写真をアップロード
               <input type="file" accept="image/*" class="ct-photo-input" style="display:none"
                 onchange="(function(input){
                   const file=input.files[0]; if(!file) return;
@@ -11379,7 +11455,7 @@ function addContactRow(ct, idx) {
                   reader.readAsDataURL(file);
                 })(this)">
             </label>
-            ${ct?.photo ? `<button type="button" style="padding:4px 10px;background:none;border:1px solid #fca5a5;border-radius:6px;color:#ef4444;font-size:11px;cursor:pointer" onclick="(function(btn){const fg=btn.closest('.form-group');fg.querySelector('.ct-photo-preview').innerHTML='<span style=\\'font-size:24px;color:#94a3b8\\'>👤</span>';fg.querySelector('.ct-photo-preview').style.border='3px solid #e2e8f0';fg.querySelector('.ct-photo-data').value=''})(this)">✕ 写真を削除</button>` : ''}
+            ${ct?.photo ? `<button type="button" style="padding:4px 10px;background:none;border:1px solid #fca5a5;border-radius:6px;color:#ef4444;font-size:11px;cursor:pointer" onclick="(function(btn){const fg=btn.closest('.form-group');fg.querySelector('.ct-photo-preview').innerHTML='<span style=\\'font-size:24px;color:#94a3b8\\'><svg class=ico aria-hidden=true><use href=#i-user></use></svg></span>';fg.querySelector('.ct-photo-preview').style.border='3px solid #e2e8f0';fg.querySelector('.ct-photo-data').value=''})(this)">✕ 写真を削除</button>` : ''}
           </div>
         </div>
         <input type="hidden" class="ct-photo-data" value="${ct?.photo || ''}">
@@ -11402,12 +11478,12 @@ function addContactRow(ct, idx) {
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">メールアドレス</label>
         <div class="ct-email-list">${makeEmailRows(emails)}</div>
-        <button type="button" class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addMultiRow(this,'email','✉','メールアドレス')">＋ メール追加</button>
+        <button type="button" class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addMultiRow(this,'email','mail','メールアドレス')">＋ メール追加</button>
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">FAX番号</label>
         <div class="ct-fax-list">${makeFaxRows(faxes)}</div>
-        <button type="button" class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addMultiRow(this,'fax','📠','FAX番号')">＋ FAX追加</button>
+        <button type="button" class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addMultiRow(this,'fax','fax','FAX番号')">＋ FAX追加</button>
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">メモ（住所・補足など）</label>
@@ -11425,7 +11501,7 @@ function addContactRow(ct, idx) {
 }
 
 function telTypeIcon(type) {
-  return { '固定':'🏠', '会社':'🏢', '携帯':'📱' }[type] || '📞';
+  return { '固定':'phone', '会社':'building', '携帯':'mobile' }[type] || 'phone';   // アイコンの名前（ico() に渡す）
 }
 
 /** 電話番号行を追加（種別セレクト付き） */
@@ -11436,7 +11512,7 @@ function addMultiRow(btn, type, icon, placeholder) {
   row.style.cssText = 'display:flex;gap:4px;margin-bottom:4px;align-items:center';
   if (type === 'fax') {
     row.innerHTML = `
-      <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">📠</span>
+      <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">${ico('fax')}</span>
       <input class="form-control ct-fax-1" style="width:72px;flex-shrink:0;text-align:center" placeholder="03" maxlength="6" value="" inputmode="tel">
       <span style="flex-shrink:0;font-weight:700;color:#666">-</span>
       <input class="form-control ct-fax-2" style="width:68px;flex-shrink:0;text-align:center" placeholder="1234" maxlength="4" value="" inputmode="tel">
@@ -11445,7 +11521,7 @@ function addMultiRow(btn, type, icon, placeholder) {
       <button type="button" class="btn btn-secondary btn-xs" onclick="removeMultiRow(this)" style="flex-shrink:0">✕</button>`;
   } else if (type === 'email') {
     row.innerHTML = `
-      <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">✉</span>
+      <span style="width:28px;text-align:center;font-size:14px;flex-shrink:0">${ico('mail')}</span>
       <input class="form-control ct-email" style="flex:1" placeholder="例：yamada@example.com" value="" inputmode="email">
       <button type="button" class="btn btn-secondary btn-xs" onclick="removeMultiRow(this)" style="flex-shrink:0">✕</button>`;
   }
@@ -11497,9 +11573,9 @@ function fmtEmail(el) {
 function addTelRow(btn) {
   const listDiv = btn.previousElementSibling;
   const TEL_TYPES = ['携帯','固定','会社'];
-  const TEL_ICONS = { '携帯':'📱', '固定':'🏠', '会社':'🏢' };
+  const TEL_ICONS = { '携帯':'mobile', '固定':'phone', '会社':'building' };
     const TEL_LABELS = { '携帯':'Mobile', '固定':'固定', '会社':'勤務先' };
-  const opts = TEL_TYPES.map(tp => `<option value="${tp}">${TEL_ICONS[tp]} ${TEL_LABELS[tp]||tp}</option>`).join('');
+  const opts = TEL_TYPES.map(tp => `<option value="${tp}">${TEL_LABELS[tp]||tp}</option>`).join('');
   const row = document.createElement('div');
   row.className = 'ct-multi-row';
   row.style.cssText = 'display:flex;gap:4px;margin-bottom:4px;align-items:center';
@@ -11857,11 +11933,14 @@ function confirmAction(msg, callback) {
 /* =====================================================
    TOAST
    ===================================================== */
-function toast(msg, type) {
+function toast(msg, type, icon) {
   const container = document.getElementById('toast-container');
   const el = document.createElement('div');
   el.className = 'toast' + (type ? ' ' + type : '');
-  el.textContent = msg;
+  // 先頭の印（10.2.8）。success は既定で ✓ の丸。msg は今までどおり文字として入れる（HTMLとして流さない）
+  const _ic = icon || (type === 'success' ? 'check-circle' : '');
+  if (_ic) { el.innerHTML = ico(_ic) + ' '; }
+  el.appendChild(document.createTextNode(msg));
   container.appendChild(el);
   setTimeout(() => el.remove(), 3000);
 }
@@ -12086,7 +12165,7 @@ function renderStorageStatus() {
     <div style="background:var(--bg-secondary);border-radius:6px;height:10px;overflow:hidden;margin-bottom:8px">
       <div style="width:${pct}%;height:100%;background:${barColor};border-radius:6px;transition:width 0.3s"></div>
     </div>
-    ${pct > 80 ? '<div style="font-size:11px;color:#ef4444;font-weight:700;margin-bottom:6px">⚠ 使用量が80%を超えています。完了案件の整理やバックアップ後の削除を検討してください</div>' : ''}
+    ${pct > 80 ? '<div style="font-size:11px;color:#ef4444;font-weight:700;margin-bottom:6px">' + ico('warn') + ' 使用量が80%を超えています。完了案件の整理やバックアップ後の削除を検討してください</div>' : ''}
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">内訳（上位5件）：</div>
     ${top5}
     <div style="font-size:10px;color:var(--text-muted);margin-top:6px">案件数：${cases.length}件 ／ タスク数：${tasks.length}件</div>
@@ -12341,7 +12420,7 @@ function onYoteiChange(input) {
 
   suggest.style.display = 'flex';
   suggest.innerHTML = `
-    <span>📋 タスク「<b>謄本</b>」を追加しますか？（期限：${formatDate(yotei)}）</span>
+    <span>${ico('clipboard')} タスク「<b>謄本</b>」を追加しますか？（期限：${formatDate(yotei)}）</span>
     <div class="touhon-suggest-btns">
       <button type="button" class="btn btn-primary btn-xs" onclick="addTouhonTask(this,'${escHtml(yotei)}')">はい</button>
       <button type="button" class="btn btn-secondary btn-xs" onclick="this.closest('.touhon-suggest').style.display='none'">いいえ</button>
@@ -12387,7 +12466,7 @@ function addShinseiRow(r, idx) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control sh-shinsei" type="text" placeholder="例：2026-04-15" value="${escHtml(r?.shinsei||'')}" style="flex:1">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">📅</button>
+            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">${ico('calendar')}</button>
             <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
           </div>
         </div>
@@ -12397,7 +12476,7 @@ function addShinseiRow(r, idx) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control sh-yotei" type="text" placeholder="例：2026-05-01" value="${escHtml(r?.yotei||'')}" style="flex:1" onchange="onYoteiChange(this)">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">📅</button>
+            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">${ico('calendar')}</button>
             <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;onYoteiChange(this.parentElement.previousElementSibling);this.value=''">
           </div>
         </div>
@@ -12408,7 +12487,7 @@ function addShinseiRow(r, idx) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control sh-kanryo" type="text" placeholder="例：2026-05-10" value="${escHtml(r?.kanryo||'')}" style="flex:1">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">📅</button>
+            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">${ico('calendar')}</button>
             <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
           </div>
         </div>
@@ -12417,14 +12496,14 @@ function addShinseiRow(r, idx) {
         <label class="form-label">追跡番号</label>
         <div style="display:flex;gap:6px;align-items:center">
           <input class="form-control sh-tracking" type="text" placeholder="例：1234567890123" value="${escHtml(r?.tracking||'')}" style="flex:1" inputmode="numeric">
-          <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="shTrack(this)">📦 追跡</button>
+          <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="shTrack(this)">${ico('package')} 追跡</button>
         </div>
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">返信追跡番号</label>
         <div style="display:flex;gap:6px;align-items:center">
           <input class="form-control sh-tracking-return" type="text" placeholder="例：1234567890123" value="${escHtml(r?.tracking_return||'')}" style="flex:1" inputmode="numeric">
-          <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="shTrackReturn(this)">📦 追跡</button>
+          <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="shTrackReturn(this)">${ico('package')} 追跡</button>
         </div>
       </div>
     </div>`;
@@ -12461,7 +12540,7 @@ function renderShinseiSection(c) {
   if (rows.length === 0) return `
     <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-left:4px solid #2563eb;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-bottom:16px;overflow:hidden">
       <div style="padding:11px 14px;background:linear-gradient(135deg,#e0eaff,#f0f7ff);border-bottom:3px solid #fbbf24;font-size:13px;font-weight:700;color:#1e3a8a;display:flex;align-items:center;justify-content:space-between">
-        <span>📋 管轄別 申請日・完了日</span>
+        <span>${ico('clipboard')} 管轄別 申請日・完了日</span>
         <button class="btn btn-primary btn-xs no-print" onclick="openCaseModal('${c.id}','section-shinsei')">＋ 追加</button>
       </div>
     </div>`;
@@ -12479,20 +12558,20 @@ function renderShinseiSection(c) {
       ${trackings.map(num => `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
         <span style="font-size:11px;color:var(--text-muted)">追跡：${escHtml(num)}</span>
         <a href="https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${encodeURIComponent(num)}&searchKind=S002&locale=ja" target="_blank"
-          style="font-size:11px;color:#0369a1;text-decoration:none;padding:1px 6px;border:1px solid #0369a1;border-radius:4px">📦 追跡</a>
+          style="font-size:11px;color:#0369a1;text-decoration:none;padding:1px 6px;border:1px solid #0369a1;border-radius:4px">${ico('package')} 追跡</a>
       </div>`).join('')}
       ${r.tracking_return ? `<div style="display:flex;align-items:center;gap:6px">
         <span style="font-size:11px;color:var(--text-muted)">返信追跡：${escHtml(r.tracking_return)}</span>
         <a href="https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${encodeURIComponent(r.tracking_return)}&searchKind=S002&locale=ja" target="_blank"
-          style="font-size:11px;color:#0369a1;text-decoration:none;padding:1px 6px;border:1px solid #0369a1;border-radius:4px">📦 追跡</a>
+          style="font-size:11px;color:#0369a1;text-decoration:none;padding:1px 6px;border:1px solid #0369a1;border-radius:4px">${ico('package')} 追跡</a>
       </div>` : ''}
     </div>`;
   }).join('');
   return `
     <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-left:4px solid #2563eb;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-bottom:16px;overflow:hidden">
       <div style="padding:11px 14px;background:linear-gradient(135deg,#e0eaff,#f0f7ff);border-bottom:3px solid #fbbf24;font-size:13px;font-weight:700;color:#1e3a8a;display:flex;align-items:center;justify-content:space-between">
-        <span>📋 管轄別 申請日・完了日（${rows.length}件）</span>
-        <button class="btn btn-secondary btn-xs" onclick="openCaseModal('${c.id}', 'section-shinsei')">✏ 編集</button>
+        <span>${ico('clipboard')} 管轄別 申請日・完了日（${rows.length}件）</span>
+        <button class="btn btn-secondary btn-xs" onclick="openCaseModal('${c.id}', 'section-shinsei')">${ico('edit')} 編集</button>
       </div>
       <div style="padding:10px 12px">${items}</div>
     </div>`;
@@ -12540,7 +12619,7 @@ function addDeliveryRow(d, idx) {
         <label class="form-label">郵便番号 → 住所自動入力</label>
         <div style="display:flex;gap:6px;align-items:center">
           <input class="form-control dv-zip" placeholder="例：1000001（ハイフン不要）" value="${escHtml(d?.zip||'')}" style="width:160px;flex-shrink:0" inputmode="numeric" maxlength="8">
-          <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap" onclick="dvZipSearch(this)">🔍 住所を検索</button>
+          <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap" onclick="dvZipSearch(this)">${ico('search')} 住所を検索</button>
           <span class="dv-zip-status" style="font-size:11px;color:var(--text-muted)"></span>
         </div>
       </div>
@@ -12557,7 +12636,7 @@ function addDeliveryRow(d, idx) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control dv-date" type="text" placeholder="例：2026-04-15、未定" value="${escHtml(d?.date||'')}" style="flex:1">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー">📅</button>
+            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー">${ico('calendar')}</button>
             <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
           </div>
         </div>
@@ -12567,7 +12646,7 @@ function addDeliveryRow(d, idx) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control dv-handover" type="text" placeholder="例：2026-04-20" value="${escHtml(d?.handover||'')}" style="flex:1">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー">📅</button>
+            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー">${ico('calendar')}</button>
             <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
           </div>
         </div>
@@ -12580,7 +12659,7 @@ function addDeliveryRow(d, idx) {
             return nums.map((v, i) => `
               <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
                 <input class="form-control dv-tracking-input" type="text" placeholder="例：1234567890123" value="${escHtml(v)}" style="flex:1" inputmode="numeric">
-                <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="dvTrackThis(this)">📦 追跡</button>
+                <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="dvTrackThis(this)">${ico('package')} 追跡</button>
                 ${i > 0 ? `<button type="button" class="btn btn-xs" style="color:#dc2626;border-color:#fca5a5;background:#fff0f0;padding:0 6px" onclick="this.closest('div').remove()">✕</button>` : ''}
               </div>`).join('');
           })()}
@@ -12591,17 +12670,17 @@ function addDeliveryRow(d, idx) {
         <label class="form-label">返信追跡番号</label>
         <div style="display:flex;gap:6px;align-items:center">
           <input class="form-control dv-tracking-return" type="text" placeholder="例：1234567890123" value="${escHtml(d?.tracking_return||'')}" style="flex:1" inputmode="numeric">
-          <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="dvTrackReturn(this)">📦 追跡</button>
+          <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="dvTrackReturn(this)">${ico('package')} 追跡</button>
         </div>
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">メモ</label>
         <div class="marker-toolbar">
-          <span style="font-size:11px;color:var(--text-muted);margin-right:2px">🖊️</span>
-          <button type="button" class="marker-btn" style="background:#fef08a" title="黄マーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-yellow')">🟡</button>
-          <button type="button" class="marker-btn" style="background:#bfdbfe" title="青マーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-blue')">🔵</button>
-          <button type="button" class="marker-btn" style="background:#bbf7d0" title="緑マーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-green')">🟢</button>
-          <button type="button" class="marker-btn" style="background:#fecdd3" title="ピンクマーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-pink')">🩷</button>
+          <span style="font-size:11px;color:var(--text-muted);margin-right:2px">${ico('edit')}</span>
+          <button type="button" class="marker-btn" style="background:#fef08a" title="黄マーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-yellow')"><span style="color:#ca8a04">●</span></button>
+          <button type="button" class="marker-btn" style="background:#bfdbfe" title="青マーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-blue')"><span style="color:#2563a8">●</span></button>
+          <button type="button" class="marker-btn" style="background:#bbf7d0" title="緑マーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-green')"><span style="color:#16a34a">●</span></button>
+          <button type="button" class="marker-btn" style="background:#fecdd3" title="ピンクマーカー" onclick="applyMarkerEl(this.closest('.form-group').querySelector('textarea'),'hl-pink')"><span style="color:#be185d">●</span></button>
           <div class="marker-sep"></div>
           <button type="button" class="marker-btn-clear" onclick="clearMarkerEl(this.closest('.form-group').querySelector('textarea'))">消去</button>
         </div>
@@ -12619,7 +12698,7 @@ function addDvTrackingRow(btn) {
   div.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:4px';
   div.innerHTML = `
     <input class="form-control dv-tracking-input" type="text" placeholder="例：1234567890123" style="flex:1" inputmode="numeric">
-    <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="dvTrackThis(this)">📦 追跡</button>
+    <button type="button" class="btn btn-secondary btn-xs" style="white-space:nowrap;flex-shrink:0" onclick="dvTrackThis(this)">${ico('package')} 追跡</button>
     <button type="button" class="btn btn-xs" style="color:#dc2626;border-color:#fca5a5;background:#fff0f0;padding:0 6px" onclick="this.closest('div').remove()">✕</button>
   `;
   list.appendChild(div);
@@ -12817,7 +12896,7 @@ function _tnSync() {
   const 候補 = _tnCandidates();
   const 中身 = 候補.length
     ? '<button type="button" class="btn btn-secondary btn-xs tn-open" title="スマホから届いた追跡番号から選ぶ"'
-      + ' onclick="_tnToggleMenu(this,event)">📥<span class="cnt">' + 候補.length + '</span></button>'
+      + ' onclick="_tnToggleMenu(this,event)">' + ico('tray-in') + '<span class="cnt">' + 候補.length + '</span></button>'
     : '';
   欄.forEach(el => {
     const a = _tnAnchor(el);
@@ -12870,7 +12949,7 @@ function _tnFillMenu() {
   const m = _tnMenuEl();
   const 候補 = _tnCandidates();
   if (候補.length === 0) { _tnCloseMenu(); return; }
-  m.innerHTML = '<div class="hd">📥 スマホから届いた番号</div>'
+  m.innerHTML = '<div class="hd">' + ico('tray-in') + ' スマホから届いた番号</div>'
     + 候補.map((it, i) =>
         '<div class="it" onclick="_tnPick(' + i + ')"><b>' + escHtml(_tnMitame(it.num)) + '</b>'
         + '<small>' + escHtml(_tnWhen(it.at)) + '</small></div>').join('');
@@ -12938,7 +13017,7 @@ async function dvZipSearch(btn) {
   const statusEl = item.querySelector('.dv-zip-status');
   const zip = (zipEl?.value || '').replace(/[^\d]/g, '');
   if (zip.length !== 7) {
-    statusEl.textContent = '⚠ 7桁の郵便番号を入力してください';
+    statusEl.innerHTML = ico('warn') + ' 7桁の郵便番号を入力してください';
     statusEl.style.color = 'var(--color-danger)';
     return;
   }
@@ -12968,7 +13047,7 @@ function renderDeliverySection(c) {
   if (deliveries.length === 0) return `
     <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-bottom:16px;overflow:hidden">
       <div style="padding:11px 14px;background:#f0fdf4;border-bottom:1px solid #bbf7d0;font-size:13px;font-weight:700;color:#166534;display:flex;align-items:center;justify-content:space-between">
-        <span>📬 書類送付先</span>
+        <span>${ico('mailbox')} 書類送付先</span>
         <button class="btn btn-primary btn-xs no-print" onclick="openCaseModal('${c.id}','section-delivery')">＋ 追加</button>
       </div>
     </div>`;
@@ -12976,26 +13055,26 @@ function renderDeliverySection(c) {
   const rows = deliveries.map((d, i) => `
     <div style="border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;background:var(--bg-primary);font-size:12px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-        <span style="font-weight:700;color:var(--text-primary)">📬 ${escHtml(d.name||'送付先'+(i+1))}</span>
+        <span style="font-weight:700;color:var(--text-primary)">${ico('mailbox')} ${escHtml(d.name||'送付先'+(i+1))}</span>
         ${d.role ? `<span style="font-size:11px;color:var(--text-muted)">${escHtml(d.role)}</span>` : ''}
         <span style="font-size:11px;padding:1px 6px;border-radius:4px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">${escHtml(d.method||'郵送')}</span>
-        ${d.date ? `<span style="font-size:11px;color:var(--text-muted)">📅 送付：${escHtml(d.date)}</span>` : ''}
-        ${d.handover ? `<span style="font-size:11px;color:#0369a1;font-weight:600">🤝 手渡し：${escHtml(d.handover)}</span>` : ''}
+        ${d.date ? `<span style="font-size:11px;color:var(--text-muted)">${ico('calendar')} 送付：${escHtml(d.date)}</span>` : ''}
+        ${d.handover ? `<span style="font-size:11px;color:#0369a1;font-weight:600">${ico('handshake')} 手渡し：${escHtml(d.handover)}</span>` : ''}
       </div>
-      ${d.address ? `<div style="color:var(--text-secondary);margin-bottom:4px">📍 ${d.zip ? `〒${escHtml(d.zip)} ` : ''}${escHtml(d.address)}</div>` : ''}
-      ${d.docs    ? `<div style="color:var(--text-secondary);margin-bottom:4px">📄 ${escHtml(d.docs)}</div>` : ''}
+      ${d.address ? `<div style="color:var(--text-secondary);margin-bottom:4px">${ico('pin-map')} ${d.zip ? `〒${escHtml(d.zip)} ` : ''}${escHtml(d.address)}</div>` : ''}
+      ${d.docs    ? `<div style="color:var(--text-secondary);margin-bottom:4px">${ico('doc')} ${escHtml(d.docs)}</div>` : ''}
       ${(() => {
         const nums = d.trackings && d.trackings.length > 0 ? d.trackings : (d.tracking ? [d.tracking] : []);
         return nums.map(num => `<div style="margin-bottom:4px;display:flex;align-items:center;gap:6px">
           <span style="color:var(--text-muted);font-size:11px">追跡番号：${escHtml(num)}</span>
           <a href="https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${encodeURIComponent(num)}&searchKind=S002&locale=ja" target="_blank"
-            style="font-size:11px;color:#0369a1;text-decoration:none;padding:1px 6px;border:1px solid #0369a1;border-radius:4px">📦 追跡</a>
+            style="font-size:11px;color:#0369a1;text-decoration:none;padding:1px 6px;border:1px solid #0369a1;border-radius:4px">${ico('package')} 追跡</a>
         </div>`).join('');
       })()}
       ${d.tracking_return ? `<div style="margin-bottom:4px;display:flex;align-items:center;gap:6px">
         <span style="color:var(--text-muted);font-size:11px">返信追跡：${escHtml(d.tracking_return)}</span>
         <a href="https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=${encodeURIComponent(d.tracking_return)}&searchKind=S002&locale=ja" target="_blank"
-          style="font-size:11px;color:#0369a1;text-decoration:none;padding:1px 6px;border:1px solid #0369a1;border-radius:4px">📦 追跡</a>
+          style="font-size:11px;color:#0369a1;text-decoration:none;padding:1px 6px;border:1px solid #0369a1;border-radius:4px">${ico('package')} 追跡</a>
       </div>` : ''}
       ${d.memo    ? `<div style="color:var(--text-muted);font-size:11px">${escHtml(d.memo)}</div>` : ''}
     </div>`).join('');
@@ -13003,8 +13082,8 @@ function renderDeliverySection(c) {
   return `
     <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-bottom:16px;overflow:hidden">
       <div style="padding:11px 14px;background:#f0fdf4;border-bottom:1px solid #bbf7d0;font-size:13px;font-weight:700;color:#166534;display:flex;align-items:center;justify-content:space-between">
-        <span>📬 書類送付先（${deliveries.length}件）</span>
-        <button class="btn btn-secondary btn-xs" onclick="openCaseModal('${c.id}', 'section-delivery')">✏ 編集</button>
+        <span>${ico('mailbox')} 書類送付先（${deliveries.length}件）</span>
+        <button class="btn btn-secondary btn-xs" onclick="openCaseModal('${c.id}', 'section-delivery')">${ico('edit')} 編集</button>
       </div>
       <div style="padding:10px 12px">${rows}</div>
     </div>`;
@@ -13019,9 +13098,9 @@ function renderDeliverySection(c) {
    ===================================================== */
 const SOUZOKU_DOC_TYPES = ['戸籍', '除籍・改製原戸籍', '住民票', '戸籍附票'];
 const SOUZOKU_STATUSES = [
-  { key:'none',  icon:'⚠ 未着手', label:'未着手' },
-  { key:'going', icon:'📤 手配中', label:'手配中' },
-  { key:'done',  icon:'📥 取得済', label:'取得済' },
+  { key:'none',  icon:ico('warn') + ' 未着手', label:'未着手' },
+  { key:'going', icon:ico('tray-out') + ' 手配中', label:'手配中' },
+  { key:'done',  icon:ico('tray-in') + ' 取得済', label:'取得済' },
   { key:'na',    icon:'✕ 不要',   label:'不要' },
 ];
 
@@ -13133,7 +13212,7 @@ function renderSouzokuTracker(c) {
   return `
     <div class="souzoku-tracker">
       <div class="souzoku-tracker-header">
-        <span>📋 相続人手配トラッカー${rows.length > 0 ? `（${uniqueNames.length}名）` : ''}</span>
+        <span>${ico('clipboard')} 相続人手配トラッカー${rows.length > 0 ? `（${uniqueNames.length}名）` : ''}</span>
       </div>
       ${rows.length === 0 ? `
         <div style="padding:16px 14px;color:var(--text-muted);font-size:12px;text-align:center">
@@ -13160,9 +13239,9 @@ function renderSouzokuTracker(c) {
         ${addBatchBtns}
       </div>
       <div class="souzoku-legend">
-        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #ef4444;background:#fef2f2;color:#b91c1c;font-size:11px;font-weight:700;padding:0 8px;white-space:nowrap">⚠ 未着手</span>
-        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #f59e0b;background:#fffbeb;color:#92400e;font-size:11px;font-weight:700;padding:0 8px;white-space:nowrap">📤 手配中</span>
-        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #22c55e;background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:0 8px;white-space:nowrap">📥 取得済</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #ef4444;background:#fef2f2;color:#b91c1c;font-size:11px;font-weight:700;padding:0 8px;white-space:nowrap">${ico('warn')} 未着手</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #f59e0b;background:#fffbeb;color:#92400e;font-size:11px;font-weight:700;padding:0 8px;white-space:nowrap">${ico('tray-out')} 手配中</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #22c55e;background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:0 8px;white-space:nowrap">${ico('tray-in')} 取得済</span>
         <span style="display:inline-flex;align-items:center;justify-content:center;min-width:62px;height:26px;border-radius:20px;border:2px solid #94a3b8;background:#f1f5f9;color:#64748b;font-size:11px;font-weight:700;padding:0 8px;text-decoration:line-through;white-space:nowrap">✕ 不要</span>
         <span style="color:var(--color-primary)">※ アイコンをクリックで切替</span>
       </div>
@@ -13344,7 +13423,7 @@ function renderDocuments(c) {
   const hyokaSection = hyoka.length > 0 ? `
     <div style="border-top:2px dashed #d8b4fe;margin-top:0">
       <div style="padding:8px 14px;background:#f5f3ff;font-size:12px;font-weight:700;color:#7c3aed;display:flex;align-items:center;justify-content:space-between">
-        <span>📋 評価証明書等（合計 ${calcCount(hyoka)}通${calcTotal(hyoka)?' ／ ¥'+calcTotal(hyoka).toLocaleString():''}）</span>
+        <span>${ico('clipboard')} 評価証明書等（合計 ${calcCount(hyoka)}通${calcTotal(hyoka)?' ／ ¥'+calcTotal(hyoka).toLocaleString():''}）</span>
       </div>
       ${thead}<tbody>${makeRows(hyoka)}</tbody></table></div>
     </div>` : '';
@@ -13352,7 +13431,7 @@ function renderDocuments(c) {
   return `
     <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-bottom:16px;overflow:hidden">
       <div style="padding:11px 14px;background:#fdf4ff;border-bottom:1px solid #e9d5ff;font-size:13px;font-weight:700;color:#7e22ce;display:flex;align-items:center;justify-content:space-between">
-        <span>📄 取得証明書等（合計 ${calcCount(others)}通${calcTotal(others)?' ／ ¥'+calcTotal(others).toLocaleString():''}）</span>
+        <span>${ico('doc')} 取得証明書等（合計 ${calcCount(others)}通${calcTotal(others)?' ／ ¥'+calcTotal(others).toLocaleString():''}）</span>
         <button class="btn btn-primary btn-xs" onclick="openDocumentModal('${c.id}',null)">＋ 追加</button>
       </div>
       ${docs.length === 0
@@ -13452,8 +13531,8 @@ function renderInterviews(c) {
       <div class="iv-card">
         <div class="iv-card-head">
           <span class="iv-date">${formatDatetime(iv.datetime).replace(' ', '\n')}</span>
-          ${iv.place ? `<span class="meta-badge">📍 ${escHtml(iv.place)}</span>` : ''}
-          ${iv.party ? `<span class="meta-badge">👥 ${escHtml(iv.party)}</span>` : ''}
+          ${iv.place ? `<span class="meta-badge">${ico('pin-map')} ${escHtml(iv.place)}</span>` : ''}
+          ${iv.party ? `<span class="meta-badge">${ico('users')} ${escHtml(iv.party)}</span>` : ''}
           <div class="iv-card-actions no-print">
             <button class="btn btn-secondary btn-xs" onclick="openInterviewModal('${cid}','${iv.id}')">編集</button>
             <button class="btn btn-danger btn-xs" onclick="deleteInterview('${cid}','${iv.id}')">削除</button>
@@ -13461,7 +13540,7 @@ function renderInterviews(c) {
         </div>
         <div class="iv-card-content clamp-text">${renderHl(iv.content)}</div>
         <button type="button" class="clamp-more no-print" onclick="toggleClampCard(this)">続きを読む</button>
-        ${iv.azukari ? `<div class="iv-azukari"><span style="font-weight:700">📦 預かったもの：</span>${escHtml(iv.azukari)}</div>` : ''}
+        ${iv.azukari ? `<div class="iv-azukari"><span style="font-weight:700">${ico('package')} 預かったもの：</span>${escHtml(iv.azukari)}</div>` : ''}
       </div>`).join('');
 
   // DOM に入るのはこの文字列が差し込まれたあと。溢れ判定はその後に回す
@@ -13470,7 +13549,7 @@ function renderInterviews(c) {
   return `
     <div class="interview-section">
       <div class="interview-section-header">
-        <span>📝 面談記録（${interviews.length}件）</span>
+        <span>${ico('note')} 面談記録（${interviews.length}件）</span>
         <button class="btn btn-primary btn-xs" onclick="openInterviewModal('${cid}', null)">＋ 追加</button>
       </div>
       ${interviews.length > 0
@@ -13658,7 +13737,7 @@ function renderSnapshotList() {
   }
   el.innerHTML = snapshots.map(s => `
     <div class="snapshot-item">
-      <span style="font-size:18px">${s.manual ? '📸' : '🔄'}</span>
+      <span style="font-size:18px">${s.manual ? ico('camera') : ico('refresh')}</span>
       <div class="snapshot-info">
         <div class="snapshot-time">${s.label}${s.manual ? ' <span style="font-size:10px;color:var(--color-primary);background:#eff6ff;padding:1px 5px;border-radius:4px">手動</span>' : ''}</div>
         <div class="snapshot-count">案件 ${s.cases.length}件 ／ タスク ${s.tasks.length}件</div>
@@ -13764,7 +13843,7 @@ async function cloudSave(silent, forceOverwrite) {
           const cloudStr = cloudSavedAt.toLocaleString('ja-JP');
           const localStr = localSavedAt.toLocaleString('ja-JP');
           const confirmed = await showSyncWarning(
-            `⚠️ クラウドのデータの方が新しい可能性があります。\n\nクラウド保存日時：${cloudStr}\nこのデバイスの最終保存：${localStr}\n\n上書きするとクラウドの新しいデータが失われます。`,
+            `クラウドのデータの方が新しい可能性があります。\n\nクラウド保存日時：${cloudStr}\nこのデバイスの最終保存：${localStr}\n\n上書きするとクラウドの新しいデータが失われます。`,
             '上書き保存',
             'キャンセル'
           );
@@ -13804,7 +13883,7 @@ async function cloudSave(silent, forceOverwrite) {
   } catch(e) {
     setCloudStatus('err', '保存エラー: ' + e.message);
     if (!silent) toast('保存に失敗しました: ' + e.message, 'error');
-    else toast('保存に失敗しました。「☁ 保存」を押してください', 'error');
+    else toast('保存に失敗しました。「クラウドへ保存」を押してください', 'error');
   } finally {
     setCloudBtnDisabled(false);
   }
@@ -13907,9 +13986,9 @@ async function cloudCheck() {
       }
       if (localSavedAt && cloudSavedAt) {
         if (cloudSavedAt > localSavedAt) {
-          statusMsg = `⚠️ クラウドの方が新しい — クラウド: ${cloudSavedAt.toLocaleString('ja-JP')} ／ このデバイス: ${localSavedAt.toLocaleString('ja-JP')}`;
+          statusMsg = `クラウドの方が新しい — クラウド: ${cloudSavedAt.toLocaleString('ja-JP')} ／ このデバイス: ${localSavedAt.toLocaleString('ja-JP')}`;
           setCloudStatus('err', statusMsg);
-          toast('クラウドのデータがこのデバイスより新しいです。「☁ 読込」をご確認ください', 'error');
+          toast('クラウドのデータがこのデバイスより新しいです。「クラウドから読込」をご確認ください', 'error', 'warn');
           return;
         } else {
           statusMsg += ` ／ このデバイス: ${localSavedAt.toLocaleString('ja-JP')}`;
@@ -14322,7 +14401,7 @@ function _notifyBackupDone(filename, location) {
       silent: false,
     });
   } else {
-    toast('✅ ' + msg, 'success');
+    toast(msg, 'success');
   }
 }
 
@@ -14609,7 +14688,7 @@ if ('serviceWorker' in navigator && !window.__VIEWER_MODE__) {
   transition:opacity 0.4s;
 ">
   <div style="text-align:center">
-    <div style="font-size:52px;margin-bottom:12px">☁</div>
+    <div style="font-size:52px;margin-bottom:12px"><svg class="ico" aria-hidden="true"><use href="#i-cloud"></use></svg></div>
     <div style="font-family:'Gill Sans','Avenir Next','Avenir',sans-serif;font-size:28px;font-weight:600;color:#fff;letter-spacing:0.05em;margin-bottom:6px">CaseFlow</div>
     <div style="font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:0.04em">操作を開始する前にクラウドから読み込んでください</div>
   </div>
