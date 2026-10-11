@@ -3370,7 +3370,8 @@ tr.row-waiting:hover > td {
   .case-tile-card .tile-important-badge-abs { animation: none; }
   .case-tile-card .tile-hs-badge { animation: none; }
   .case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs,
-  .case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs::after { animation: none; }
+  .case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs::after,
+  .case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs::before { animation: none; }
   .tn-btn .tn-open.tn-new .tn-arrow,
   .tn-btn .tn-open.tn-new .cnt,
   #btn-header-backup.saved-ok,
@@ -3544,23 +3545,29 @@ tr.row-waiting:hover > td {
   box-shadow: 0 0 0 2px var(--tile-badge-ring, rgba(255,255,255,0.92)),
               0 1px 3px rgba(20,30,60,0.18) !important;
   pointer-events: none;
-  /* 10.3.3（2026年10月12日、ご本人の「申請中のアイコンはキラッと光る演出がほしい」）：
-     3.2 秒に 1 回、金色の光の筋が左から右へさっと横切り（::after を translateX で走らせる）、
+  /* 10.3.3 で「金色の筋が横切る」にしたが、同日 10.3.4 でご本人の「線上で星がキラッと光る演出がいい」により、
+     札の枠線の上（右上の角）で四つ角の星が瞬く形に変えた。::after＝右上の大きい星、::before＝左下の小さい星（少し遅れて）。
      同じ瞬間に札がほんのり光る（filter の drop-shadow）。box-shadow は !important 付きなので動かせない（10.3.0 の教訓）。
-     filter と ::after の transform には !important の規則が無い。光の筋は overflow:hidden で札の中だけに収める */
-  overflow: hidden;
+     星は枠の外へはみ出すので overflow は visible のまま（hidden にすると星が切れる） */
   animation: shinseiGlow 3.2s ease-in-out infinite;
 }
-.case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs::after {
-  content: ''; position: absolute; top: -30%; bottom: -30%; left: 0; width: 40%;
-  background: linear-gradient(105deg, rgba(255,214,64,0) 15%, rgba(255,214,64,0.85) 50%, rgba(255,214,64,0) 85%);
-  transform: translateX(-180%) skewX(-18deg);
-  animation: shinseiShine 3.2s ease-in-out infinite;
-  pointer-events: none;
+.case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs::after,
+.case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs::before {
+  content: ''; position: absolute; pointer-events: none;
+  /* 四つ角の星。中心が白、外へ向かって金色 */
+  background: radial-gradient(circle, #fff 0 18%, #ffd640 45%, rgba(255,214,64,0) 72%);
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  transform: scale(0) rotate(0deg);
+  animation: shinseiStar 3.2s ease-in-out infinite;
 }
-@keyframes shinseiShine {
-  0%, 62%   { transform: translateX(-180%) skewX(-18deg); }
-  84%, 100% { transform: translateX(380%) skewX(-18deg); }
+/* 右上の角の上（枠線の上に中心を置く）。大きい星 */
+.case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs::after  { width: 18px; height: 18px; top: -9px; right: -9px; }
+/* 左下の角。小さい星。少し遅れて瞬く */
+.case-tile-card .tile-badge-anchor-l .tile-shinsei-badge-abs::before { width: 11px; height: 11px; bottom: -5px; left: -6px; animation-delay: 0.22s; }
+@keyframes shinseiStar {
+  0%, 66%  { transform: scale(0) rotate(0deg); }
+  73%      { transform: scale(1.15) rotate(45deg); }
+  80%, 100% { transform: scale(0) rotate(90deg); }
 }
 @keyframes shinseiGlow {
   0%, 60%, 90%, 100% { filter: drop-shadow(0 0 0 rgba(255,200,0,0)); }
@@ -3888,7 +3895,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.3</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.4</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
