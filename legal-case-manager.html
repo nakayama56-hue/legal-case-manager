@@ -1449,46 +1449,23 @@ body[data-theme="kohaku"] .cd-bar {
 .cd-bar-meta .sep { color: var(--text-muted); }
 .cd-bar-tools { display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
 
-/* 状態の 3 つ並び。押した 1 つだけ点く（進行中＝青、保留＝黄、完了＝緑） */
-.cd-seg {
-  display: inline-flex; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
-  background: rgba(255,255,255,0.7);
-}
-.cd-seg button {
-  border: none; background: transparent; cursor: pointer; font-family: inherit;
-  padding: 5px 11px; font-size: 12px; font-weight: 600; color: var(--text-secondary);
-  border-right: 1px solid var(--border-color); line-height: 1.2;
-}
-.cd-seg button:last-child { border-right: none; }
-.cd-seg button:hover { background: rgba(37,99,235,0.06); }
-.cd-seg button.on { color: #fff; cursor: default; }
-.cd-seg button.on.st-go   { background: var(--color-primary); }
-.cd-seg button.on.st-hold { background: #ca8a04; }
-.cd-seg button.on.st-done { background: #16a34a; }
-
+/* 状態のボタン。左から 進行中・Waiting・保留 を寄せて並べ、少し離して 完了（10.2.7、ご本人のご指示）。
+   点いているものだけ色が付く：進行中＝青、Waiting＝薄い黄、保留＝琥珀、完了＝緑 */
+.cd-status { display: inline-flex; align-items: center; gap: 4px; }
+.cd-status + .cd-status { margin-left: 10px; }   /* 「完了」との間を空ける */
 .cd-chip {
   border: 1px solid var(--border-color); background: rgba(255,255,255,0.7);
   border-radius: 8px; padding: 5px 11px; font-size: 12px; font-weight: 600;
   color: var(--text-secondary); cursor: pointer; font-family: inherit; line-height: 1.2;
-  display: inline-flex; align-items: center; gap: 5px;
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
 }
-.cd-chip:hover { border-color: #93c5fd; color: #2563eb; }
-.cd-chip.on { background: #fde68a; color: #92400e; border-color: #f59e0b; font-weight: 700; }
-
-/* 印刷の小さな一覧。body 直下には置かず、ボタンの下に絶対配置（.cd-bar は overflow を切らない） */
-.cd-print { position: relative; }
-.cd-print-list {
-  display: none; position: absolute; right: 0; top: calc(100% + 4px); min-width: 130px;
-  background: #fff; border: 1px solid var(--border-color); border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12); padding: 4px; z-index: 20;
-}
-.cd-print.open .cd-print-list { display: block; }
-.cd-print-list button {
-  display: block; width: 100%; text-align: left; border: none; background: transparent;
-  padding: 7px 10px; font-size: 12px; font-family: inherit; cursor: pointer; border-radius: 6px; color: var(--text-primary);
-  white-space: nowrap;
-}
-.cd-print-list button:hover { background: rgba(37,99,235,0.08); }
+.cd-chip:hover { border-color: #93c5fd; color: #2563eb; background: rgba(255,255,255,0.9); }
+.cd-chip.on { cursor: default; font-weight: 700; }
+.cd-chip.on.st-go   { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.cd-chip.on.st-wait { background: #fde68a; color: #92400e; border-color: #f59e0b; }
+.cd-chip.on.st-hold { background: #ca8a04; color: #fff; border-color: #ca8a04; }
+.cd-chip.on.st-done { background: #16a34a; color: #fff; border-color: #16a34a; }
+.cd-chip.on.st-wait:hover { cursor: pointer; }   /* Waiting は押して解除できる */
 
 @media (max-width: 900px) {
   .cd-bar { gap: 6px 8px; }
@@ -3750,7 +3727,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.6</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.2.7</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7444,19 +7421,16 @@ function renderCaseDetail(caseId) {
         </div>
       </div>
       <div class="cd-bar-tools">
-        <div class="cd-seg" role="group" aria-label="状態">
-          <button class="st-go ${c.status!=='保留'&&c.status!=='完了'?'on':''}" onclick="_cdSetStatus('${c.id}','')" title="進行中に戻す">進行中</button>
-          <button class="st-hold ${c.status==='保留'?'on':''}" onclick="_cdSetStatus('${c.id}','保留')" title="保留にする">保留</button>
-          <button class="st-done ${c.status==='完了'?'on':''}" onclick="_cdSetStatus('${c.id}','完了')" title="完了にする">完了</button>
+        <div class="cd-status" role="group" aria-label="状態">
+          <button class="cd-chip st-go ${c.status!=='保留'&&c.status!=='完了'?'on':''}" onclick="_cdSetStatus('${c.id}','')" title="進行中に戻す">進行中</button>
+          <button class="cd-chip st-wait ${c.waiting?'on':''}" onclick="toggleWaiting('${c.id}')" title="${c.waiting?'Waitingを解除':'Waitingにする'}">⏳ Waiting</button>
+          <button class="cd-chip st-hold ${c.status==='保留'?'on':''}" onclick="_cdSetStatus('${c.id}','保留')" title="保留にする">保留</button>
         </div>
-        <button class="cd-chip ${c.waiting?'on':''}" onclick="toggleWaiting('${c.id}')" title="${c.waiting?'Waitingを解除':'Waitingにする'}">⏳ Waiting</button>
-        <div class="cd-print">
-          <button class="cd-chip" onclick="_cdTogglePrint(this)" aria-haspopup="true">🖨 印刷 <span style="font-size:9px">▼</span></button>
-          <div class="cd-print-list">
-            <button onclick="_cdClosePrint();printCaseSimple('${c.id}')">簡易印刷</button>
-            <button onclick="_cdClosePrint();printCaseDetail('${c.id}')">印刷（全部）</button>
-          </div>
+        <div class="cd-status">
+          <button class="cd-chip st-done ${c.status==='完了'?'on':''}" onclick="_cdSetStatus('${c.id}','完了')" title="完了にする">完了</button>
         </div>
+        <button class="btn btn-secondary btn-sm" onclick="printCaseSimple('${c.id}')">🖨 簡易印刷</button>
+        <button class="btn btn-secondary btn-sm" onclick="printCaseDetail('${c.id}')">🖨 印刷</button>
       </div>
     </div><!-- /cd-bar -->
 
@@ -9627,17 +9601,6 @@ function _cdSetStatus(caseId, st) {
   if (st === '') { setCaseStatus(caseId, cur); return; }   // 点いているものを押した扱い＝解除
   setCaseStatus(caseId, st);
 }
-function _cdTogglePrint(btn) {
-  const wrap = btn.closest('.cd-print');
-  const open = !wrap.classList.contains('open');
-  _cdClosePrint();
-  if (open) wrap.classList.add('open');
-}
-function _cdClosePrint() {
-  document.querySelectorAll('.cd-print.open').forEach(w => w.classList.remove('open'));
-}
-document.addEventListener('click', e => { if (!e.target.closest('.cd-print')) _cdClosePrint(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') _cdClosePrint(); });
 
 function quickChangeStatus(caseId, newStatus) {
   const c = cases.find(c => c.id === caseId);
