@@ -3920,7 +3920,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.8</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.9</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -9581,12 +9581,24 @@ function loadTeikei() {
   if (saved && typeof saved === 'object') {
     // 10.3.8 の引っ越し：登記の目的を「不動産」（mokuteki）と「商業・法人」（mokuteki_corp）に分けた。
     // 商業・法人が無い保存値には既定を入れ、不動産側に混ざっている同じ文言だけを取り除く（ほかの並びは変えない）
+    let changed = false;
     if (!Array.isArray(saved.mokuteki_corp)) {
       const corp = JSON.parse(JSON.stringify(TEIKEI_DEFAULTS.mokuteki_corp));
       const corpTexts = new Set(corp.map(x => x.text));
       saved.mokuteki = (Array.isArray(saved.mokuteki) ? saved.mokuteki : [])
         .filter(t => !corpTexts.has(String(t ?? '').trim()));
       saved.mokuteki_corp = corp;
+      changed = true;
+    }
+    // 10.3.9：10.3.7 までの既定に入っていた商業の古い文言（商業側の文言とは違うので上の引っ越しで残っていた）を
+    // 不動産の一覧から取り除く。毎回見るので、10.3.8 を一度開いたあとでも効く。ご本人のご指示（2026 年 10 月 14 日）
+    const oldCorp = new Set(['目的変更', '増資', '解散', '取締役の変更', '代表取締役の変更', '監査役の変更',
+                             '商号変更', '本店移転', '清算人選任', '清算結了']);
+    if (Array.isArray(saved.mokuteki)) {
+      const kept = saved.mokuteki.filter(t => !oldCorp.has(String(t ?? '').trim()));
+      if (kept.length !== saved.mokuteki.length) { saved.mokuteki = kept; changed = true; }
+    }
+    if (changed) {
       // 見るだけのモードでは書き戻さない（読んだ写しで使うだけ）
       const ro = document.body && document.body.classList.contains('viewer-mode');
       if (!ro) { try { saveTeikei(saved); } catch(e) {} }
