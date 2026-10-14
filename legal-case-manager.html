@@ -3920,7 +3920,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.9</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.4.0</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -14079,8 +14079,17 @@ function souzokuDeleteRow(caseId, idx) {
   refreshSouzokuTracker(caseId);
 }
 
+// 描き直すと表の枠（.souzoku-scroll）の送り位置が 0 に戻り、いちばん上の相続人まで戻っていた（10.4.0 で直した）。
+// 枠とページの送り位置を覚えておき、描き直したあとに戻す
 function refreshSouzokuTracker(caseId) {
+  const box = document.querySelector('#case-detail-content .souzoku-scroll');
+  const boxPos = box ? [box.scrollTop, box.scrollLeft] : null;
+  const pageEls = [document.scrollingElement, document.getElementById('main'), document.getElementById('view-case-detail')].filter(Boolean);
+  const pagePos = pageEls.map(el => el.scrollTop);
   renderCaseDetail(caseId);
+  const nb = document.querySelector('#case-detail-content .souzoku-scroll');
+  if (nb && boxPos) { nb.scrollTop = boxPos[0]; nb.scrollLeft = boxPos[1]; }
+  pageEls.forEach((el, i) => { if (el.scrollTop !== pagePos[i]) el.scrollTop = pagePos[i]; });
 }
 
 function renderDocuments(c) {
