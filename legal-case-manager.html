@@ -2767,6 +2767,16 @@ body.files-in-panel.task-panel-open #case-task-panel[data-tab="files"] #case-fil
   padding: 4px 6px; border-radius: 6px; flex-shrink: 0;
 }
 .ctp-close:hover { background: var(--bg-secondary); color: var(--text-primary); }
+/* 出したままにする（固定）のピン。10.4.1。押すと青く点き、パネルの外を押しても閉じなくなる */
+.ctp-head-btns { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.ctp-pin {
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  color: var(--text-muted); font-size: 14px; line-height: 1;
+  padding: 4px 6px; border-radius: 6px; display: inline-flex; align-items: center;
+}
+.ctp-pin:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.ctp-pin.on { background: var(--color-primary); color: #fff; }
+.ctp-pin.on:hover { background: var(--color-primary-light); color: #fff; }
 /* 追加ボタンはパネルの上に置く。下端に置くと結局 Dock の帯に戻ってしまう */
 .ctp-actions { padding: 9px 12px; border-bottom: 1px solid var(--border-light); flex-shrink: 0; }
 .ctp-actions .btn { width: 100%; }
@@ -3898,7 +3908,10 @@ tr.row-waiting:hover > td {
         <div class="ctp-body">
           <div class="ctp-head">
             <div class="ctp-title" id="case-task-panel-title"></div>
-            <button type="button" class="ctp-close" onclick="toggleTaskPanel()" aria-label="タスク一覧を閉じる">✕</button>
+            <div class="ctp-head-btns">
+              <button type="button" class="ctp-pin" id="ctp-pin-btn" onclick="toggleTaskPanelPin()" aria-pressed="false" title="出したままにする（外を押しても閉じない）"><svg class="ico" aria-hidden="true"><use href="#i-pin"></use></svg></button>
+              <button type="button" class="ctp-close" onclick="toggleTaskPanel()" aria-label="タスク一覧を閉じる">✕</button>
+            </div>
           </div>
           <!-- ファイル一覧を右パネルに置いたときだけ出るタブ（body.files-in-panel） -->
           <div class="ctp-tabs no-print">
@@ -3920,7 +3933,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.4.0</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.4.1</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7850,9 +7863,27 @@ let taskPanelOpen = (() => {
   try { return localStorage.getItem(TASK_PANEL_KEY) === '1'; } catch (e) { return false; }
 })();
 
+/* 出したままにする（固定）。10.4.1、ご本人のご希望。
+   固定中はパネルの外を押しても閉じない。✕ と縦のタブではこれまでどおり閉じられる（固定は残る） */
+const TASK_PANEL_PIN_KEY = 'caseTaskPanelPinned_v1';
+let taskPanelPinned = (() => {
+  try { return localStorage.getItem(TASK_PANEL_PIN_KEY) === '1'; } catch (e) { return false; }
+})();
+function toggleTaskPanelPin() {
+  taskPanelPinned = !taskPanelPinned;
+  try { localStorage.setItem(TASK_PANEL_PIN_KEY, taskPanelPinned ? '1' : '0'); } catch (e) {}
+  _applyTaskPanelState();
+}
+
 function _applyTaskPanelState() {
   const panel = document.getElementById('case-task-panel');
   if (!panel) return;
+  const pin = document.getElementById('ctp-pin-btn');
+  if (pin) {
+    pin.classList.toggle('on', taskPanelPinned);
+    pin.setAttribute('aria-pressed', taskPanelPinned ? 'true' : 'false');
+    pin.title = taskPanelPinned ? '固定を外す（外を押すと閉じるように戻す）' : '出したままにする（外を押しても閉じない）';
+  }
   panel.classList.toggle('collapsed', !taskPanelOpen);
   document.body.classList.toggle('task-panel-open', taskPanelOpen);
   const tab = document.getElementById('case-task-tab');
@@ -7892,7 +7923,7 @@ function toggleTaskPanel() {
      .modal-overlay は inset:0 で画面全体を覆うので、除外しないと
      「＋ タスク追加」で開いた入力欄を触っただけで背後のパネルが閉じてしまう。 */
 document.addEventListener('click', e => {
-  if (!taskPanelOpen) return;
+  if (!taskPanelOpen || taskPanelPinned) return;   // 固定中は閉じない（10.4.1）
   const panel = document.getElementById('case-task-panel');
   if (!panel || panel.style.display === 'none') return;   // 案件詳細以外では出ていない
   if (panel.contains(e.target)) return;                   // タブ・✕・タスクカードは中
