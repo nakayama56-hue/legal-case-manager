@@ -1822,6 +1822,12 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 .ledger-table td.del-cell button:hover { color: var(--color-danger); background: #fef2f2; }
 .ledger-table tbody tr:hover td { background: #f0f7ff; }
 .ledger-table td.money-cell input { text-align: right; font-variant-numeric: tabular-nums; }
+/* 商業・法人の台帳：区分の列・自動で入れた登録免許税・段の合計（10.3.8） */
+.ledger-table td.ku-cell { text-align: center; }
+.ledger-table td input.menkyo-auto { color: #1d4ed8; }
+.ledger-table td input.menkyo-auto.menkyo-zero { color: var(--text-muted); }
+.ledger-sum { display: flex; justify-content: flex-end; gap: 14px; padding: 6px 10px; font-size: 12px; background: #f8fafc; border-top: 1px solid #cbd5e1; }
+.ledger-sum b { font-variant-numeric: tabular-nums; }
 /* 下段テーブルと上段の境界線 */
 .ledger-lower-table { border-top: 3px double #94a3b8; }
 .ledger-add-btn {
@@ -2401,9 +2407,28 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 8px;
 }
 .teikei-item:hover { background: var(--bg-secondary); }
+/* 文字は .t で包む（10.3.8）。flex の中では省略記号は包んだ側でしか効かない */
+.teikei-item .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 商業・法人の「登記の目的」の一覧（区分と登録免許税つき。10.3.8） */
+.teikei-picker.wide { width: 420px; max-width: 420px; }
+.teikei-item .m { width: 88px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); flex-shrink: 0; }
+.teikei-item .m.dim { color: #b45309; font-size: 11px; }
+.teikei-item .ku-chip { flex-shrink: 0; background: #e0e7ff; }
+.ku-chip { display: inline-block; min-width: 16px; padding: 1px 6px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 11px; font-weight: 700; text-align: center; line-height: 1.5; white-space: nowrap; }
+.ku-chip.ku-none { background: #f1f5f9; color: #64748b; font-weight: 600; }
+/* 設定 → 定型文管理の商業・法人の表（10.3.8） */
+.tk-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tk-table th { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-align: left; padding: 2px 4px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+.tk-table td { padding: 2px 4px; vertical-align: middle; }
+.tk-table input.form-control, .tk-table select.form-control { width: 100%; box-sizing: border-box; font-size: 12px; padding: 4px 8px; }
+.tk-table .tk-money { text-align: right; font-variant-numeric: tabular-nums; }
+.tk-table .tk-cap { display: flex; align-items: center; gap: 4px; }
+.tk-table .tk-cap + .tk-cap { margin-top: 2px; }
+.tk-table .tk-cap span { font-size: 10px; color: var(--text-muted); white-space: nowrap; width: 50px; flex-shrink: 0; }
+.tk-table .tk-ratehint { font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
 .teikei-empty { padding: 10px 14px; font-size: 12px; color: var(--text-muted); }
 .teikei-dnd-item.teikei-dnd-over { outline: 2px dashed var(--color-primary); border-radius: 4px; background: var(--bg-secondary); }
 .teikei-dnd-handle:active { cursor: grabbing; }
@@ -3895,7 +3920,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.7</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.3.8</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -4118,6 +4143,21 @@ tr.row-waiting:hover > td {
                 style="width:90px;text-align:center;letter-spacing:1px"
                 oninput="corpNumInput(this,null,6)"
                 onkeydown="corpNumBack(event,'f-corp-num-2')">
+            </div>
+          </div>
+          <!-- 商業・法人登記：資本金（役員変更（カ）の登録免許税 1万円／3万円の判定に使う。10.3.8） -->
+          <div class="form-group" id="field-shihon" style="display:none">
+            <label class="form-label">資本金の額</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input class="form-control" id="f-shihon" inputmode="numeric" placeholder="例：3,000,000"
+                style="width:150px;text-align:right" onblur="fmtMoney(this)" oninput="_shihonSyncClass()">
+              <span style="font-size:12px;color:var(--text-secondary)">円</span>
+              <select class="form-control" id="f-shihon-class" style="width:auto;font-size:12px"
+                title="金額が入っていれば、金額で判定します" onchange="this.dataset.manual=this.value">
+                <option value="">（金額から判定）</option>
+                <option value="under">1億円以下</option>
+                <option value="over">1億円超</option>
+              </select>
             </div>
           </div>
           <div class="form-group" style="display:none">
@@ -7635,7 +7675,7 @@ function renderCaseDetail(caseId) {
         <div class="info-rows">
           ${infoRow('依頼者名', escHtml(c.client_name||'—'))}
           ${c.category === '商業・法人登記'
-            ? `${infoRow('商号・法人名', escHtml(c.company_name||''))}${infoRow('本店所在地', escHtml(c.honten||''))}${c.corp_num?infoRow('会社法人等番号', escHtml(c.corp_num)):''}` 
+            ? `${infoRow('商号・法人名', escHtml(c.company_name||''))}${infoRow('本店所在地', escHtml(c.honten||''))}${c.corp_num?infoRow('会社法人等番号', escHtml(c.corp_num)):''}${_shihonText(c)?infoRow('資本金', escHtml(_shihonText(c))):''}` 
             : infoRow('不動産所在地', escHtml(c.location||''))}
           ${infoRow('区分', escHtml(c.category||''))}
           ${infoRow('種別', escHtml(c.type||''))}
@@ -9446,13 +9486,83 @@ function deleteMemoItem(caseId, memoId) {
 /* =====================================================
    定型文管理
    ===================================================== */
+/* 登録免許税法 別表第一 二十四号 の区分（10.3.8）。e-Gov の現行の条文（二十四号（一）・（三））から起こした。
+   この表は編集画面には出さない（選択肢に出すのは key・label だけ）。
+   kind：fixed=定額／rate=課税価格×rate/1000（最低 min）／
+   manual=手入力（率が 2 段で自動にできない）／capital=資本金 1 億円以下 amount・超 amount_big */
+const MENKYO_KUBUN = [
+  { key:'イ',  label:'イ　株式会社の設立',                 kind:'rate',    rate:7, min:150000 },
+  { key:'ロ',  label:'ロ　合名・合資会社、一般社団法人等の設立', kind:'fixed', amount:60000 },
+  { key:'ハ',  label:'ハ　合同会社の設立',                 kind:'rate',    rate:7, min:60000 },
+  { key:'ニ',  label:'ニ　資本金の増加',                   kind:'rate',    rate:7, min:30000 },
+  { key:'ホ',  label:'ホ　新設合併・組織変更等による設立',   kind:'manual' },
+  { key:'ヘ',  label:'ヘ　吸収合併による資本金の増加',       kind:'manual' },
+  { key:'ト',  label:'ト　新設分割による設立',             kind:'rate',    rate:7, min:30000 },
+  { key:'チ',  label:'チ　吸収分割による資本金の増加',       kind:'rate',    rate:7, min:30000 },
+  { key:'ヌ',  label:'ヌ　新株予約権の発行',               kind:'fixed',   amount:90000 },
+  { key:'ル',  label:'ル　支店・従たる事務所の設置（1 か所につき）', kind:'fixed', amount:60000 },
+  { key:'ヲ',  label:'ヲ　本店・支店の移転（1 か所につき）',  kind:'fixed',   amount:30000 },
+  { key:'ワ',  label:'ワ　取締役会等に関する事項の変更',     kind:'fixed',   amount:30000 },
+  { key:'カ',  label:'カ　役員等の変更',                   kind:'capital', amount:10000, amount_big:30000 },
+  { key:'ヨ',  label:'ヨ　支配人の選任・代理権の消滅',       kind:'fixed',   amount:30000 },
+  { key:'タ',  label:'タ　職務執行停止・職務代行者の選任',   kind:'fixed',   amount:30000 },
+  { key:'レ',  label:'レ　解散',                           kind:'fixed',   amount:30000 },
+  { key:'ソ',  label:'ソ　継続・回復・設立無効等',           kind:'fixed',   amount:30000 },
+  { key:'ツ',  label:'ツ　登記事項の変更・消滅・廃止（その他）', kind:'fixed', amount:30000 },
+  { key:'ネ',  label:'ネ　登記の更正',                     kind:'fixed',   amount:20000 },
+  { key:'ナ',  label:'ナ　登記の抹消',                     kind:'fixed',   amount:20000 },
+  { key:'三イ', label:'（三）イ　清算人の登記',             kind:'fixed',   amount:9000 },
+  { key:'三ロ', label:'（三）ロ　清算人の職務執行停止等',     kind:'fixed',   amount:6000 },
+  { key:'三ハ', label:'（三）ハ　清算結了',                 kind:'fixed',   amount:2000 },
+  { key:'三ニ', label:'（三）ニ　清算中の登記事項の変更・更正・抹消', kind:'fixed', amount:6000 },
+];
+/* key が '' の行は「区分なし」。加算の判定に入れない（何行あっても独立）。金額は行に書いた額（既定 0） */
+
 const TEIKEI_DEFAULTS = {
   'mokuteki': [
     '所有権移転','所有権保存','所有権抹消','抵当権設定','抵当権抹消',
     '根抵当権設定','根抵当権抹消','住所変更','氏名変更','地目変更',
     '分筆','合筆','建物表題登記','滅失登記',
-    '取締役の変更','代表取締役の変更','監査役の変更','目的変更',
-    '商号変更','本店移転','増資','解散','清算人選任','清算結了',
+  ],
+  /* 登記の目的（商業・法人）。ご本人の実データ 42 行の文言から起こした（10.3.8）。
+     rate の区分は金額を持たない（課税価格から計算）。capital（カ）だけ amount_big を持つ */
+  'mokuteki_corp': [
+    { text:'取締役の変更', ku:'カ', amount:10000, amount_big:30000 },
+    { text:'代表取締役の変更', ku:'カ', amount:10000, amount_big:30000 },
+    { text:'監査役の変更', ku:'カ', amount:10000, amount_big:30000 },
+    { text:'取締役、代表取締役の変更', ku:'カ', amount:10000, amount_big:30000 },
+    { text:'取締役、監査役の変更', ku:'カ', amount:10000, amount_big:30000 },
+    { text:'取締役、代表取締役、監査役の変更', ku:'カ', amount:10000, amount_big:30000 },
+    { text:'代表取締役の氏名抹消', ku:'カ', amount:10000, amount_big:30000 },
+    { text:'理事、代表理事、監事の変更', ku:'カ', amount:10000, amount_big:30000 },
+    { text:'評議員、理事、代表理事、監事の変更', ku:'カ', amount:10000, amount_big:30000 },
+    { text:'社員の住所変更', ku:'カ', amount:10000, amount_big:30000 },
+    { text:'取締役会設置会社の定め設定', ku:'ワ', amount:30000 },
+    { text:'取締役会設置会社の定め廃止', ku:'ワ', amount:30000 },
+    { text:'監査役設置会社の定め設定', ku:'ツ', amount:30000 },
+    { text:'監査役設置会社の定め廃止', ku:'ツ', amount:30000 },
+    { text:'監査役の監査の範囲を会計に関するものに限定する旨の定めの廃止', ku:'ツ', amount:30000 },
+    { text:'監査役の監査の範囲を会計に関するものに限定する旨の定款の定めがある旨', ku:'', amount:0 },
+    { text:'株式の譲渡制限に関する規定の設定', ku:'ツ', amount:30000 },
+    { text:'株式の譲渡制限に関する規定の変更', ku:'ツ', amount:30000 },
+    { text:'株式の譲渡制限に関する規定の廃止', ku:'ツ', amount:30000 },
+    { text:'目的の変更', ku:'ツ', amount:30000 },
+    { text:'商号変更', ku:'ツ', amount:30000 },
+    { text:'発行可能株式総数の変更', ku:'ツ', amount:30000 },
+    { text:'公告方法の変更', ku:'ツ', amount:30000 },
+    { text:'本店移転', ku:'ヲ', amount:30000 },
+    { text:'支店設置', ku:'ル', amount:60000 },
+    { text:'支配人選任', ku:'ヨ', amount:30000 },
+    { text:'会社解散', ku:'レ', amount:30000 },
+    { text:'清算人選任', ku:'三イ', amount:9000 },
+    { text:'清算結了', ku:'三ハ', amount:2000 },
+    { text:'会社継続', ku:'ソ', amount:30000 },
+    { text:'株式会社設立', ku:'イ' },
+    { text:'合同会社設立', ku:'ハ' },
+    { text:'募集株式の発行', ku:'ニ' },
+    { text:'新株予約権の発行', ku:'ヌ', amount:90000 },
+    { text:'登記の更正', ku:'ネ', amount:20000 },
+    { text:'登記の抹消', ku:'ナ', amount:20000 },
   ],
   'gen_in': [
     '相続','遺贈','売買','贈与','財産分与','共有物分割',
@@ -9464,12 +9574,185 @@ const TEIKEI_DEFAULTS = {
 };
 
 function loadTeikei() {
+  let saved = null;
   try {
-    const saved = JSON.parse(localStorage.getItem('teikei_v1') || 'null');
-    if (saved) return saved;
+    saved = JSON.parse(localStorage.getItem('teikei_v1') || 'null');
   } catch(e) {}
+  if (saved && typeof saved === 'object') {
+    // 10.3.8 の引っ越し：登記の目的を「不動産」（mokuteki）と「商業・法人」（mokuteki_corp）に分けた。
+    // 商業・法人が無い保存値には既定を入れ、不動産側に混ざっている同じ文言だけを取り除く（ほかの並びは変えない）
+    if (!Array.isArray(saved.mokuteki_corp)) {
+      const corp = JSON.parse(JSON.stringify(TEIKEI_DEFAULTS.mokuteki_corp));
+      const corpTexts = new Set(corp.map(x => x.text));
+      saved.mokuteki = (Array.isArray(saved.mokuteki) ? saved.mokuteki : [])
+        .filter(t => !corpTexts.has(String(t ?? '').trim()));
+      saved.mokuteki_corp = corp;
+      // 見るだけのモードでは書き戻さない（読んだ写しで使うだけ）
+      const ro = document.body && document.body.classList.contains('viewer-mode');
+      if (!ro) { try { saveTeikei(saved); } catch(e) {} }
+    }
+    // 要素の欠けを読み替えで補う（ku 未定義など）
+    saved.mokuteki_corp = saved.mokuteki_corp
+      .filter(x => x != null)
+      .map(x => typeof x === 'string' ? { text: x, ku: '', amount: 0 } : { ...x, text: String(x.text ?? ''), ku: x.ku ?? '' });
+    return saved;
+  }
   // デフォルト値をコピーして返す
   return JSON.parse(JSON.stringify(TEIKEI_DEFAULTS));
+}
+
+/* =====================================================
+   商業・法人登記の登録免許税（10.3.8）
+   受付台帳（商業・法人）の「登記の目的」を定型文から選ぶと、区分と登録免許税が同時に入る。
+   同じ段の中で同じ区分が 2 行目以降に出たら 0 円（加算しない）。設立・増資は課税価格から計算する。
+   役員変更（カ）は案件の資本金で 1 万円／3 万円を選び分ける。
+   ・row.menkyo_auto … 自動で入れた印（無い＝false）。手で登録免許税を直すと false
+   ・row.menkyo_note … 自動で入れた（入れなかった）理由。登録免許税の欄の title に出す
+   ===================================================== */
+function _kubunOf(key) {
+  if (!key) return null;
+  return MENKYO_KUBUN.find(k => k.key === key) || null;
+}
+/** 画面に出す区分の印（三イ → （三）イ） */
+function _kuLabel(key) {
+  if (!key) return '—';
+  return /^三/.test(key) ? '（三）' + key.slice(1) : key;
+}
+function _kuChipHtml(key) {
+  return key ? `<span class="ku-chip">${escHtml(_kuLabel(key))}</span>` : '<span class="ku-chip ku-none">—</span>';
+}
+/** 商業・法人の定型文から、文言が完全一致する最初の行を返す（前後の空白は除いて比べる） */
+function _corpTeikeiFor(text, data) {
+  const t = String(text ?? '').trim();
+  if (!t) return null;
+  const list = (data || loadTeikei()).mokuteki_corp || [];
+  return list.find(x => String(x.text ?? '').trim() === t) || null;
+}
+/** 資本金が 1 億円を超えるか。true／false／null（未確定） */
+function _capitalOver(c) {
+  if (!c) return null;
+  const d = String(c.shihon ?? '').replace(/[^0-9]/g, '');
+  if (d) return Number(d) > 100000000;
+  if (c.shihon_over === true || c.shihon_over === false) return c.shihon_over;
+  return null;
+}
+/** 案件詳細・印刷に出す資本金の文字（無ければ ''） */
+function _shihonText(c) {
+  if (!c) return '';
+  const d = String(c.shihon ?? '').replace(/[^0-9]/g, '');
+  if (d) return Number(d).toLocaleString('ja-JP') + '円';
+  if (c.shihon_over === true) return '1億円超';
+  if (c.shihon_over === false) return '1億円以下';
+  return '';
+}
+/** 1 行ぶんの登録免許税を決める。{ amount: 数 or null（入れない）, note } */
+function _menkyoAmount(c, item, kazei) {
+  const k = _kubunOf(item.ku);
+  if (!k) return { amount: item.amount ?? 0, note: '' };
+  if (k.kind === 'fixed') return { amount: item.amount ?? k.amount, note: '' };
+  if (k.kind === 'capital') {
+    const over = _capitalOver(c);
+    if (over === true)  return { amount: item.amount_big ?? k.amount_big ?? 30000, note: '' };
+    if (over === false) return { amount: item.amount ?? k.amount ?? 10000, note: '' };
+    return { amount: null, note: '資本金が未入力のため入れていません' };
+  }
+  if (k.kind === 'rate') {
+    const d = String(kazei ?? '').replace(/[^0-9]/g, '');
+    if (!d || Number(d) === 0) return { amount: null, note: '課税価格を入れると計算します' };
+    const base = Math.floor(Number(d) / 1000) * 1000;          // 千円未満切捨て
+    let tax = Math.floor(base * k.rate / 1000 / 100) * 100;      // 百円未満切捨て
+    if (tax < k.min) tax = k.min;
+    return { amount: tax, note: '' };
+  }
+  // manual
+  if (item.amount == null || item.amount === '') return { amount: null, note: '金額を手で入れてください' };
+  return { amount: item.amount, note: '' };
+}
+/** 段（gid）の自動の登録免許税を上から計算し直す。商業・法人の案件だけ。
+    手入力の行（menkyo_auto が false）・チェック済みの行は額を変えないが、区分は占める */
+function _recalcLedgerMenkyo(c, gid) {
+  if (!c || c.category !== '商業・法人登記' || !Array.isArray(c.ledger)) return;
+  const data = loadTeikei();
+  const seen = new Map(); // ku → 最初に出た行の No.
+  c.ledger.filter(r => r.group === gid).forEach((r, i) => {
+    const item = _corpTeikeiFor(r.mokuteki, data);
+    const ku = item ? item.ku : '';
+    if (r.menkyo_auto && !r.menkyo_checked && item) {
+      if (ku && seen.has(ku)) {
+        r.menkyo = '0';
+        r.menkyo_note = `同じ段の ${seen.get(ku)} 行目（${_kuLabel(ku)}）と同じ区分のため加算しません`;
+      } else {
+        const { amount, note } = _menkyoAmount(c, item, r.kazei);
+        r.menkyo = amount == null ? '' : String(amount);
+        r.menkyo_note = note || '';
+      }
+    }
+    if (ku && !seen.has(ku)) seen.set(ku, String(r.row_no ?? '').trim() || String(i + 1));
+  });
+}
+function _recalcAllLedgerMenkyo(c) {
+  if (!c || c.category !== '商業・法人登記' || !Array.isArray(c.ledger)) return;
+  [...new Set(c.ledger.map(r => r.group))].forEach(gid => _recalcLedgerMenkyo(c, gid));
+}
+/** 段の登録免許税の合計（空は 0） */
+function _ledgerMenkyoSum(c, gid) {
+  return (c.ledger || []).filter(r => r.group === gid)
+    .reduce((sum, r) => sum + (Number(String(r.menkyo ?? '').replace(/[^0-9]/g, '')) || 0), 0);
+}
+/** 金額の短い書き方（10000 → 1万、それ以外は 3 桁区切り） */
+function _yenShort(n) {
+  n = Number(n) || 0;
+  return (n >= 10000 && n % 10000 === 0) ? (n / 10000) + '万' : n.toLocaleString('ja-JP');
+}
+/** 一覧の右に出す金額。{ text, dim } */
+function _corpPickerAmount(c, row, item, data) {
+  const k = _kubunOf(item.ku);
+  if (item.ku && c && row) {
+    const dup = (c.ledger || []).some(r => r.group === row.group && r.id !== row.id &&
+      (_corpTeikeiFor(r.mokuteki, data) || {}).ku === item.ku);
+    if (dup) return { text: '加算なし', dim: true };
+  }
+  const yen = n => (Number(n) || 0).toLocaleString('ja-JP') + '円';
+  if (!k) return { text: yen(item.amount ?? 0), dim: false };
+  if (k.kind === 'fixed') return { text: yen(item.amount ?? k.amount), dim: false };
+  if (k.kind === 'capital') {
+    const over = _capitalOver(c);
+    if (over === true)  return { text: yen(item.amount_big ?? k.amount_big), dim: false };
+    if (over === false) return { text: yen(item.amount ?? k.amount), dim: false };
+    return { text: `${_yenShort(item.amount ?? k.amount)}／${_yenShort(item.amount_big ?? k.amount_big)}円`, dim: false };
+  }
+  if (k.kind === 'rate') return { text: '課税価格から', dim: true };
+  if (item.amount == null || item.amount === '') return { text: '手入力', dim: true };
+  return { text: yen(item.amount), dim: false };
+}
+/** 商業・法人の一覧で 1 つ選んだとき */
+function _pickCorpTeikei(inputEl, item) {
+  const rowId = inputEl && inputEl.dataset ? inputEl.dataset.row : '';
+  const c = rowId ? cases.find(cc => (cc.ledger || []).some(r => r.id === rowId)) : null;
+  const row = c ? c.ledger.find(r => r.id === rowId) : null;
+  closeTeikeiPicker();
+  if (!c || !row) {
+    // 行が引けないときは、今までどおり文字だけ入れる
+    inputEl.value = item.text;
+    inputEl.dispatchEvent(new Event('change'));
+    return;
+  }
+  const k = _kubunOf(item.ku);
+  let askedCapital = false;
+  if (k && k.kind === 'capital' && _capitalOver(c) === null) {
+    const ok = confirm('この会社の資本金は 1 億円以下ですか？\n（「OK」＝1 億円以下、「キャンセル」＝1 億円超。案件の資本金の欄に書き戻します）');
+    c.shihon_over = ok ? false : true;   // OK＝1 億円以下＝over は false
+    askedCapital = true;
+  }
+  row.mokuteki = item.text;
+  row.menkyo_auto = true;
+  row.menkyo_note = '';
+  // 資本金を書き戻したときは、ほかの段のカも決まるので全段を計算し直す
+  if (askedCapital) _recalcAllLedgerMenkyo(c);
+  else _recalcLedgerMenkyo(c, row.group);
+  saveToStorage();
+  _scheduleLedgerCloudSave();
+  refreshLedgerSection(c.id);
 }
 
 function saveTeikei(data) {
@@ -9487,7 +9770,25 @@ function showTeikeiPicker(inputEl, field) {
   const picker = document.createElement('div');
   picker.className = 'teikei-picker';
   picker.id = 'teikei-picker';
+  const isCorpList = field === 'mokuteki_corp';
 
+  if (isCorpList) {
+    // 商業・法人：区分と登録免許税つき（10.3.8）。右の金額は、この欄の行が属する段を見て決める
+    picker.classList.add('wide');
+    picker.innerHTML = `<div class="teikei-picker-header">${ico('clipboard')} 登記の目的（商業・法人）　区分と登録免許税</div>`;
+    const rowId = inputEl.dataset ? inputEl.dataset.row : '';
+    const c = rowId ? cases.find(cc => (cc.ledger || []).some(r => r.id === rowId)) : null;
+    const row = c ? c.ledger.find(r => r.id === rowId) : null;
+    items.forEach(it => {
+      const el = document.createElement('div');
+      el.className = 'teikei-item';
+      const m = _corpPickerAmount(c, row, it, data);
+      el.innerHTML = `<span class="t">${escHtml(it.text)}</span>${_kuChipHtml(it.ku)}<span class="m${m.dim ? ' dim' : ''}">${escHtml(m.text)}</span>`;
+      el.title = it.text;
+      el.onclick = () => _pickCorpTeikei(inputEl, it);
+      picker.appendChild(el);
+    });
+  } else {
   const fieldName = field === 'mokuteki' ? '登記の目的' : '登記原因';
   picker.innerHTML = `<div class="teikei-picker-header">${ico('clipboard')} ${fieldName} の定型文</div>`;
 
@@ -9497,7 +9798,10 @@ function showTeikeiPicker(inputEl, field) {
     items.forEach(text => {
       const item = document.createElement('div');
       item.className = 'teikei-item';
-      item.textContent = text;
+      const t = document.createElement('span');
+      t.className = 't';
+      t.textContent = text;
+      item.appendChild(t);
       item.onclick = () => {
         inputEl.value = text;
         inputEl.dispatchEvent(new Event('change'));
@@ -9507,11 +9811,14 @@ function showTeikeiPicker(inputEl, field) {
       picker.appendChild(item);
     });
   }
+  }
 
   // 位置計算
   const rect = inputEl.getBoundingClientRect();
-  picker.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-  picker.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 340) + 'px';
+  // position: fixed なので画面上の位置（rect）をそのまま使う。scrollY を足すと、
+  // 下へ送った画面で開いたとき欄から離れた所に出る（10.3.7 まであった不具合。10.3.8 で直した）
+  picker.style.top = (rect.bottom + 4) + 'px';
+  picker.style.left = Math.max(0, Math.min(rect.left, window.innerWidth - (isCorpList ? 440 : 340))) + 'px';
 
   document.body.appendChild(picker);
   teikeiPickerTarget = inputEl;
@@ -9565,14 +9872,108 @@ function renderTeikeiSettings() {
     `;
   };
 
+  // 登記の目的（商業・法人）：区分と登録免許税つきの表（10.3.8）
+  const renderCorp = () => {
+    const items = data.mokuteki_corp || [];
+    const fmt = n => (n == null || n === '') ? '' : (Number(n) || 0).toLocaleString('ja-JP');
+    const kuOptions = (sel) => `<option value=""${sel ? '' : ' selected'}>（区分なし・加算しない）</option>` +
+      MENKYO_KUBUN.map(k => `<option value="${escHtml(k.key)}"${k.key === sel ? ' selected' : ''}>${escHtml(k.label)}</option>`).join('');
+    const moneyCell = (it, i) => {
+      const k = _kubunOf(it.ku);
+      if (k && k.kind === 'rate') {
+        return `<span class="tk-ratehint">課税価格×${k.rate}/1000（最低 ${k.min.toLocaleString('ja-JP')}円）</span>`;
+      }
+      if (k && k.kind === 'capital') {
+        return `<div class="tk-cap"><span>1億円以下</span><input type="text" class="form-control tk-money" inputmode="numeric" value="${fmt(it.amount ?? k.amount)}"
+                  onblur="fmtMoney(this)" onchange="updateCorpTeikei(${i},'amount',this.value)"></div>
+                <div class="tk-cap"><span>1億円超</span><input type="text" class="form-control tk-money" inputmode="numeric" value="${fmt(it.amount_big ?? k.amount_big)}"
+                  onblur="fmtMoney(this)" onchange="updateCorpTeikei(${i},'amount_big',this.value)"></div>`;
+      }
+      const v = k ? (k.kind === 'manual' ? fmt(it.amount) : fmt(it.amount ?? k.amount)) : fmt(it.amount ?? 0);
+      return `<input type="text" class="form-control tk-money" inputmode="numeric" value="${v}"${k && k.kind === 'manual' ? ' placeholder="手入力"' : ''}
+                onblur="fmtMoney(this)" onchange="updateCorpTeikei(${i},'amount',this.value)">`;
+    };
+    return `
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:6px">${ico('clipboard')} 登記の目的（商業・法人）</div>
+        <div style="font-size:11.5px;color:var(--text-secondary);margin:0 0 8px;line-height:1.7">区分は登録免許税法 別表第一 二十四号の記号です。同じ区分の行が同じ段にあると、2 行目からは加算しません（0 円）。金額は区分を選ぶと既定の額が入り、手で直せます。</div>
+        <div style="overflow-x:auto">
+        <table class="tk-table">
+          <thead><tr><th style="width:22px"></th><th style="min-width:220px">登記の目的</th><th style="width:230px;min-width:170px">区分</th><th style="width:150px;min-width:130px">登録免許税</th><th style="width:30px"></th></tr></thead>
+          <tbody id="teikei-list-mokuteki_corp" data-field="mokuteki_corp" class="teikei-dnd-list">
+            ${items.map((it, i) => `
+              <tr class="teikei-dnd-item" draggable="true" data-idx="${i}" data-field="mokuteki_corp">
+                <td><span class="teikei-dnd-handle" title="ドラッグして並び替え"
+                  style="cursor:grab;color:var(--text-muted);font-size:14px;user-select:none;padding:0 2px">⠿</span></td>
+                <td><input type="text" value="${escHtml(it.text)}" class="form-control"
+                  onchange="updateCorpTeikei(${i},'text',this.value)"></td>
+                <td><select class="form-control" onchange="updateCorpTeikei(${i},'ku',this.value)">${kuOptions(it.ku)}</select></td>
+                <td>${moneyCell(it, i)}</td>
+                <td><button class="btn btn-xs" onclick="deleteCorpTeikei(${i})"
+                  style="background:#fff0f0;border:1px solid #fca5a5;color:#dc2626">✕</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        </div>
+        <button class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addCorpTeikei()">＋ 追加</button>
+      </div>
+    `;
+  };
+
   container.innerHTML =
-    renderCategory('mokuteki', '登記の目的') +
+    renderCategory('mokuteki', '登記の目的（不動産）') +
+    renderCorp() +
     renderCategory('gen_in', '登記原因');
 
   // DnD初期化
-  ['mokuteki','gen_in'].forEach(field => {
+  ['mokuteki','mokuteki_corp','gen_in'].forEach(field => {
     initTeikeiDnD(document.getElementById('teikei-list-' + field), field);
   });
+}
+
+/* 商業・法人の定型文の編集（10.3.8）。入力中の欄を作り直さないよう、文言と金額は保存するだけ。
+   描き直すのは区分を変えたとき・追加・削除だけ */
+function updateCorpTeikei(idx, field, value) {
+  const data = loadTeikei();
+  const it = (data.mokuteki_corp || [])[idx];
+  if (!it) return;
+  if (field === 'text') {
+    it.text = String(value ?? '').trim();
+  } else if (field === 'ku') {
+    it.ku = value || '';
+    const k = _kubunOf(it.ku);
+    delete it.amount; delete it.amount_big;
+    if (!k) it.amount = 0;
+    else if (k.kind === 'fixed') it.amount = k.amount;
+    else if (k.kind === 'capital') { it.amount = k.amount; it.amount_big = k.amount_big; }
+    else if (k.kind === 'manual') it.amount = null;
+    // rate は金額を持たない（課税価格から計算）
+    saveTeikei(data);
+    renderTeikeiSettings();
+    return;
+  } else if (field === 'amount' || field === 'amount_big') {
+    const d = String(value ?? '').replace(/[^0-9]/g, '');
+    // 空欄：手入力の区分は「自動で入れない」（null）、区分なしは 0、それ以外は区分の既定の額に戻る（null）
+    it[field] = d === '' ? (it.ku ? null : 0) : Number(d);
+  } else {
+    return;
+  }
+  saveTeikei(data);
+}
+function addCorpTeikei() {
+  const data = loadTeikei();
+  if (!data.mokuteki_corp) data.mokuteki_corp = [];
+  data.mokuteki_corp.push({ text: '', ku: '', amount: 0 });
+  saveTeikei(data);
+  renderTeikeiSettings();
+}
+function deleteCorpTeikei(idx) {
+  const data = loadTeikei();
+  if (!data.mokuteki_corp) return;
+  data.mokuteki_corp.splice(idx, 1);
+  saveTeikei(data);
+  renderTeikeiSettings();
 }
 
 function initTeikeiDnD(listEl, field) {
@@ -10169,11 +10570,15 @@ function renderLedger(c) {
   const seenL = new Set();
   lower.forEach(r => { if (!seenL.has(r.group)) { seenL.add(r.group); lowerGroups.push(r.group); } });
 
+  // 商業・法人だけ：区分の列・自動の登録免許税・段の合計（10.3.8）。不動産の出力は 10.3.7 と同じ
+  const corpData = isCorporate ? loadTeikei() : null;
+  const kuTh = isCorporate ? '<th style="width:44px" title="登録免許税の区分">区分</th>' : '';
+
   const theadUpper = `<thead><tr>
     <th style="width:28px"></th><th style="width:32px">No.</th>
     <th style="width:60px;max-width:60px;text-align:center">受託番号</th>
     <th style="width:120px;max-width:120px;text-align:center">管轄</th>
-    <th style="min-width:200px;text-align:center">登記の目的</th>
+    <th style="min-width:200px;text-align:center">登記の目的</th>${kuTh}
     <th style="min-width:80px;text-align:center">登記原因</th>
     <th style="min-width:110px;text-align:center">課税価格</th>
     <th style="width:28px;text-align:center" title="チェック済">✓</th>
@@ -10194,16 +10599,28 @@ function renderLedger(c) {
     const gRows = rows.filter(r => r.group === gid);
     return gRows.map((r, idx) => {
       const autoNo = String(idx + 1);
+      let kuTd = '', menkyoCls = '', menkyoTitle = '', mokuAttr = '', pickField = 'mokuteki';
+      if (isCorporate) {
+        const item = _corpTeikeiFor(r.mokuteki, corpData);
+        kuTd = `<td class="ku-cell">${item ? _kuChipHtml(item.ku) : ''}</td>`;
+        if (r.menkyo_auto) {
+          const zero = String(r.menkyo ?? '') !== '' && Number(String(r.menkyo).replace(/[^0-9]/g, '')) === 0;
+          menkyoCls = ` class="menkyo-auto${zero ? ' menkyo-zero' : ''}"`;
+        }
+        if (r.menkyo_note) menkyoTitle = ` title="${escHtml(r.menkyo_note)}"`;
+        mokuAttr = ` data-row="${r.id}"`;
+        pickField = 'mokuteki_corp';
+      }
       return `<tr>
         <td class="del-cell"><button onclick="deleteLedgerRow('${cid}','${r.id}')" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button></td>
         <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||autoNo)}" oninput="updateLedgerField('${cid}','${r.id}','row_no',this.value)"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(r.jutaku_num||'')}" onchange="updateLedgerField('${cid}','${r.id}','jutaku_num',this.value)"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(r.kankatsu||'')}" onchange="updateLedgerField('${cid}','${r.id}','kankatsu',this.value)"></td>
-        <td><input style="width:100%;text-align:center" value="${escHtml(r.mokuteki||'')}" onchange="updateLedgerField('${cid}','${r.id}','mokuteki',this.value)" ondblclick="showTeikeiPicker(this,'mokuteki')" title="ダブルクリックで定型文"></td>
+        <td><input style="width:100%;text-align:center" value="${escHtml(r.mokuteki||'')}" onchange="updateLedgerField('${cid}','${r.id}','mokuteki',this.value)" ondblclick="showTeikeiPicker(this,'${pickField}')"${mokuAttr} title="ダブルクリックで定型文"></td>${kuTd}
         <td><input style="width:100%;text-align:center" value="${escHtml(r.gen_in||'')}" onchange="updateLedgerField('${cid}','${r.id}','gen_in',this.value)" ondblclick="showTeikeiPicker(this,'gen_in')" title="ダブルクリックで定型文"></td>
         <td class="money-cell"><input value="${r.kazei ? Number(String(r.kazei).replace(/[^\d]/g,'')||0).toLocaleString('ja-JP') : ''}" onblur="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','kazei',this.value.replace(/[^\\d]/g,''))" inputmode="numeric" style="width:100%;text-align:right;${r.kazei_checked?'background:#f0fdf4;color:#166534;font-weight:700;':''}" ${r.kazei_checked?'readonly':''}></td>
         <td style="text-align:center;vertical-align:middle"><input type="checkbox" ${r.kazei_checked?'checked':''} onchange="toggleLedgerLock('${cid}','${r.id}','kazei',this.checked,this)" style="cursor:pointer;width:14px;height:14px"></td>
-        <td class="money-cell"><input value="${r.menkyo ? Number(String(r.menkyo).replace(/[^\d]/g,'')||0).toLocaleString('ja-JP') : ''}" onblur="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','menkyo',this.value.replace(/[^\\d]/g,''))" inputmode="numeric" style="width:100%;text-align:right;${r.menkyo_checked?'background:#f0fdf4;color:#166534;font-weight:700;':''}" ${r.menkyo_checked?'readonly':''}></td>
+        <td class="money-cell"${menkyoTitle}><input${menkyoCls} value="${r.menkyo ? Number(String(r.menkyo).replace(/[^\d]/g,'')||0).toLocaleString('ja-JP') : ''}" onblur="fmtMoney(this)" onchange="updateLedgerField('${cid}','${r.id}','menkyo',this.value.replace(/[^\\d]/g,''))" inputmode="numeric" style="width:100%;text-align:right;${r.menkyo_checked?'background:#f0fdf4;color:#166534;font-weight:700;':''}" ${r.menkyo_checked?'readonly':''}></td>
         <td style="text-align:center;vertical-align:middle"><input type="checkbox" ${r.menkyo_checked?'checked':''} onchange="toggleLedgerLock('${cid}','${r.id}','menkyo',this.checked,this)" style="cursor:pointer;width:14px;height:14px"></td>
         <td style="text-align:center;padding:2px"><button onclick="duplicateLedgerRow('${cid}','${r.id}')" title="複製" style="width:24px;height:24px;font-size:13px;padding:0;line-height:1;border:1px solid #93c5fd;background:#eff6ff;border-radius:4px;cursor:pointer;color:#1d4ed8">⧉</button></td>
       </tr>`;
@@ -10249,8 +10666,9 @@ function renderLedger(c) {
             <button class="btn btn-secondary btn-xs" onclick="addLedgerRow('${cid}','${gid}')">＋ 行を追加</button>
           </div>
           <div class="ledger-wrap">
-            <table class="ledger-table">${theadUpper}<tbody>${rowsHtml||'<tr><td colspan="11" style="padding:8px;text-align:center;color:#9ca3af;font-size:11px">行がありません</td></tr>'}</tbody></table>
-          </div>
+            <table class="ledger-table">${theadUpper}<tbody>${rowsHtml||`<tr><td colspan="${isCorporate ? 12 : 11}" style="padding:8px;text-align:center;color:#9ca3af;font-size:11px">行がありません</td></tr>`}</tbody></table>
+          </div>${isCorporate ? `
+          <div class="ledger-sum" data-sum-group="${escHtml(gid)}"><span>この段の登録免許税 合計</span><b>${_ledgerMenkyoSum(c, gid).toLocaleString('ja-JP')}円</b></div>` : ''}
         </div>`;
       }).join('');
 
@@ -10275,7 +10693,7 @@ function renderLedger(c) {
   return `
     <div class="ledger-section">
       <div class="ledger-section-header">
-        <span>${ico('ledger')} 受付台帳（上段）</span>
+        <span>${ico('ledger')} 受付台帳（${isCorporate ? '商業・法人' : '上段'}）</span>
         <button class="btn btn-primary btn-xs" onclick="addLedgerGroup('${cid}','upper')">＋ 段を追加</button>
       </div>
       ${upperSections}
@@ -10422,6 +10840,7 @@ function duplicateLedgerRow(caseId, rowId) {
   copy.id = genId();
   c.ledger.splice(idx + 1, 0, copy);
   _renumberLedgerGroup(c.ledger, copy.group);
+  _recalcLedgerMenkyo(c, copy.group);   // 商業・法人だけ働く（10.3.8）
   saveToStorage();
   refreshLedgerSection(caseId);
 }
@@ -10517,6 +10936,7 @@ function deleteLedgerRow(caseId, rowId) {
   const gone = c.ledger.find(r => r.id === rowId);
   c.ledger = c.ledger.filter(r => r.id !== rowId);
   if (gone) _renumberLedgerGroup(c.ledger, gone.group);
+  if (gone) _recalcLedgerMenkyo(c, gone.group);   // 商業・法人だけ働く（10.3.8）
   saveToStorage();
   refreshLedgerSection(caseId);
 }
@@ -10566,8 +10986,56 @@ function updateLedgerField(caseId, rowId, field, value) {
   const row = c.ledger.find(r => r.id === rowId);
   if (!row) return;
   row[field] = value;
+  // 商業・法人の登録免許税（10.3.8）
+  let refresh = false;
+  if (c.category === '商業・法人登記') {
+    if (field === 'menkyo') {
+      // 手で直した額は「自動」の印を外し、以後の再計算で書き換えない
+      row.menkyo_auto = false;
+      row.menkyo_note = '';
+      _updateLedgerMenkyoDom(c, row);
+    } else if (field === 'kazei' || field === 'mokuteki') {
+      // 課税価格・登記の目的が確定したら（onchange）、その段を計算し直す。額が変わったときだけ描き直す
+      const g = c.ledger.filter(r => r.group === row.group);
+      const before = JSON.stringify(g.map(r => [r.menkyo, r.menkyo_note]));
+      _recalcLedgerMenkyo(c, row.group);
+      refresh = JSON.stringify(g.map(r => [r.menkyo, r.menkyo_note])) !== before;
+      // 手で打ち直した登記の目的は、描き直さないときも区分のチップだけ直す（入力中の次の欄を壊さない）
+      if (!refresh && field === 'mokuteki') _updateLedgerKuDom(c, row);
+    }
+  }
   saveToStorage();
   _scheduleLedgerCloudSave();
+  if (refresh) refreshLedgerSection(caseId);
+}
+
+/** 登記の目的を手で打ち直したとき、描き直さずに区分のチップだけ直す（10.3.8） */
+function _updateLedgerKuDom(c, row) {
+  try {
+    const inp = document.querySelector(`.ledger-table input[data-row="${row.id}"]`);
+    const td = inp && inp.closest('td') ? inp.closest('td').nextElementSibling : null;
+    if (!td || !td.classList.contains('ku-cell')) return;
+    const item = _corpTeikeiFor(row.mokuteki);
+    td.innerHTML = item ? _kuChipHtml(item.ku) : '';
+  } catch (e) { console.warn('_updateLedgerKuDom', e); }
+}
+
+/** 登録免許税を手で直したとき、描き直さずに（次の欄の入力を壊さないよう）色・説明・段の合計だけ直す（10.3.8） */
+function _updateLedgerMenkyoDom(c, row) {
+  try {
+    document.querySelectorAll('.ledger-table input[onchange*="updateLedgerField"]').forEach(inp => {
+      const oc = inp.getAttribute('onchange') || '';
+      if (oc.indexOf(`'${row.id}','menkyo'`) === -1) return;
+      inp.classList.remove('menkyo-auto', 'menkyo-zero');
+      const td = inp.closest('td');
+      if (td) td.removeAttribute('title');
+    });
+    document.querySelectorAll('.ledger-sum[data-sum-group]').forEach(el => {
+      if (el.getAttribute('data-sum-group') !== String(row.group)) return;
+      const b = el.querySelector('b');
+      if (b) b.textContent = _ledgerMenkyoSum(c, row.group).toLocaleString('ja-JP') + '円';
+    });
+  } catch (e) { console.warn('_updateLedgerMenkyoDom', e); }
 }
 
 function updateLedgerArray(caseId, rowId, field, idx, value) {
@@ -10948,7 +11416,8 @@ function printCaseDetail(caseId) {
         ${isCorporate
           ? `<tr><th>商号・法人名</th><td>${escHtml(c.company_name||'—')}</td></tr>
              <tr><th>本店所在地</th><td>${escHtml(c.honten||'—')}</td></tr>
-             ${c.corp_num ? `<tr><th>会社法人等番号</th><td>${escHtml(c.corp_num)}</td></tr>` : ''}`
+             ${c.corp_num ? `<tr><th>会社法人等番号</th><td>${escHtml(c.corp_num)}</td></tr>` : ''}
+             ${_shihonText(c) ? `<tr><th>資本金</th><td>${escHtml(_shihonText(c))}</td></tr>` : ''}`
           : `<tr><th>不動産所在地</th><td>${escHtml(c.location||'—')}</td></tr>`}
         <tr><th>区分</th><td>${escHtml(c.category||'—')}</td></tr>
         <tr><th>種別</th><td>${escHtml(c.type||'—')}</td></tr>
@@ -11080,6 +11549,7 @@ function onCaseCategoryChange(cat) {
   const comp = document.getElementById('field-company-name');
   const hon  = document.getElementById('field-honten');
   const corp = document.getElementById('field-corp-num');
+  const shihon = document.getElementById('field-shihon');
   if (!sel || !txt) return;
   if (cat === '商業・法人登記') {
     sel.style.display  = 'none';
@@ -11088,6 +11558,7 @@ function onCaseCategoryChange(cat) {
     if (comp) comp.style.display = '';
     if (hon)  hon.style.display  = '';
     if (corp) corp.style.display = '';
+    if (shihon) shihon.style.display = '';
   } else {
     sel.style.display  = '';
     txt.style.display  = 'none';
@@ -11095,6 +11566,23 @@ function onCaseCategoryChange(cat) {
     if (comp) comp.style.display = 'none';
     if (hon)  hon.style.display  = 'none';
     if (corp) corp.style.display = 'none';
+    if (shihon) shihon.style.display = 'none';
+  }
+}
+
+/* 資本金の欄：金額が入っていれば「1億円以下／超」の選択は金額で決まる（見た目だけ切り替えて触れなくする）。
+   手で選んだ値は dataset.manual に覚えておき、金額を消したら戻す（10.3.8） */
+function _shihonSyncClass() {
+  const inp = document.getElementById('f-shihon');
+  const sel = document.getElementById('f-shihon-class');
+  if (!inp || !sel) return;
+  const d = String(inp.value || '').replace(/[^\d]/g, '');
+  if (d) {
+    sel.disabled = true;
+    sel.value = Number(d) > 100000000 ? 'over' : 'under';
+  } else {
+    sel.disabled = false;
+    sel.value = sel.dataset.manual || '';
   }
 }
 
@@ -11108,7 +11596,7 @@ function openCaseModal(caseId, scrollTo) {
   const fields = ['case-num','case-name','client-name','location','company-name','honten',
                   'received-date','deadline',
                   'apply-done','done-date','memo','corp-num-1','corp-num-2','corp-num-3',
-                  'memo','corp-num-1','corp-num-2','corp-num-3'];
+                  'memo','corp-num-1','corp-num-2','corp-num-3','shihon'];
   fields.forEach(f => {
     const el = document.getElementById('f-' + f);
     if (el) el.value = '';
@@ -11119,6 +11607,7 @@ function openCaseModal(caseId, scrollTo) {
     if (el) el.selectedIndex = 0;
   });
   document.getElementById('f-case-type-text').value = '';
+  { const sc = document.getElementById('f-shihon-class'); if (sc) { sc.dataset.manual = ''; sc.value = ''; sc.disabled = false; } }
   document.getElementById('f-hoteisozoku').checked = false;
   document.getElementById('f-hoteisozoku-tehai').checked = false;
   document.getElementById('f-hoteisozoku-tehai-date').value = '';
@@ -11155,6 +11644,14 @@ function openCaseModal(caseId, scrollTo) {
     document.getElementById('f-corp-num-1').value = cn.slice(0,4);
     document.getElementById('f-corp-num-2').value = cn.slice(4,6);
     document.getElementById('f-corp-num-3').value = cn.slice(6,12);
+    // 資本金（10.3.8）
+    {
+      const sd = String(c.shihon || '').replace(/[^0-9]/g, '');
+      document.getElementById('f-shihon').value = sd ? Number(sd).toLocaleString('ja-JP') : '';
+      const sc = document.getElementById('f-shihon-class');
+      sc.dataset.manual = c.shihon_over === true ? 'over' : c.shihon_over === false ? 'under' : '';
+      _shihonSyncClass();
+    }
     // 請求情報（複数対応・旧形式互換）
     const invListEl = document.getElementById('f-invoice-list');
     if (invListEl) invListEl.innerHTML = '';
@@ -11816,6 +12313,14 @@ function saveCase() {
       const p3 = document.getElementById('f-corp-num-3').value.trim();
       return (p1||p2||p3) ? `${p1}-${p2}-${p3}` : '';
     })(),
+    // 資本金（10.3.8）。数字だけ。金額があれば「以下／超」は金額から決まる
+    shihon: String(document.getElementById('f-shihon').value || '').replace(/[^0-9]/g, ''),
+    shihon_over: (() => {
+      const d = String(document.getElementById('f-shihon').value || '').replace(/[^0-9]/g, '');
+      if (d) return Number(d) > 100000000;
+      const v = document.getElementById('f-shihon-class').value;
+      return v === 'over' ? true : v === 'under' ? false : null;
+    })(),
     invoices: readInvoiceRows(),
     touki_list: readToukiRows(),
     legal_bureaus: readBureauRows(),
@@ -11868,6 +12373,10 @@ function saveCase() {
         }
       });
       cases[idx] = { ...prev, ...data };
+      // 資本金が変わったら、商業・法人の台帳の自動の登録免許税（役員変更カ）を計算し直す（10.3.8）
+      if ((prev.shihon || '') !== (data.shihon || '') || (prev.shihon_over ?? null) !== (data.shihon_over ?? null)) {
+        _recalcAllLedgerMenkyo(cases[idx]);
+      }
     }
     toast('案件を更新しました');
   } else {
