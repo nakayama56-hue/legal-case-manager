@@ -3935,7 +3935,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.4.3</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.4.4</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7099,10 +7099,10 @@ function renderTrackingSummary() {
     const statusBtn = arrived
       ? '<button class="tracking-arrived-btn" title="押すと到着済を取り消します" onclick="event.stopPropagation();_unmarkArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;font-size:10px;background:#d1fae5;color:#065f46;border:none;border-radius:4px;cursor:pointer;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">✓ 到着済</button>'
       : '<button onclick="event.stopPropagation();_markArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;background:#1d4ed8;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">' + ico('mailbox') + ' 到着</button>';
-    const rowClick = 'onclick="window.open(\'' + url + '\',\'_blank\')"';
+    const rowClick = 'onclick="_trRowClick(this)"';
     /* Mac アプリ：マウスを乗せてスペースで追跡ページをのぞき見（10.3.6）。Chrome 版では data- が付くだけ */
     const peekAttr = ' data-peek-url="' + url + '" data-peek-title="' + escHtml(label + '　' + item.tracking) + '"'
-      + (_trPeekNative() ? ' title="少し乗せたままにすると追跡ページをのぞけます（スペースキーでもすぐ開きます）"' : '');
+      + (_trPeekNative() ? ' title="押すと追跡ページをのぞけます（⏎ でブラウザ窓、⌘P で印刷）"' : '');
     return '<div class="tracking-row" ' + rowClick + peekAttr + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
       + '<span style="flex-shrink:0;width:36px;font-size:11px;color:#94a3b8">' + dateStr + '</span>'
       + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(label) + '</span>'
@@ -8044,15 +8044,12 @@ document.addEventListener('keydown', ev => {
   if (row) row.scrollIntoView({ block: 'nearest' });
 });
 
-// ---- 送付追跡の行にマウスを乗せる → 追跡ページをのぞき見（Mac アプリだけ。10.3.6、10.4.2 で乗せるだけで開く形に）----
-// 行の選び方は「マウスを乗せるだけ」（ご本人の選択。クリックは今までどおりブラウザ窓で開く）。
-// 10.4.2：0.5 秒乗せたままにすると開く（ご本人の選択。通りすがりでは開かない）。スペースでもすぐ開く。窓は今までどおり
+// ---- 送付追跡の行を押す → 追跡ページをのぞき見（Mac アプリだけ。10.3.6〜）----
+// 10.4.4（2026 年 10 月 15 日）：ワンクリックで開く（ご本人のご指示）。10.4.2〜10.4.3 の「0.5 秒乗せると開く」は「わずらわしい」のでやめた。再提案しない。
+// ブラウザ窓へは、のぞき見の窓で ⏎。マウスを乗せてスペースでも開く（10.3.6 のまま）。Chrome 版は今までどおり新しいタブで開く。
 // 渡すのは、いま画面に出ている行ぜんぶ（折りたたみの中は含めない）。のぞき見の窓の ↑↓ はこの並びを前後する
-const TR_PEEK_HOVER_MS = 500;
 function _trPeekNative() { return _cfNative() && typeof window.CaseFlowNative.peek === 'function'; }
 let _trHover = null;
-let _trHoverTimer = null;
-let _trPeekArmed = true;   // 開いたあとは、いったん行から外れるまで乗せても開かない（閉じた直後にまた開かないように）
 let _trPeekUrls = [];      // のぞき見に渡した並び（行を点灯させるときに引く）
 // のぞき見の窓でいま見ている行を点灯させる（10.4.3）。殻（Peek.swift）が行を移るたび i、閉じたら -1 で呼ぶ。
 // 窓は大きいので、行が隠れないよう一覧の中で見える位置まで送る。描き直されていても URL で引き直す
@@ -8074,31 +8071,22 @@ function _trPeekOpen(row) {
   if (i < 0) return false;
   const items = rows.map(r => ({ url: r.dataset.peekUrl, title: r.dataset.peekTitle || '' }));
   _trPeekUrls = items.map(it => it.url);
-  _trPeekArmed = false;
   window.CaseFlowNative.peek(items, i).catch(err => toast(`のぞき見できませんでした（${err.message}）`, 'error'));
   return true;
 }
+function _trRowClick(row) {
+  if (_trPeekOpen(row)) return;
+  window.open(row.dataset.peekUrl, '_blank');
+}
 document.addEventListener('mouseover', ev => {
   const t = ev.target;
-  const row = (t && t.closest) ? t.closest('.tracking-row[data-peek-url]') : null;
-  if (row === _trHover) return;   // 同じ行の中を動いただけ
-  _trHover = row;
-  clearTimeout(_trHoverTimer);
-  if (!row) { _trPeekArmed = true; return; }
-  if (!_trPeekArmed || !_trPeekNative()) return;
-  _trHoverTimer = setTimeout(() => {
-    if (_trHover !== row) return;
-    const a = document.activeElement;
-    if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;   // 入力中は横取りしない
-    _trPeekOpen(row);
-  }, TR_PEEK_HOVER_MS);
+  _trHover = (t && t.closest) ? t.closest('.tracking-row[data-peek-url]') : null;
 });
 document.addEventListener('keydown', ev => {
   if (ev.key !== ' ' || ev.metaKey || ev.ctrlKey || ev.altKey || !_trPeekNative()) return;
   const t = ev.target;
   if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(t.tagName))) return;
   if (!_trHover) return;
-  clearTimeout(_trHoverTimer);
   if (_trPeekOpen(_trHover)) ev.preventDefault();   // 効いたときは必ず止める（5-5章）
 });
 
