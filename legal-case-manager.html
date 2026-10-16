@@ -3935,7 +3935,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.4.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.4.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5008,6 +5008,32 @@ function deleteAddrBookEntry(idx) {
   renderAddrBookList();
 }
 
+/* 法人の案件では、送付状・確認記録の宛名に法人名を添える（10.4.5）。
+   編集画面の「登記区分」が商業・法人登記で、「商号・法人名」が入っているときだけ。
+   役職は、連絡先の「役割・続柄」が肩書らしい言葉のときだけ宛名に乗せる（「依頼者」「担当者」は乗せない） */
+const CORP_TITLE_RE = /代表|取締役|監査役|執行役|社長|会長|専務|常務|理事|監事|清算人|部長|次長|課長|係長|主任|室長|支店長|所長|店長|局長/;
+function _corpTitleOf(role) { const r = (role || '').trim(); return CORP_TITLE_RE.test(r) ? r : ''; }
+function _formCorpInfo() {
+  if ((document.getElementById('f-case-category')?.value || '') !== '商業・法人登記') return null;
+  const company = (document.getElementById('f-company-name')?.value || '').trim();
+  if (!company) return null;
+  return { company, honten: (document.getElementById('f-honten')?.value || '').trim() };
+}
+function _caseCorpInfo(c) {
+  if (!c || c.category !== '商業・法人登記') return null;
+  const company = (c.company_name || '').trim();
+  return company ? { company, honten: (c.honten || '').trim() } : null;
+}
+function _soushuParams(name, corp, role) {
+  const params = new URLSearchParams({ name });
+  if (corp) {
+    params.set('company', corp.company);
+    const t = _corpTitleOf(role);
+    if (t) params.set('title', t);
+  }
+  return params;
+}
+
 function openKakuninFromForm(btn) {
   const row = btn.closest('.contact-list-item');
   if (!row) return;
@@ -5020,6 +5046,8 @@ function openKakuninFromForm(btn) {
   const tel3 = row.querySelector('.ct-tel-3')?.value || '';
   const tel  = [tel1, tel2, tel3].filter(v=>v).join('-');
   const mail = row.querySelector('.ct-email')?.value || '';
+  const role = row.querySelector('.ct-role')?.value || '';
+  const corp = _formCorpInfo();
 
   // 案件名・所在地はフォームから取得
   const caseName = document.getElementById('f-case-name')?.value || '';
@@ -5050,13 +5078,15 @@ function openKakuninFromForm(btn) {
     zip:     r.querySelector('.dv-zip')?.value     || '',
   })).filter(d => d.name || d.address);
 
-  const params = new URLSearchParams({
-    name, kana, tel, mail,
-    case_name: caseName,
-    location,
-    contacts:   JSON.stringify(allContacts),
-    deliveries: JSON.stringify(deliveries),
-  });
+  const params = new URLSearchParams(corp
+    // 法人：依頼者（本人）は法人（商号・本店所在地）。押した連絡先は「代理人・取引担当者」の欄へ
+    ? { type: 'juridical', name: corp.company, addr: corp.honten,
+        dai_name: name, dai_kana: kana, dai_tel: tel, dai_mail: mail, dai_relation: role }
+    : { name, kana, tel, mail });
+  params.set('case_name', caseName);
+  params.set('location', corp ? corp.honten : location);
+  params.set('contacts', JSON.stringify(allContacts));
+  params.set('deliveries', JSON.stringify(deliveries));
   const modal = document.getElementById('kakunin-modal');
   const iframe = document.getElementById('kakunin-iframe');
   const caseContent = document.getElementById('kakunin-case-content');
@@ -5081,7 +5111,7 @@ function openKakuninFromForm(btn) {
           ${ct.address ? `<div style="font-size:11px;color:var(--text-muted)">${ico('note')} ${escHtml(ct.address)}</div>` : ''}
         </div>`;
       });
-      allDeliveries.forEach(d => {
+      deliveries.forEach(d => {
         html += `<div style="background:var(--bg-secondary);border-radius:8px;padding:10px;margin-bottom:8px">
           <div style="font-size:11px;color:#f97316;font-weight:600">${ico('mailbox')} 送付先</div>
           <div style="font-weight:700">${escHtml(d.name||'')}</div>
@@ -5109,7 +5139,10 @@ function openHenshinFromForm(btn) {
   const row = btn.closest('.contact-list-item');
   if (!row) return;
   const name = row.querySelector('.ct-name')?.value || '';
+  const role = row.querySelector('.ct-role')?.value || '';
+  const corp = _formCorpInfo();
   const caseName = document.getElementById('f-case-name')?.value || '';
+  const params = _soushuParams(name, corp, role);
 
   const modal = document.getElementById('kakunin-modal');
   const iframe = document.getElementById('kakunin-iframe');
@@ -5118,14 +5151,14 @@ function openHenshinFromForm(btn) {
   if (modal && iframe) {
     if (caseContent) {
       let html = caseName ? `<h3 style="margin:0 0 8px">${escHtml(caseName)}</h3>` : '';
+      if (corp) html += `<p style="color:var(--text-muted);font-size:12px">${ico('building')} ${escHtml(corp.company)}</p>`;
       if (name) html += `<p style="color:var(--text-muted);font-size:12px">${ico('user')} ${escHtml(name)}</p>`;
       caseContent.innerHTML = html;
     }
-    const params = new URLSearchParams({ name });
     iframe.src = `henshin_ari_soushu.html?${params.toString()}`;
     modal.style.display = 'flex';
   } else {
-    window.open(`henshin_ari_soushu.html?name=${encodeURIComponent(name)}`, '_blank', 'noopener');
+    window.open(`henshin_ari_soushu.html?${params.toString()}`, '_blank', 'noopener');
   }
 }
 
@@ -5133,7 +5166,10 @@ function openSoushuFromForm(btn) {
   const row = btn.closest('.contact-list-item');
   if (!row) return;
   const name = row.querySelector('.ct-name')?.value || '';
+  const role = row.querySelector('.ct-role')?.value || '';
+  const corp = _formCorpInfo();
   const caseName = document.getElementById('f-case-name')?.value || '';
+  const params = _soushuParams(name, corp, role);
 
   const modal = document.getElementById('kakunin-modal');
   const iframe = document.getElementById('kakunin-iframe');
@@ -5142,14 +5178,14 @@ function openSoushuFromForm(btn) {
   if (modal && iframe) {
     if (caseContent) {
       let html = caseName ? `<h3 style="margin:0 0 8px">${escHtml(caseName)}</h3>` : '';
+      if (corp) html += `<p style="color:var(--text-muted);font-size:12px">${ico('building')} ${escHtml(corp.company)}</p>`;
       if (name) html += `<p style="color:var(--text-muted);font-size:12px">${ico('user')} ${escHtml(name)}</p>`;
       caseContent.innerHTML = html;
     }
-    const params = new URLSearchParams({ name });
     iframe.src = `kanryo_soushu.html?${params.toString()}`;
     modal.style.display = 'flex';
   } else {
-    window.open(`kanryo_soushu.html?name=${encodeURIComponent(name)}`, '_blank', 'noopener');
+    window.open(`kanryo_soushu.html?${params.toString()}`, '_blank', 'noopener');
   }
 }
 
@@ -7820,17 +7856,18 @@ function openSoushuPanel(caseId) {
   const c = cases.find(c => c.id === caseId);
   if (!c) return;
   const contacts = (c.contacts && c.contacts.length > 0) ? c.contacts : [];
+  const corp = _caseCorpInfo(c);
   if (contacts.length <= 1) {
     // 1名以下なら直接開く
     const name = contacts[0]?.name || c.client_name || '';
-    _openSoushu(name);
+    _openSoushu(name, corp, contacts[0]?.role);
   } else {
     // 複数いる場合は選択モーダルを出す
     const modal = document.getElementById('soushu-select-modal');
     const list  = document.getElementById('soushu-select-list');
     if (!modal || !list) return;
-    list.innerHTML = contacts.map(ct =>
-      `<button class="soushu-select-item" onclick="_openSoushu('${escHtml(ct.name||'')}');closeSoushuSelectModal()">
+    list.innerHTML = contacts.map((ct, i) =>
+      `<button class="soushu-select-item" onclick="_openSoushuAt('${c.id}',${i});closeSoushuSelectModal()">
         <span style="font-weight:700">${escHtml(withKeisho(ct.name||'', ct.role))}</span>
         ${ct.role ? `<span style="font-size:11px;color:var(--text-muted);margin-left:6px">${escHtml(ct.role)}</span>` : ''}
       </button>`
@@ -7840,8 +7877,15 @@ function openSoushuPanel(caseId) {
   }
 }
 
-function _openSoushu(name) {
-  const params = new URLSearchParams({ name });
+function _openSoushuAt(caseId, i) {
+  const c = cases.find(x => x.id === caseId);
+  const ct = c?.contacts?.[i];
+  if (!c || !ct) return;
+  _openSoushu(ct.name || '', _caseCorpInfo(c), ct.role);
+}
+
+function _openSoushu(name, corp, role) {
+  const params = _soushuParams(name, corp, role);
   const modal = document.getElementById('kakunin-modal');
   const iframe = document.getElementById('kakunin-iframe');
   if (modal && iframe) {

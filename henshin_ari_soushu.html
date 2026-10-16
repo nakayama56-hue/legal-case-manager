@@ -217,6 +217,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
 
 .doc-date { text-align: right; font-size: 13px; }
 .doc-rcpt { font-size: 19px; font-weight: 600; letter-spacing: 0.08em; margin-top: 10px; }
+.doc-rcpt-co { font-size: 17px; margin-bottom: 2px; } /* 法人名の行（宛名が2行のとき） */
 .doc-who  { text-align: right; font-size: 13.5px; margin-top: 14px; letter-spacing: 0.12em; }
 .doc-who b { font-size: 15px; letter-spacing: 0.24em; }
 
@@ -316,7 +317,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
     <div class="h-badge">📄</div>
     <div>
       <div class="h-title">書類送付案内　作成</div>
-      <div class="h-ver">ver.1.1.2</div>
+      <div class="h-ver">ver.1.1.3</div>
     </div>
     <div class="h-div"></div>
     <div class="h-office">中山司法書士事務所</div>
@@ -350,6 +351,10 @@ input:focus, textarea:focus { outline: none; border-color: var(--blue-mid); box-
     <!-- 送付先 -->
     <div class="sec">
       <div class="sec-head"><div class="sec-lbl">👤 送付先</div></div>
+      <label>法人名（法人宛てのとき）</label>
+      <input type="text" id="recipientCompany" placeholder="例：株式会社○○">
+      <label>役職・肩書</label>
+      <input type="text" id="recipientTitle" placeholder="例：代表取締役">
       <label>氏名</label>
       <input type="text" id="recipientName" placeholder="例：○○　○○">
       <label>件名（遺産分割協議の依頼人名・被相続人名など）</label>
@@ -428,6 +433,8 @@ let currentFont = "'Hiragino Mincho ProN', 'ヒラギノ明朝 ProN', 'Yu Mincho
 function init() {
   document.getElementById('sendDate').value = '2026-03-24';
   document.getElementById('recipientName').value = '';
+  document.getElementById('recipientCompany').value = '';
+  document.getElementById('recipientTitle').value = '';
   document.getElementById('subjectLine').value = '';
   document.getElementById('greetingText').value = DEFAULT_GREETING;
   document.getElementById('bodyText').value = DEFAULT_BODY;
@@ -435,7 +442,7 @@ function init() {
   sendDocs = DEFAULT_SEND_DOCS.map((d,i) => ({ ...d, id: i+1 }));
   retDocs  = DEFAULT_RET_DOCS.map((t,i) => ({ id: 100+i, text: t }));
 
-  ['sendDate','recipientName','subjectLine','greetingText','bodyText'].forEach(id =>
+  ['sendDate','recipientCompany','recipientTitle','recipientName','subjectLine','greetingText','bodyText'].forEach(id =>
     document.getElementById(id).addEventListener('input', renderPreview));
 
   renderSendList();
@@ -525,10 +532,21 @@ function renderRetList() {
   });
 }
 
+
+// 宛名の組み立て。法人名があれば 1行目に法人名、2行目に「役職　氏名　様」。氏名が無ければ「法人名　御中」
+function recipientHtml(company, title, name) {
+  if (!company) return `<div class="doc-rcpt">${escHtml(name || '　　　　　　')}　様</div>`;
+  const person = [title, name].filter(Boolean).join('　');
+  if (!person) return `<div class="doc-rcpt">${escHtml(company)}　御中</div>`;
+  return `<div class="doc-rcpt"><div class="doc-rcpt-co">${escHtml(company)}</div><div>${escHtml(person)}　様</div></div>`;
+}
+
 // ── プレビュー ──
 function renderPreview() {
   const dateVal  = document.getElementById('sendDate').value;
-  const name     = document.getElementById('recipientName').value.trim() || '　　　　　　';
+  const name     = document.getElementById('recipientName').value.trim();
+  const company  = document.getElementById('recipientCompany').value.trim();
+  const title    = document.getElementById('recipientTitle').value.trim();
   const subjectRaw = document.getElementById('subjectLine').value.trim();
   const greeting = document.getElementById('greetingText').value.trim();
   const bodyTxt  = document.getElementById('bodyText').value.trim();
@@ -592,7 +610,7 @@ function renderPreview() {
     </div>
     <div class="doc-main">
       <div class="doc-date">${escHtml(dateStr)}</div>
-      <div class="doc-rcpt">${escHtml(name)}　様</div>
+      ${recipientHtml(company, title, name)}
       <div class="doc-who">司法書士　<b>中山 吾郎</b></div>
       <div class="doc-title">書類送付のご案内</div>
       ${subjectHtml}
@@ -622,6 +640,8 @@ function resetAll() {
   sendDocs = DEFAULT_SEND_DOCS.map((d,i) => ({ ...d, id: i+1 }));
   retDocs  = DEFAULT_RET_DOCS.map((t,i) => ({ id: 100+i, text: t }));
   document.getElementById('recipientName').value = '';
+  document.getElementById('recipientCompany').value = '';
+  document.getElementById('recipientTitle').value = '';
   document.getElementById('sendDate').value      = '2026-03-24';
   document.getElementById('subjectLine').value   = '';
   document.getElementById('greetingText').value  = DEFAULT_GREETING;
@@ -712,14 +732,13 @@ init();
 // URLパラメータから氏名を自動入力
 (function() {
   const params = new URLSearchParams(window.location.search);
-  const name = params.get('name');
-  if (name) {
-    const el = document.getElementById('recipientName');
-    if (el) {
-      el.value = name;
-      el.dispatchEvent(new Event('input'));
-    }
-  }
+  let touched = false;
+  [['name','recipientName'], ['company','recipientCompany'], ['title','recipientTitle']].forEach(([k, id]) => {
+    const v = params.get(k);
+    const el = document.getElementById(id);
+    if (v && el) { el.value = v; touched = true; }
+  });
+  if (touched) renderPreview();
 })();
 </script>
 </body>

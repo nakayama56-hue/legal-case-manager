@@ -408,7 +408,7 @@
 <body class="mode-input">
 
 <div class="toolbar">
-  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.2.0</span></h1>
+  <h1>📋 確認記録 <span style="font-size:11px; font-weight:400; color:#9ca3af; margin-left:6px;">ver.1.2.1</span></h1>
   <div class="mode-switch">
     <button id="btn-mode-input" class="active" onclick="setMode('input')">入力</button>
     <button id="btn-mode-print" onclick="setMode('print')">様式プレビュー</button>
@@ -1809,6 +1809,25 @@ document.addEventListener('DOMContentLoaded', () => {
   if (kana) { const el = document.getElementById('irai_kana'); if(el) el.value = kana; }
   if (tel)  { const el = document.getElementById('irai_tel');  if(el) el.value = tel; }
   if (mail) { const el = document.getElementById('irai_mail'); if(el) el.value = mail; }
+
+  // 法人の依頼者（CaseFlow の商業・法人登記の案件から開いたとき。1.2.1）
+  // type=juridical で種別を「法人」に、addr に本店所在地、dai_* に取引担当者（押した連絡先）
+  // CaseFlow から開いたとき（name あり）は、種別も合わせる（法人なら法人、それ以外は自然人）
+  if (name) {
+    const t = params.get('type') === 'juridical' ? 'juridical' : 'natural';
+    const r = document.querySelector(`input[name="irai_type"][value="${t}"]`);
+    if (r) { r.checked = true; toggleIraiType(); }
+  }
+  [['addr','irai_addr'], ['dai_name','dai_name'], ['dai_kana','dai_kana'], ['dai_tel','dai_tel'],
+   ['dai_mail','dai_mail'], ['dai_relation','dai_relation']].forEach(([k, id]) => {
+    const v = params.get(k);
+    const el = document.getElementById(id);
+    if (v && el) el.value = v;
+  });
+  if (name || kana || tel || mail || params.get('type') || params.get('addr') || params.get('dai_name')) {
+    saveData();
+    updateProgress();
+  }
 
   // 案件情報パネルを表示
   if (caseName || location || contacts || deliveriesParam) {
