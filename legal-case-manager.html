@@ -3911,7 +3911,7 @@ tr.row-waiting:hover > td {
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.4.7</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.4.8</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -11733,12 +11733,27 @@ function readBureauRows() {
 
 /* 会社法人等番号入力補助 */
 function corpNumInput(el, nextId, max) {
-  el.value = el.value.replace(/[^0-9]/g, '').slice(0, max);
+  // 日本語入力の変換中（未確定）は値を書き換えない。書き換えると確定時に文字が二重に入る（10.4.7 の金額欄と同じ型）
+  if (el.dataset.composing === '1') return;
+  const v = el.value.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).replace(/[^0-9]/g, '').slice(0, max);
+  if (v !== el.value) el.value = v;
   if (nextId && el.value.length >= max) {
     const next = document.getElementById(nextId);
     if (next) next.focus();
   }
 }
+// 会社法人等番号の3欄：変換中の印を立て、確定したあとに整える
+document.addEventListener('compositionstart', e => {
+  if (e.target && e.target.matches && e.target.matches('#f-corp-num-1, #f-corp-num-2, #f-corp-num-3')) e.target.dataset.composing = '1';
+});
+document.addEventListener('compositionend', e => {
+  const t = e.target;
+  if (!(t && t.matches && t.matches('#f-corp-num-1, #f-corp-num-2, #f-corp-num-3'))) return;
+  t.dataset.composing = '0';
+  const max = { 'f-corp-num-1': 4, 'f-corp-num-2': 2, 'f-corp-num-3': 6 }[t.id];
+  const next = { 'f-corp-num-1': 'f-corp-num-2', 'f-corp-num-2': 'f-corp-num-3' }[t.id] || null;
+  corpNumInput(t, next, max);
+});
 function corpNumBack(e, prevId) {
   if (e.key === 'Backspace' && e.target.value === '') {
     const prev = document.getElementById(prevId);
