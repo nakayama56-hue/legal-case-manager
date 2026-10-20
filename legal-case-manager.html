@@ -1434,6 +1434,7 @@ td.col-case-name {
   position: relative; z-index: 5;   /* 印刷の小さな一覧が下の受付台帳に隠れないように */
 }
 .cd-bar.corp { border-left-color: var(--color-accent); }
+.cd-bar.other { border-left-color: #8a929e; }
 body[data-theme="ginnezu"] .cd-bar,
 body[data-theme="kohaku"] .cd-bar {
   /* 銀鼠・琥珀は地が濃いので板を白く。border-color は左の縁の色を消すので触らない */
@@ -1448,6 +1449,7 @@ body[data-theme="kohaku"] .cd-bar {
 .cd-bar-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-secondary); align-items: baseline; }
 .cd-bar-meta .cat { font-weight: 700; color: var(--color-primary); white-space: nowrap; }
 .cd-bar.corp .cd-bar-meta .cat { color: var(--color-accent); }
+.cd-bar.other .cd-bar-meta .cat { color: #6b7280; }
 .cd-bar-meta .sep { color: var(--text-muted); }
 .cd-bar-tools { display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
 
@@ -3232,6 +3234,7 @@ tr.row-waiting:hover > td {
 .case-tile-card::before { content: none !important; }
 .case-tile-card[data-cat="real"] { --tile-accent: var(--color-primary); }
 .case-tile-card[data-cat="corp"] { --tile-accent: var(--color-accent); }
+.case-tile-card[data-cat="other"] { --tile-accent: #8a929e; }  /* その他（10.5.5）は灰。青橙の対は崩さない */
 
 /* 一律の青グラデーションをやめ、左帯だけで区別する */
 .case-tile-card.tile-active {
@@ -3919,6 +3922,7 @@ body.jb-window .logo-home { cursor: default; }
               <option value="">区分（全て）</option>
               <option value="不動産登記">不動産登記</option>
               <option value="商業・法人登記">商業・法人登記</option>
+              <option value="その他">その他</option>
             </select>
             <select class="filter-select" id="case-sort" style="display:none"></select>
             <input type="hidden" id="case-show-completed">
@@ -4038,7 +4042,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -4217,6 +4221,7 @@ body.jb-window .logo-home { cursor: default; }
             <select class="form-control" id="f-case-category" onchange="onCaseCategoryChange(this.value)">
               <option value="不動産登記">不動産登記</option>
               <option value="商業・法人登記">商業・法人登記</option>
+              <option value="その他">その他</option>
             </select>
           </div>
           <div class="form-group">
@@ -4228,7 +4233,7 @@ body.jb-window .logo-home { cursor: default; }
               <option>抵当権抹消</option><option>根抵当権抹消</option>
               <option>住所氏名変更</option><option>共有物分割</option><option>その他</option>
             </select>
-            <!-- 商業・法人登記：自由入力 -->
+            <!-- 商業・法人登記・その他：自由入力 -->
             <input class="form-control" id="f-case-type-text" style="display:none" placeholder="例：設立登記、役員変更、本店移転、解散登記">
           </div>
           <!-- 不動産登記：所在地 -->
@@ -5409,6 +5414,16 @@ const ICON_CAT_CORP = _catSvg(
   '<rect x="6.6" y="9.9" width="4.1" height="1.4"/><rect x="6.6" y="12.9" width="4.1" height="1.4"/>' +
   '<rect x="14.6" y="11.6" width="2.9" height="1.4"/><rect x="14.6" y="14.4" width="2.9" height="1.4"/></g>' +
   '<rect x="2.6" y="19.4" width="18.8" height="1.5" rx=".75"/>');
+/* その他（10.5.5）＝書類の束（紙 2 枚を重ねた形）。地面線は上の 2 つと同じ高さ */
+const ICON_CAT_OTHER = _catSvg(
+  '<path d="M9 3.4h10.6v13.4h-3.4V5.2H9z"/><rect x="5" y="6" width="10.4" height="12.5" rx=".6"/>' +
+  '<g fill="#fff" opacity=".95"><rect x="7" y="9.2" width="6.4" height="1.4"/><rect x="7" y="12.4" width="6.4" height="1.4"/></g>' +
+  '<rect x="2.6" y="19.4" width="18.8" height="1.5" rx=".75"/>');
+/* 案件の区分（10.5.5）。保存する値は '不動産登記'／'商業・法人登記'／'その他'。空は不動産として扱う。
+   商業の判定は今までどおり c.category === '商業・法人登記'。「その他」に関わる新しい分岐はこの 2 つを使う */
+const CAT_OTHER = 'その他';
+function _isOtherCat(c) { return !!c && c.category === CAT_OTHER; }
+function _isLandCat(c)  { return !!c && c.category !== '商業・法人登記' && c.category !== CAT_OTHER; }
 const ICON_CAL    = _svg('<rect x="2.4" y="3.6" width="11.2" height="10" rx="1.6"/><path d="M2.4 6.8h11.2M5.6 2.4v2.4M10.4 2.4v2.4"/>');
 function renderCaseTiles() {
   const grid = document.getElementById('case-tile-grid');
@@ -5521,12 +5536,12 @@ function renderCaseTiles() {
       _hsPending(c) ? '<span class="tile-hs-badge" title="法定相続情報一覧図の手配がまだです">' + ico('doc') + '一覧図 未手配</span>' : '',
       c.pinned ? '<span class="tile-pin">' + ico('pin') + '</span>' : '',
     ].filter(Boolean).join('');
-    return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" data-cat="${_isCorp ? 'corp' : 'real'}" onclick="showCaseDetail('${c.id}')">
+    return `<div class="case-tile-card${c.waiting ? ' tile-waiting' : (!sc ? ' tile-active' : '')}" data-cat="${_isCorp ? 'corp' : _isOtherCat(c) ? 'other' : 'real'}" onclick="showCaseDetail('${c.id}')">
       ${isShinseichuu ? '<span class="tile-badge-anchor tile-badge-anchor-l"><span class="tile-shinsei-badge-abs">申請中</span></span>' : ''}
       ${_undone ? `<span class="tile-badge-anchor"><span class="tile-task-badge" title="未完了タスク ${_undone}件">${_undone > 99 ? '99+' : _undone}</span></span>` : ''}
       <div class="tile-body">
         <div class="tile-toprow">
-          <span class="cat-mark">${_isCorp ? ICON_CAT_CORP : ICON_CAT_REAL}</span>
+          <span class="cat-mark">${_isCorp ? ICON_CAT_CORP : _isOtherCat(c) ? ICON_CAT_OTHER : ICON_CAT_REAL}</span>
           ${_mark ? `<div class="tile-marks">${_mark}</div>` : ''}
         </div>
         <div class="tile-name">${escHtml(c.case_name||'—')}</div>
@@ -7760,7 +7775,7 @@ function renderCaseTable() {
       <td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
         ${escHtml(withKeisho(c.client_name||'', c.contacts?.[0]?.role || '依頼者'))}
       </td>
-      <td style="white-space:nowrap"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${c.category==='商業・法人登記'?'#fef3c7':'#dbeafe'};color:${c.category==='商業・法人登記'?'#92400e':'#1e40af'}">${c.category==='商業・法人登記' ? ICON_CAT_CORP + ' 商業' : ICON_CAT_REAL + ' 不動産'}</span></td>
+      <td style="white-space:nowrap"><span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${c.category==='商業・法人登記'?'#fef3c7':_isOtherCat(c)?'#f3f4f6':'#dbeafe'};color:${c.category==='商業・法人登記'?'#92400e':_isOtherCat(c)?'#374151':'#1e40af'}">${c.category==='商業・法人登記' ? ICON_CAT_CORP + ' 商業' : _isOtherCat(c) ? ICON_CAT_OTHER + ' その他' : ICON_CAT_REAL + ' 不動産'}</span></td>
       <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="badge">${escHtml(c.type||'')}</span></td>
       <td style="white-space:nowrap" onclick="event.stopPropagation()">
         <button class="btn btn-secondary btn-xs" onclick="duplicateCase('${c.id}')" title="この案件を複製">複製</button>
@@ -7795,11 +7810,11 @@ function renderCaseDetail(caseId) {
 
   document.getElementById('case-detail-content').innerHTML = `
     <!-- 見出しの行（10.2.6。白い 1 行。区分は左の縁の色） -->
-    <div class="cd-bar no-print ${c.category==='商業・法人登記'?'corp':'land'}">
+    <div class="cd-bar no-print ${c.category==='商業・法人登記'?'corp':_isOtherCat(c)?'other':'land'}">
       <div class="cd-bar-main">
         <div class="cd-bar-title">${escHtml(c.case_name)}</div>
         <div class="cd-bar-meta">
-          <span class="cat">${c.category==='商業・法人登記' ? ICON_CAT_CORP + ' 商業・法人登記' : ICON_CAT_REAL + ' 不動産登記'}</span>
+          <span class="cat">${c.category==='商業・法人登記' ? ICON_CAT_CORP + ' 商業・法人登記' : _isOtherCat(c) ? ICON_CAT_OTHER + ' その他' : ICON_CAT_REAL + ' 不動産登記'}</span>
           ${c.type ? `<span class="sep">·</span><span>${escHtml(c.type)}</span>` : ''}
           ${c.case_num ? `<span class="sep">·</span><span>No. ${escHtml(c.case_num)}</span>` : ''}
           ${c.received_date ? `<span class="sep">·</span><span>受付 ${formatDate(c.received_date)}</span>` : ''}
@@ -7838,7 +7853,7 @@ function renderCaseDetail(caseId) {
           ${infoRow('依頼者名', escHtml(c.client_name||'—'))}
           ${c.category === '商業・法人登記'
             ? `${infoRow('商号・法人名', escHtml(c.company_name||''))}${infoRow('本店所在地', escHtml(c.honten||''))}${c.corp_num?infoRow('会社法人等番号', escHtml(c.corp_num)):''}${_shihonText(c)?infoRow('資本金', escHtml(_shihonText(c))):''}` 
-            : infoRow('不動産所在地', escHtml(c.location||''))}
+            : _isOtherCat(c) ? '' : infoRow('不動産所在地', escHtml(c.location||''))}
           ${infoRow('区分', escHtml(c.category||''))}
           ${infoRow('種別', escHtml(c.type||''))}
           ${infoRow('受付日', formatDate(c.received_date))}
@@ -8519,7 +8534,8 @@ async function _cfPermOk(handle, caseId) {
 }
 
 /* ---- 1 クリックで選ぶ一覧（chooser） ---- */
-function _cfCategoryFolder(c) { return c && c.category === '商業・法人登記' ? '商業・法人登記案件' : '不動産登記案件'; }
+/* その他（10.5.5）は区分のフォルダが決まらないので null。一覧は親（中山事務所）の直下から始める */
+function _cfCategoryFolder(c) { return _isOtherCat(c) ? null : c && c.category === '商業・法人登記' ? '商業・法人登記案件' : '不動産登記案件'; }
 /* 依頼者名・社名の先頭 2 文字。一覧の先頭に寄せるための手がかり（当てにはしない） */
 function _cfNameKeys(c) {
   const norm = s => String(s || '').replace(/[\s　]/g, '').replace(/様|さん|殿|株式会社|有限会社|合同会社|（株）|\(株\)/g, '');
@@ -8535,7 +8551,7 @@ function _cfNameKeys(c) {
 async function _cfLoadChooser(path) {
   const caseId = _cf.caseId;
   const c = cases.find(x => x.id === caseId);
-  if (!Array.isArray(path)) path = (_cf.chooser && _cf.chooser.path) || [_cfCategoryFolder(c)];
+  if (!Array.isArray(path)) path = (_cf.chooser && _cf.chooser.path) || (_cfCategoryFolder(c) ? [_cfCategoryFolder(c)] : []);
   const filter = (_cf.chooser && _cf.chooser.filter) || '';
   _cf.chooser = { path, items: [], tops: [], keys: [], filter, loading: true, missing: false };
   _cfRender();
@@ -8559,7 +8575,7 @@ async function _cfLoadChooser(path) {
   }
   _cfRender();
 }
-function cfChooserParent(name) { _cfLoadChooser([name]); }
+function cfChooserParent(name) { _cfLoadChooser(name ? [name] : []); }
 function cfChooserEnter(i) { const ch = _cf.chooser; if (!ch || !ch.items[i]) return; _cfLoadChooser([...ch.path, ch.items[i]]); }
 function cfChooserGoto(i) { const ch = _cf.chooser; if (!ch) return; _cfLoadChooser(ch.path.slice(0, i + 1)); }
 function cfChooserFilter(v) {
@@ -8853,7 +8869,7 @@ function _cfRender() {
       const crumb = ch.path.map((seg, i) => i === ch.path.length - 1 ? `<b>${escHtml(seg)}</b>` : `<span style="cursor:pointer;text-decoration:underline" onclick="cfChooserGoto(${i})">${escHtml(seg)}</span>`).join(' › ');
       body = `
         <div class="cf-tools" style="flex-wrap:wrap">
-          <select onchange="cfChooserParent(this.value)" title="親の中のどのフォルダから探すか">${ch.tops.map(t => `<option value="${escHtml(t)}"${t === ch.path[0] ? ' selected' : ''}>${escHtml(t)}</option>`).join('')}</select>
+          <select onchange="cfChooserParent(this.value)" title="親の中のどのフォルダから探すか"><option value=""${ch.path.length === 0 ? ' selected' : ''}>（${escHtml(_cf.base && _cf.base.name || '親フォルダ')}の直下）</option>${ch.tops.map(t => `<option value="${escHtml(t)}"${t === ch.path[0] ? ' selected' : ''}>${escHtml(t)}</option>`).join('')}</select>
           <input type="search" placeholder="名前で絞り込み" value="${escHtml(ch.filter || '')}" oninput="cfChooserFilter(this.value)">
         </div>
         <div class="cf-tools" style="flex-wrap:wrap;gap:6px">
@@ -10775,6 +10791,7 @@ function renderLedger(c) {
   const rows  = c.ledger       || [];
   const lower = c.ledger_lower || [];
   const isCorporate = c.category === '商業・法人登記';
+  const isOther = _isOtherCat(c);  // その他（10.5.5）：上段は 受託番号・業務の内容 だけ。下段・不動産一覧は出さない
 
   // 既存データにgroupがない行は全て先頭グループに統合
   let defaultGroupU = rows.length > 0 && !rows[0].group ? 'grp_legacy_upper' : null;
@@ -10796,7 +10813,12 @@ function renderLedger(c) {
   const corpData = isCorporate ? loadTeikei() : null;
   const kuTh = isCorporate ? '<th style="width:44px" title="登録免許税の区分">区分</th>' : '';
 
-  const theadUpper = `<thead><tr>
+  const theadUpper = isOther ? `<thead><tr>
+    <th style="width:28px"></th><th style="width:32px">No.</th>
+    <th style="width:60px;max-width:60px;text-align:center">受託番号</th>
+    <th style="min-width:300px;text-align:center">業務の内容</th>
+    <th style="width:32px"></th>
+  </tr></thead>` : `<thead><tr>
     <th style="width:28px"></th><th style="width:32px">No.</th>
     <th style="width:60px;max-width:60px;text-align:center">受託番号</th>
     <th style="width:120px;max-width:120px;text-align:center">管轄</th>
@@ -10821,6 +10843,13 @@ function renderLedger(c) {
     const gRows = rows.filter(r => r.group === gid);
     return gRows.map((r, idx) => {
       const autoNo = String(idx + 1);
+      if (isOther) return `<tr>
+        <td class="del-cell"><button onclick="deleteLedgerRow('${cid}','${r.id}')" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button></td>
+        <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||autoNo)}" oninput="updateLedgerField('${cid}','${r.id}','row_no',this.value)"></td>
+        <td><input${r.jutaku_num_auto ? ' class="jutaku-auto"' : ''} style="width:100%;text-align:center" value="${escHtml(r.jutaku_num||'')}" onchange="updateLedgerField('${cid}','${r.id}','jutaku_num',this.value)" ondblclick="jutakuNextNum('${cid}','${r.id}')" title="ダブルクリックで次の番号"></td>
+        <td><input style="width:100%" value="${escHtml(r.mokuteki||'')}" onchange="updateLedgerField('${cid}','${r.id}','mokuteki',this.value)"></td>
+        <td style="text-align:center;padding:2px"><button onclick="duplicateLedgerRow('${cid}','${r.id}')" title="複製" style="width:24px;height:24px;font-size:13px;padding:0;line-height:1;border:1px solid #93c5fd;background:#eff6ff;border-radius:4px;cursor:pointer;color:#1d4ed8">⧉</button></td>
+      </tr>`;
       let kuTd = '', menkyoCls = '', menkyoTitle = '', mokuAttr = '', pickField = 'mokuteki';
       if (isCorporate) {
         const item = _corpTeikeiFor(r.mokuteki, corpData);
@@ -10888,14 +10917,14 @@ function renderLedger(c) {
             <button class="btn btn-secondary btn-xs" onclick="addLedgerRow('${cid}','${gid}')">＋ 行を追加</button>
           </div>
           <div class="ledger-wrap">
-            <table class="ledger-table">${theadUpper}<tbody>${rowsHtml||`<tr><td colspan="${isCorporate ? 12 : 11}" style="padding:8px;text-align:center;color:#9ca3af;font-size:11px">行がありません</td></tr>`}</tbody></table>
+            <table class="ledger-table">${theadUpper}<tbody>${rowsHtml||`<tr><td colspan="${isOther ? 5 : isCorporate ? 12 : 11}" style="padding:8px;text-align:center;color:#9ca3af;font-size:11px">行がありません</td></tr>`}</tbody></table>
           </div>${isCorporate ? `
           <div class="ledger-sum" data-sum-group="${escHtml(gid)}"><span>この段の登録免許税 合計</span><b>${_ledgerMenkyoSum(c, gid).toLocaleString('ja-JP')}円</b></div>` : ''}
         </div>`;
       }).join('');
 
   // 下段セクション（不動産登記のみ）
-  const lowerSections = !isCorporate ? (
+  const lowerSections = !isCorporate && !isOther ? (
     lowerGroups.length === 0
       ? `<div style="padding:12px;text-align:center;color:#9ca3af;font-size:12px">「＋ 段を追加」で入力欄を追加してください</div>`
       : lowerGroups.map((gid, gi) => {
@@ -10915,12 +10944,12 @@ function renderLedger(c) {
   return `
     <div class="ledger-section">
       <div class="ledger-section-header">
-        <span>${ico('ledger')} 受付台帳（${isCorporate ? '商業・法人' : '上段'}）</span>
+        <span>${ico('ledger')} 受付台帳（${isCorporate ? '商業・法人' : isOther ? 'その他' : '上段'}）</span>
         <button class="btn btn-primary btn-xs" onclick="addLedgerGroup('${cid}','upper')">＋ 段を追加</button>
       </div>
       ${upperSections}
     </div>
-    ${!isCorporate ? `
+    ${!isCorporate && !isOther ? `
     <div class="ledger-section" style="margin-top:8px">
       <div class="ledger-section-header">
         <span>${ico('ledger')} 受付台帳（下段：当事者・不動産）</span>
@@ -10928,7 +10957,7 @@ function renderLedger(c) {
       </div>
       ${lowerSections}
     </div>` : ''}
-    ${!isCorporate ? renderPropertyList(c) : ''}`;
+    ${!isCorporate && !isOther ? renderPropertyList(c) : ''}`;
 }
 
 
@@ -11383,7 +11412,7 @@ function _doPrintSimple(caseId) {
     ? (show('location') ? row('商号・法人名', escHtml(c.company_name||'')) +
       row('本店所在地', escHtml(c.honten||'')) +
       (c.corp_num ? row('会社法人等番号', escHtml(c.corp_num)) : '') : '')
-    : (show('location') ? row('不動産所在地', escHtml(c.location||'')) : '');
+    : _isOtherCat(c) ? '' : (show('location') ? row('不動産所在地', escHtml(c.location||'')) : '');
 
   // 申請日・完了予定日（複数件）
   const shinseiRows = show('shinsei') && c.shinsei_dates && c.shinsei_dates.length > 0
@@ -11423,7 +11452,7 @@ function _doPrintSimple(caseId) {
   ${show('client') && referrers.length > 0 ? `<div class="referrer">紹介：${referrers.join('、')}</div>` : ''}
   <table class="info-table">
     ${basicInfo}
-    ${show('category') ? row('区分', c.category === '商業・法人登記' ? '商業・法人登記' : '不動産登記') : ''}
+    ${show('category') ? row('区分', escHtml(c.category || '不動産登記')) : ''}
     ${show('category') ? row('種別', escHtml(c.type||'')) : ''}
     ${show('bureau') ? row('管轄法務局', escHtml(bureaus.filter(b=>b).join('、')||'—')) : ''}
     ${show('received') ? row('受付日', escHtml(formatDate(c.received_date)||'—')) : ''}
@@ -11449,6 +11478,7 @@ function printCaseDetail(caseId) {
   if (!c) return;
   const caseTasks = tasks.filter(t => t.case_id === caseId);
   const isCorporate = c.category === '商業・法人登記';
+  const isOther = _isOtherCat(c);  // その他（10.5.5）：所在地・商号を出さず、上段は受託番号・業務の内容だけ
   const printDate = new Date().toLocaleDateString('ja-JP');
   const money = v => { const n = Number(String(v == null ? '' : v).replace(/[^\d]/g, '')); return n ? n.toLocaleString('ja-JP') : ''; };
   const has = v => v != null && String(v).trim() !== '';
@@ -11473,7 +11503,7 @@ function printCaseDetail(caseId) {
   if (isCorporate) {
     kv('商号', escHtml(c.company_name || '')); kv('本店', escHtml(c.honten || ''));
     kv('法人番号', escHtml(c.corp_num || '')); kv('資本金', escHtml(_shihonText(c) || ''));
-  } else kv('所在地', escHtml(c.location || ''));
+  } else if (!isOther) kv('所在地', escHtml(c.location || ''));
   kv('管轄', escHtml(bureaus.filter(Boolean).join('、')));
   kv('受付日', formatDate(c.received_date));
   kv('完了予定', c.kanryo_yotei_date ? formatDate(c.kanryo_yotei_date) : '');
@@ -11483,7 +11513,11 @@ function printCaseDetail(caseId) {
   /* ===== 受付台帳 上段：段を列にして1つの表に ===== */
   const upperRows = c.ledger || [];
   const ug = []; upperRows.forEach(r => { const g = r.group || 'u'; if (!ug.includes(g)) ug.push(g); });
-  const upper = table([
+  const upper = table(isOther ? [
+    { h: '段', w: '7mm', cls: 'c', keep: ug.length > 1, get: r => ug.length > 1 ? String(ug.indexOf(r.group || 'u') + 1) : '' },
+    { h: '受託番号', w: '14mm', keep: true, get: r => r.jutaku_num || '' },
+    { h: '業務の内容', keep: true, get: r => r.mokuteki || '' },
+  ] : [
     { h: '段', w: '7mm', cls: 'c', keep: ug.length > 1, get: r => ug.length > 1 ? String(ug.indexOf(r.group || 'u') + 1) : '' },
     { h: 'No.', w: '7mm', cls: 'c', keep: true, get: r => r.row_no || '' },
     { h: '受託番号', w: '14mm', get: r => r.jutaku_num || '' },
@@ -11661,9 +11695,9 @@ function printCaseDetail(caseId) {
       <div class="pd-meta">管理番号 ${escHtml(c.case_num || '—')}　${escHtml(c.category || '不動産登記')}／${escHtml(c.type || '—')}<br>ステータス ${escHtml(c.status || '—')}${c.waiting ? '（Waiting）' : ''}　印刷日 ${printDate}</div>
     </div>
     ${basic.length ? `<div class="pd-basic">${basic.join('')}</div>` : ''}
-    ${sec(isCorporate ? '受付台帳（商業・法人）' : '受付台帳（上段）', upper)}
-    ${isCorporate ? '' : sec('受付台帳（下段：当事者・不動産）', lower)}
-    ${isCorporate ? '' : sec('不動産一覧', propsT, props.length ? `${props.length}件` : null)}
+    ${sec(isCorporate ? '受付台帳（商業・法人）' : isOther ? '受付台帳（その他）' : '受付台帳（上段）', upper)}
+    ${isCorporate || isOther ? '' : sec('受付台帳（下段：当事者・不動産）', lower)}
+    ${isCorporate || isOther ? '' : sec('不動産一覧', propsT, props.length ? `${props.length}件` : null)}
     ${sec('登記事項証明書取得', toukiT, touki.length ? `${touki.length}件` : null)}
     ${sec('請求情報', invT, invs.length ? `${invs.length}件` : null)}
     ${sec('備考・メモ', memoT)}
@@ -12379,7 +12413,9 @@ function printJikenbo(year) {
 /* =====================================================
    CASE MODAL (Add/Edit)
    ===================================================== */
-/** 登記区分切替：不動産登記→ドロップダウン、商業・法人登記→テキスト入力 */
+/** 登記区分切替：不動産登記→ドロップダウン、商業・法人登記・その他→テキスト入力 */
+const CASE_TYPE_PH_CORP  = '例：設立登記、役員変更、本店移転、解散登記';
+const CASE_TYPE_PH_OTHER = '例：遺言書作成、遺産承継、後見申立て、帰化申請、簡裁訴訟';
 function onCaseCategoryChange(cat) {
   const sel  = document.getElementById('f-case-type');
   const txt  = document.getElementById('f-case-type-text');
@@ -12389,7 +12425,17 @@ function onCaseCategoryChange(cat) {
   const corp = document.getElementById('field-corp-num');
   const shihon = document.getElementById('field-shihon');
   if (!sel || !txt) return;
-  if (cat === '商業・法人登記') {
+  txt.placeholder = cat === CAT_OTHER ? CASE_TYPE_PH_OTHER : CASE_TYPE_PH_CORP;
+  if (cat === CAT_OTHER) {
+    // その他（10.5.5）：種別は自由入力。所在地・商号・本店・法人番号・資本金は出さない
+    sel.style.display  = 'none';
+    txt.style.display  = '';
+    if (loc)  loc.style.display  = 'none';
+    if (comp) comp.style.display = 'none';
+    if (hon)  hon.style.display  = 'none';
+    if (corp) corp.style.display = 'none';
+    if (shihon) shihon.style.display = 'none';
+  } else if (cat === '商業・法人登記') {
     sel.style.display  = 'none';
     txt.style.display  = '';
     if (loc)  loc.style.display  = 'none';
@@ -12471,7 +12517,7 @@ function openCaseModal(caseId, scrollTo) {
     const cat = c.category || '不動産登記';
     document.getElementById('f-case-category').value = cat;
     onCaseCategoryChange(cat);
-    if (cat === '商業・法人登記') {
+    if (cat !== '不動産登記') {
       document.getElementById('f-case-type-text').value = c.type || '';
     }
     document.getElementById('f-location').value = c.location || '';
@@ -13154,7 +13200,7 @@ function saveCase() {
     case_name: name,
     client_name: client,
     category: document.getElementById('f-case-category').value,
-    type: document.getElementById('f-case-category').value === '商業・法人登記'
+    type: document.getElementById('f-case-category').value !== '不動産登記'
       ? document.getElementById('f-case-type-text').value.trim()
       : document.getElementById('f-case-type').value,
     location: document.getElementById('f-location').value.trim(),
