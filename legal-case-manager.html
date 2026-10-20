@@ -425,6 +425,31 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   overflow-wrap: break-word;
   line-break: strict;
 }
+/* よく使う書類のタグ（送付状の「よく使う書類」と同じ一覧。押すと欄に「、」で足す） */
+.doc-preset-bar { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.doc-preset-tag {
+  font-size: 11px; padding: 2px 9px; line-height: 1.6;
+  border: 1px solid var(--border); border-radius: 11px;
+  background: #fff; color: var(--text-secondary); cursor: pointer;
+  white-space: nowrap; max-width: 190px; overflow: hidden; text-overflow: ellipsis;
+  font-family: inherit;
+}
+.doc-preset-tag:hover { border-color: var(--color-primary); color: var(--color-primary); background: #eff6ff; }
+.doc-preset-tag.used { opacity: 0.45; }
+.doc-preset-edit {
+  font-size: 11px; padding: 2px 8px; line-height: 1.6; border: 1px dashed var(--border);
+  border-radius: 11px; background: transparent; color: var(--text-muted); cursor: pointer; font-family: inherit;
+}
+.doc-preset-edit:hover { color: var(--color-primary); border-color: var(--color-primary); }
+#doc-preset-modal { z-index: 260; }
+.dpm-row { display: flex; gap: 6px; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--border-light); }
+.dpm-row .form-control { flex: 1; height: 32px; }
+.dpm-chk { display: flex; align-items: center; gap: 3px; font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+.dpm-btn { border: 1px solid var(--border); background: #fff; border-radius: 4px; width: 26px; height: 26px; cursor: pointer; color: var(--text-secondary); font-size: 12px; padding: 0; }
+.dpm-btn:hover:not(:disabled) { color: var(--color-primary); border-color: var(--color-primary); }
+.dpm-btn:disabled { opacity: 0.3; cursor: default; }
+.dpm-btn.del:hover { color: var(--color-danger); border-color: var(--color-danger); }
+.viewer-mode .doc-preset-bar { display: none; }
 /* 預かったものはクランプの外。本文が折りたたまれていても常に見える */
 .iv-azukari {
   margin-top: 8px; padding: 6px 10px;
@@ -4042,7 +4067,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.5</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.7</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -4689,6 +4714,27 @@ body.jb-window .logo-home { cursor: default; }
 </div>
 
 <!-- =========== INTERVIEW MODAL =========== -->
+<div id="doc-preset-modal" class="modal-overlay" style="display:none" onclick="closeDocPresetModal(event)">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">よく使う書類の編集</div>
+      <button class="modal-close" onclick="closeDocPresetModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">書類送付状の「よく使う書類」と同じ一覧です。ここで直すと送付状にも反映されます。名前は欄を離れたときに保存されます。</div>
+      <div id="dpm-list"></div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:10px">
+        <input class="form-control" id="dpm-new" placeholder="書類名を入力（例：登記済証）" style="flex:1;height:32px" onkeydown="if(event.key==='Enter'&&!event.isComposing){event.preventDefault();dpmAdd();}">
+        <label class="dpm-chk"><input type="checkbox" id="dpm-new-issiki">一式</label>
+        <button type="button" class="btn btn-primary btn-sm" onclick="dpmAdd()">＋ 追加</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeDocPresetModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div id="interview-modal" class="modal-overlay" style="display:none" onclick="closeInterviewModal(event)">
   <div class="modal">
     <div class="modal-header">
@@ -4727,7 +4773,8 @@ body.jb-window .logo-home { cursor: default; }
           </div>
           <div class="form-group full">
             <label class="form-label">預かったもの</label>
-            <textarea class="form-control" id="f-interview-azukari" rows="3" placeholder="例：実印、登記済証、権利証、印鑑証明書など"></textarea>
+            <textarea class="form-control" id="f-interview-azukari" rows="3" placeholder="例：実印、登記済証、権利証、印鑑証明書など" oninput="_dpMarkUsed(this)"></textarea>
+            <div class="doc-preset-bar" id="f-interview-azukari-presets"></div>
           </div>
         </div>
       </div>
@@ -14144,6 +14191,137 @@ function renderDeliveryRows(deliveries) {
   (deliveries && deliveries.length > 0 ? deliveries : []).forEach((d, i) => addDeliveryRow(d, i));
 }
 
+/* ── よく使う書類（送付状 kanryo_soushu.html の「よく使う書類」と同じ一覧） ──
+   置き場は送付状と同じ localStorage の sp_presets（6 種類の外＝ブラウザ側）。
+   送付状で足した・消した書類がそのまま出る。既定値は送付状の DEFAULT_PRESETS と同じ 12 件。
+   ここからは読むだけ（一覧の管理は送付状の「⚙ よく使う書類を管理」で）。 */
+const DOC_PRESETS_DEFAULT = [
+  '不動産登記権利情報（登記識別情報通知）','全部事項証明書（登記簿謄本）','遺産分割協議書','法定相続情報一覧図',
+  '評価証明書','印鑑証明書','領収書','登記完了証','住民票','戸籍謄本（除籍）','固定資産評価証明書','委任状（原本還付）',
+].map(name => ({ name, issiki: false }));
+function _docPresets() {
+  try {
+    const s = localStorage.getItem('sp_presets');
+    if (!s) return DOC_PRESETS_DEFAULT;
+    const arr = JSON.parse(s);
+    if (!Array.isArray(arr)) return DOC_PRESETS_DEFAULT;
+    return arr.map(p => typeof p === 'string' ? { name: p, issiki: false } : p).filter(p => p && p.name);
+  } catch { return DOC_PRESETS_DEFAULT; }
+}
+function _dpLabel(p) { return p.name + (p.issiki ? '一式' : ''); }
+function _docPresetTagsHtml(cur) {
+  return _docPresets().map(p => {
+    const lb = _dpLabel(p);
+    return `<button type="button" class="doc-preset-tag${(cur||'').includes(lb) ? ' used' : ''}" data-dp="${escHtml(lb)}" title="${escHtml(lb)}（押すと欄に足します）" onclick="_dpAdd(this)">${escHtml(lb)}</button>`;
+  }).join('') + `<button type="button" class="doc-preset-edit" title="タグを足す・名前を変える" onclick="openDocPresetModal()">✎ 編集</button>`;
+}
+function _docPresetBarHtml(cur) {
+  return `<div class="doc-preset-bar">${_docPresetTagsHtml(cur)}</div>`;
+}
+/* 一覧を直したあと、画面に出ているタグを全部作り直す（欄そのものは触らない） */
+function _dpRefreshBars() {
+  document.querySelectorAll('.doc-preset-bar').forEach(bar => {
+    const el = bar.closest('.form-group')?.querySelector('input.form-control, textarea.form-control');
+    bar.innerHTML = _docPresetTagsHtml(el ? el.value : '');
+  });
+}
+function _dpSave(list) {
+  try { localStorage.setItem('sp_presets', JSON.stringify(list.map(p => ({ name: p.name, issiki: !!p.issiki })))); }
+  catch (e) { toast('保存できませんでした', 'error'); return false; }
+  _dpRefreshBars();
+  return true;
+}
+/* ── よく使う書類の編集窓 ── */
+function openDocPresetModal() {
+  _dpmRender();
+  const m = document.getElementById('doc-preset-modal');
+  m.style.display = 'flex';
+  requestAnimationFrame(() => m.classList.add('show'));
+  setTimeout(() => document.getElementById('dpm-new')?.focus(), 50);
+}
+function closeDocPresetModal(e) {
+  const m = document.getElementById('doc-preset-modal');
+  if (e && e.target !== m) return;
+  if (document.activeElement && m.contains(document.activeElement)) document.activeElement.blur();  // 打ちかけの名前を保存させる
+  m.classList.remove('show');
+  setTimeout(() => { m.style.display = 'none'; }, 150);
+}
+function _dpmRender() {
+  const list = _docPresets();
+  const host = document.getElementById('dpm-list');
+  if (!list.length) { host.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:6px 0">登録がありません。下の欄から足してください。</div>'; return; }
+  host.innerHTML = list.map((p, i) => `
+    <div class="dpm-row">
+      <input class="form-control" value="${escHtml(p.name)}" onchange="dpmRename(${i}, this)">
+      <label class="dpm-chk"><input type="checkbox" ${p.issiki ? 'checked' : ''} onchange="dpmIssiki(${i}, this.checked)">一式</label>
+      <button type="button" class="dpm-btn" title="上へ" ${i === 0 ? 'disabled' : ''} onclick="dpmMove(${i}, -1)">▲</button>
+      <button type="button" class="dpm-btn" title="下へ" ${i === list.length - 1 ? 'disabled' : ''} onclick="dpmMove(${i}, 1)">▼</button>
+      <button type="button" class="dpm-btn del" title="一覧から外す" onclick="dpmRemove(${i})">✕</button>
+    </div>`).join('');
+}
+function dpmAdd() {
+  const inp = document.getElementById('dpm-new');
+  const name = inp.value.trim();
+  if (!name) { inp.focus(); return; }
+  const list = _docPresets().map(p => ({ ...p }));
+  if (list.some(p => p.name === name)) { toast('同じ名前の書類がすでにあります', 'error'); return; }
+  list.push({ name, issiki: document.getElementById('dpm-new-issiki').checked });
+  if (!_dpSave(list)) return;
+  inp.value = ''; document.getElementById('dpm-new-issiki').checked = false;
+  _dpmRender(); inp.focus();
+}
+function dpmRename(i, el) {
+  const list = _docPresets().map(p => ({ ...p }));
+  const name = el.value.trim();
+  if (!list[i]) return;
+  if (!name || list.some((p, j) => j !== i && p.name === name)) {
+    toast(name ? '同じ名前の書類がすでにあります' : '名前が空です。元に戻しました', 'error');
+    el.value = list[i].name; return;
+  }
+  if (name === list[i].name) return;
+  list[i].name = name;
+  _dpSave(list);
+}
+function dpmIssiki(i, v) {
+  const list = _docPresets().map(p => ({ ...p }));
+  if (!list[i]) return;
+  list[i].issiki = v; _dpSave(list);
+}
+function dpmMove(i, d) {
+  const list = _docPresets().map(p => ({ ...p }));
+  const j = i + d;
+  if (!list[i] || !list[j]) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  if (_dpSave(list)) _dpmRender();
+}
+function dpmRemove(i) {
+  const list = _docPresets().map(p => ({ ...p }));
+  if (!list[i]) return;
+  if (!confirm(`「${list[i].name}」を一覧から外します。よろしいですか？\n（書類送付状の一覧からも外れます。すでに欄に入っている文字は消えません）`)) return;
+  list.splice(i, 1);
+  if (_dpSave(list)) _dpmRender();
+}
+/* 押したタグの書類名を、同じ欄の末尾に「、」で足す。すでに入っていれば足さない */
+function _dpAdd(btn) {
+  const el = btn.closest('.form-group')?.querySelector('input.form-control, textarea.form-control');
+  if (!el) return;
+  const lb = btn.dataset.dp || '';
+  if (!lb) return;
+  if (!el.value.includes(lb)) {
+    const v = el.value.replace(/[\s、,，]+$/, '');
+    el.value = v ? v + '、' + lb : lb;
+  }
+  el.focus();
+  try { el.setSelectionRange(el.value.length, el.value.length); } catch (e) {}
+  _dpMarkUsed(el);
+}
+/* 欄に入っている書類のタグを薄くする */
+function _dpMarkUsed(el) {
+  const bar = el.closest('.form-group')?.querySelector('.doc-preset-bar');
+  if (!bar) return;
+  bar.querySelectorAll('.doc-preset-tag').forEach(b => b.classList.toggle('used', el.value.includes(b.dataset.dp || '')));
+}
+
 function addDeliveryRow(d, idx) {
   const list = document.getElementById('f-delivery-list');
   if (!list) return;
@@ -14175,6 +14353,16 @@ function addDeliveryRow(d, idx) {
           <option ${d?.method==='その他'?'selected':''}>その他</option>
         </select>
       </div>
+      <div class="form-group">
+        <label class="form-label">送付日</label>
+        <div style="display:flex;gap:4px;align-items:center">
+          <input class="form-control dv-date" type="text" placeholder="例：2026-04-15、未定" value="${escHtml(d?.date||'')}" style="flex:1">
+          <div style="position:relative;flex-shrink:0">
+            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー">${ico('calendar')}</button>
+            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
+          </div>
+        </div>
+      </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">郵便番号 → 住所自動入力</label>
         <div style="display:flex;gap:6px;align-items:center">
@@ -14187,19 +14375,10 @@ function addDeliveryRow(d, idx) {
         <label class="form-label">送付先住所</label>
         <input class="form-control dv-address" placeholder="例：東京都千代田区○○1-2-3" value="${escHtml(d?.address||'')}">
       </div>
-      <div class="form-group">
+      <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">送付書類</label>
-        <input class="form-control dv-docs" placeholder="例：登記識別情報、完了書類一式" value="${escHtml(d?.docs||'')}">
-      </div>
-      <div class="form-group">
-        <label class="form-label">送付日</label>
-        <div style="display:flex;gap:4px;align-items:center">
-          <input class="form-control dv-date" type="text" placeholder="例：2026-04-15、未定" value="${escHtml(d?.date||'')}" style="flex:1">
-          <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー">${ico('calendar')}</button>
-            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
-          </div>
-        </div>
+        <input class="form-control dv-docs" placeholder="例：登記識別情報、完了書類一式" value="${escHtml(d?.docs||'')}" oninput="_dpMarkUsed(this)">
+        ${_docPresetBarHtml(d?.docs||'')}
       </div>
       <div class="form-group" style="grid-column:1/-1;display:${(d?.method==='手渡し')?'block':'none'}" data-handover>
         <label class="form-label">手渡し日</label>
@@ -15207,6 +15386,12 @@ function openInterviewModal(caseId, interviewId) {
     document.getElementById('f-interview-party').value = '';
     document.getElementById('f-interview-content').value = '';
     document.getElementById('f-interview-azukari').value = '';
+  }
+
+  const _dpHost = document.getElementById('f-interview-azukari-presets');
+  if (_dpHost) {
+    const az = document.getElementById('f-interview-azukari');
+    _dpHost.innerHTML = _docPresetTagsHtml(az.value);
   }
 
   modal.style.display = 'flex';
