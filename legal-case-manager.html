@@ -3704,6 +3704,25 @@ tr.row-waiting:hover > td {
 .jb-x:hover { color: var(--color-danger); background: var(--bg-primary); }
 .jb-add { display: block; border: none; background: none; color: var(--color-primary); font-size: 10px; font-family: inherit; cursor: pointer; padding: 1px 5px 2px; }
 .jb-add:hover { text-decoration: underline; }
+/* 「最近」：事件簿の画面で入れた当事者（住所＋氏名）を5件まで覚えて、1クリックで入れる（10.5.8、ゴロウさんのご希望）。
+   「＋ 当事者を足す」と同じ行に並べる。覚えたものが無いときは出さない */
+.jb-add-line { display: flex; align-items: center; gap: 6px; }
+.jb-add-line .jb-add { display: inline-block; }
+.jb-recent { color: var(--text-secondary); }
+/* 一覧は #tn-menu と同じく body の直下・fixed（別の窓の中でも、表の overflow に切られないように） */
+#jb-recent-menu {
+  position: fixed; z-index: 4000; display: none;
+  background: var(--bg-primary, #fff); border: 1px solid var(--border-color);
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.16);
+  min-width: 260px; max-width: 420px; max-height: 60vh; overflow-y: auto; padding: 6px;
+}
+#jb-recent-menu.open { display: block; }
+#jb-recent-menu .hd { font-size: 11px; color: var(--text-muted); padding: 4px 8px 6px; }
+#jb-recent-menu .it { display: block; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; line-height: 1.35; }
+#jb-recent-menu .it:hover { background: var(--bg-secondary, #eef3fa); }
+#jb-recent-menu .it b { display: block; font-weight: 600; }
+#jb-recent-menu .it small { color: var(--text-muted); font-size: 11px; display: block; word-break: normal; overflow-wrap: break-word; line-break: strict; }
+#jb-recent-menu .it small:empty { display: none; }
 .jb-table td.jb-c-party input::placeholder { color: transparent; }
 .jb-table td.jb-c-party input:focus::placeholder { color: var(--text-muted); }
 .jb-table td.jb-c-num input { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -4067,7 +4086,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.7</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.8</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5732,6 +5751,7 @@ function _applyReadOnly(msg) {
   window.updateJikenboField = silentNoop;
   window.addJikenboLooseRow = noop;
   window.jbDeleteLooseRow = noop;
+  window.jbPickRecent = noop;
 }
 
 /* =====================================================
@@ -12045,11 +12065,13 @@ function _jbRenderTable() {
       const val = p[f], auto = f === 'addr' ? p.autoAddr : p.autoName;
       return `<input class="jb-in jb-p-${f}${auto ? ' jb-auto' : ''}" value="${escHtml(val)}" data-f="${f}" data-k="${rid}|${side}|${i}|${f}"`
         + ` placeholder="${f === 'addr' ? '住所' : '氏名・名称'}"${tip(auto, val)}${ro ? ' readonly' : ''}`
-        + ` onchange="jbPartyChanged('${cid}','${rid}')" onblur="_jbAfterEdit()">`;
+        + ` onchange="jbPartyChanged('${cid}','${rid}',this)" onblur="_jbAfterEdit()">`;
     };
     return list.map((p, i) => `<div class="jb-person" data-row="${rid}" data-side="${side}">${one(p, i, 'addr')}<div class="jb-p-line">${one(p, i, 'name')}`
       + `${ro ? '' : `<button type="button" class="jb-x" title="この当事者を消す" aria-label="この当事者を消す" onclick="jbRemovePerson('${cid}','${rid}','${side}',${i})">✕</button>`}</div></div>`).join('')
-      + (ro ? '' : `<button type="button" class="jb-add" onclick="jbAddPerson('${cid}','${rid}','${side}')">＋ 当事者を足す</button>`);
+      + (ro ? '' : `<div class="jb-add-line"><button type="button" class="jb-add" onclick="jbAddPerson('${cid}','${rid}','${side}')">＋ 当事者を足す</button>`
+        + (_jbRecentList().length ? `<button type="button" class="jb-add jb-recent" title="最近入れた住所・氏名から選んで入れる" onclick="jbOpenRecent(this,'${cid}','${rid}','${side}')">↺ 最近</button>` : '')
+        + `</div>`);
   };
   const rowHtml = v => {
     const c = v.c, holder = !!c.jikenbo_holder;
@@ -12132,11 +12154,84 @@ function _jbFind(caseId, rowId) {
   return r ? { c, r } : null;
 }
 /** 住所・氏名の欄を直したとき */
-function jbPartyChanged(caseId, rowId) {
+function jbPartyChanged(caseId, rowId, el) {
   const f = _jbFind(caseId, rowId); if (!f) return;
   _jbSaveParties(f.c, f.r, { kenri: _jbReadSide(rowId, 'kenri'), gimu: _jbReadSide(rowId, 'gimu') });
+  // 直した組を「最近」に覚える（氏名が入っているものだけ）
+  const box = el && el.closest ? el.closest('.jb-person') : null;
+  if (box) _jbRecentRemember({ addr: box.querySelector('[data-f="addr"]').value, name: box.querySelector('[data-f="name"]').value }, (el.dataset.k || '').replace(/\|(addr|name)$/, ''));
   _jb.dirty = true;
 }
+
+/* ---- 「最近」：事件簿の画面で入れた当事者を5件まで覚える（10.5.8、ゴロウさんのご希望） ----
+   localStorage `jb_recent_parties_v1`（新しい順の [{addr, name, k}]）。6種類の外なのでバックアップ JSON には入らない（覚え書きの類）。
+   k は「どの欄から覚えたか」（行|側|番目）。同じ欄を打ち直したときは前の組を置き換える（住所→氏名の順に打つと途中の組が残るため）。
+   一覧（#jb-recent-menu）は #tn-menu と同じく body の直下・fixed（表の overflow に切られない） */
+const JB_RECENT_KEY = 'jb_recent_parties_v1', JB_RECENT_MAX = 5;
+function _jbRecentList() {
+  try { const a = JSON.parse(localStorage.getItem(JB_RECENT_KEY) || '[]'); return Array.isArray(a) ? a.filter(x => x && typeof x.name === 'string') : []; }
+  catch (e) { return []; }
+}
+function _jbRecentRemember(p, k) {
+  const name = String(p.name || '').trim(), addr = String(p.addr || '').trim();
+  if (!name) return;
+  const list = _jbRecentList().filter(x => !(k && x.k === k) && !(x.name === name && (x.addr || '') === addr));
+  list.unshift({ addr, name, k });
+  try { localStorage.setItem(JB_RECENT_KEY, JSON.stringify(list.slice(0, JB_RECENT_MAX))); } catch (e) {}
+}
+const _jbRecent = { cid: null, rid: null, side: null };
+function _jbRecentMenu() {
+  let m = document.getElementById('jb-recent-menu');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'jb-recent-menu'; m.setAttribute('role', 'listbox'); m.setAttribute('aria-label', '最近入れた当事者');
+    m.addEventListener('click', e => e.stopPropagation());
+    document.body.appendChild(m);
+  }
+  return m;
+}
+function jbOpenRecent(btn, caseId, rowId, side) {
+  const list = _jbRecentList();
+  if (!list.length) return;
+  if (window.event) window.event.stopPropagation();
+  const m = _jbRecentMenu();
+  _jbRecent.cid = caseId; _jbRecent.rid = rowId; _jbRecent.side = side;
+  m.innerHTML = `<div class="hd">最近入れた当事者（新しい順）</div>`
+    + list.map((x, i) => `<div class="it" role="option" onclick="jbPickRecent(${i})"><b>${escHtml(x.name)}</b><small>${escHtml(x.addr || '')}</small></div>`).join('');
+  m.classList.add('open');
+  const r = btn.getBoundingClientRect();
+  m.style.left = '0px'; m.style.top = '0px';
+  const w = m.offsetWidth, h = m.offsetHeight;
+  const left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+  let top = r.bottom + 4;
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
+  m.style.left = left + 'px'; m.style.top = top + 'px';
+}
+function _jbCloseRecent() {
+  const m = document.getElementById('jb-recent-menu');
+  if (m) m.classList.remove('open');
+}
+/** 選んだ組を、そのマスの「住所も氏名も空の組」に入れる（無ければ組を1つ足す）。そのまま保存して描き直す */
+function jbPickRecent(i) {
+  const x = _jbRecentList()[i];
+  const { cid, rid, side } = _jbRecent;
+  _jbCloseRecent();
+  if (!x || !cid) return;
+  const f = _jbFind(cid, rid); if (!f) return;
+  const lists = { kenri: _jbReadSide(rid, 'kenri'), gimu: _jbReadSide(rid, 'gimu') };
+  const p = { addr: x.addr || '', name: x.name };
+  const empty = lists[side].findIndex(q => !String(q.addr || '').trim() && !String(q.name || '').trim());
+  if (empty >= 0) lists[side][empty] = p; else lists[side].push(p);
+  _jbSaveParties(f.c, f.r, lists);
+  _jbRecentRemember(p, '');   // 先頭へ
+  _jb.dirty = false;
+  _jbRenderTable();
+  toast(`${x.name} を入れました`, 'success');
+}
+document.addEventListener('click', () => _jbCloseRecent());
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') _jbCloseRecent(); });
+document.addEventListener('scroll', () => _jbCloseRecent(), true);
+window.addEventListener('resize', () => _jbCloseRecent());
 /** ✕：その当事者（組）を消す（最後の1組を消しても、マスには空の1組が出る） */
 function jbRemovePerson(caseId, rowId, side, i) {
   const f = _jbFind(caseId, rowId); if (!f) return;
