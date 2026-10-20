@@ -3686,11 +3686,21 @@ tr.row-waiting:hover > td {
 .jb-table tr.jb-dup td:first-child { border-left: 2px solid var(--color-danger); }
 .jb-table tr.jb-dup td:last-child { border-right: 2px solid var(--color-danger); }
 .jb-empty { padding: 28px; text-align: center; color: var(--text-muted); font-size: 12px; }
+/* 表のいちばん下の「＋ 行を足す」と、受け皿の行の ✕（10.5.1） */
+.jb-foot { padding: 6px 10px 10px; }
+/* 右下の「↑」（#scroll-top-btn：右 16px・幅 40px）が表の右端の ✕ に重ならないよう、事件簿の画面だけ右に余白を取り、
+   表を「↑」の列より内側で終わらせる（10.5.1、ご本人のご指摘）。狭い画面（768px 以下）は表の中で横に送るのでそのまま */
+@media (min-width: 769px) { #view-jikenbo { padding-right: 40px; } }
+.jb-add-row { border: 1px dashed var(--border-color); background: none; color: var(--color-primary); font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; padding: 5px 14px; border-radius: var(--radius-sm); }
+.jb-add-row:hover { background: var(--bg-primary); border-color: var(--color-primary); }
+.jb-table td.jb-c-act { text-align: center; padding: 2px 0; }
+.jb-del { width: 22px; height: 22px; padding: 0; border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 12px; border-radius: 3px; font-family: inherit; }
+.jb-del:hover { color: var(--color-danger); background: var(--bg-primary); }
 @media (max-width: 480px) {
   .btn-header-jb-label { display: none; }
   #btn-header-jikenbo { padding: 5px 9px !important; }
 }
-body.viewer-mode [onclick*="addJikenboLooseRow"] { display: none !important; }
+body.viewer-mode [onclick*="addJikenboLooseRow"], body.viewer-mode [onclick*="jbDeleteLooseRow"] { display: none !important; }
 /* 事件簿の窓（?view=jikenbo）：自分を開くボタンと保存は出さない（保存は本体の窓から）。歯車は残す */
 body.jb-window #btn-header-jikenbo, body.jb-window #btn-header-backup { display: none !important; }
 body.jb-window .logo-home { cursor: default; }
@@ -4002,16 +4012,17 @@ body.jb-window .logo-home { cursor: default; }
             <span class="jb-bar-right">
               <button type="button" class="btn btn-secondary btn-sm" onclick="printJikenbo(_jb.year)"><svg class="ico" aria-hidden="true"><use href="#i-print"></use></svg> 印刷</button>
               <button type="button" class="btn btn-secondary btn-sm" onclick="exportJikenboXlsx(_jb.year)" title="この年の事件簿を Excel（.xlsx）で保存する。絞り込みは無視して全件"><svg class="ico" aria-hidden="true"><use href="#i-tray-out"></use></svg> Excel に書き出す</button>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="addJikenboLooseRow()">＋ 案件に結び付けない行を足す</button>
             </span>
           </div>
           <div class="jb-wrap">
             <table class="jb-table">
-              <colgroup><col style="width:64px"><col style="width:122px"><col style="width:180px"><col><col><col style="width:80px"></colgroup>
-              <thead><tr><th>受託番号</th><th>受託日</th><th>登記の目的</th><th>権利者（住所／氏名）</th><th>義務者（住所／氏名）</th><th title="ほとんど使わないので狭くしてある。中身はマウスを乗せると全文が出る">備考</th></tr></thead>
+              <colgroup><col style="width:64px"><col style="width:122px"><col style="width:180px"><col><col><col style="width:80px"><col style="width:28px"></colgroup>
+              <thead><tr><th>受託番号</th><th>受託日</th><th>登記の目的</th><th>権利者（住所／氏名）</th><th>義務者（住所／氏名）</th><th title="ほとんど使わないので狭くしてある。中身はマウスを乗せると全文が出る">備考</th><th></th></tr></thead>
               <tbody id="jb-tbody"></tbody>
             </table>
           </div>
+          <!-- 表のいちばん下に「＋ 行を足す」（10.5.1。表が空のときも出す） -->
+          <div class="jb-foot"><button type="button" class="jb-add-row" onclick="addJikenboLooseRow()" title="案件を作らずに、事件簿に1行足します">＋ 行を足す</button></div>
         </div>
       </div>
 
@@ -4021,7 +4032,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.0</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.1</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5649,9 +5660,10 @@ function _applyReadOnly(msg) {
   window.cfRename = noop;
   window.cfNewFolder = noop;
   window.cfDrop = async (ev) => { ev.preventDefault(); noop(); };
-  // 事件簿（10.4.9）：欄の書き換えと「案件に結び付けない行を足す」も止める。見る・刷るは可
+  // 事件簿（10.4.9）：欄の書き換えと「＋ 行を足す」・行の ✕ も止める。見る・刷るは可
   window.updateJikenboField = silentNoop;
   window.addJikenboLooseRow = noop;
+  window.jbDeleteLooseRow = noop;
 }
 
 /* =====================================================
@@ -11930,11 +11942,12 @@ function _jbRenderTable() {
       <td class="jb-c-party">${party(v, 'kenri')}</td>
       <td class="jb-c-party">${party(v, 'gimu')}</td>
       <td class="jb-c-biko">${inp(v, 'jb_biko', v.biko, v.auto.biko)}</td>
+      <td class="jb-c-act">${holder && !ro ? `<button type="button" class="jb-del" title="この行を消す" aria-label="この行を消す" onclick="jbDeleteLooseRow('${escHtml(c.id)}','${escHtml(v.r.id)}')">✕</button>` : ''}</td>
     </tr>`;
   };
 
   let html = shownNum.map(rowHtml).join('');
-  if (!html) html = `<tr><td colspan="6" class="jb-empty">${filtered ? '当てはまる行がありません' : 'この年の事件簿はありません'}</td></tr>`;
+  if (!html) html = `<tr><td colspan="7" class="jb-empty">${filtered ? '当てはまる行がありません' : 'この年の事件簿はありません'}</td></tr>`;
   tbody.innerHTML = html;
 }
 
@@ -12178,8 +12191,25 @@ function exportJikenboXlsx(year) {
   return { filename, numbered: numbered.length, blob };
 }
 
-/** 「案件に結び付けない行を足す」：その年の受け皿の案件（無ければ作る）の受付台帳に1行足し、次の受託番号を入れて、登記の目的の欄へ。
+/** 表のいちばん下の「＋ 行を足す」（10.5.1 で名前と置き場所を変えた。もとは帯の「＋ 案件に結び付けない行を足す」）：
+ *  その年の受け皿の案件（無ければ作る）の受付台帳に1行足し、次の受託番号を入れて、登記の目的の欄へ。
  *  事件簿は番号のある行だけを出すので、ここで足す行には番号を入れる（ここで足すのは受託が決まったものだけのため。10.5.0） */
+/** 受け皿の行の ✕（10.5.1）：誤って足した行を消す。受け皿（jikenbo_holder）の行だけ。
+ *  ふつうの案件の行は消さない（受付台帳の行ごと消えるため。消すなら受付台帳で）。受け皿の案件そのものは残す */
+function jbDeleteLooseRow(caseId, rowId) {
+  const c = cases.find(x => x.id === caseId);
+  if (!c || !c.jikenbo_holder || !c.ledger) return;
+  const r = c.ledger.find(x => x.id === rowId);
+  if (!r) return;
+  const num = String(r.jutaku_num || '').trim();
+  if (!confirm(`受託番号 ${num || '（なし）'} の行を消します。よろしいですか？`)) return;
+  c.ledger = c.ledger.filter(x => x.id !== rowId);
+  _renumberLedgerGroup(c.ledger, r.group || 'grp_legacy_upper');
+  saveToStorage();
+  _jbRenderTable();
+  toast(`受託番号 ${num || '（なし）'} の行を消しました`, 'success');
+}
+
 function addJikenboLooseRow() {
   const y = _jb.year || new Date().getFullYear();
   let h = cases.find(c => c.jikenbo_holder && Number(c.jikenbo_year) === y);
@@ -12206,7 +12236,7 @@ function addJikenboLooseRow() {
   renderJikenbo();
   const el = document.querySelector(`#jb-tbody input[data-row="${CSS.escape(row.id)}"][data-f="mokuteki"]`);
   if (el) { el.scrollIntoView({ block: 'center' }); el.focus(); }
-  toast(`受け皿の案件に1行足しました（受託番号 ${row.jutaku_num}）。登記の目的を入れてください`, 'info');
+  toast(`1行足しました（受託番号 ${row.jutaku_num}）。登記の目的を入れてください`, 'info');
 }
 
 /* ---- 印刷：いまの Excel の紙面を再現する（A4横・1件の高さは人数しだい） ---- */
