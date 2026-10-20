@@ -3653,14 +3653,13 @@ tr.row-waiting:hover > td {
 .jb-year-label { min-width: 62px; text-align: center; }
 .jb-count { font-size: 12px; color: var(--text-secondary); white-space: nowrap; display: inline-flex; gap: 10px; }
 .jb-count b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.jb-warn-nonum { color: var(--color-warning); font-weight: 700; }
 .jb-warn-dup { color: var(--color-danger); font-weight: 700; }
 .jb-bar .search-input { flex: 1 1 160px; max-width: 300px; padding: 6px 14px; font-size: 12px; }
 .jb-chips { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .jb-chips .qf-btn { padding: 4px 12px; font-size: 11px; flex: none; white-space: nowrap; }
 .jb-bar-right { margin-left: auto; display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .jb-wrap { overflow-x: auto; }
-.jb-table { width: 100%; min-width: 1060px; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
+.jb-table { width: 100%; min-width: 900px; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
 .jb-table th { background: var(--bg-primary); padding: 6px 8px; font-size: 11px; font-weight: 700; color: var(--text-secondary); border: 1px solid var(--border-color); white-space: nowrap; text-align: center; cursor: default; }
 .jb-table td { border: 1px solid var(--border-color); padding: 2px 3px; vertical-align: middle; overflow: hidden; white-space: normal; }
 /* 全体の tbody tr の「押せる行」の見た目（指の形・浮き上がり）は、欄を打つ表なので外す */
@@ -3668,12 +3667,11 @@ tr.row-waiting:hover > td {
 .jb-table tbody tr:hover { transform: none; box-shadow: none; }
 .jb-table td input { display: block; width: 100%; min-width: 0; box-sizing: border-box; border: none; outline: none; font-size: 12px; font-family: inherit; background: transparent; padding: 3px 5px; color: var(--text-primary); min-height: 24px; }
 .jb-table td input:focus { background: var(--bg-primary); box-shadow: inset 0 0 0 1px var(--color-primary); border-radius: 2px; }
-.jb-table td input.jb-auto { color: var(--text-muted); }
 .jb-table td input[readonly] { cursor: default; }
-.jb-person { display: flex; align-items: center; gap: 2px; }
 .jb-person + .jb-person { border-top: 1px dotted var(--border-color); }
-.jb-table td .jb-person input.jb-p-addr { flex: 1.4 1 0; }
-.jb-table td .jb-person input.jb-p-name { flex: 1 1 0; border-left: 1px dotted var(--border-color); }
+/* 当事者ごとに 住所の行／氏名の行 を縦に重ねる（10.5.0。横幅を広げなくても住所が読めるように）。✕ は氏名の行の右端 */
+.jb-p-line { display: flex; align-items: center; gap: 2px; }
+.jb-table td .jb-p-line input.jb-p-name { flex: 1 1 0; }
 .jb-x { flex: none; width: 20px; height: 20px; padding: 0; border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 11px; border-radius: 3px; font-family: inherit; }
 .jb-x:hover { color: var(--color-danger); background: var(--bg-primary); }
 .jb-add { display: block; border: none; background: none; color: var(--color-primary); font-size: 10px; font-family: inherit; cursor: pointer; padding: 1px 5px 2px; }
@@ -3687,14 +3685,12 @@ tr.row-waiting:hover > td {
 .jb-table tr.jb-dup td { border-top: 2px solid var(--color-danger); border-bottom: 2px solid var(--color-danger); }
 .jb-table tr.jb-dup td:first-child { border-left: 2px solid var(--color-danger); }
 .jb-table tr.jb-dup td:last-child { border-right: 2px solid var(--color-danger); }
-.jb-table tr.jb-sep td { background: var(--bg-primary); color: var(--color-warning); font-weight: 700; font-size: 11px; padding: 7px 10px; }
-.jb-table tr.jb-sep td span { color: var(--text-muted); font-weight: 400; margin-left: 8px; }
 .jb-empty { padding: 28px; text-align: center; color: var(--text-muted); font-size: 12px; }
 @media (max-width: 480px) {
   .btn-header-jb-label { display: none; }
   #btn-header-jikenbo { padding: 5px 9px !important; }
 }
-body.viewer-mode [onclick*="addJikenboLooseRow"], body.viewer-mode [onclick*="jbNumberUnnumbered"] { display: none !important; }
+body.viewer-mode [onclick*="addJikenboLooseRow"] { display: none !important; }
 /* 事件簿の窓（?view=jikenbo）：自分を開くボタンと保存は出さない（保存は本体の窓から）。歯車は残す */
 body.jb-window #btn-header-jikenbo, body.jb-window #btn-header-backup { display: none !important; }
 body.jb-window .logo-home { cursor: default; }
@@ -4006,14 +4002,13 @@ body.jb-window .logo-home { cursor: default; }
             <span class="jb-bar-right">
               <button type="button" class="btn btn-secondary btn-sm" onclick="printJikenbo(_jb.year)"><svg class="ico" aria-hidden="true"><use href="#i-print"></use></svg> 印刷</button>
               <button type="button" class="btn btn-secondary btn-sm" onclick="exportJikenboXlsx(_jb.year)" title="この年の事件簿を Excel（.xlsx）で保存する。絞り込みは無視して全件"><svg class="ico" aria-hidden="true"><use href="#i-tray-out"></use></svg> Excel に書き出す</button>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="jbNumberUnnumbered()" title="この年の番号なしの行に、受託日の順で続き番号を振る">番号なしの行に振る</button>
               <button type="button" class="btn btn-secondary btn-sm" onclick="addJikenboLooseRow()">＋ 案件に結び付けない行を足す</button>
             </span>
           </div>
           <div class="jb-wrap">
             <table class="jb-table">
-              <colgroup><col style="width:70px"><col style="width:132px"><col style="width:190px"><col><col><col style="width:160px"></colgroup>
-              <thead><tr><th>受託番号</th><th>受託日</th><th>登記の目的</th><th>権利者（住所／氏名）</th><th>義務者（住所／氏名）</th><th>備考</th></tr></thead>
+              <colgroup><col style="width:64px"><col style="width:122px"><col style="width:180px"><col><col><col style="width:80px"></colgroup>
+              <thead><tr><th>受託番号</th><th>受託日</th><th>登記の目的</th><th>権利者（住所／氏名）</th><th>義務者（住所／氏名）</th><th title="ほとんど使わないので狭くしてある。中身はマウスを乗せると全文が出る">備考</th></tr></thead>
               <tbody id="jb-tbody"></tbody>
             </table>
           </div>
@@ -4026,7 +4021,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.4.9</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.0</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5657,7 +5652,6 @@ function _applyReadOnly(msg) {
   // 事件簿（10.4.9）：欄の書き換えと「案件に結び付けない行を足す」も止める。見る・刷るは可
   window.updateJikenboField = silentNoop;
   window.addJikenboLooseRow = noop;
-  window.jbNumberUnnumbered = noop;
 }
 
 /* =====================================================
@@ -9954,9 +9948,7 @@ function _pickCorpTeikei(inputEl, item) {
     c.shihon_over = ok ? false : true;   // OK＝1 億円以下＝over は false
     askedCapital = true;
   }
-  const prevMokuteki = row.mokuteki;
   row.mokuteki = item.text;
-  _autoJutakuNum(c, row, prevMokuteki);   // 受託番号が空なら次の番号を振る（10.4.9）
   row.menkyo_auto = true;
   row.menkyo_note = '';
   // 資本金を書き戻したときは、ほかの段のカも決まるので全段を計算し直す
@@ -10826,7 +10818,7 @@ function renderLedger(c) {
       return `<tr>
         <td class="del-cell"><button onclick="deleteLedgerRow('${cid}','${r.id}')" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button></td>
         <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||autoNo)}" oninput="updateLedgerField('${cid}','${r.id}','row_no',this.value)"></td>
-        <td><input${r.jutaku_num_auto ? ' class="jutaku-auto"' : ''} style="width:100%;text-align:center" value="${escHtml(r.jutaku_num||'')}" onchange="updateLedgerField('${cid}','${r.id}','jutaku_num',this.value)"></td>
+        <td><input${r.jutaku_num_auto ? ' class="jutaku-auto"' : ''} style="width:100%;text-align:center" value="${escHtml(r.jutaku_num||'')}" onchange="updateLedgerField('${cid}','${r.id}','jutaku_num',this.value)" ondblclick="jutakuNextNum('${cid}','${r.id}')" title="ダブルクリックで次の番号"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(r.kankatsu||'')}" onchange="updateLedgerField('${cid}','${r.id}','kankatsu',this.value)"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(r.mokuteki||'')}" onchange="updateLedgerField('${cid}','${r.id}','mokuteki',this.value)" ondblclick="showTeikeiPicker(this,'${pickField}')"${mokuAttr} title="ダブルクリックで定型文"></td>${kuTd}
         <td><input style="width:100%;text-align:center" value="${escHtml(r.gen_in||'')}" onchange="updateLedgerField('${cid}','${r.id}','gen_in',this.value)" ondblclick="showTeikeiPicker(this,'gen_in')" title="ダブルクリックで定型文"></td>
@@ -11050,11 +11042,10 @@ function duplicateLedgerRow(caseId, rowId) {
   if (idx === -1) return;
   const copy = JSON.parse(JSON.stringify(c.ledger[idx]));
   copy.id = genId();
-  // 受託番号は写さず、次の番号を振る（同じ番号が2つできないように。10.4.9）
+  // 受託番号は写さない（同じ番号が2つできないように）。振るのは受託が決まってから、欄のダブルクリックで（10.5.0）
   copy.jutaku_num = '';
   delete copy.jutaku_num_auto;
   c.ledger.splice(idx + 1, 0, copy);
-  _autoJutakuNum(c, copy, '');
   _renumberLedgerGroup(c.ledger, copy.group);
   _recalcLedgerMenkyo(c, copy.group);   // 商業・法人だけ働く（10.3.8）
   saveToStorage();
@@ -11196,9 +11187,10 @@ function _scheduleLedgerCloudSave() {
   }, 1500);
 }
 
-/* ---- 受託番号を自動で振る（10.4.9。事件簿。ゴロウさんのご指示） ----
-   登記の目的が空から入ったとき、受託番号が空なら「その年の全案件の最大＋1」を入れる。印は jutaku_num_auto（受付台帳で青い字）。
-   年は 行の受託日 → 案件の受付日 → 今日。手で打ち直したら印を消す */
+/* ---- 受託番号の「次の番号」（10.4.9 で足し、10.5.0 で振り方を変えた。事件簿。ゴロウさんのご指示） ----
+   受付台帳の受託番号の欄が空のとき、ダブルクリックで「その年の全案件の最大＋1」を入れる（目的の欄の定型文と同じ操作）。
+   10.4.9 では登記の目的を入れた時点で自動で振っていたが、受託するか分からない段階の案件にも番号が付くのでやめた。
+   印は jutaku_num_auto（受付台帳で青い字）。年は 行の受託日 → 案件の受付日 → 今日。手で打ち直したら印を消す */
 function _jutakuYearOf(c, row) {
   const m = /^(\d{4})/.exec(row.jutaku_date || c.received_date || today());
   return m ? Number(m[1]) : new Date().getFullYear();
@@ -11212,13 +11204,16 @@ function _jutakuMaxOf(year) {
   });
   return max;
 }
-function _autoJutakuNum(c, row, prevMokuteki) {
-  if (String(prevMokuteki || '').trim() !== '' || String(row.mokuteki || '').trim() === '') return false;
-  if (String(row.jutaku_num || '').trim() !== '') return false;
+/** 受託番号の欄のダブルクリック：空なら次の番号を入れて保存する。番号が入っていれば何もしない */
+function jutakuNextNum(caseId, rowId) {
+  const c = cases.find(x => x.id === caseId);
+  const row = c && (c.ledger || []).find(r => r.id === rowId);
+  if (!row || String(row.jutaku_num || '').trim() !== '') return;
   row.jutaku_num = String(_jutakuMaxOf(_jutakuYearOf(c, row)) + 1);
   row.jutaku_num_auto = true;
   _jutakuNumDom(row);
-  return true;
+  saveToStorage();
+  _scheduleLedgerCloudSave();
 }
 /** 受付台帳の受託番号の欄を、描き直さずに直す（入力中の次の欄を壊さない） */
 function _jutakuNumDom(row) {
@@ -11234,11 +11229,9 @@ function updateLedgerField(caseId, rowId, field, value) {
   if (!c || !c.ledger) return;
   const row = c.ledger.find(r => r.id === rowId);
   if (!row) return;
-  const prevMokuteki = row.mokuteki;
   row[field] = value;
-  // 受託番号（10.4.9）：手で打ち直したら自動の印を消す。登記の目的が入ったときに番号が空なら、その年の次の番号を振る
+  // 受託番号：手で打ち直したら自動の印を消す（10.4.9）
   if (field === 'jutaku_num') { delete row.jutaku_num_auto; _jutakuNumDom(row); }
-  if (field === 'mokuteki') _autoJutakuNum(c, row, prevMokuteki);
   // 商業・法人の登録免許税（10.3.8）
   let refresh = false;
   if (c.category === '商業・法人登記') {
@@ -11707,7 +11700,7 @@ function openJikenboWindow() {
   let w = null;
   // Macアプリでは名前付きの窓にしない（名前付きだと、本体を読み直したあとに殻を通らず既存の窓を読み直すため）。
   // 殻はすでに事件簿の窓があれば新しく作らず前に出し、null を返す
-  try { w = window.open(u, _isNativeApp() ? '_blank' : 'caseflow-jikenbo', 'width=1320,height=860'); } catch (e) {}
+  try { w = window.open(u, _isNativeApp() ? '_blank' : 'caseflow-jikenbo', 'width=1500,height=900'); } catch (e) {}
   if (w) { _jbWin = w; try { w.focus(); } catch (e) {} return; }
   // Chrome で窓が塞がれたときの保険：この窓の中で画面を差し替える
   if (!_isNativeApp()) showView('jikenbo');
@@ -11872,8 +11865,8 @@ function _jbRenderTable() {
   if (lbl) lbl.textContent = year >= 2019 ? `令和${_jbReiwa(year)}年` : `${year}年`;
 
   const all = _jbAllRows().filter(v => _jbYearOf(v) === year);
+  // 事件簿は受託番号のある行だけ（10.5.0）。目的を入れただけの行は、受託するか分からないので出さない
   const numbered = all.filter(v => v.num !== '').sort(_jbCmp);
-  const nonum = all.filter(v => v.num === '');
   // 番号の重なり（絞り込みの前に数える）
   const cnt = {};
   numbered.forEach(v => { const k = _jbNumNorm(v.num); cnt[k] = (cnt[k] || 0) + 1; });
@@ -11890,23 +11883,23 @@ function _jbRenderTable() {
     const people = v.kenri.concat(v.gimu).flatMap(p => [p.addr, p.name]);
     return people.concat([v.mokuteki, v.r.mokuteki, v.c.case_name]).some(s => String(s || '').toLowerCase().includes(q));
   };
-  const shownNum = numbered.filter(match), shownNon = nonum.filter(match);
+  const shownNum = numbered.filter(match);
   const filtered = !!(q || _jb.cat);
 
   const cEl = document.getElementById('jb-count');
   if (cEl) {
     cEl.innerHTML = `<span><b>${filtered ? shownNum.length : numbered.length}</b>件${filtered ? `（全${numbered.length}件）` : ''}</span>`
-      + (nonum.length ? `<span class="jb-warn-nonum" title="受託番号が空の行。表の下にまとめて出しています。印刷には出ません">番号なし ${nonum.length}</span>` : '')
       + (dupRows ? `<span class="jb-warn-dup" title="同じ受託番号の行。赤い枠で出しています">番号の重なり ${dupRows}件</span>` : '');
   }
 
   const ro = document.body.classList.contains('viewer-mode');
-  const tip = (auto, val) => auto ? (val ? ' title="受付台帳から自動"' : '') : (val ? ` title="${escHtml(val)}"` : '');
+  // 既定値（受付台帳から）の欄も手で入れた欄も、同じ濃さで出す（10.5.0、ゴロウさんのご指示）。title は中身（長い住所を読むため）
+  const tip = (auto, val) => val ? ` title="${escHtml(val)}"` : '';
   const inp = (v, field, val, auto, extra) =>
     `<input class="jb-in${auto ? ' jb-auto' : ''}" value="${escHtml(val)}" data-row="${escHtml(v.r.id)}" data-f="${field}" data-k="${escHtml(v.r.id)}|${field}"`
     + `${tip(auto, val)}${ro ? ' readonly' : ''}${extra ? ' ' + extra : ''}`
     + ` onchange="updateJikenboField('${escHtml(v.c.id)}','${escHtml(v.r.id)}','${field}',this.value)" onblur="_jbAfterEdit()">`;
-  // 権利者・義務者のマス：1人1行で「住所｜氏名｜✕」、いちばん下に「＋ 当事者を足す」
+  // 権利者・義務者のマス：当事者ごとに「住所の行」と「氏名の行（右端に ✕）」を縦に重ねる。いちばん下に「＋ 当事者を足す」（10.5.0）
   const party = (v, side) => {
     const cid = escHtml(v.c.id), rid = escHtml(v.r.id);
     const list = v[side].slice();
@@ -11919,8 +11912,8 @@ function _jbRenderTable() {
         + ` placeholder="${f === 'addr' ? '住所' : '氏名・名称'}"${tip(auto, val)}${ro ? ' readonly' : ''}`
         + ` onchange="jbPartyChanged('${cid}','${rid}')" onblur="_jbAfterEdit()">`;
     };
-    return list.map((p, i) => `<div class="jb-person" data-row="${rid}" data-side="${side}">${one(p, i, 'addr')}${one(p, i, 'name')}`
-      + `${ro ? '' : `<button type="button" class="jb-x" title="この当事者を消す" aria-label="この当事者を消す" onclick="jbRemovePerson('${cid}','${rid}','${side}',${i})">✕</button>`}</div>`).join('')
+    return list.map((p, i) => `<div class="jb-person" data-row="${rid}" data-side="${side}">${one(p, i, 'addr')}<div class="jb-p-line">${one(p, i, 'name')}`
+      + `${ro ? '' : `<button type="button" class="jb-x" title="この当事者を消す" aria-label="この当事者を消す" onclick="jbRemovePerson('${cid}','${rid}','${side}',${i})">✕</button>`}</div></div>`).join('')
       + (ro ? '' : `<button type="button" class="jb-add" onclick="jbAddPerson('${cid}','${rid}','${side}')">＋ 当事者を足す</button>`);
   };
   const rowHtml = v => {
@@ -11941,10 +11934,6 @@ function _jbRenderTable() {
   };
 
   let html = shownNum.map(rowHtml).join('');
-  if (shownNon.length) {
-    html += `<tr class="jb-sep"><td colspan="6">番号なし ${shownNon.length}件<span>受託番号を入れると上に並びます。印刷には出ません</span></td></tr>`
-      + shownNon.map(rowHtml).join('');
-  }
   if (!html) html = `<tr><td colspan="6" class="jb-empty">${filtered ? '当てはまる行がありません' : 'この年の事件簿はありません'}</td></tr>`;
   tbody.innerHTML = html;
 }
@@ -12068,7 +12057,7 @@ document.addEventListener('mouseup', () => {
 
 /* ---- Excel に書き出す（10.4.9。年度ごとの Excel の控えを続けるため。ゴロウさんのご指示） ----
    外部の部品は使わない。xlsx は ZIP の中に XML が入った形なので、ZIP（圧縮なしの store）と xlsx の最小の部品を自分で組む。
-   シート「事件簿」＝その年の番号ありの行（番号の昇順・1行1件）。番号なしの行があれば別シート「番号なし」 */
+   シート「事件簿」＝その年の番号ありの行（番号の昇順・1行1件）。番号の無い行は入れない（10.5.0） */
 let _jbCrcTab = null;
 function _jbCrc32(u8) {
   if (!_jbCrcTab) {
@@ -12143,11 +12132,9 @@ function exportJikenboXlsx(year) {
   const y = year || _jb.year || new Date().getFullYear();
   const all = _jbAllRows().filter(v => _jbYearOf(v) === y);
   const numbered = all.filter(v => v.num !== '').sort(_jbCmp);
-  const nonum = all.filter(v => v.num === '');
-  if (!numbered.length && !nonum.length) { toast('この年の事件簿はありません', 'info'); return; }
+  if (!numbered.length) { toast('この年の事件簿はありません', 'info'); return; }
   const enc = new TextEncoder();
   const sheets = [{ name: '事件簿', rows: numbered }];
-  if (nonum.length) sheets.push({ name: '番号なし', rows: nonum });
   const X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
   const files = [
     { name: '[Content_Types].xml', xml: X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
@@ -12187,30 +12174,12 @@ function exportJikenboXlsx(year) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
-  toast(`「${filename}」を書き出しました（${numbered.length}件${nonum.length ? `・番号なし ${nonum.length}行` : ''}）`, 'success');
-  return { filename, numbered: numbered.length, nonum: nonum.length, blob };
+  toast(`「${filename}」を書き出しました（${numbered.length}件）`, 'success');
+  return { filename, numbered: numbered.length, blob };
 }
 
-/** 「番号なしの行に振る」：その年の番号なしの行（受け皿の行も含む）を受託日の昇順（同日なら案件の並び・行の順）に並べ、
- *  その年の最大＋1 から続き番号を振る。振った番号には自動の印（jutaku_num_auto）を付ける */
-function jbNumberUnnumbered() {
-  const y = _jb.year || new Date().getFullYear();
-  const all = _jbAllRows().filter(v => _jbYearOf(v) === y);
-  const targets = all.filter(v => v.num === '');
-  if (!targets.length) { toast('この年に番号なしの行はありません', 'info'); return; }
-  const ci = new Map(cases.map((c, i) => [c.id, i]));
-  const dk = v => v.date || '9999-99-99';
-  targets.sort((a, b) => dk(a) < dk(b) ? -1 : dk(a) > dk(b) ? 1
-    : (ci.get(a.c.id) - ci.get(b.c.id)) || (a.c.ledger.indexOf(a.r) - b.c.ledger.indexOf(b.r)));
-  const start = _jutakuMaxOf(y) + 1;
-  if (!confirm(`令和${_jbReiwa(y)}年の番号なしの ${targets.length} 行に、受託日の順で ${start} 番から振ります。よろしいですか？`)) return;
-  targets.forEach((v, i) => { v.r.jutaku_num = String(start + i); v.r.jutaku_num_auto = true; });
-  saveToStorage();
-  _jbRenderTable();
-  toast(`${targets.length} 行に ${start}〜${start + targets.length - 1} 番を振りました`, 'success');
-}
-
-/** 「案件に結び付けない行を足す」：その年の受け皿の案件（無ければ作る）の受付台帳に1行足して、受託番号の欄へ */
+/** 「案件に結び付けない行を足す」：その年の受け皿の案件（無ければ作る）の受付台帳に1行足し、次の受託番号を入れて、登記の目的の欄へ。
+ *  事件簿は番号のある行だけを出すので、ここで足す行には番号を入れる（ここで足すのは受託が決まったものだけのため。10.5.0） */
 function addJikenboLooseRow() {
   const y = _jb.year || new Date().getFullYear();
   let h = cases.find(c => c.jikenbo_holder && Number(c.jikenbo_year) === y);
@@ -12228,14 +12197,16 @@ function addJikenboLooseRow() {
   const gid = 'grp_legacy_upper';
   const row = newLedgerRow(gid, String(h.ledger.filter(r => (r.group || gid) === gid).length + 1));
   if (y === new Date().getFullYear()) row.jutaku_date = today();
+  row.jutaku_num = String(_jutakuMaxOf(y) + 1);
+  row.jutaku_num_auto = true;
   h.ledger.push(row);
   saveToStorage();
   // 足した行が見えるよう、絞り込みを外す
   _jb.q = ''; _jb.cat = '';
   renderJikenbo();
-  const el = document.querySelector(`#jb-tbody input[data-row="${CSS.escape(row.id)}"][data-f="jutaku_num"]`);
+  const el = document.querySelector(`#jb-tbody input[data-row="${CSS.escape(row.id)}"][data-f="mokuteki"]`);
   if (el) { el.scrollIntoView({ block: 'center' }); el.focus(); }
-  toast('受け皿の案件に1行足しました。受託番号と登記の目的を入れてください', 'info');
+  toast(`受け皿の案件に1行足しました（受託番号 ${row.jutaku_num}）。登記の目的を入れてください`, 'info');
 }
 
 /* ---- 印刷：いまの Excel の紙面を再現する（A4横・1件の高さは人数しだい） ---- */
@@ -12277,7 +12248,7 @@ function _jbPartyLines(list) {
 
 function printJikenbo(year) {
   const y = year || _jb.year || new Date().getFullYear();
-  // 番号なしの行は刷らない（画面で注意を出している）。空の行も刷らない
+  // 番号のある行だけ刷る
   const rows = _jbAllRows().filter(v => _jbYearOf(v) === y && v.num !== '').sort(_jbCmp);
   if (!rows.length) { toast('この年の事件簿に、刷る行がありません', 'info'); return; }
   const tot = JB_PRINT_COLS.reduce((a, b) => a + b, 0);
