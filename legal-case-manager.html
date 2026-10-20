@@ -4086,7 +4086,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.8</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.9</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -11810,8 +11810,10 @@ function _setupJikenboWindow() {
 function openJikenboWindow() {
   if (_isJikenboWindow()) { showView('jikenbo'); return; }
   // すでに開いていれば、その窓を前に出す（Macアプリでは focus() だけでは前に出ないので、殻にも頼む）
+  // Macアプリでは、前に開いた窓の控え（_jbWin）を当てにしない（10.5.9）。閉じた窓でも `closed` が false のままのことがあり、
+  // そのときは focus() も殻への「前に出す」も空振りして、押しても何も出なかった。殻は同じ窓が開いていれば前に出して新しく作らないので、毎回 window.open でよい
   try {
-    if (_jbWin && !_jbWin.closed) {
+    if (!_isNativeApp() && _jbWin && !_jbWin.closed) {
       try { _jbWin.focus(); } catch (e) {}
       try { window.webkit.messageHandlers.caseflow.postMessage({ type: 'focus-jikenbo' }); } catch (e) {}
       return;
@@ -12070,7 +12072,7 @@ function _jbRenderTable() {
     return list.map((p, i) => `<div class="jb-person" data-row="${rid}" data-side="${side}">${one(p, i, 'addr')}<div class="jb-p-line">${one(p, i, 'name')}`
       + `${ro ? '' : `<button type="button" class="jb-x" title="この当事者を消す" aria-label="この当事者を消す" onclick="jbRemovePerson('${cid}','${rid}','${side}',${i})">✕</button>`}</div></div>`).join('')
       + (ro ? '' : `<div class="jb-add-line"><button type="button" class="jb-add" onclick="jbAddPerson('${cid}','${rid}','${side}')">＋ 当事者を足す</button>`
-        + (_jbRecentList().length ? `<button type="button" class="jb-add jb-recent" title="最近入れた住所・氏名から選んで入れる" onclick="jbOpenRecent(this,'${cid}','${rid}','${side}')">↺ 最近</button>` : '')
+        + `<button type="button" class="jb-add jb-recent" title="最近の住所・氏名から選んで入れる" onclick="jbOpenRecent(this,'${cid}','${rid}','${side}')">↺ 最近</button>`
         + `</div>`);
   };
   const rowHtml = v => {
@@ -12179,6 +12181,29 @@ function _jbRecentRemember(p, k) {
   list.unshift({ addr, name, k });
   try { localStorage.setItem(JB_RECENT_KEY, JSON.stringify(list.slice(0, JB_RECENT_MAX))); } catch (e) {}
 }
+/** 一覧に出す 5 件：画面で打って覚えたもの（新しい順）に、足りないぶんは表示中の年の受託番号が大きい行の当事者を足す（10.5.9）。
+ *  覚えたものが無い日（更新直後など）でも、直近の案件の当事者がすぐ選べるように。同じ住所＋氏名は重ねない */
+function _jbRecentItems() {
+  const out = [], seen = new Set();
+  const add = (addr, name) => {
+    name = String(name || '').trim(); addr = String(addr || '').trim();
+    if (!name || out.length >= JB_RECENT_MAX) return;
+    const key = addr + '\n' + name;
+    if (seen.has(key)) return;
+    seen.add(key); out.push({ addr, name });
+  };
+  _jbRecentList().forEach(x => add(x.addr, x.name));
+  if (out.length < JB_RECENT_MAX) {
+    const year = _jb.year || new Date().getFullYear();
+    let rows = [];
+    try { rows = _jbAllRows().filter(v => _jbYearOf(v) === year && v.num !== '').sort(_jbCmp).reverse(); } catch (e) {}
+    for (const v of rows) {
+      v.kenri.concat(v.gimu).forEach(p => add(p.addr, p.name));
+      if (out.length >= JB_RECENT_MAX) break;
+    }
+  }
+  return out;
+}
 const _jbRecent = { cid: null, rid: null, side: null };
 function _jbRecentMenu() {
   let m = document.getElementById('jb-recent-menu');
@@ -12191,13 +12216,14 @@ function _jbRecentMenu() {
   return m;
 }
 function jbOpenRecent(btn, caseId, rowId, side) {
-  const list = _jbRecentList();
-  if (!list.length) return;
+  const list = _jbRecentItems();
   if (window.event) window.event.stopPropagation();
   const m = _jbRecentMenu();
+  m._list = list;
   _jbRecent.cid = caseId; _jbRecent.rid = rowId; _jbRecent.side = side;
-  m.innerHTML = `<div class="hd">最近入れた当事者（新しい順）</div>`
-    + list.map((x, i) => `<div class="it" role="option" onclick="jbPickRecent(${i})"><b>${escHtml(x.name)}</b><small>${escHtml(x.addr || '')}</small></div>`).join('');
+  m.innerHTML = `<div class="hd">最近の当事者（新しい順）</div>`
+    + (list.length ? list.map((x, i) => `<div class="it" role="option" onclick="jbPickRecent(${i})"><b>${escHtml(x.name)}</b><small>${escHtml(x.addr || '')}</small></div>`).join('')
+                   : `<div class="hd">まだありません。住所・氏名を打つと、ここに残ります</div>`);
   m.classList.add('open');
   const r = btn.getBoundingClientRect();
   m.style.left = '0px'; m.style.top = '0px';
@@ -12213,7 +12239,8 @@ function _jbCloseRecent() {
 }
 /** 選んだ組を、そのマスの「住所も氏名も空の組」に入れる（無ければ組を1つ足す）。そのまま保存して描き直す */
 function jbPickRecent(i) {
-  const x = _jbRecentList()[i];
+  const m = document.getElementById('jb-recent-menu');
+  const x = m && m._list ? m._list[i] : null;
   const { cid, rid, side } = _jbRecent;
   _jbCloseRecent();
   if (!x || !cid) return;
