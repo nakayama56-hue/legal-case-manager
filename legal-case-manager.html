@@ -3686,6 +3686,12 @@ tr.row-waiting:hover > td {
 .jb-table tr.jb-dup td:first-child { border-left: 2px solid var(--color-danger); }
 .jb-table tr.jb-dup td:last-child { border-right: 2px solid var(--color-danger); }
 .jb-empty { padding: 28px; text-align: center; color: var(--text-muted); font-size: 12px; }
+/* 行の区分の切り替え（10.5.2）。.qf-btn 風の小さな札3つ。選ばれているものだけ色つき */
+.jb-kubun { display: flex; gap: 3px; padding: 2px 5px 3px; flex-wrap: wrap; }
+.jb-kb { border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-muted); font-size: 10px; font-family: inherit; line-height: 1.4; padding: 0 7px; border-radius: 10px; cursor: pointer; }
+.jb-kb:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+.jb-kb.on { background: var(--color-primary); border-color: var(--color-primary); color: #fff; font-weight: 700; }
+.jb-kb:disabled { cursor: default; }
 /* 表のいちばん下の「＋ 行を足す」と、受け皿の行の ✕（10.5.1） */
 .jb-foot { padding: 6px 10px 10px; }
 /* 右下の「↑」（#scroll-top-btn：右 16px・幅 40px）が表の右端の ✕ に重ならないよう、事件簿の画面だけ右に余白を取り、
@@ -4008,7 +4014,7 @@ body.jb-window .logo-home { cursor: default; }
             <span class="jb-year"><button type="button" onclick="jbShiftYear(-1)" title="前の年" aria-label="前の年">◀</button><span class="jb-year-label" id="jb-year-label"></span><button type="button" onclick="jbShiftYear(1)" title="次の年" aria-label="次の年">▶</button></span>
             <span class="jb-count" id="jb-count"></span>
             <input type="text" class="search-input has-search-ico" id="jb-search" placeholder="氏名・住所・目的・案件名" oninput="jbSearch(this.value)">
-            <span class="jb-chips" id="jb-chips"><button type="button" class="qf-btn active" data-cat="" onclick="jbSetCat('')">すべて</button><button type="button" class="qf-btn" data-cat="real" onclick="jbSetCat('real')">不動産</button><button type="button" class="qf-btn" data-cat="corp" onclick="jbSetCat('corp')">商業・法人</button></span>
+            <span class="jb-chips" id="jb-chips"><button type="button" class="qf-btn active" data-cat="" onclick="jbSetCat('')">すべて</button><button type="button" class="qf-btn" data-cat="不動産" onclick="jbSetCat('不動産')">不動産</button><button type="button" class="qf-btn" data-cat="商業・法人" onclick="jbSetCat('商業・法人')">商業・法人</button><button type="button" class="qf-btn" data-cat="その他" onclick="jbSetCat('その他')">その他</button></span>
             <span class="jb-bar-right">
               <button type="button" class="btn btn-secondary btn-sm" onclick="printJikenbo(_jb.year)"><svg class="ico" aria-hidden="true"><use href="#i-print"></use></svg> 印刷</button>
               <button type="button" class="btn btn-secondary btn-sm" onclick="exportJikenboXlsx(_jb.year)" title="この年の事件簿を Excel（.xlsx）で保存する。絞り込みは無視して全件"><svg class="ico" aria-hidden="true"><use href="#i-tray-out"></use></svg> Excel に書き出す</button>
@@ -4032,7 +4038,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.1</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.2</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -11775,6 +11781,37 @@ function _jbSide(r, listKey, nameKey, addrKey, def) {
   return def.map(p => ({ ...p, autoAddr: true, autoName: true }));
 }
 
+/* ---- 区分（10.5.2。ご本人の「不動産と商業・法人のいずれにもあてはまらない業務もある」。裁判書類作成・供託・相談のみ等） ---- */
+const JB_KUBUN = ['不動産', '商業・法人', 'その他'];
+function _jbKubunOfCategory(cat) {
+  return cat === '不動産登記' ? '不動産' : cat === '商業・法人登記' ? '商業・法人' : 'その他';
+}
+/** 登記の目的の字から区分を推す（受け皿の行の既定値）。商業・法人の定型文と同じ字、または商業・法人の語 → 商業・法人。
+ *  不動産の語 → 不動産。どちらでもなければ その他。推すのはこの関数1か所だけ */
+const JB_CORP_WORDS = ['役員', '取締役', '監査役', '会計参与', '会計監査人', '理事', '監事', '評議員', '社員', '解散', '清算', '設立', '資本', '剰余金',
+  '商号', '目的の変更', '目的変更', '本店', '支店', '支配人', '株式', '株主', '新株予約権', '会社', '合併', '分割', '組織変更', '継続', '公告', '発行可能'];
+const JB_REAL_WORDS = ['所有権', '抵当権', '質権', '先取特権', '地上権', '賃借権', '地役権', '永小作権', '配偶者居住権', '持分', '名義人',
+  '地目', '地積', '分筆', '合筆', '表題', '滅失', '仮登記', '信託', '区分建物', '敷地権', '買戻'];
+function _jbGuessKubun(mokuteki) {
+  const t = String(mokuteki || '').trim();
+  if (!t) return 'その他';
+  if (TEIKEI_DEFAULTS.mokuteki_corp.some(x => x.text === t)) return '商業・法人';
+  if (JB_CORP_WORDS.some(w => t.includes(w))) return '商業・法人';
+  if (JB_REAL_WORDS.some(w => t.includes(w))) return '不動産';
+  return 'その他';
+}
+/** 区分の切り替え：既定値と同じなら jb_kubun を消す（既定値は保存しない） */
+function jbSetKubun(caseId, rowId, kubun) {
+  if (!JB_KUBUN.includes(kubun)) return;
+  const c = cases.find(x => x.id === caseId);
+  const r = c && (c.ledger || []).find(x => x.id === rowId);
+  if (!r) return;
+  const def = jikenboRowOf(c, r, _jbIdxOf(c, r)).def.kubun;
+  if (kubun === def) delete r.jb_kubun; else r.jb_kubun = kubun;
+  saveToStorage();
+  _jbRenderTable();
+}
+
 /** 事件簿の1行（既定値込み）。画面と印刷の両方がこれを使う。idx は同じ段（group）の中の何番目か。
  *  kenri／gimu は [{ addr, name, autoAddr, autoName }]。auto[項目] が true なら、その値は既定値から来ている */
 function jikenboRowOf(c, r, idx) {
@@ -11804,6 +11841,10 @@ function jikenboRowOf(c, r, idx) {
     if (s != null && String(s) !== '') { v[k] = String(s); v.auto[k] = false; }
     else { v[k] = def[k]; v.auto[k] = true; }
   });
+  // 区分（10.5.2）：行ごとに 不動産／商業・法人／その他。既定は 案件の区分、受け皿の行は登記の目的の字から推す
+  def.kubun = c.jikenbo_holder ? _jbGuessKubun(v.mokuteki) : _jbKubunOfCategory(c.category);
+  if (JB_KUBUN.includes(r.jb_kubun)) { v.kubun = r.jb_kubun; v.auto.kubun = false; }
+  else { v.kubun = def.kubun; v.auto.kubun = true; }
   v.kenri = _jbSide(r, 'jb_kenri_list', 'jb_kenri', 'jb_kenri_addr', def.kenri);
   v.gimu = _jbSide(r, 'jb_gimu_list', 'jb_gimu', 'jb_gimu_addr', def.gimu);
   return v;
@@ -11887,9 +11928,8 @@ function _jbRenderTable() {
 
   const q = _jb.q.trim().toLowerCase();
   const match = v => {
-    const corp = v.c.category === '商業・法人登記';
-    if (_jb.cat === 'corp' && !corp) return false;
-    if (_jb.cat === 'real' && corp) return false;
+    // 札は行の区分（既定値込み）で絞る（10.5.2）
+    if (_jb.cat && v.kubun !== _jb.cat) return false;
     if (!q) return true;
     // 検索は全員の氏名・住所が対象
     const people = v.kenri.concat(v.gimu).flatMap(p => [p.addr, p.name]);
@@ -11938,7 +11978,8 @@ function _jbRenderTable() {
     return `<tr${isDup(v) && v.num ? ' class="jb-dup"' : ''}>
       <td class="jb-c-num">${inp(v, 'jutaku_num', v.num, false, 'inputmode="numeric" placeholder="番号"')}</td>
       <td class="jb-c-date">${inp(v, 'jutaku_date', v.date, v.auto.date, 'type="date"')}</td>
-      <td class="jb-c-moku">${moku}</td>
+      <td class="jb-c-moku">${moku}<div class="jb-kubun" role="group" aria-label="区分">${JB_KUBUN.map(k =>
+        `<button type="button" class="jb-kb${v.kubun === k ? ' on' : ''}"${ro ? ' disabled' : ''} title="${v.kubun === k ? (v.auto.kubun ? '区分（自動）：' : '区分：') + k : 'この行の区分を「' + k + '」にする'}" onclick="jbSetKubun('${escHtml(c.id)}','${escHtml(v.r.id)}','${k}')">${k}</button>`).join('')}</div></td>
       <td class="jb-c-party">${party(v, 'kenri')}</td>
       <td class="jb-c-party">${party(v, 'gimu')}</td>
       <td class="jb-c-biko">${inp(v, 'jb_biko', v.biko, v.auto.biko)}</td>
@@ -12130,7 +12171,7 @@ function _jbSheetXml(rows) {
     // Excel の日付は 1899-12-30 からの日数
     const dateCell = m ? `<c r="B${r}" s="3"><v>${Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000 + 25569}</v></c>` : str(r, 1, v.date || '', 2);
     xml += `<row r="${r}">${numCell}${dateCell}${str(r, 2, v.mokuteki, 2)}${str(r, 3, party(v.kenri), 2)}${str(r, 4, party(v.gimu), 2)}`
-      + `${str(r, 5, v.biko, 2)}${str(r, 6, v.c.jikenbo_holder ? '' : (v.c.case_name || ''), 2)}${str(r, 7, v.c.category || '', 2)}</row>`;
+      + `${str(r, 5, v.biko, 2)}${str(r, 6, v.c.jikenbo_holder ? '' : (v.c.case_name || ''), 2)}${str(r, 7, v.kubun || '', 2)}</row>`;
   });
   const widths = [9, 11, 28, 40, 40, 16, 24, 14];
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
