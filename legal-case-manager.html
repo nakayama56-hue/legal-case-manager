@@ -1861,6 +1861,15 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 .ledger-sum b { font-variant-numeric: tabular-nums; }
 /* 下段テーブルと上段の境界線 */
 .ledger-lower-table { border-top: 3px double #94a3b8; }
+/* 下段の権利者／申請人：氏名の下に持分の欄（不動産登記だけ） */
+.ledger-lower-table { min-width: 1196px; }   /* 権利者の列を 120px 確保するため（持分が切れないように） */
+.ledger-lower-table td.kenri-cell { padding: 1px 3px; }
+.ledger-lower-table td.kenri-cell input { display: block; }
+.ledger-lower-table td.kenri-cell input.mochibun {
+  min-height: 18px; padding: 0 5px 2px; font-size: 10.5px; line-height: 1.2;
+  color: #1d4ed8; text-align: center; border-top: 1px dotted #dbe3ee;
+}
+.ledger-lower-table td.kenri-cell input.mochibun::placeholder { color: #c3cdd9; font-size: 10px; }
 .ledger-add-btn {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 14px;
@@ -4086,7 +4095,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.5.9</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.0</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -10900,7 +10909,7 @@ function renderLedger(c) {
 
   const theadLower = `<thead><tr>
     <th style="width:28px"></th><th style="width:32px">No.</th>
-    <th colspan="4" style="min-width:310px">権利者／申請人</th>
+    <th colspan="4" style="min-width:310px">権利者／申請人<span style="font-weight:400;color:var(--text-muted)">（下の行は持分）</span></th>
     <th colspan="4" style="min-width:310px">義務者</th>
     <th colspan="5" style="min-width:390px">不動産</th>
     <th style="width:32px"></th>
@@ -10950,15 +10959,16 @@ function renderLedger(c) {
     return gRows.map((r, idx) => {
       const autoNo = String(idx + 1);
       const kenri   = r.kenri   || ['','','',''];
+      const mochi   = r.kenri_mochibun || ['','','',''];
       const gimu    = r.gimu    || ['','','',''];
       const fudosan = r.fudosan || ['','','','',''];
       return `<tr>
         <td class="del-cell"><button onclick="deleteLedgerLowerRow('${cid}','${r.id}')" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button></td>
         <td class="num-cell"><input style="width:100%;text-align:center;font-weight:700;font-size:12px;background:transparent;border:none;outline:none;padding:2px" value="${escHtml(r.row_no||autoNo)}" oninput="updateLedgerLowerField('${cid}','${r.id}','row_no',this.value)"></td>
-        <td><input style="width:100%;text-align:center" value="${escHtml(kenri[0]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',0,this.value)"></td>
-        <td><input style="width:100%;text-align:center" value="${escHtml(kenri[1]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',1,this.value)"></td>
-        <td><input style="width:100%;text-align:center" value="${escHtml(kenri[2]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',2,this.value)"></td>
-        <td><input style="width:100%;text-align:center" value="${escHtml(kenri[3]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',3,this.value)"></td>
+        <td class="kenri-cell"><input style="width:100%;text-align:center" value="${escHtml(kenri[0]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',0,this.value)"><input class="mochibun" placeholder="持分" title="持分（例：2分の1）" value="${escHtml(mochi[0]||'')}" oninput="_fitMochibun(this)" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri_mochibun',0,this.value)"></td>
+        <td class="kenri-cell"><input style="width:100%;text-align:center" value="${escHtml(kenri[1]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',1,this.value)"><input class="mochibun" placeholder="持分" title="持分（例：2分の1）" value="${escHtml(mochi[1]||'')}" oninput="_fitMochibun(this)" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri_mochibun',1,this.value)"></td>
+        <td class="kenri-cell"><input style="width:100%;text-align:center" value="${escHtml(kenri[2]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',2,this.value)"><input class="mochibun" placeholder="持分" title="持分（例：2分の1）" value="${escHtml(mochi[2]||'')}" oninput="_fitMochibun(this)" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri_mochibun',2,this.value)"></td>
+        <td class="kenri-cell"><input style="width:100%;text-align:center" value="${escHtml(kenri[3]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri',3,this.value)"><input class="mochibun" placeholder="持分" title="持分（例：2分の1）" value="${escHtml(mochi[3]||'')}" oninput="_fitMochibun(this)" onchange="updateLedgerLowerArray('${cid}','${r.id}','kenri_mochibun',3,this.value)"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(gimu[0]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',0,this.value)"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(gimu[1]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',1,this.value)"></td>
         <td><input style="width:100%;text-align:center" value="${escHtml(gimu[2]||'')}" onchange="updateLedgerLowerArray('${cid}','${r.id}','gimu',2,this.value)"></td>
@@ -11002,12 +11012,14 @@ function renderLedger(c) {
               <button class="btn btn-secondary btn-xs" onclick="addLedgerLowerRow('${cid}','${gid}')">＋ 行を追加</button>
             </div>
             <div class="ledger-wrap">
-              <table class="ledger-table ledger-lower-table">${theadLower}<tbody>${rowsHtml||'<tr><td colspan="16" style="padding:8px;text-align:center;color:#9ca3af;font-size:11px">行がありません</td></tr>'}</tbody></table>
+              <table class="ledger-table ledger-lower-table"><colgroup><col style="width:28px"><col style="width:32px"><col span="4" style="width:120px"><col span="4" style="width:76px"><col span="5" style="width:64px"><col style="width:32px"></colgroup>${theadLower}<tbody>${rowsHtml||'<tr><td colspan="16" style="padding:8px;text-align:center;color:#9ca3af;font-size:11px">行がありません</td></tr>'}</tbody></table>
             </div>
           </div>`;
         }).join('')
   ) : '';
 
+  // 持分の欄は DOM に入ってから字を縮める（備考・メモの溢れ判定と同じ型）
+  if (!isCorporate && !isOther) setTimeout(() => _fitMochibun(document.getElementById('case-detail-content')), 0);
   return `
     <div class="ledger-section">
       <div class="ledger-section-header">
@@ -11135,6 +11147,7 @@ function refreshLedgerSection(caseId) {
   ledgerEls.forEach(el => el.remove());
   // tmpの中身をDOMに展開
   while (tmp.firstChild) tmp.parentNode.insertBefore(tmp.firstChild, tmp);
+  _fitMochibun(detail);
   tmp.remove();
 }
 
@@ -11241,6 +11254,15 @@ function updateLedgerLowerField(caseId, rowId, field, value) {
   saveToStorage();
 }
 
+/** 持分の欄（下段の権利者）の字を、欄に収まるまで縮める（7px まで）。root は要素か、入力欄そのもの。値は書き換えない */
+function _fitMochibun(root) {
+  const els = root && root.classList && root.classList.contains('mochibun') ? [root] : [...(root || document).querySelectorAll('input.mochibun')];
+  els.forEach(el => {
+    el.style.fontSize = '';
+    let px = parseFloat(getComputedStyle(el).fontSize) || 10.5;
+    while (el.scrollWidth > el.clientWidth && px > 9) { px -= 0.5; el.style.fontSize = px + 'px'; }
+  });
+}
 function updateLedgerLowerArray(caseId, rowId, field, idx, value) {
   const c = cases.find(c => c.id === caseId);
   if (!c || !c.ledger_lower) return;
@@ -11606,7 +11628,7 @@ function printCaseDetail(caseId) {
   const lower = table([
     { h: '段', w: '7mm', cls: 'c', keep: lg.length > 1, get: r => lg.length > 1 ? String(lg.indexOf(r.group || 'l') + 1) : '' },
     { h: 'No.', w: '7mm', cls: 'c', keep: true, get: r => r.row_no || String(lowerRows.filter(x => (x.group || 'l') === (r.group || 'l')).indexOf(r) + 1) },
-    { h: '権利者／申請人', keep: true, get: r => join(r.kenri) },
+    { h: '権利者／申請人', keep: true, get: r => (r.kenri || []).map((n, i) => has(n) ? n + (has((r.kenri_mochibun || [])[i]) ? `（持分 ${r.kenri_mochibun[i]}）` : '') : '').filter(has).join('、') },
     { h: '義務者', keep: true, get: r => join(r.gimu) },
     { h: '不動産', w: '34mm', get: r => join(r.fudosan) },
   ], lowerRows);
