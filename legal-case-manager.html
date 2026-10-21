@@ -3755,7 +3755,11 @@ tr.row-waiting:hover > td {
 .jb-kb.on { background: var(--color-primary); border-color: var(--color-primary); color: #fff; font-weight: 700; }
 .jb-kb:disabled { cursor: default; }
 /* 表のいちばん下の「＋ 行を足す」と、受け皿の行の ✕（10.5.1） */
-.jb-foot { padding: 6px 10px 10px; }
+.jb-foot { margin-top: 28px; padding: 12px 10px 14px; border-top: 1px dashed var(--border-color); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.jb-foot-note { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+/* 案件なし（受け皿）の行の印。登記の目的の下、区分の札の左（10.6.3） */
+.jb-loose { display: inline-block; font-size: 10px; line-height: 1.5; padding: 0 7px; border-radius: 10px; border: 1px dashed var(--text-muted); color: var(--text-muted); white-space: nowrap; }
+.jb-table tr.jb-holder .jb-c-num input { color: var(--text-secondary); }
 /* 右下の「↑」（#scroll-top-btn：右 16px・幅 40px）が表の右端の ✕ に重ならないよう、事件簿の画面だけ右に余白を取り、
    表を「↑」の列より内側で終わらせる（10.5.1、ご本人のご指摘）。狭い画面（768px 以下）は表の中で横に送るのでそのまま */
 @media (min-width: 769px) { #view-jikenbo { padding-right: 40px; } }
@@ -4090,8 +4094,10 @@ body.jb-window .logo-home { cursor: default; }
               <tbody id="jb-tbody"></tbody>
             </table>
           </div>
-          <!-- 表のいちばん下に「＋ 行を足す」（10.5.1。表が空のときも出す） -->
-          <div class="jb-foot"><button type="button" class="jb-add-row" onclick="addJikenboLooseRow()" title="案件を作らずに、事件簿に1行足します">＋ 行を足す</button></div>
+          <!-- 表の下に「＋ 案件なしの行を足す」（10.5.1。表が空のときも出す）。
+               10.6.3：表から離し、説明を添えた。最下行の「＋ 当事者を足す」の真下にあって押し間違えが起きたため -->
+          <div class="jb-foot"><button type="button" class="jb-add-row" onclick="addJikenboLooseRow()" title="案件を作らずに、事件簿だけに1行足します">＋ 案件なしの行を足す</button>
+            <span class="jb-foot-note">案件を作らずに、事件簿だけに1行足します。行に当事者を足すときは、その行の中の「＋ 当事者を足す」です。<br>案件なしの行と同じ受託番号を案件の受付台帳に入れると、その行は案件の行に自動でまとまります。</span></div>
         </div>
       </div>
 
@@ -4101,7 +4107,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.2</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.3</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -11390,7 +11396,7 @@ function updateLedgerField(caseId, rowId, field, value) {
   if (!row) return;
   row[field] = value;
   // 受託番号：手で打ち直したら自動の印を消す（10.4.9）
-  if (field === 'jutaku_num') { delete row.jutaku_num_auto; _jutakuNumDom(row); }
+  if (field === 'jutaku_num') { delete row.jutaku_num_auto; _jutakuNumDom(row); _jbMergeToast(_jbMergeLooseInto(c, row)); }
   // 商業・法人の登録免許税（10.3.8）
   let refresh = false;
   if (c.category === '商業・法人登記') {
@@ -12141,10 +12147,11 @@ function _jbRenderTable() {
       ? inp(v, 'mokuteki', v.r.mokuteki || '', false, 'placeholder="登記の目的"').replace(/ title="[^"]*"/, '').replace('<input ', '<input title="（案件なし）" ')
       // 案件の列は外した（ゴロウさんのご指示）。案件へは登記の目的から飛ぶ。title に案件名
       : `<button type="button" class="jb-link" onclick="openCaseDetail('${escHtml(c.id)}')" title="${escHtml(c.case_name || '')}（${escHtml(c.category || '')}）${v.auto.mokuteki ? '' : ` ／ 受付台帳：${escHtml(v.r.mokuteki || '')}`}">${escHtml(v.mokuteki) || '<span style="color:var(--text-muted)">（目的なし）</span>'}</button>`;
-    return `<tr${isDup(v) && v.num ? ' class="jb-dup"' : ''}>
+    const trCls = [holder ? 'jb-holder' : '', isDup(v) && v.num ? 'jb-dup' : ''].filter(Boolean).join(' ');
+    return `<tr${trCls ? ` class="${trCls}"` : ''}>
       <td class="jb-c-num">${inp(v, 'jutaku_num', v.num, false, 'inputmode="numeric" placeholder="番号"')}</td>
       <td class="jb-c-date">${inp(v, 'jutaku_date', v.date, v.auto.date, 'type="date"')}</td>
-      <td class="jb-c-moku">${moku}<div class="jb-kubun" role="group" aria-label="区分">${JB_KUBUN.map(k =>
+      <td class="jb-c-moku">${moku}<div class="jb-kubun" role="group" aria-label="区分">${holder ? '<span class="jb-loose" title="案件に結び付いていない行。同じ受託番号を案件の受付台帳に入れると、この行は案件の行にまとまります">案件なし</span>' : ''}${JB_KUBUN.map(k =>
         `<button type="button" class="jb-kb${v.kubun === k ? ' on' : ''}"${ro ? ' disabled' : ''} title="${v.kubun === k ? (v.auto.kubun ? '区分（自動）：' : '区分：') + k : 'この行の区分を「' + k + '」にする'}" onclick="jbSetKubun('${escHtml(c.id)}','${escHtml(v.r.id)}','${k}')">${k}</button>`).join('')}</div></td>
       <td class="jb-c-party">${party(v, 'kenri')}</td>
       <td class="jb-c-party">${party(v, 'gimu')}</td>
@@ -12172,6 +12179,7 @@ function updateJikenboField(caseId, rowId, field, value) {
   } else if (field === 'jutaku_num') {
     delete r.jutaku_num_auto;
     r.jutaku_num = val.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+    _jbMergeToast(_jbMergeLooseInto(c, r));   // 事件簿の画面で案件の行の番号を直したときも同じ（10.6.3）
   } else if (JB_EDIT_FIELDS.includes(field)) {
     if (val === '') delete r[field];
     else r[field] = val;
@@ -12501,6 +12509,37 @@ function exportJikenboXlsx(year) {
  *  事件簿は番号のある行だけを出すので、ここで足す行には番号を入れる（ここで足すのは受託が決まったものだけのため。10.5.0） */
 /** 受け皿の行の ✕（10.5.1）：誤って足した行を消す。受け皿（jikenbo_holder）の行だけ。
  *  ふつうの案件の行は消さない（受付台帳の行ごと消えるため。消すなら受付台帳で）。受け皿の案件そのものは残す */
+/** 案件の受付台帳の行に受託番号を入れたとき、同じ年に同じ番号の「案件なし」の行があれば、その行の中身を案件の行へ移して消す（10.6.3）。
+ *  先に事件簿へ書いておき、あとから案件に番号を付けたときに二重にならないように。
+ *  移すのは 当事者（権利者・義務者）・備考・区分・登記の目的（案件の行が空のときだけ）。受託日は移さない（案件なしの行の受託日は足した日が自動で入るだけなので、案件の受付日のほうが正しい）。
+ *  案件の行にすでに入っている項目は上書きしない。戻り値は null（何もしなかった）か { num, moved } */
+function _jbMergeLooseInto(c, row) {
+  if (!c || c.jikenbo_holder || !row) return null;
+  const num = _jbNumNorm(String(row.jutaku_num || '').trim());
+  if (!num) return null;
+  const y = _jutakuYearOf(c, row);
+  const h = cases.find(x => x.jikenbo_holder && Number(x.jikenbo_year) === y && Array.isArray(x.ledger));
+  if (!h) return null;
+  const loose = h.ledger.find(r => _jbNumNorm(String(r.jutaku_num || '').trim()) === num);
+  if (!loose) return null;
+  const lv = jikenboRowOf(h, loose, _jbIdxOf(h, loose));
+  let moved = 0;
+  const take = (key, list, oldKeys) => {
+    if (row[key] || oldKeys.some(k => row[k])) return;
+    const cl = _jbClean(list);
+    if (cl.length) { row[key] = cl; moved += cl.length; }
+  };
+  take('jb_kenri_list', lv.kenri, ['jb_kenri', 'jb_kenri_addr']);
+  take('jb_gimu_list', lv.gimu, ['jb_gimu', 'jb_gimu_addr']);
+  if (!String(row.mokuteki || '').trim() && String(loose.mokuteki || '').trim()) row.mokuteki = loose.mokuteki;
+  ['jb_mokuteki', 'jb_biko', 'jb_kubun'].forEach(k => { if (!row[k] && loose[k]) row[k] = loose[k]; });
+  h.ledger = h.ledger.filter(r => r !== loose);
+  _renumberLedgerGroup(h.ledger, loose.group || 'grp_legacy_upper');
+  return { num, moved };
+}
+function _jbMergeToast(mg) {
+  if (mg) toast(`案件なしの ${mg.num} 番の行を、この案件の行にまとめました${mg.moved ? `（当事者 ${mg.moved} 人を移しました）` : ''}`, 'info');
+}
 function jbDeleteLooseRow(caseId, rowId) {
   const c = cases.find(x => x.id === caseId);
   if (!c || !c.jikenbo_holder || !c.ledger) return;
