@@ -1862,7 +1862,7 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 /* 下段テーブルと上段の境界線 */
 .ledger-lower-table { border-top: 3px double #94a3b8; }
 /* 下段の権利者／申請人：氏名の下に持分の欄（不動産登記だけ） */
-.ledger-lower-table { min-width: 1232px; }   /* 権利者の列を 120px 確保するため（持分が切れないように） */
+.ledger-lower-table { min-width: 1296px; }   /* 権利者の列を 136px 確保するため（持分が切れないように） */
 .ledger-lower-table td.mochi-cell { text-align: center; padding: 2px; background: #f8fafc; }
 .ledger-lower-table td.mochi-cell button.mochi-toggle {
   width: 30px; height: 20px; padding: 0; font-size: 10px; line-height: 1; cursor: pointer;
@@ -1872,10 +1872,10 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 .ledger-lower-table td.kenri-cell { padding: 1px 3px; }
 .ledger-lower-table td.kenri-cell input { display: block; }
 .ledger-lower-table td.kenri-cell input.mochibun {
-  min-height: 18px; padding: 0 5px 2px; font-size: 10.5px; line-height: 1.2;
-  color: #1d4ed8; text-align: center; border-top: 1px dotted #dbe3ee;
+  min-height: 20px; padding: 0 5px 2px; font-size: 12px; line-height: 1.2; font-weight: 600;
+  color: #1e3a8a; text-align: center; border-top: 1px dotted #dbe3ee;
 }
-.ledger-lower-table td.kenri-cell input.mochibun::placeholder { color: #c3cdd9; font-size: 10px; }
+.ledger-lower-table td.kenri-cell input.mochibun::placeholder { color: #9ca3af; font-size: 11px; font-weight: 400; }
 .ledger-add-btn {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 14px;
@@ -4107,7 +4107,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.3</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.4</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -11027,7 +11027,7 @@ function renderLedger(c) {
               <button class="btn btn-secondary btn-xs" onclick="addLedgerLowerRow('${cid}','${gid}')">＋ 行を追加</button>
             </div>
             <div class="ledger-wrap">
-              <table class="ledger-table ledger-lower-table"><colgroup><col style="width:28px"><col style="width:32px"><col style="width:36px"><col span="4" style="width:120px"><col span="4" style="width:76px"><col span="5" style="width:64px"><col style="width:32px"></colgroup>${theadLower}<tbody>${rowsHtml||'<tr><td colspan="17" style="padding:8px;text-align:center;color:#9ca3af;font-size:11px">行がありません</td></tr>'}</tbody></table>
+              <table class="ledger-table ledger-lower-table"><colgroup><col style="width:28px"><col style="width:32px"><col style="width:36px"><col span="4" style="width:136px"><col span="4" style="width:76px"><col span="5" style="width:64px"><col style="width:32px"></colgroup>${theadLower}<tbody>${rowsHtml||'<tr><td colspan="17" style="padding:8px;text-align:center;color:#9ca3af;font-size:11px">行がありません</td></tr>'}</tbody></table>
             </div>
           </div>`;
         }).join('')
@@ -11274,8 +11274,8 @@ function _fitMochibun(root) {
   const els = root && root.classList && root.classList.contains('mochibun') ? [root] : [...(root || document).querySelectorAll('input.mochibun')];
   els.forEach(el => {
     el.style.fontSize = '';
-    let px = parseFloat(getComputedStyle(el).fontSize) || 10.5;
-    while (el.scrollWidth > el.clientWidth && px > 9) { px -= 0.5; el.style.fontSize = px + 'px'; }
+    let px = parseFloat(getComputedStyle(el).fontSize) || 12;
+    while (el.scrollWidth > el.clientWidth && px > 9.5) { px -= 0.5; el.style.fontSize = px + 'px'; }
   });
 }
 /** 下段のこの行に持分の欄を出すか（行ごと。r.mochibun_on が true＝出す／false＝隠す／無し＝持分が1つでも入っていれば出す） */
