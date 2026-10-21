@@ -4107,7 +4107,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -12145,6 +12145,7 @@ function _jbRenderTable() {
     const moku = holder
       // 受け皿の行は案件詳細へ飛ばないので、登記の目的もここで直せるようにする
       ? inp(v, 'mokuteki', v.r.mokuteki || '', false, 'placeholder="登記の目的"').replace(/ title="[^"]*"/, '').replace('<input ', '<input title="（案件なし）" ')
+        + (ro ? '' : `<div class="jb-add-line"><button type="button" class="jb-add jb-recent" title="最近の登記の目的から選んで入れる" onclick="jbOpenRecentMoku(this,'${escHtml(c.id)}','${escHtml(v.r.id)}')">↺ 最近</button></div>`)
       // 案件の列は外した（ゴロウさんのご指示）。案件へは登記の目的から飛ぶ。title に案件名
       : `<button type="button" class="jb-link" onclick="openCaseDetail('${escHtml(c.id)}')" title="${escHtml(c.case_name || '')}（${escHtml(c.category || '')}）${v.auto.mokuteki ? '' : ` ／ 受付台帳：${escHtml(v.r.mokuteki || '')}`}">${escHtml(v.mokuteki) || '<span style="color:var(--text-muted)">（目的なし）</span>'}</button>`;
     const trCls = [holder ? 'jb-holder' : '', isDup(v) && v.num ? 'jb-dup' : ''].filter(Boolean).join(' ');
@@ -12176,6 +12177,7 @@ function updateJikenboField(caseId, rowId, field, value) {
     // 登記の目的は受付台帳の項目。ここで直せるのは受け皿（案件なし）の行だけ
     if (!c.jikenbo_holder) return;
     r.mokuteki = val;
+    _jbRecentMokuRemember(val);
   } else if (field === 'jutaku_num') {
     delete r.jutaku_num_auto;
     r.jutaku_num = val.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
@@ -12283,14 +12285,18 @@ function _jbRecentMenu() {
   return m;
 }
 function jbOpenRecent(btn, caseId, rowId, side) {
-  const list = _jbRecentItems();
+  _jbRecent.cid = caseId; _jbRecent.rid = rowId; _jbRecent.side = side;
+  _jbOpenRecentMenu(btn, _jbRecentItems(), '最近の当事者（新しい順）', 'まだありません。住所・氏名を打つと、ここに残ります',
+    x => `<b>${escHtml(x.name)}</b><small>${escHtml(x.addr || '')}</small>`, _jbPickRecentParty);
+}
+/** 一覧を開く（当事者と登記の目的で共用。10.6.5）。item(x) が1行の中身、onPick(x) が選んだときの処理 */
+function _jbOpenRecentMenu(btn, list, title, emptyText, item, onPick) {
   if (window.event) window.event.stopPropagation();
   const m = _jbRecentMenu();
-  m._list = list;
-  _jbRecent.cid = caseId; _jbRecent.rid = rowId; _jbRecent.side = side;
-  m.innerHTML = `<div class="hd">最近の当事者（新しい順）</div>`
-    + (list.length ? list.map((x, i) => `<div class="it" role="option" onclick="jbPickRecent(${i})"><b>${escHtml(x.name)}</b><small>${escHtml(x.addr || '')}</small></div>`).join('')
-                   : `<div class="hd">まだありません。住所・氏名を打つと、ここに残ります</div>`);
+  m._list = list; m._pick = onPick;
+  m.innerHTML = `<div class="hd">${escHtml(title)}</div>`
+    + (list.length ? list.map((x, i) => `<div class="it" role="option" onclick="jbPickRecent(${i})">${item(x)}</div>`).join('')
+                   : `<div class="hd">${escHtml(emptyText)}</div>`);
   m.classList.add('open');
   const r = btn.getBoundingClientRect();
   m.style.left = '0px'; m.style.top = '0px';
@@ -12304,12 +12310,15 @@ function _jbCloseRecent() {
   const m = document.getElementById('jb-recent-menu');
   if (m) m.classList.remove('open');
 }
-/** 選んだ組を、そのマスの「住所も氏名も空の組」に入れる（無ければ組を1つ足す）。そのまま保存して描き直す */
 function jbPickRecent(i) {
   const m = document.getElementById('jb-recent-menu');
-  const x = m && m._list ? m._list[i] : null;
-  const { cid, rid, side } = _jbRecent;
+  const x = m && m._list ? m._list[i] : null, pick = m && m._pick;
   _jbCloseRecent();
+  if (x && pick) pick(x);
+}
+/** 選んだ組を、そのマスの「住所も氏名も空の組」に入れる（無ければ組を1つ足す）。そのまま保存して描き直す */
+function _jbPickRecentParty(x) {
+  const { cid, rid, side } = _jbRecent;
   if (!x || !cid) return;
   const f = _jbFind(cid, rid); if (!f) return;
   const lists = { kenri: _jbReadSide(rid, 'kenri'), gimu: _jbReadSide(rid, 'gimu') };
@@ -12321,6 +12330,42 @@ function jbPickRecent(i) {
   _jb.dirty = false;
   _jbRenderTable();
   toast(`${x.name} を入れました`, 'success');
+}
+/* ---- 登記の目的の「↺ 最近」（10.6.5、ゴロウさんのご希望）。受け皿（案件なし）の行だけ。
+   localStorage `jb_recent_mokuteki_v1`（打って覚えた字、新しい順・5件）に、足りないぶんは表示中の年の受託番号が大きい行の目的を足す。同じ字は重ねない */
+const JB_RECENT_MOKU_KEY = 'jb_recent_mokuteki_v1';
+function _jbRecentMokuList() {
+  try { const a = JSON.parse(localStorage.getItem(JB_RECENT_MOKU_KEY) || '[]'); return Array.isArray(a) ? a.filter(x => typeof x === 'string' && x) : []; }
+  catch (e) { return []; }
+}
+function _jbRecentMokuRemember(text) {
+  text = String(text || '').trim();
+  if (!text) return;
+  const list = [text].concat(_jbRecentMokuList().filter(x => x !== text)).slice(0, JB_RECENT_MAX);
+  try { localStorage.setItem(JB_RECENT_MOKU_KEY, JSON.stringify(list)); } catch (e) {}
+}
+function _jbRecentMokuItems() {
+  const out = [], seen = new Set();
+  const add = t => { t = String(t || '').trim(); if (!t || seen.has(t) || out.length >= JB_RECENT_MAX) return; seen.add(t); out.push(t); };
+  _jbRecentMokuList().forEach(add);
+  if (out.length < JB_RECENT_MAX) {
+    const year = _jb.year || new Date().getFullYear();
+    let rows = [];
+    try { rows = _jbAllRows().filter(v => _jbYearOf(v) === year && v.num !== '').sort(_jbCmp).reverse(); } catch (e) {}
+    for (const v of rows) { add(v.mokuteki); if (out.length >= JB_RECENT_MAX) break; }
+  }
+  return out;
+}
+function jbOpenRecentMoku(btn, caseId, rowId) {
+  _jbOpenRecentMenu(btn, _jbRecentMokuItems(), '最近の登記の目的（新しい順）', 'まだありません。登記の目的を打つと、ここに残ります',
+    x => `<b>${escHtml(x)}</b>`, x => {
+      const f = _jbFind(caseId, rowId); if (!f || !f.c.jikenbo_holder) return;
+      updateJikenboField(caseId, rowId, 'mokuteki', x);
+      _jbRecentMokuRemember(x);
+      _jb.dirty = false;
+      _jbRenderTable();   // 区分の推定（登記の目的の字から）も変わるので描き直す
+      toast(`「${x}」を入れました`, 'success');
+    });
 }
 document.addEventListener('click', () => _jbCloseRecent());
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') _jbCloseRecent(); });
