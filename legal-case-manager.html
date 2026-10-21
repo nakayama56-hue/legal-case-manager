@@ -815,6 +815,44 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
 }
 .hdr-icon-btn.on:hover { background: color-mix(in srgb, var(--color-primary) 26%, transparent); }
 .hdr-gear { width: 20px; height: 20px; display: block; flex-shrink: 0; }
+/* 不具合の記録（10.6.6）：未確認があるとき ⚙ の右上に出る小さな赤い点。鳴らさない・窓も出さない */
+.hdr-icon-btn { position: relative; }
+.hdr-dot {
+  position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--color-danger, #dc2626); box-shadow: 0 0 0 1.5px var(--bg-header, #fff);
+  pointer-events: none;
+}
+.hdr-dot[hidden] { display: none; }
+/* 設定画面「不具合の記録」のカード（Mac アプリだけ。Chrome 版では #issues-section ごと出ない） */
+#issues-section[hidden] { display: none; }
+.issues-card {
+  background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  padding: 14px 16px; margin-bottom: 20px; font-size: 12px; color: var(--text-secondary); line-height: 1.6;
+}
+.issues-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.issues-head .issues-count { font-weight: 700; color: var(--text-primary); }
+.issues-head .issues-count.has { color: var(--color-danger, #dc2626); }
+.issues-head .sp { flex: 1; }
+.issues-note { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+.issues-list { border-top: 1px solid var(--border-color); }
+.issues-row { border-bottom: 1px solid var(--border-light, var(--border-color)); padding: 6px 2px; }
+.issues-row .issues-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.issues-row .issues-mark { width: 10px; flex-shrink: 0; font-size: 11px; }
+.issues-row.unseen .issues-mark { color: var(--color-danger, #dc2626); }
+.issues-row.seen .issues-mark { color: var(--text-muted); }
+.issues-row.warn.unseen .issues-mark { color: #d97706; }
+.issues-row .issues-at { color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.issues-row .issues-kind { font-weight: 700; color: var(--text-primary); flex-shrink: 0; min-width: 5.5em; }
+.issues-row.warn .issues-kind { color: #b45309; }
+.issues-row .issues-text { flex: 1 1 240px; min-width: 0; word-break: normal; overflow-wrap: break-word; line-break: strict; color: var(--text-primary); }
+.issues-row .issues-cnt { color: var(--text-muted); flex-shrink: 0; }
+.issues-row .issues-more { font-size: 11px; color: var(--color-primary); background: none; border: none; cursor: pointer; padding: 0 4px; font-family: inherit; }
+.issues-row .issues-sub { font-size: 11px; color: var(--text-muted); margin: 2px 0 0 18px; word-break: normal; overflow-wrap: break-word; line-break: strict; }
+.issues-row .issues-detail { display: none; margin: 4px 0 2px 18px; font-size: 11px; white-space: pre-wrap; font-family: ui-monospace, Menlo, monospace;
+  background: var(--bg-card, rgba(255,255,255,0.6)); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 8px; color: var(--text-secondary); max-height: 260px; overflow: auto; }
+.issues-row.open .issues-detail { display: block; }
+.issues-foot { font-size: 10px; color: var(--text-muted); margin-top: 8px; }
+.issues-empty { color: var(--text-muted); padding: 6px 2px; }
 
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -3883,7 +3921,7 @@ body.jb-window .logo-home { cursor: default; }
         <!-- 10.0.7：データ管理・設定への唯一の入口。閲覧専用モードと
              「引っ越し済み」のときも隠さない（設定画面へ行けなくなるため）。
              説明（title / aria-label）の版は、起動時に設定画面の先頭から読む -->
-        <button id="btn-settings" class="hdr-icon-btn" onclick="showView('settings')" title="設定" aria-label="設定"><svg class="hdr-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.2 14.9a1.6 1.6 0 0 0 .32 1.77l.06.06a1.95 1.95 0 1 1-2.76 2.76l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-.97 1.47v.17a1.95 1.95 0 1 1-3.9 0v-.09a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.77.32l-.06.06a1.95 1.95 0 1 1-2.76-2.76l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-.97H3.2a1.95 1.95 0 1 1 0-3.9h.09a1.6 1.6 0 0 0 1.47-1.05 1.6 1.6 0 0 0-.32-1.77l-.06-.06a1.95 1.95 0 1 1 2.76-2.76l.06.06a1.6 1.6 0 0 0 1.77.32h.08a1.6 1.6 0 0 0 .97-1.47V3.2a1.95 1.95 0 1 1 3.9 0v.09a1.6 1.6 0 0 0 .97 1.47 1.6 1.6 0 0 0 1.77-.32l.06-.06a1.95 1.95 0 1 1 2.76 2.76l-.06.06a1.6 1.6 0 0 0-.32 1.77v.08a1.6 1.6 0 0 0 1.47.97h.17a1.95 1.95 0 1 1 0 3.9h-.09a1.6 1.6 0 0 0-1.47.97z"/></svg></button>
+        <button id="btn-settings" class="hdr-icon-btn" onclick="showView('settings')" title="設定" aria-label="設定"><span class="hdr-dot" id="issues-dot" hidden></span><svg class="hdr-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.1"/><path d="M19.2 14.9a1.6 1.6 0 0 0 .32 1.77l.06.06a1.95 1.95 0 1 1-2.76 2.76l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-.97 1.47v.17a1.95 1.95 0 1 1-3.9 0v-.09a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.77.32l-.06.06a1.95 1.95 0 1 1-2.76-2.76l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-.97H3.2a1.95 1.95 0 1 1 0-3.9h.09a1.6 1.6 0 0 0 1.47-1.05 1.6 1.6 0 0 0-.32-1.77l-.06-.06a1.95 1.95 0 1 1 2.76-2.76l.06.06a1.6 1.6 0 0 0 1.77.32h.08a1.6 1.6 0 0 0 .97-1.47V3.2a1.95 1.95 0 1 1 3.9 0v.09a1.6 1.6 0 0 0 .97 1.47 1.6 1.6 0 0 0 1.77-.32l.06-.06a1.95 1.95 0 1 1 2.76 2.76l-.06.06a1.6 1.6 0 0 0-.32 1.77v.08a1.6 1.6 0 0 0 1.47.97h.17a1.95 1.95 0 1 1 0 3.9h-.09a1.6 1.6 0 0 0-1.47.97z"/></svg></button>
       </div>
     </header>
 
@@ -4107,7 +4145,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.5</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.6</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -4192,6 +4230,14 @@ body.jb-window .logo-home { cursor: default; }
           </div>
         </div>
 
+
+        <!-- 不具合の記録（10.6.6）。Mac アプリの殻が書いた CaseFlow-不具合.jsonl を読んで出す。
+             Chrome 版・閲覧用では殻が無いので、この節ごと出ない（renderIssuesCard が hidden のまま）。
+             設計書：~/secretary/不具合の記録_設計書.md -->
+        <div id="issues-section" hidden>
+          <div class="section-title"><svg class="ico" aria-hidden="true"><use href="#i-wrench"></use></svg> 不具合の記録</div>
+          <div class="issues-card" id="issues-card"></div>
+        </div>
 
         <!-- Cloud sync status -->
         <div class="section-title"><svg class="ico" aria-hidden="true"><use href="#i-user"></use></svg> 依頼者ショートカットボタン</div>
@@ -5785,6 +5831,167 @@ function _applyReadOnly(msg) {
    ===================================================== */
 const MIGRATED_KEY = 'migrated_to_app_v1';
 function _isNativeApp() { return location.protocol === 'caseflow:'; }
+
+/* =====================================================
+   不具合の記録（10.6.6。設計書：~/secretary/不具合の記録_設計書.md）
+   ・殻が ~/Library/Logs/CaseFlow-不具合.jsonl に書いたものを、設定画面のカードに出す
+   ・本体が書けるのは「確認済み」の印（seen）だけ。記録そのものは殻が書く
+   ・直前の操作（最大10件）をリングに覚え、殻がエラーを記録するときに添える（window.__cfRecent）。
+     ★ 入力欄の値・案件名は入れない（ボタンの字と画面の名前だけ）。段階2で Claude に渡す前提
+   ・Chrome 版・閲覧用では何もしない（口が無い）
+   ===================================================== */
+function _issuesNative() {
+  return _isNativeApp() && !!(window.CaseFlowNative && typeof window.CaseFlowNative.readIssues === 'function');
+}
+const _CF_RECENT_MAX = 10;
+const _cfRecentRing = [];
+function _cfRecentLabel(t) {
+  if (!t || !t.closest) return '';
+  const el = t.closest('button, a, [role="button"], input, select, textarea, [onclick]');
+  if (!el) return '';
+  const tag = el.tagName.toLowerCase();
+  if (tag === 'input' || tag === 'select' || tag === 'textarea') {
+    // 値は読まない。欄の種類だけ
+    return '入力欄（' + (el.placeholder || el.name || el.type || tag).slice(0, 20) + '）';
+  }
+  // 案件タイル・表の行・事件簿の行は中に依頼者名があるので、字を拾わない
+  if (el.closest('.case-tile-card')) return '案件タイルを押した';
+  if (el.closest('tbody tr')) return (tag === 'button' ? 'ボタン（表の行の中）' : '表の行を押した');
+  if (tag === 'a') return 'リンク（' + (el.id || el.className.split(' ')[0] || 'a') + '）';
+  if (tag === 'button' || el.getAttribute('role') === 'button') {
+    const s = (el.textContent || '').replace(/\s+/g, ' ').trim() || el.title || el.getAttribute('aria-label') || '';
+    return (s || 'ボタン（' + (el.id || el.className.split(' ')[0] || '') + '）').slice(0, 30);
+  }
+  return tag + '（' + (el.id || el.className.split(' ')[0] || '') + '）';
+}
+if (_isNativeApp()) {
+  document.addEventListener('click', ev => {
+    try {
+      const s = _cfRecentLabel(ev.target);
+      if (!s) return;
+      _cfRecentRing.push(s);
+      if (_cfRecentRing.length > _CF_RECENT_MAX) _cfRecentRing.shift();
+    } catch (e) {}
+  }, true);
+  window.__cfRecent = () => {
+    let view = '';
+    try { const v = document.querySelector('.view.active'); view = v ? v.id.replace(/^view-/, '') : ''; } catch (e) {}
+    try { if (document.querySelector('.modal-overlay.show')) view += '+modal'; } catch (e) {}
+    return { view, recent: _cfRecentRing.slice() };
+  };
+}
+
+const _ISSUE_KIND = {
+  'jserror': 'JSエラー', 'jsreject': '未処理の例外', 'console.error': 'エラー', 'console.warn': '注意',
+  'store-write': '保存できず', 'store-blocked': '保存を停止', 'store-external': '外から変更',
+  'backup-failed': '控え失敗', 'webcontent-crash': 'ページ落ち', 'app-crash': 'アプリ落ち'
+};
+let _issuesLast = null;   // 最後に読んだもの（「記録をコピー」用）
+function _issuesFmtAt(iso) {
+  const d = new Date(iso); if (isNaN(d)) return String(iso || '');
+  const p = n => String(n).padStart(2, '0');
+  return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+/** 設定画面のカードを描く。殻が無ければ節ごと隠したまま */
+async function renderIssuesCard() {
+  const sec = document.getElementById('issues-section'), card = document.getElementById('issues-card');
+  if (!sec || !card) return;
+  if (!_issuesNative()) { sec.hidden = true; return; }
+  sec.hidden = false;
+  const r = await window.CaseFlowNative.readIssues(100);
+  if (!r || !r.ok) {
+    card.innerHTML = `<div class="issues-empty">${ico('warn', 'ico-danger')} 記録を読めませんでした（${escHtml((r && r.reason) || '理由不明')}）</div>`;
+    _issuesRefreshDot(0);
+    return;
+  }
+  _issuesLast = r;
+  const items = r.items || [];
+  const unseen = r.unseen | 0;
+  _issuesRefreshDot(unseen);
+  const head = `<div class="issues-head">
+      <span class="issues-count ${unseen ? 'has' : ''}">${unseen ? '未確認 ' + unseen + ' 件' : (items.length ? 'すべて確認済み' : '記録はありません')}</span>
+      <span class="sp"></span>
+      <button class="btn btn-secondary btn-sm" onclick="issuesMarkAllSeen()" ${unseen ? '' : 'disabled'}>${ico('check-circle')} 確認済みにする</button>
+      <button class="btn btn-secondary btn-sm" onclick="issuesCopy()" ${items.length ? '' : 'disabled'}>${ico('clipboard')} 記録をコピー</button>
+      <button class="btn btn-secondary btn-sm" onclick="issuesReveal()">${ico('folder-open')} Finder で開く</button>
+      <button class="btn btn-secondary btn-sm" onclick="renderIssuesCard()">${ico('refresh')} 更新</button>
+    </div>
+    <div class="issues-note">アプリの中で起きたエラーや、保存の失敗の記録です。ここに何も無ければ正常です。${r.disabled ? '（この起動のしかたでは記録しません）' : ''}</div>`;
+  let body;
+  if (!items.length) {
+    body = `<div class="issues-empty">${ico('check-circle', 'ico-ok')} 記録はありません（正常です）</div>`;
+  } else {
+    body = '<div class="issues-list">' + items.map(it => {
+      const warn = it.kind === 'console.warn';
+      const seen = it.seen === true;
+      const detail = [
+        it.stack ? it.stack : '',
+        'kind: ' + it.kind + (it.ver ? '　本体 ' + it.ver : '') + (it.shell ? '　殻 ' + it.shell : '') + '　id ' + it.id
+          + (it.lastAt ? '　最後 ' + _issuesFmtAt(it.lastAt) : '')
+      ].filter(Boolean).join('\n');
+      const sub = [it.view ? '画面：' + it.view : '', (it.recent && it.recent.length) ? '直前：' + it.recent.join(' → ') : ''].filter(Boolean).join('　／　');
+      return `<div class="issues-row ${seen ? 'seen' : 'unseen'} ${warn ? 'warn' : ''}" data-id="${escHtml(it.id)}">
+        <div class="issues-line">
+          <span class="issues-mark">${seen ? '○' : '●'}</span>
+          <span class="issues-at">${escHtml(_issuesFmtAt(it.at))}</span>
+          <span class="issues-kind">${escHtml(_ISSUE_KIND[it.kind] || it.kind)}</span>
+          <span class="issues-text">${escHtml(it.text || '')}</span>
+          ${(it.count | 0) > 1 ? `<span class="issues-cnt">×${it.count}</span>` : ''}
+          <button class="issues-more" onclick="_issuesToggle(this)">詳しく</button>
+        </div>
+        ${sub ? `<div class="issues-sub">${escHtml(sub)}</div>` : ''}
+        <div class="issues-detail">${escHtml(detail)}</div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+  const foot = `<div class="issues-foot">記録ファイル：${escHtml(r.path || '（無し）')}（${r.total | 0} 件。500 件まで）${(r.broken | 0) ? '　⚠️ 読めない行が ' + r.broken + ' 行あります' : ''}</div>`;
+  card.innerHTML = head + body + foot;
+}
+function _issuesToggle(btn) {
+  const row = btn.closest('.issues-row'); if (!row) return;
+  row.classList.toggle('open');
+  btn.textContent = row.classList.contains('open') ? '閉じる' : '詳しく';
+}
+async function issuesMarkAllSeen() {
+  if (!_issuesNative()) return;
+  const n = await window.CaseFlowNative.markIssuesSeen([]);
+  toast(n ? n + ' 件を確認済みにしました' : '確認済みにするものはありません', n ? 'success' : 'info');
+  renderIssuesCard();
+}
+async function issuesReveal() { if (_issuesNative()) await window.CaseFlowNative.revealIssuesFile(); }
+/** 未確認の分（無ければ全部）を文章にしてクリップボードへ。段階2・3 ができるまでの橋 */
+async function issuesCopy() {
+  const r = _issuesLast; if (!r || !r.items) return;
+  let list = r.items.filter(it => it.seen !== true); if (!list.length) list = r.items;
+  const lines = ['CaseFlow 不具合の記録（' + new Date().toLocaleString('ja-JP') + '、' + list.length + ' 件）', ''];
+  list.forEach(it => {
+    lines.push('■ ' + _issuesFmtAt(it.at) + '　' + (_ISSUE_KIND[it.kind] || it.kind) + ((it.count | 0) > 1 ? '　×' + it.count : '') + '　本体 ' + (it.ver || '?') + '　殻 ' + (it.shell || '?'));
+    lines.push(it.text || '');
+    if (it.view) lines.push('画面：' + it.view);
+    if (it.recent && it.recent.length) lines.push('直前：' + it.recent.join(' → '));
+    if (it.stack) lines.push(it.stack);
+    lines.push('');
+  });
+  const text = lines.join('\n');
+  try { await navigator.clipboard.writeText(text); toast(list.length + ' 件をコピーしました', 'success'); }
+  catch (e) {
+    try {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove(); toast(list.length + ' 件をコピーしました', 'success');
+    } catch (e2) { toast('コピーできませんでした', 'error'); }
+  }
+}
+/** ⚙ の赤い点。n を渡せばそれで決め、渡さなければ殻に聞く（起動時・保存のあと） */
+async function _issuesRefreshDot(n) {
+  const dot = document.getElementById('issues-dot'); if (!dot) return;
+  if (!_issuesNative()) { dot.hidden = true; return; }
+  if (typeof n !== 'number') {
+    try { const r = await window.CaseFlowNative.readIssues(1); n = (r && r.ok) ? (r.unseen | 0) : 0; } catch (e) { n = 0; }
+  }
+  dot.hidden = !(n > 0);
+  const btn = document.getElementById('btn-settings');
+  if (btn) btn.title = btn.title.replace(/（未確認の不具合 \d+ 件）/, '') + (n > 0 ? '（未確認の不具合 ' + n + ' 件）' : '');
+}
 function _migratedInfo() {
   if (_isNativeApp() || window.__VIEWER_MODE__) return null;
   try { const v = JSON.parse(localStorage.getItem(MIGRATED_KEY) || 'null'); return v && v.date ? v : null; } catch (e) { return null; }
@@ -6171,7 +6378,7 @@ function showView(name) {
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.getElementById('main')?.scrollTo({ top: 0, behavior: 'instant' });
   }
-  else if (name === 'settings') { renderSnapshotList(); renderShortcutInputs(); initAppearance(); renderTeikeiSettings(); }
+  else if (name === 'settings') { renderSnapshotList(); renderShortcutInputs(); initAppearance(); renderTeikeiSettings(); renderIssuesCard(); }
   else if (name === 'jikenbo') { renderJikenbo(); _jbScrollToBottom(); }
 }
 
@@ -14160,6 +14367,7 @@ async function saveAll() {
   const kind = (b || v) ? 'success' : 'error';
   _flashSaveButton(!!(b || v));
   toast('保存しました（' + parts.join(' / ') + '）', kind);
+  try { _issuesRefreshDot(); } catch (e) {}
 }
 
 /* 💾保存の成否をボタンに1回だけ出す（10.2.9。見本「動きのある印」c）。
@@ -16626,6 +16834,7 @@ window.addEventListener('DOMContentLoaded', () => {
   _updateBackupFolderLabel();
   try { _idbGet('viewerDir').then(h => { if (h) _viewerDirHandle = h; _updateViewerFolderLabel(); }); } catch(e) { _updateViewerFolderLabel(); }
   renderStorageStatus();
+  setTimeout(() => { try { _issuesRefreshDot(); } catch (e) {} }, 1500);   // 不具合の記録の赤い点（10.6.6）
   // 自動バックアップは読込ボタン押下後（_startupAutoBackup）に実行するためここでは呼ばない
   // 【クラウド無効化】起動時の読込オーバーレイは表示せず、ローカルデータで即起動
   _hideStartupOverlay();
