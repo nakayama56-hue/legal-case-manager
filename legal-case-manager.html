@@ -3959,10 +3959,7 @@ body.jb-window .logo-home { cursor: default; }
       <!-- ===== DASHBOARD VIEW ===== -->
       <!-- ===== CASES VIEW ===== -->
       <div id="view-cases" class="view active">
-        <div id="dashboard-layout" style="display:flex;gap:20px;align-items:flex-start">
-          <!-- 左カラム：カレンダー＋タスク -->
-          <div id="dashboard-left" style="flex:0 0 45%;min-width:0">
-        <!-- 統合カレンダー -->
+        <!-- 統合カレンダー（上段・横いっぱい。10.7.4 で 2 段組みの外へ出した） -->
         <div id="case-calendar-wrap" style="margin-bottom:12px">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
             <div id="cal-nav-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -3990,12 +3987,16 @@ body.jb-window .logo-home { cursor: default; }
           <div id="gcal-host" class="no-print" style="display:none;height:560px;border:1px solid var(--border-color);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-muted);font-size:12px;align-items:center;justify-content:center">Googleカレンダーを読み込んでいます…</div>
           <div id="case-calendar"></div>
           <div id="case-calendar-week" style="display:none"></div>
+        </div><!-- /case-calendar-wrap -->
+
+        <div id="dashboard-layout" style="display:flex;gap:20px;align-items:flex-start">
+          <!-- 左カラム：タイムライン・送付追跡・入金待ち・タスク一覧 -->
+          <div id="dashboard-left" style="flex:0 0 45%;min-width:0">
           <div id="case-timeline"></div>
           <div id="tracking-summary"></div>
           <div id="payment-pending"></div>
-        </div>
 
-        <!-- タスク一覧（カレンダー直下） -->
+        <!-- タスク一覧 -->
         <div style="margin-top:12px">
           <div class="table-container">
             <div class="table-toolbar">
@@ -4176,7 +4177,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.3</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.4</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
