@@ -3540,6 +3540,8 @@ tr.row-waiting:hover > td {
 /* --- 月送りボタンの行に並ぶバナー（2026年9月8日）。外部の早見表への入口。
        幅は中身ぴったり。8.3.7 で幅いっぱいの帯にしたが横長すぎるとのことで 8.3.8 で今の形に。
        色は青（`--color-primary`）に揃える。外部読み込みは無し（アイコンも内製 SVG） --- */
+/* Google カレンダーを重ねている間は、自前の月・週のカレンダーを出さない（描き直しで display が戻されても勝つ。10.7.3） */
+body.gcal-on #case-calendar, body.gcal-on #case-calendar-week { display: none !important; }
 .cal-ext-banner {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 3px 9px; line-height: 1.5;
@@ -3963,7 +3965,7 @@ body.jb-window .logo-home { cursor: default; }
         <!-- 統合カレンダー -->
         <div id="case-calendar-wrap" style="margin-bottom:12px">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div id="cal-nav-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <button class="btn btn-secondary btn-xs" onclick="calMove(-1)" style="padding:4px 8px;line-height:1" title="前へ"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 1L3 5L7 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               <span id="cal-label" style="font-size:13px;font-weight:700;color:var(--text-primary);min-width:80px;text-align:center"></span>
               <button class="btn btn-secondary btn-xs" onclick="calMove(1)" style="padding:4px 8px;line-height:1" title="次へ"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 1L7 5L3 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -3984,6 +3986,8 @@ body.jb-window .logo-home { cursor: default; }
               <button class="btn btn-secondary btn-xs" onclick="fetchGCalEvents()" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>同期</button>
             </div>
           </div>
+          <!-- Google カレンダーの置き場（Mac アプリだけ。殻がこの位置に本物の画面を重ねる。10.7.3） -->
+          <div id="gcal-host" class="no-print" style="display:none;height:560px;border:1px solid var(--border-color);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-muted);font-size:12px;align-items:center;justify-content:center">Googleカレンダーを読み込んでいます…</div>
           <div id="case-calendar"></div>
           <div id="case-calendar-week" style="display:none"></div>
           <div id="case-timeline"></div>
@@ -4172,7 +4176,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.2</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.3</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -6180,7 +6184,7 @@ function init() {
     renderCalendar();
     renderTaskTable();
     try { checkDeadlineAlert(); } catch(e) {}
-    _jpStart();   // 日本郵便の配達状況（10.6.7。初めて開いた日もこの道を通るので、ここでも始める）
+    _jpStart(); _gcalStart();   // 日本郵便の配達状況（10.6.7。初めて開いた日もこの道を通るので、ここでも始める）
     return;
   }
   localStorage.setItem('app_initialized', '1');
@@ -6196,7 +6200,7 @@ function init() {
   try { checkDeadlineAlert(); } catch(e) { console.warn('alert error', e); }
 
   // 送付追跡の日本郵便の配達状況（10.6.7。Mac アプリだけ。口が無ければ何もしない）
-  _jpStart();
+  _jpStart(); _gcalStart();
 
   // 起動時にショートカットをクラウドからバックグラウンドで取得
   setTimeout(async () => {
@@ -7720,6 +7724,65 @@ const JP_TICK_MS = 5 * 60 * 1000;        // 時計の刻み。30 分たったか
 const JP_STORE_KEY = 'jp_tracking_v1';   // 6 種類の外（バックアップに入らない覚え書き）
 const _jp = { cache: {}, lastRun: null, lastTry: 0, lastError: null, busy: false, timer: null,
   started: false, loaded: false, deliveredN: 0 };
+
+// ---- Google カレンダーを、月のカレンダーの場所に殻が重ねて出す（Mac アプリだけ。10.7.3）----
+// 本体は「置き場（#gcal-host）がいま画面のどこにあるか」と「隠すべきか（別の画面・モーダルの間）」を殻へ知らせるだけ。
+// 殻は本物の Google カレンダー（WKWebView）をその位置に重ねる。データのやりとりは無い
+function _gcalNative() {
+  return _isNativeApp() && !_isJikenboWindow() && !!(window.CaseFlowNative && typeof window.CaseFlowNative.gcalFrame === 'function');
+}
+var _gcalLast = '';
+var _gcalRaf = 0;
+function _gcalSync() {
+  if (!_gcalNative()) return;
+  if (_gcalRaf) return;
+  _gcalRaf = requestAnimationFrame(function () {
+    _gcalRaf = 0;
+    var host = document.getElementById('gcal-host');
+    var f = { visible: false, x: 0, y: 0, w: 0, h: 0 };
+    if (host && host.offsetParent !== null) {
+      var r = host.getBoundingClientRect();
+      var covered = !!document.querySelector('.modal-overlay.show');
+      var ov = document.getElementById('startup-overlay');
+      if (ov && getComputedStyle(ov).display !== 'none' && getComputedStyle(ov).opacity !== '0') covered = true;
+      var vw = window.innerWidth, vh = window.innerHeight;
+      // 画面の中に残っている部分だけ（上下に送って外へ出た分は切る）
+      // 固定のヘッダー（ロゴの行）の下で切る。上に送ったとき、ヘッダーの上に Google の画面がかぶらないように
+      var hd = document.getElementById('header');
+      var topLimit = hd ? Math.max(0, hd.getBoundingClientRect().bottom) : 0;
+      var top = Math.max(r.top, topLimit), bottom = Math.min(r.bottom, vh);
+      var left = Math.max(r.left, 0), right = Math.min(r.right, vw);
+      if (!covered && bottom - top > 40 && right - left > 40) {
+        f = { visible: true, x: Math.round(left), y: Math.round(top), w: Math.round(right - left), h: Math.round(bottom - top),
+              clipTop: Math.round(top - r.top), fullH: Math.round(r.height) };
+      }
+    }
+    var key = JSON.stringify(f);
+    if (key === _gcalLast) return;
+    _gcalLast = key;
+    try { window.CaseFlowNative.gcalFrame(f); } catch (e) {}
+  });
+}
+function _gcalStart() {
+  if (!_gcalNative()) return;
+  var host = document.getElementById('gcal-host');
+  if (host) host.style.display = 'flex';
+  document.body.classList.add('gcal-on');
+  // 自前の月・週のカレンダーと送りのボタンは出さない（Google の画面が代わり）。干支の一覧表の入口は残す
+  ['case-calendar', 'case-calendar-week'].forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  var nav = document.getElementById('cal-nav-row');
+  if (nav) Array.prototype.forEach.call(nav.children, function (el) { if (!el.classList.contains('cal-ext-banner')) el.style.display = 'none'; });
+  window.addEventListener('scroll', _gcalSync, { capture: true, passive: true });
+  window.addEventListener('resize', _gcalSync);
+  document.addEventListener('visibilitychange', _gcalSync);
+  try { new ResizeObserver(_gcalSync).observe(document.body); } catch (e) {}
+  try {
+    new MutationObserver(_gcalSync).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style'], childList: true });
+  } catch (e) {}
+  _gcalSync();
+  setInterval(_gcalSync, 1000);   // 念のため（取りこぼしがあっても 1 秒で追いつく）
+}
+window.__gcalSync = _gcalSync;
 
 function _jpNative() {
   return _isNativeApp()
