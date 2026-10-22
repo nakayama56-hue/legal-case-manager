@@ -3542,6 +3542,12 @@ tr.row-waiting:hover > td {
        色は青（`--color-primary`）に揃える。外部読み込みは無し（アイコンも内製 SVG） --- */
 /* Google カレンダーを重ねている間は、自前の月・週のカレンダーを出さない（描き直しで display が戻されても勝つ。10.7.3） */
 body.gcal-on #case-calendar, body.gcal-on #case-calendar-week { display: none !important; }
+/* カレンダーの見せ方の切替（10.7.5）。全幅／標準／非表示。非表示ではカレンダーの入れ物ごと隠す（殻は offsetParent が null なので「隠せ」と伝わる） */
+.cal-seg { display: inline-flex; border: 1px solid var(--border-color); border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; }
+.cal-seg button { padding: 3px 10px; border: none; background: var(--bg-secondary); color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: 600; line-height: 1.4; }
+.cal-seg button + button { border-left: 1px solid var(--border-color); }
+.cal-seg button.on { background: var(--color-primary); color: #fff; }
+body.cal-layout-hidden #case-calendar-wrap { display: none !important; }
 .cal-ext-banner {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 3px 9px; line-height: 1.5;
@@ -3959,7 +3965,16 @@ body.jb-window .logo-home { cursor: default; }
       <!-- ===== DASHBOARD VIEW ===== -->
       <!-- ===== CASES VIEW ===== -->
       <div id="view-cases" class="view active">
-        <!-- 統合カレンダー（上段・横いっぱい。10.7.4 で 2 段組みの外へ出した） -->
+        <!-- カレンダーの見せ方の切替（10.7.5）。カレンダーから切り離し、常にこの行の右端に置く（配置が変わってもボタンが動かないように） -->
+        <div id="cal-topbar" class="no-print" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:28px;margin-bottom:6px">
+          <span id="cal-topbar-note" style="font-size:12px;color:var(--text-muted)"></span>
+          <span class="cal-seg" role="group" aria-label="カレンダーの見せ方">
+            <button type="button" data-cl="wide" onclick="setCalLayout('wide')" title="カレンダーを横いっぱいに出す">全幅</button>
+            <button type="button" data-cl="std" onclick="setCalLayout('std')" title="カレンダーを左の列に入れ、右に案件一覧を並べる">標準</button>
+            <button type="button" data-cl="hidden" onclick="setCalLayout('hidden')" title="カレンダーを隠す">非表示</button>
+          </span>
+        </div>
+        <!-- 統合カレンダー（10.7.4 で 2 段組みの外へ。10.7.5 から「標準」では #dashboard-left の先頭へ移る） -->
         <div id="case-calendar-wrap" style="margin-bottom:12px">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
             <div id="cal-nav-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -4177,7 +4192,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -6110,6 +6125,7 @@ function renderMigratedCard() {
 
 function init() {
   if (_isJikenboWindow()) _setupJikenboWindow();
+  _calLayoutApply(_calLayoutGet());   // カレンダーの見せ方（10.7.5）。描く前に置き場を決める
   _setupViewerMode();
   _setupMigratedMode();
   try { loadFromStorage(); } catch(e) { cases = []; tasks = []; }
@@ -7764,6 +7780,39 @@ function _gcalSync() {
     try { window.CaseFlowNative.gcalFrame(f); } catch (e) {}
   });
 }
+// ---- カレンダーの見せ方（10.7.5）：全幅（wide）／標準（std＝以前の 2 段組み）／非表示（hidden）----
+// 覚える場所は localStorage（6 種類の外。バックアップには入らない画面の好み）。知らない値は wide に読み替える
+const CAL_LAYOUT_KEY = 'calLayout_v1';
+const CAL_LAYOUTS = ['wide', 'std', 'hidden'];
+function _calLayoutGet() {
+  var v = null;
+  try { v = localStorage.getItem(CAL_LAYOUT_KEY); } catch (e) {}
+  return CAL_LAYOUTS.indexOf(v) >= 0 ? v : 'wide';
+}
+function _calLayoutApply(mode) {
+  var wrap = document.getElementById('case-calendar-wrap');
+  var left = document.getElementById('dashboard-left');
+  var layout = document.getElementById('dashboard-layout');
+  if (!wrap || !left || !layout) return;
+  // 標準＝カレンダーの入れ物を左の列の先頭へ。それ以外＝2 段組みの上へ戻す（id はそのままなので描画は壊れない）
+  if (mode === 'std') { if (wrap.parentElement !== left) left.insertBefore(wrap, left.firstChild); }
+  else if (wrap.parentElement === left) layout.parentElement.insertBefore(wrap, layout);
+  document.body.classList.toggle('cal-layout-std', mode === 'std');
+  document.body.classList.toggle('cal-layout-hidden', mode === 'hidden');
+  document.querySelectorAll('#cal-topbar .cal-seg button').forEach(function (b) { b.classList.toggle('on', b.dataset.cl === mode); });
+  var note = document.getElementById('cal-topbar-note');
+  if (note) note.textContent = mode === 'hidden' ? 'カレンダーは隠しています' : '';
+  if (window.__gcalSync) try { window.__gcalSync(); } catch (e) {}
+}
+function setCalLayout(mode) {
+  if (CAL_LAYOUTS.indexOf(mode) < 0) mode = 'wide';
+  var before = document.body.classList.contains('cal-layout-hidden');
+  try { localStorage.setItem(CAL_LAYOUT_KEY, mode); } catch (e) {}
+  _calLayoutApply(mode);
+  // 隠していた所から出したときは、自前のカレンダーを描き直す（Chrome 版。アプリでは隠れた div に描くだけ）
+  if (before && mode !== 'hidden') { try { renderCalendar(); } catch (e) {} }
+}
+
 function _gcalStart() {
   if (!_gcalNative()) return;
   var host = document.getElementById('gcal-host');
