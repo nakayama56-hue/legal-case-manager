@@ -673,9 +673,19 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
 
 /* 送付追跡パネル */
 .tracking-row { transition: background 0.15s; }
+/* 日本郵便で配達済みの行（10.6.7。Mac アプリだけ）。ホバーとのぞき見の点灯が後勝ちで効くよう、それらより前に置く */
+.tracking-row.jp-delivered { background: #f0fdf4; }
 .tracking-row:hover { background: #f0f7ff; }
 /* のぞき見の窓でいま見ている行（10.4.3。殻が __cfPeekAt で知らせる） */
 .tracking-row.tr-peek-on { background: #dbeafe; box-shadow: inset 3px 0 0 var(--color-primary); }
+/* 日本郵便の配達状況（10.6.7。Mac アプリだけ。7-7 章） */
+.jp-chip { flex-shrink: 0; font-size: 10px; padding: 2px 7px; border-radius: 999px; background: #dcfce7; color: #166534; border: 1px solid #86efac; font-weight: 700; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
+.jp-st { flex-shrink: 0; font-size: 10px; color: #94a3b8; white-space: nowrap; }
+.jp-st.jp-none { color: #c4c4c4; }
+.jp-head { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: #64748b; white-space: nowrap; }
+.jp-head.jp-err { color: #b91c1c; }
+.jp-refresh { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; border: 1px solid #bfdbfe; border-radius: 5px; background: #fff; color: #1e40af; cursor: pointer; font-size: 11px; }
+.jp-refresh:hover { background: #eff6ff; }
 
 /* =====================================================
    Layout
@@ -4145,7 +4155,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.6</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.7</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -6123,6 +6133,7 @@ function init() {
     renderCalendar();
     renderTaskTable();
     try { checkDeadlineAlert(); } catch(e) {}
+    _jpStart();   // 日本郵便の配達状況（10.6.7。初めて開いた日もこの道を通るので、ここでも始める）
     return;
   }
   localStorage.setItem('app_initialized', '1');
@@ -6136,6 +6147,9 @@ function init() {
   try { renderClientShortcutButtons(); } catch(e) {}
   showView('cases');
   try { checkDeadlineAlert(); } catch(e) { console.warn('alert error', e); }
+
+  // 送付追跡の日本郵便の配達状況（10.6.7。Mac アプリだけ。口が無ければ何もしない）
+  _jpStart();
 
   // 起動時にショートカットをクラウドからバックグラウンドで取得
   setTimeout(async () => {
@@ -7436,12 +7450,9 @@ function renderPaymentPending() {
     + '</div>';
 }
 
-function renderTrackingSummary() {
-  const el = document.getElementById('tracking-summary');
-  if (!el) return;
-  // 展開状態を保持
-  const wasOpen = document.getElementById('tracking-hidden-rows')?.classList.contains('open');
-
+/* 送付追跡パネルに出す行（受付から2か月以内、古い順）。10.6.7 で renderTrackingSummary から切り出した
+   （日本郵便の見張り _jpTargets が同じ組み立てを使うため。出力は変えていない） */
+function _trRecentItems() {
   // arrived判定はcasesデータから（クラウド同期対応）
 
   const items = [];
@@ -7520,19 +7531,31 @@ function renderTrackingSummary() {
     }
   });
 
-  if (items.length === 0) { el.innerHTML = ''; return; }
+  if (items.length === 0) return [];
 
   // 日付なしは除外してから古い順にソート
   const datedItems = items.filter(item => item.date);
-  if (datedItems.length === 0) { el.innerHTML = ''; return; }
+  if (datedItems.length === 0) return [];
   datedItems.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
 
   // 過去2か月以内を全件表示（件数制限なし）
   const _twoMonthsAgo = new Date();
   _twoMonthsAgo.setMonth(_twoMonthsAgo.getMonth() - 2);
   const _twoMonthsAgoStr = _twoMonthsAgo.toISOString().slice(0, 10);
-  const recent = datedItems.filter(item => item.date >= _twoMonthsAgoStr);
+  return datedItems.filter(item => item.date >= _twoMonthsAgoStr);
+}
 
+// その追跡番号が到着済みかどうか（10.6.7 で関数の外へ。中身は同じ）
+function _trIsArrivedItem(item) {
+  const km = item.key.match(/^(.+?)_(dv|dvr|sh|sr|szt|szr)_(.+)$/);
+  return km ? _isArrived(km[1], km[2], km[3]) : false;
+}
+
+function renderTrackingSummary() {
+  const el = document.getElementById('tracking-summary');
+  if (!el) return;
+
+  const recent = _trRecentItems();
   if (recent.length === 0) { el.innerHTML = ''; return; }
 
   // 展開状態を保持（2セクション分）
@@ -7540,10 +7563,12 @@ function renderTrackingSummary() {
   const wasReturnOpen = document.getElementById('tracking-return-hidden')?.classList.contains('open');
 
   // その追跡番号が到着済みかどうか
-  const isArrivedItem = (item) => {
-    const km = item.key.match(/^(.+?)_(dv|dvr|sh|sr|szt|szr)_(.+)$/);
-    return km ? _isArrived(km[1], km[2], km[3]) : false;
-  };
+  const isArrivedItem = _trIsArrivedItem;
+
+  // 日本郵便の配達状況（10.6.7。Mac アプリで口があるときだけ。Chrome 版では jpOn が偽で、行も見出しも 10.6.6 のまま）
+  const jpOn = _jpNative();
+  if (jpOn) _jpEnsureLoaded();
+  let jpDeliveredN = 0;
 
   // 1行を生成する共通関数
   const buildRow = (item) => {
@@ -7557,12 +7582,18 @@ function renderTrackingSummary() {
       ? '<button class="tracking-arrived-btn" title="押すと到着済を取り消します" onclick="event.stopPropagation();_unmarkArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;font-size:10px;background:#d1fae5;color:#065f46;border:none;border-radius:4px;cursor:pointer;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">✓ 到着済</button>'
       : '<button onclick="event.stopPropagation();_markArrived(\'' + keyEsc + '\')" style="flex-shrink:0;width:72px;background:#1d4ed8;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;padding:4px 0;font-weight:700;white-space:nowrap;text-align:center;display:block">' + ico('mailbox') + ' 到着</button>';
     const rowClick = 'onclick="_trRowClick(this)"';
+    /* 日本郵便の配達状況（10.6.7）。到着済の行と、口が無いとき・まだ確かめていない番号には何も足さない */
+    const jp = (jpOn && !arrived) ? _jpRowParts(item.tracking) : null;
+    if (jp && jp.delivered) jpDeliveredN++;
+    const peekTitle = _trPeekNative() ? '押すと追跡ページをのぞけます（⏎ でブラウザ窓、⌘P で印刷）' : '';
+    const rowTitle = jp ? [jp.title, peekTitle].filter(v => v).join('\n') : peekTitle;
     /* Mac アプリ：マウスを乗せてスペースで追跡ページをのぞき見（10.3.6）。Chrome 版では data- が付くだけ */
     const peekAttr = ' data-peek-url="' + url + '" data-peek-title="' + escHtml(label + '　' + item.tracking) + '"'
-      + (_trPeekNative() ? ' title="押すと追跡ページをのぞけます（⏎ でブラウザ窓、⌘P で印刷）"' : '');
-    return '<div class="tracking-row" ' + rowClick + peekAttr + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
+      + (rowTitle ? ' title="' + escHtml(rowTitle) + '"' : '');
+    return '<div class="tracking-row' + (jp && jp.delivered ? ' jp-delivered' : '') + '" ' + rowClick + peekAttr + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
       + '<span style="flex-shrink:0;width:36px;font-size:11px;color:#94a3b8">' + dateStr + '</span>'
       + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(label) + '</span>'
+      + (jp ? jp.html : '')
       + statusBtn
       + '</div>';
   };
@@ -7613,8 +7644,11 @@ function renderTrackingSummary() {
     icon: ico('mail'), label: '返信待ち', accent: '#30b14e'
   });
 
+  const headTitle = jpOn
+    ? '<div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:4px;display:flex;align-items:center;gap:4px"><span>' + ico('mailbox') + ' 直近の送付追跡</span>' + _jpHeadHtml(jpDeliveredN) + '</div>'
+    : '<div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:4px">' + ico('mailbox') + ' 直近の送付追跡</div>';
   el.innerHTML = '<div style="margin-top:10px;background:linear-gradient(135deg,#eff6ff 0%,#f0f9ff 100%);border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;overflow:hidden">'
-    + '<div style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:4px">' + ico('mailbox') + ' 直近の送付追跡</div>'
+    + headTitle
     + sendSection
     + returnSection
     + '</div>';
@@ -7622,6 +7656,235 @@ function renderTrackingSummary() {
   // 展開状態を復元
   if (wasSendOpen) openTrackingSection('tracking-send');
   if (wasReturnOpen) openTrackingSection('tracking-return');
+
+  // 日本郵便を確かめる時刻なら確かめる（60 分の歯止めがあるので、描くたびに通信はしない）
+  if (jpOn) { _jp.deliveredN = jpDeliveredN; _jpCheck(false); }
+}
+
+/* =====================================================
+   送付追跡に日本郵便の配達状況（10.6.7。Mac アプリだけ。7-7 章）
+   日本郵便の追跡ページは CORS でページの中から読めないので、殻（FSA.swift の rpc jpTracking）が
+   通信だけを受け持ち、HTML の文字列を返す。読み取り（_jpParse）はここ。追跡番号の受け取り箱（7-2 章）と同じ型。
+   ★ 案件データ（cases・arrived_tracking）には一切書かない。到着済の印はゴロウさんが自分で押す
+   ★ 数字や言葉を作らない。読めない形のページは、その番号に何も出さない
+   ===================================================== */
+const JP_INTERVAL_MS = 60 * 60 * 1000;   // 確かめる間隔（60 分）
+const JP_TICK_MS = 5 * 60 * 1000;        // 時計の刻み。60 分たったかを 5 分ごとに見る
+const JP_STORE_KEY = 'jp_tracking_v1';   // 6 種類の外（バックアップに入らない覚え書き）
+const _jp = { cache: {}, lastRun: null, lastTry: 0, lastError: null, busy: false, timer: null,
+  started: false, loaded: false, deliveredN: 0 };
+
+function _jpNative() {
+  return _isNativeApp()
+    && !!(window.CaseFlowNative && typeof window.CaseFlowNative.fetchJapanPost === 'function');
+}
+
+/** 日本郵便の追跡ページの HTML を読む（純粋関数）。
+ *  { found:false } ／ { found:true, kind, latest:{at,status,office,pref}, history:[…] } ／ { error:'形が違う' } */
+function _jpParse(html) {
+  try {
+    if (typeof html !== 'string' || !html) return { error: '形が違う' };
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const tx = (el) => (el ? el.textContent : '').replace(/\s+/g, ' ').trim();
+    // 見つからない番号：実物は summary="照会結果" の表に出る（設計書の「配達状況詳細」の表にも備える）
+    const nfTables = doc.querySelectorAll('table[summary="配達状況詳細"], table[summary="照会結果"]');
+    for (const t of nfTables) {
+      if (tx(t).includes('お問い合わせ番号が見つかりません')) return { found: false };
+    }
+    const detail = doc.querySelector('table[summary="配達状況詳細"]');
+    const histT = doc.querySelector('table[summary="履歴情報"]');
+    if (!detail || !histT) return { error: '形が違う' };
+    const history = [];
+    histT.querySelectorAll('tr').forEach(tr => {
+      const tds = Array.from(tr.children).filter(c => c.tagName === 'TD');
+      if (!tds.length || !tds[0].hasAttribute('rowspan') || tds.length < 5) return;
+      const at = tx(tds[0]), status = tx(tds[1]);
+      if (!at || !status) return;
+      history.push({ at, status, office: tx(tds[3]), pref: tx(tds[4]) });
+    });
+    if (!history.length) return { error: '形が違う' };
+    const dRow = detail.querySelectorAll('tr')[1];
+    const dTds = dRow ? Array.from(dRow.children).filter(c => c.tagName === 'TD') : [];
+    return { found: true, kind: dTds[1] ? tx(dTds[1]) : '', latest: history[history.length - 1], history };
+  } catch (e) {
+    return { error: '形が違う' };
+  }
+}
+
+/** 配達済みか。判定はこの 1 か所（「お届け済み」「お渡し」の字だけ。新しい言い回しは「まだ」に倒す） */
+function _jpDelivered(st) {
+  const s = String(st || '');
+  return s.includes('お届け済み') || s.includes('お渡し');
+}
+
+/** 状態の短い言い方（10 字まで） */
+function _jpShort(status) {
+  let s = String(status || '');
+  if (s.includes('ご不在のため持ち戻り')) s = '不在持ち戻り';
+  else if (s.includes('差出人に返送')) s = '返送';
+  return s.slice(0, 10);
+}
+/** 局名は末尾の「郵便局」を外して 5 字まで */
+function _jpOffice(o) { return String(o || '').replace(/郵便局$/, '').slice(0, 5); }
+/** 「2026/10/01 10:23」→「10/1 10:23」。形が違えばそのまま（作らない） */
+function _jpMD(at) {
+  const m = String(at || '').match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}:\d{2})/);
+  return m ? (parseInt(m[2], 10) + '/' + parseInt(m[3], 10) + ' ' + m[4]) : String(at || '');
+}
+/** ISO の時刻を「HH:MM」（今日でなければ「M/D HH:MM」）に */
+function _jpClock(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const now = new Date();
+  return d.toDateString() === now.toDateString() ? hm : ((d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm);
+}
+
+/** 行に足すもの。まだ確かめていない番号は null（何も出さない） */
+function _jpRowParts(tracking) {
+  const num = _tnDigits(tracking);
+  const c = _jp.cache[num];
+  if (!c) return null;
+  if (!c.found) {
+    return { delivered: false, title: '日本郵便：お問い合わせ番号が見つかりません',
+      html: '<span class="jp-st jp-none">未引受</span>' };
+  }
+  const L = c.latest || {};
+  const full = '日本郵便：' + L.status + ' ' + L.at + (L.office ? ' ' + L.office : '') + (L.pref ? '（' + L.pref + '）' : '');
+  if (_jpDelivered(L.status)) {
+    return { delivered: true, title: full,
+      html: '<span class="jp-chip">' + ico('mailbox') + ' 配達済み ' + escHtml(_jpMD(L.at)) + '</span>' };
+  }
+  const off = _jpOffice(L.office);
+  return { delivered: false, title: full,
+    html: '<span class="jp-st">' + escHtml(_jpShort(L.status) + ' ' + _jpMD(L.at) + (off ? ' ' + off : '')) + '</span>' };
+}
+
+/** 見出しの右端 */
+function _jpHeadHtml(n) {
+  const btn = '<button class="jp-refresh" title="日本郵便で今すぐ確かめ直す" onclick="event.stopPropagation();_jpCheck(true)">' + ico('refresh') + '</button>';
+  if (_jp.busy) return '<span class="jp-head">確認中…</span>';
+  if (_jp.lastError) {
+    return '<span class="jp-head jp-err" title="' + escHtml(_jp.lastError) + '">日本郵便 読めませんでした '
+      + escHtml(_jpClock(new Date(_jp.lastTry || Date.now()).toISOString())) + ' ' + btn + '</span>';
+  }
+  if (!_jp.lastRun) return '<span class="jp-head">日本郵便 未確認 ' + btn + '</span>';
+  return '<span class="jp-head">' + (n > 0 ? '配達済み ' + n + '件 · ' : '') + '日本郵便 '
+    + escHtml(_jpClock(_jp.lastRun)) + ' 確認 ' + btn + '</span>';
+}
+/** 見出しだけ描き直す（確かめ始めたとき。行の点灯を消さないため、パネル全体は描き直さない） */
+function _jpPaintHead() {
+  const h = document.querySelector('#tracking-summary .jp-head');
+  if (h) h.outerHTML = _jpHeadHtml(_jp.deliveredN);
+}
+
+/** 覚え書きを読む（1 度だけ）。形が違えば捨てて空から */
+function _jpEnsureLoaded() {
+  if (_jp.loaded) return;
+  _jp.loaded = true;
+  try {
+    const o = JSON.parse(localStorage.getItem(JP_STORE_KEY) || 'null');
+    if (!o || typeof o !== 'object' || !o.cache || typeof o.cache !== 'object' || Array.isArray(o.cache)) return;
+    const cache = {};
+    Object.keys(o.cache).forEach(k => {
+      const v = o.cache[k];
+      if (!/^\d{11,13}$/.test(k) || !v || typeof v !== 'object') return;
+      if (v.found === false) { cache[k] = { found: false, checkedAt: String(v.checkedAt || '') }; return; }
+      const L = v.latest;
+      if (v.found === true && L && typeof L.at === 'string' && typeof L.status === 'string') {
+        cache[k] = { found: true, latest: { at: L.at, status: L.status, office: String(L.office || ''), pref: String(L.pref || '') },
+          checkedAt: String(v.checkedAt || '') };
+      }
+    });
+    _jp.cache = cache;
+    _jp.lastRun = (typeof o.lastRun === 'string' && !isNaN(new Date(o.lastRun))) ? o.lastRun : null;
+  } catch (e) { _jp.cache = {}; _jp.lastRun = null; }
+}
+/** 覚え書きを書く。パネルに出ていない番号は落とす（際限なく増やさない） */
+function _jpSave() {
+  try {
+    const keep = new Set(_trRecentItems().map(it => _tnDigits(it.tracking)));
+    Object.keys(_jp.cache).forEach(k => { if (!keep.has(k)) delete _jp.cache[k]; });
+    localStorage.setItem(JP_STORE_KEY, JSON.stringify({ cache: _jp.cache, lastRun: _jp.lastRun }));
+  } catch (e) {}
+}
+
+/** 確かめる番号：パネルの行のうち到着済でないもの（数字だけ・11〜13 桁・重複なし・50 件まで） */
+function _jpTargets() {
+  const set = new Set();
+  _trRecentItems().forEach(it => {
+    if (_trIsArrivedItem(it)) return;
+    const d = _tnDigits(it.tracking);
+    if (d.length >= 11 && d.length <= 13) set.add(d);
+  });
+  return [...set].slice(0, 50);
+}
+
+/** パネルを描き直す（のぞき見で点灯している行は点灯させ直す） */
+function _jpRender() {
+  const on = document.querySelector('.tracking-row.tr-peek-on');
+  const url = on ? on.dataset.peekUrl : null;
+  renderTrackingSummary();
+  if (url) {
+    const row = Array.from(document.querySelectorAll('.tracking-row[data-peek-url]')).find(r => r.dataset.peekUrl === url);
+    if (row) row.classList.add('tr-peek-on');
+  }
+}
+
+/** 起動時（init の末尾）：5 秒後に 1 回確かめ、以後 5 分ごとに「60 分たったか」を見る。事件簿の窓では確かめない */
+function _jpStart() {
+  if (!_jpNative() || _isJikenboWindow()) return;
+  setTimeout(() => _jpCheck(true), 5000);
+  if (!_jp.timer) _jp.timer = setInterval(() => _jpCheck(false), JP_TICK_MS);
+}
+
+/** 日本郵便に確かめる。force でなければ 60 分に 1 回まで。起動の 1 回（init の 5 秒後）までは force でしか動かない */
+async function _jpCheck(force) {
+  if (!_jpNative() || _isJikenboWindow()) return;
+  _jpEnsureLoaded();
+  if (_jp.busy) return;
+  if (!force) {
+    if (!_jp.started) return;
+    const last = Math.max(Date.parse(_jp.lastRun || '') || 0, _jp.lastTry || 0);
+    if (Date.now() - last < JP_INTERVAL_MS) return;
+  }
+  _jp.started = true;
+  const nums = _jpTargets();
+  if (!nums.length) return;
+  _jp.busy = true;
+  _jp.lastTry = Date.now();
+  _jpPaintHead();
+  let r;
+  try { r = await window.CaseFlowNative.fetchJapanPost(nums); }
+  catch (e) { r = { ok: false, reason: (e && e.message) || '読めませんでした' }; }
+  try {
+    if (!r || r.ok === false || !r.results || typeof r.results !== 'object') {
+      _jp.lastError = String((r && r.reason) || '返事が空です');
+    } else {
+      const at = (typeof r.at === 'string' && !isNaN(new Date(r.at))) ? r.at : new Date().toISOString();
+      let good = 0, bad = 0, odd = 0;
+      const reasons = [];
+      nums.forEach(n => {
+        const x = r.results[n];
+        if (!x || !x.ok) { bad++; if (x && x.reason) reasons.push(String(x.reason)); return; }  // 通信の失敗：前回の値を残す
+        const p = _jpParse(x.html);
+        if (p.error) { odd++; delete _jp.cache[n]; return; }   // 読めない形：その番号には何も出さない
+        good++;
+        _jp.cache[n] = p.found ? { found: true, latest: p.latest, checkedAt: at } : { found: false, checkedAt: at };
+      });
+      if (!good) {
+        _jp.lastError = reasons[0] || (odd ? 'ページの形が違います' : '読めませんでした');
+      } else {
+        _jp.lastError = null;
+        _jp.lastRun = at;
+      }
+      if (bad || odd) console.warn('[日本郵便] ' + nums.length + '件中 読めない ' + bad + '件・形が違う ' + odd + '件');
+    }
+    _jpSave();
+  } finally {
+    _jp.busy = false;
+    _jpRender();
+  }
 }
 
 /* カレンダー D&D */
