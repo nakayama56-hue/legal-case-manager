@@ -3560,11 +3560,11 @@ tr.row-waiting:hover > td {
 .cal-ext-banner .ceb-out { flex: 0 0 auto; opacity: 0.6; }
 /* 案件編集の「完了予定日」の見出しの右端に置く、全国登記完了予定日一覧（zen-koku）への小さな入口（2026年10月22日、10.6.8）。
    見た目はカレンダー上のバナーと同じ組で、ひと回り小さい。4列の狭い枠なので字は「全国一覧」だけ */
-.btn.yotei-ref { height: 34px; padding: 0 8px; gap: 3px; flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--color-primary); border: 1px solid color-mix(in srgb, var(--color-primary) 26%, transparent); background: color-mix(in srgb, var(--color-primary) 7%, transparent); white-space: nowrap; }
-/* 枠が狭い（4列で 1 列 200px 未満）ときは字を隠して印だけにし、日付の欄を削らない（container query。WKWebView も対応） */
+.btn.yotei-ref { height: 34px; padding: 0 10px; gap: 4px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: #fff; border: none; background: var(--color-primary); white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+.btn.yotei-ref:hover { background: color-mix(in srgb, var(--color-primary) 85%, #000); color: #fff; }
+/* 枠が狭い（4列で 1 列 210px 未満）ときは、欄の下に幅いっぱいで出す。字は隠さない（10.6.9 の「印だけ」は見にくいとのご指摘で 10.7.0 でやめた） */
 .shinsei-grid .form-group { container-type: inline-size; }
-@container (max-width: 210px) { .btn.yotei-ref span { display: none; } .btn.yotei-ref { padding: 0 7px; } }
-.btn.yotei-ref:hover { background: color-mix(in srgb, var(--color-primary) 14%, transparent); border-color: color-mix(in srgb, var(--color-primary) 45%, transparent); }
+@container (max-width: 210px) { .yotei-row { flex-wrap: wrap; } .btn.yotei-ref { width: 100%; height: 28px; justify-content: center; } }
 /* --- 登記情報提供サービスの利用時間・メンテナンス（2026年9月18日、8.6.4）。
        日付のマスのいちばん下に細い行を1本。Googleカレンダー `08_登記情報提供サービス` と
        同じ文面を出す（元はこのMacの見張りが作る touki-maintenance.json）。
@@ -4172,7 +4172,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.9</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.0</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -14865,7 +14865,7 @@ function addShinseiRow(r, idx) {
       </div>
       <div class="form-group">
         <label class="form-label">完了予定日</label>
-        <div style="display:flex;gap:4px;align-items:center">
+        <div class="yotei-row" style="display:flex;gap:4px;align-items:center">
           <input class="form-control sh-yotei" type="text" placeholder="例：2026-05-01" value="${escHtml(r?.yotei||'')}" style="flex:1" onchange="onYoteiChange(this)">
           <div style="position:relative;flex-shrink:0">
             <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">${ico('calendar')}</button>
