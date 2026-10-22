@@ -4172,7 +4172,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.1</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.2</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7704,7 +7704,7 @@ function renderTrackingSummary() {
   if (wasSendOpen) openTrackingSection('tracking-send');
   if (wasReturnOpen) openTrackingSection('tracking-return');
 
-  // 日本郵便を確かめる時刻なら確かめる（60 分の歯止めがあるので、描くたびに通信はしない）
+  // 日本郵便を確かめる時刻なら確かめる（30 分の歯止めがあるので、描くたびに通信はしない）
   if (jpOn) { _jp.deliveredN = jpDeliveredN; _jpCheck(false); }
 }
 
@@ -7715,8 +7715,8 @@ function renderTrackingSummary() {
    ★ 案件データ（cases・arrived_tracking）には一切書かない。到着済の印はゴロウさんが自分で押す
    ★ 数字や言葉を作らない。読めない形のページは、その番号に何も出さない
    ===================================================== */
-const JP_INTERVAL_MS = 60 * 60 * 1000;   // 確かめる間隔（60 分）
-const JP_TICK_MS = 5 * 60 * 1000;        // 時計の刻み。60 分たったかを 5 分ごとに見る
+const JP_INTERVAL_MS = 30 * 60 * 1000;   // 確かめる間隔（30 分。10.7.2 でご本人のご希望により 60 分から短縮）
+const JP_TICK_MS = 5 * 60 * 1000;        // 時計の刻み。30 分たったかを 5 分ごとに見る
 const JP_STORE_KEY = 'jp_tracking_v1';   // 6 種類の外（バックアップに入らない覚え書き）
 const _jp = { cache: {}, lastRun: null, lastTry: 0, lastError: null, busy: false, timer: null,
   started: false, loaded: false, deliveredN: 0 };
@@ -7878,14 +7878,14 @@ function _jpRender() {
   }
 }
 
-/** 起動時（init の末尾）：5 秒後に 1 回確かめ、以後 5 分ごとに「60 分たったか」を見る。事件簿の窓では確かめない */
+/** 起動時（init の末尾）：5 秒後に 1 回確かめ、以後 5 分ごとに「30 分たったか」を見る。事件簿の窓では確かめない */
 function _jpStart() {
   if (!_jpNative() || _isJikenboWindow()) return;
   setTimeout(() => _jpCheck(true), 5000);
   if (!_jp.timer) _jp.timer = setInterval(() => _jpCheck(false), JP_TICK_MS);
 }
 
-/** 日本郵便に確かめる。force でなければ 60 分に 1 回まで。起動の 1 回（init の 5 秒後）までは force でしか動かない */
+/** 日本郵便に確かめる。force でなければ 30 分に 1 回まで。起動の 1 回（init の 5 秒後）までは force でしか動かない */
 async function _jpCheck(force) {
   if (!_jpNative() || _isJikenboWindow()) return;
   _jpEnsureLoaded();
