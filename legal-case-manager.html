@@ -3558,6 +3558,10 @@ tr.row-waiting:hover > td {
 .cal-ext-banner .ceb-ico { flex: 0 0 auto; opacity: 0.85; }
 .cal-ext-banner .ceb-text { flex: 0 1 auto; min-width: 0; }
 .cal-ext-banner .ceb-out { flex: 0 0 auto; opacity: 0.6; }
+/* 案件編集の「完了予定日」の見出しの右端に置く、全国登記完了予定日一覧（zen-koku）への小さな入口（2026年10月22日、10.6.8）。
+   見た目はカレンダー上のバナーと同じ組で、ひと回り小さい。4列の狭い枠なので字は「全国一覧」だけ */
+.form-label.yotei-label { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.cal-ext-banner.yotei-ref { margin-left: auto; padding: 0 6px; font-size: 10px; line-height: 1.6; gap: 4px; min-width: 0; overflow: hidden; }
 /* --- 登記情報提供サービスの利用時間・メンテナンス（2026年9月18日、8.6.4）。
        日付のマスのいちばん下に細い行を1本。Googleカレンダー `08_登記情報提供サービス` と
        同じ文面を出す（元はこのMacの見張りが作る touki-maintenance.json）。
@@ -4155,7 +4159,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.7</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.8</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -14788,6 +14792,8 @@ function addTouhonTask(btn, yotei) {
   toast(`タスク「謄本」を追加しました（期限：${formatDate(yotei)}）`, 'success');
 }
 
+// 全国登記完了予定日一覧（ゴロウさん作の zen-koku。GitHub Pages）。完了予定日の欄の横から開く（2026年10月22日、10.6.8）
+const ZENKOKU_KANRYO_URL = 'https://nakayama56-hue.github.io/zen-koku/%E5%85%A8%E5%9B%BD%E7%99%BB%E8%A8%98%E5%AE%8C%E4%BA%86%E4%BA%88%E5%AE%9A%E6%97%A5%E4%B8%80%E8%A6%A7.html';
 function addShinseiRow(r, idx) {
   const list = document.getElementById('f-shinsei-list');
   if (!list) return;
@@ -14815,7 +14821,13 @@ function addShinseiRow(r, idx) {
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">完了予定日</label>
+        <label class="form-label yotei-label">完了予定日
+          <a class="cal-ext-banner yotei-ref" href="${ZENKOKU_KANRYO_URL}" target="_blank" rel="noopener noreferrer" title="全国登記完了予定日一覧を開きます（別のタブ。Macアプリではアプリ内の窓）" tabindex="-1">
+            <svg class="ceb-ico" width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.4" y="3.6" width="11.2" height="10" rx="1.6"/><path d="M2.4 6.8h11.2M5.6 2.4v2.4M10.4 2.4v2.4"/></svg>
+            <span class="ceb-text">全国一覧</span>
+            <svg class="ceb-out" width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 1.5h6v6M10.5 1.5 5 7"/><path d="M9 7.5v3h-7.5V3h3"/></svg>
+          </a>
+        </label>
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control sh-yotei" type="text" placeholder="例：2026-05-01" value="${escHtml(r?.yotei||'')}" style="flex:1" onchange="onYoteiChange(this)">
           <div style="position:relative;flex-shrink:0">
