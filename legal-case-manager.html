@@ -3560,8 +3560,11 @@ tr.row-waiting:hover > td {
 .cal-ext-banner .ceb-out { flex: 0 0 auto; opacity: 0.6; }
 /* 案件編集の「完了予定日」の見出しの右端に置く、全国登記完了予定日一覧（zen-koku）への小さな入口（2026年10月22日、10.6.8）。
    見た目はカレンダー上のバナーと同じ組で、ひと回り小さい。4列の狭い枠なので字は「全国一覧」だけ */
-.form-label.yotei-label { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.cal-ext-banner.yotei-ref { margin-left: auto; padding: 0 6px; font-size: 10px; line-height: 1.6; gap: 4px; min-width: 0; overflow: hidden; }
+.btn.yotei-ref { height: 34px; padding: 0 8px; gap: 3px; flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--color-primary); border: 1px solid color-mix(in srgb, var(--color-primary) 26%, transparent); background: color-mix(in srgb, var(--color-primary) 7%, transparent); white-space: nowrap; }
+/* 枠が狭い（4列で 1 列 200px 未満）ときは字を隠して印だけにし、日付の欄を削らない（container query。WKWebView も対応） */
+.shinsei-grid .form-group { container-type: inline-size; }
+@container (max-width: 210px) { .btn.yotei-ref span { display: none; } .btn.yotei-ref { padding: 0 7px; } }
+.btn.yotei-ref:hover { background: color-mix(in srgb, var(--color-primary) 14%, transparent); border-color: color-mix(in srgb, var(--color-primary) 45%, transparent); }
 /* --- 登記情報提供サービスの利用時間・メンテナンス（2026年9月18日、8.6.4）。
        日付のマスのいちばん下に細い行を1本。Googleカレンダー `08_登記情報提供サービス` と
        同じ文面を出す（元はこのMacの見張りが作る touki-maintenance.json）。
@@ -3821,12 +3824,21 @@ tr.row-waiting:hover > td {
 .jb-del { width: 22px; height: 22px; padding: 0; border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 12px; border-radius: 3px; font-family: inherit; }
 .jb-del:hover { color: var(--color-danger); background: var(--bg-primary); }
 @media (max-width: 480px) {
-  .btn-header-jb-label { display: none; }
-  #btn-header-jikenbo { padding: 5px 9px !important; }
+  .btn-header-jb-label, .btn-header-mail-label { display: none; }
+  #btn-header-jikenbo, #btn-header-mail { padding: 5px 9px !important; }
 }
+/* ヘッダーの「メール」（10.6.9）：Mac アプリで MailFlow を中の窓で開く。殻の口が無ければ hidden のまま。未読数は殻が __cfMailUnread で入れる */
+#btn-header-mail[hidden] { display: none !important; }
+.mail-unread {
+  position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+  border-radius: 9px; background: var(--color-danger, #dc2626); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px;
+  text-align: center; pointer-events: none; box-shadow: 0 0 0 1.5px #fff;
+}
+.mail-unread[hidden] { display: none; }
+.mail-unread.off { background: #9ca3af; }
 body.viewer-mode [onclick*="addJikenboLooseRow"], body.viewer-mode [onclick*="jbDeleteLooseRow"] { display: none !important; }
 /* 事件簿の窓（?view=jikenbo）：自分を開くボタンと保存は出さない（保存は本体の窓から）。歯車は残す */
-body.jb-window #btn-header-jikenbo, body.jb-window #btn-header-backup { display: none !important; }
+body.jb-window #btn-header-jikenbo, body.jb-window #btn-header-backup, body.jb-window #btn-header-mail { display: none !important; }
 body.jb-window .logo-home { cursor: default; }
 @media print {
   /* 事件簿の紙面（printJikenbo）。A4横・1ページ10件（1件2行）。向きは @page（printJikenbo が差し込む）、余白は .jb-page の padding */
@@ -3928,6 +3940,7 @@ body.jb-window .logo-home { cursor: default; }
         キーボードでも押せるように role/tabindex と Enter・space を持たせてある -->
         <span class="logo-home" onclick="showView('cases')" title="案件一覧へ戻る" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('cases');}"><svg class="app-logo-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></svg><span id="header-logo-text" class="app-logo-word">Case<span class="app-logo-flow">Flow</span></span></span></div>
       <div class="header-actions">
+        <button class="btn btn-secondary" onclick="openMailWindow()" id="btn-header-mail" title="メール（MailFlow をこの中の窓で開く）" style="padding:5px 12px;font-size:12px;font-weight:700;position:relative" hidden><svg class="ico" aria-hidden="true"><use href="#i-mail"></use></svg><span class="btn-header-mail-label" style="margin-left:5px">メール</span><span id="mail-unread" class="mail-unread" hidden></span></button>
         <button class="btn btn-secondary" onclick="openJikenboWindow()" id="btn-header-jikenbo" title="事件簿（全案件の受託番号順）" style="padding:5px 12px;font-size:12px;font-weight:700"><svg class="ico" aria-hidden="true"><use href="#i-book-open"></use></svg><span class="btn-header-jb-label" style="margin-left:5px">事件簿</span></button>
         <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存" style="padding:5px 12px;font-size:12px;font-weight:700"><svg class="ico" aria-hidden="true"><use href="#i-save"></use></svg><span class="btn-header-backup-label" style="margin-left:5px">保存</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
@@ -4159,7 +4172,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.8</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.6.9</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5854,6 +5867,36 @@ function _isNativeApp() { return location.protocol === 'caseflow:'; }
      ★ 入力欄の値・案件名は入れない（ボタンの字と画面の名前だけ）。段階2で Claude に渡す前提
    ・Chrome 版・閲覧用では何もしない（口が無い）
    ===================================================== */
+/* =====================================================
+   メール：MailFlow を CaseFlow の中の窓で開く（10.6.9。設計書：~/secretary/CaseFlowにMailFlow_設計書.md）
+   ・本体がするのはボタン 1 つと未読数の受け口だけ。画面も裏方も殻（caseflow-mac/Sources/Mail.swift）が受け持つ
+   ・Chrome 版・閲覧用・事件簿の窓では出さない（口が無い）
+   ===================================================== */
+function _mailNative() {
+  return _isNativeApp() && !_isJikenboWindow() && window.__caseflowMailEnabled !== false
+    && !!(window.CaseFlowNative && typeof window.CaseFlowNative.openMail === 'function');
+}
+function _mailButtonSetup() {
+  const b = document.getElementById('btn-header-mail'); if (!b) return;
+  b.hidden = !_mailNative();
+}
+async function openMailWindow() {
+  if (!_mailNative()) return;
+  const r = await window.CaseFlowNative.openMail();
+  if (r && r.ok) return;
+  const reason = (r && r.reason) || 'メールを開けません';
+  toast(reason, (r && r.starting) ? 'info' : 'error');
+}
+/** 殻が呼ぶ：未読数（null＝裏方が止まっている） */
+window.__cfMailUnread = function (n) {
+  const el = document.getElementById('mail-unread'); if (!el) return;
+  if (n === null || n === undefined) { el.textContent = '?'; el.classList.add('off'); el.hidden = false; return; }
+  el.classList.remove('off');
+  if (!(n > 0)) { el.hidden = true; el.textContent = ''; return; }
+  el.textContent = n > 999 ? '999+' : String(n);
+  el.hidden = false;
+};
+
 function _issuesNative() {
   return _isNativeApp() && !!(window.CaseFlowNative && typeof window.CaseFlowNative.readIssues === 'function');
 }
@@ -14821,19 +14864,14 @@ function addShinseiRow(r, idx) {
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label yotei-label">完了予定日
-          <a class="cal-ext-banner yotei-ref" href="${ZENKOKU_KANRYO_URL}" target="_blank" rel="noopener noreferrer" title="全国登記完了予定日一覧を開きます（別のタブ。Macアプリではアプリ内の窓）" tabindex="-1">
-            <svg class="ceb-ico" width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.4" y="3.6" width="11.2" height="10" rx="1.6"/><path d="M2.4 6.8h11.2M5.6 2.4v2.4M10.4 2.4v2.4"/></svg>
-            <span class="ceb-text">全国一覧</span>
-            <svg class="ceb-out" width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 1.5h6v6M10.5 1.5 5 7"/><path d="M9 7.5v3h-7.5V3h3"/></svg>
-          </a>
-        </label>
+        <label class="form-label">完了予定日</label>
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control sh-yotei" type="text" placeholder="例：2026-05-01" value="${escHtml(r?.yotei||'')}" style="flex:1" onchange="onYoteiChange(this)">
           <div style="position:relative;flex-shrink:0">
             <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">${ico('calendar')}</button>
             <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;onYoteiChange(this.parentElement.previousElementSibling);this.value=''">
           </div>
+          <a class="btn btn-secondary btn-xs yotei-ref" href="${ZENKOKU_KANRYO_URL}" target="_blank" rel="noopener noreferrer" title="全国登記完了予定日一覧を開きます（別のタブ。Macアプリではアプリ内の窓）">${ico('clipboard')}<span>一覧</span></a>
         </div>
         <div class="touhon-suggest" style="display:none"></div>
       </div>
@@ -17110,6 +17148,7 @@ window.addEventListener('DOMContentLoaded', () => {
   try { _idbGet('viewerDir').then(h => { if (h) _viewerDirHandle = h; _updateViewerFolderLabel(); }); } catch(e) { _updateViewerFolderLabel(); }
   renderStorageStatus();
   setTimeout(() => { try { _issuesRefreshDot(); } catch (e) {} }, 1500);   // 不具合の記録の赤い点（10.6.6）
+  try { _mailButtonSetup(); } catch (e) {}   // 「メール」ボタン（10.6.9）
   // 自動バックアップは読込ボタン押下後（_startupAutoBackup）に実行するためここでは呼ばない
   // 【クラウド無効化】起動時の読込オーバーレイは表示せず、ローカルデータで即起動
   _hideStartupOverlay();
