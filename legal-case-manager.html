@@ -4192,7 +4192,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.8</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.9</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7782,11 +7782,26 @@ function _gcalSync() {
               clipTop: Math.round(top - r.top), fullH: Math.round(r.height) };
       }
     }
+    // 切替の動きの最中（10.7.9）：殻は WKWebView を作り直さず、最終の置き場（target）で固定して層の拡縮で見せる
+    if (_gcalAnimTarget) { f.anim = true; if (_gcalAnimTarget !== 'keep') f.target = _gcalAnimTarget; }
     var key = JSON.stringify(f);
     if (key === _gcalLast) return;
     _gcalLast = key;
     try { window.CaseFlowNative.gcalFrame(f); } catch (e) {}
   });
+}
+// 切替の動きの最中だけ入る。'keep'＝隠す動き（最終の置き場は無い）、{x,y,w,h}＝出す動きの最終の置き場（画面の中に残る部分・ヘッダーの下で切った形）
+var _gcalAnimTarget = null;
+function _gcalHostRectNow() {
+  var host = document.getElementById('gcal-host');
+  if (!host || host.offsetParent === null) return null;
+  var r = host.getBoundingClientRect();
+  var hd = document.getElementById('header');
+  var topLimit = hd ? Math.max(0, hd.getBoundingClientRect().bottom) : 0;
+  var top = Math.max(r.top, topLimit), bottom = Math.min(r.bottom, window.innerHeight);
+  var left = Math.max(r.left, 0), right = Math.min(r.right, window.innerWidth);
+  if (bottom - top <= 40 || right - left <= 40) return null;
+  return { x: Math.round(left), y: Math.round(top), w: Math.round(right - left), h: Math.round(bottom - top) };
 }
 // ---- カレンダーの見せ方（10.7.5）：全幅（wide）／標準（std＝以前の 2 段組み）／非表示（hidden）----
 // 覚える場所は localStorage（6 種類の外。バックアップには入らない画面の好み）。知らない値は wide に読み替える
@@ -7833,12 +7848,14 @@ function _calLayoutAnimate(mode, before) {
     if (tickRaf) cancelAnimationFrame(tickRaf);
     wrap.style.transition = ''; wrap.style.transform = ''; wrap.style.opacity = ''; wrap.style.transformOrigin = ''; wrap.style.willChange = '';
     _calAnimBusy = false;
+    _gcalAnimTarget = null;
     if (window.__gcalSync) try { window.__gcalSync(); } catch (e) {}
   }
   wrap.style.transformOrigin = 'top left';
   wrap.style.willChange = 'transform';
   if (mode === 'hidden') {
     // 縦に縮んで消える → 消えきってから置き場を隠す
+    _gcalAnimTarget = 'keep';
     wrap.style.transition = 'transform ' + CAL_LAYOUT_ANIM_MS + 'ms ' + ease + ', opacity ' + CAL_LAYOUT_ANIM_MS + 'ms';
     void wrap.getBoundingClientRect();
     wrap.style.transform = 'scaleY(0.02)'; wrap.style.opacity = '0';
@@ -7849,6 +7866,7 @@ function _calLayoutAnimate(mode, before) {
   var from = (fromMode === 'hidden') ? null : wrap.getBoundingClientRect();
   _calLayoutApply(mode);
   var to = wrap.getBoundingClientRect();
+  _gcalAnimTarget = _gcalHostRectNow() || 'keep';   // 置き場を移した直後（変形の前）＝最終の置き場
   wrap.style.transition = 'none';
   if (!from) { wrap.style.transform = 'scaleY(0.02)'; wrap.style.opacity = '0'; }
   else {
