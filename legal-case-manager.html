@@ -4192,7 +4192,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.7</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.8</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7812,13 +7812,66 @@ function _calLayoutApply(mode) {
   if (note) note.textContent = mode === 'hidden' ? 'カレンダーは隠しています' : '';
   if (window.__gcalSync) try { window.__gcalSync(); } catch (e) {}
 }
+// ボタンを押したとき、カレンダーの枠が伸び縮みしながら新しい場所へ滑る（10.7.8。ご本人の「ボタンを押した時にグッと広がったり、小さくなったりするとよい」。
+// 見本 A／B から A を選択）。やり方は FLIP：いまの位置と大きさを覚え → 置き場を移してから → 元の見た目から新しい見た目へ transform で滑らせる。
+// 非表示は縦に縮んで消え、戻すときは伸びて現れる。動いている間は毎フレーム Google の欄の位置を殻へ知らせる（__gcalSync。殻は無変更）。
+// 「視差効果を減らす」の設定のときと、動いている最中の連打は、今までどおり瞬時に切り替える
+var CAL_LAYOUT_ANIM_MS = 350;
+var _calAnimBusy = false;
+function _calLayoutAnimate(mode, before) {
+  var wrap = document.getElementById('case-calendar-wrap');
+  var reduce = false;
+  try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  if (!wrap || reduce || _calAnimBusy || document.hidden) { _calLayoutApply(mode); return; }
+  var fromMode = before;
+  if (fromMode === mode) { _calLayoutApply(mode); return; }
+  _calAnimBusy = true;
+  var ease = 'cubic-bezier(.2,.8,.2,1)';
+  var tickRaf = 0;
+  function tick() { if (window.__gcalSync) try { window.__gcalSync(); } catch (e) {} tickRaf = requestAnimationFrame(tick); }
+  function finish() {
+    if (tickRaf) cancelAnimationFrame(tickRaf);
+    wrap.style.transition = ''; wrap.style.transform = ''; wrap.style.opacity = ''; wrap.style.transformOrigin = ''; wrap.style.willChange = '';
+    _calAnimBusy = false;
+    if (window.__gcalSync) try { window.__gcalSync(); } catch (e) {}
+  }
+  wrap.style.transformOrigin = 'top left';
+  wrap.style.willChange = 'transform';
+  if (mode === 'hidden') {
+    // 縦に縮んで消える → 消えきってから置き場を隠す
+    wrap.style.transition = 'transform ' + CAL_LAYOUT_ANIM_MS + 'ms ' + ease + ', opacity ' + CAL_LAYOUT_ANIM_MS + 'ms';
+    void wrap.getBoundingClientRect();
+    wrap.style.transform = 'scaleY(0.02)'; wrap.style.opacity = '0';
+    tick();
+    setTimeout(function () { _calLayoutApply(mode); finish(); }, CAL_LAYOUT_ANIM_MS + 20);
+    return;
+  }
+  var from = (fromMode === 'hidden') ? null : wrap.getBoundingClientRect();
+  _calLayoutApply(mode);
+  var to = wrap.getBoundingClientRect();
+  wrap.style.transition = 'none';
+  if (!from) { wrap.style.transform = 'scaleY(0.02)'; wrap.style.opacity = '0'; }
+  else {
+    var sx = to.width ? from.width / to.width : 1, sy = to.height ? from.height / to.height : 1;
+    wrap.style.transform = 'translate(' + (from.left - to.left) + 'px,' + (from.top - to.top) + 'px) scale(' + sx + ',' + sy + ')';
+  }
+  void wrap.getBoundingClientRect();   // 始まりの見た目を確定させる（reflow）
+  tick();
+  // requestAnimationFrame は窓が裏にあると呼ばれず、途中で止まったままになる（10.6.2 と同じ罠）。setTimeout で始める
+  setTimeout(function () {
+    wrap.style.transition = 'transform ' + CAL_LAYOUT_ANIM_MS + 'ms ' + ease + ', opacity ' + CAL_LAYOUT_ANIM_MS + 'ms';
+    wrap.style.transform = 'none'; wrap.style.opacity = '1';
+    setTimeout(finish, CAL_LAYOUT_ANIM_MS + 30);
+  }, 20);
+}
 function setCalLayout(mode) {
   if (CAL_LAYOUTS.indexOf(mode) < 0) mode = 'wide';
-  var before = document.body.classList.contains('cal-layout-hidden');
+  var before = _calLayoutGet();
+  var wasHidden = document.body.classList.contains('cal-layout-hidden');
   try { localStorage.setItem(CAL_LAYOUT_KEY, mode); } catch (e) {}
-  _calLayoutApply(mode);
-  // 隠していた所から出したときは、自前のカレンダーを描き直す（Chrome 版。アプリでは隠れた div に描くだけ）
-  if (before && mode !== 'hidden') { try { renderCalendar(); } catch (e) {} }
+  // 隠していた所から出したときは、先に自前のカレンダーを描き直す（Chrome 版。アプリでは隠れた div に描くだけ）
+  if (wasHidden && mode !== 'hidden') { try { _calLayoutApply(mode); renderCalendar(); _calLayoutApply('hidden'); } catch (e) {} }
+  _calLayoutAnimate(mode, before);
 }
 
 function _gcalStart() {
