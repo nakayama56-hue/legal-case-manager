@@ -3755,6 +3755,10 @@ body.cal-layout-hidden #case-calendar-wrap { display: none !important; }
 /* 10.8.1：✕ は戻せない。押す前に「消します」と分かるよう、✕ に乗せている間は行の番号に取り消し線 */
 #tn-menu .it:has(.x:hover) b { text-decoration: line-through; color: var(--text-muted); }
 .tn-filled { animation: tn-flash 1.4s ease-out 1; }
+/* 10.8.2：追跡番号があるのに送付日が空の送付先に、送付日の欄の下へ琥珀の注意（送付追跡パネルに出ないため） */
+.dv-date-warn { display: none; margin-top: 4px; font-size: 11px; color: #92400e; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 3px 8px; }
+.delivery-item.dv-nodate .dv-date-warn { display: block; }
+.delivery-item.dv-nodate .dv-date { border-color: #d97706; background: #fffbeb; }
 @keyframes tn-flash { from { background: #fdba74; } to { background: transparent; } }
 
 /* =====================================================
@@ -4201,7 +4205,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.1</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.2</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -14227,6 +14231,20 @@ function saveCase() {
 
   const contacts = readContactRows();
 
+  // 10.8.2：追跡番号があるのに送付日が空の送付先があれば、保存の前に一度だけ確かめる
+  // （送付追跡パネルは送付日の無い行を出さない。2026 年 10 月 25 日、岩橋様の行で気づけなかったため）
+  {
+    const 空 = readDeliveryRows().map((d, i) => ({ d, i })).filter(x => _dvNoDate(x.d));
+    if (空.length) {
+      const 名 = 空.map(x => x.d.name || ('送付先 ' + (x.i + 1))).join('、');
+      if (!confirm('送付日が入っていない送付先があります：' + 名 + '\n\n送付追跡パネルには出ません。このまま保存しますか？\n（キャンセルで入力に戻ります）')) {
+        const first = [...document.querySelectorAll('#f-delivery-list .delivery-item.dv-nodate .dv-date')][0];
+        if (first) { first.scrollIntoView({ block: 'center' }); first.focus(); }
+        return;
+      }
+    }
+  }
+
   const data = {
     case_num: num,
     case_name: name,
@@ -15348,9 +15366,10 @@ function addDeliveryRow(d, idx) {
           <input class="form-control dv-date" type="text" placeholder="例：2026-04-15、未定" value="${escHtml(d?.date||'')}" style="flex:1">
           <div style="position:relative;flex-shrink:0">
             <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー">${ico('calendar')}</button>
-            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
+            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value='';_dvDateWarnSync(this)">
           </div>
         </div>
+        <div class="dv-date-warn">${ico('warn')} 追跡番号があるのに送付日が空です。このままでは送付追跡パネルに出ません</div>
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">郵便番号 → 住所自動入力</label>
@@ -15416,6 +15435,7 @@ function addDeliveryRow(d, idx) {
       </div>
     </div>`;
   list.appendChild(div);
+  _dvDateWarnSync(div);
   renumberDeliveryRows();
   _tnSyncSoon();
 }
@@ -15451,6 +15471,29 @@ function renumberDeliveryRows() {
     if (lbl) lbl.textContent = '送付先 ' + (i + 1);
   });
 }
+
+/** 追跡番号（送付か返信）があるのに送付日が空の送付先か（10.8.2）。手渡しは追跡が無いので対象外。
+    「未定」などの字が入っていれば空とは見ない。判定はこの 1 か所（入力中の注意と、保存時の確認が共用） */
+function _dvNoDate(d) {
+  if (!d || d.method === '手渡し') return false;
+  const has = (d.trackings || []).some(v => _tnDigits(v)) || !!_tnDigits(d.tracking_return);
+  return has && !(d.date || '').trim();
+}
+/** 入力中の注意の出し入れ。送付先の行（.delivery-item）か、その中の要素を渡す */
+function _dvDateWarnSync(el) {
+  const row = el && el.closest ? el.closest('.delivery-item') : null;
+  if (!row) return;
+  const d = {
+    method: row.querySelector('.dv-method')?.value || '',
+    date: row.querySelector('.dv-date')?.value || '',
+    trackings: [...row.querySelectorAll('.dv-tracking-input')].map(e => e.value),
+    tracking_return: row.querySelector('.dv-tracking-return')?.value || '',
+  };
+  row.classList.toggle('dv-nodate', _dvNoDate(d));
+}
+// 送付先の欄の入力（追跡番号・送付日・送付方法。📥 から入れたときの input イベントも通る）で注意を出し入れ
+document.addEventListener('input', (e) => { if (e.target.closest && e.target.closest('#f-delivery-list .delivery-item')) _dvDateWarnSync(e.target); });
+document.addEventListener('change', (e) => { if (e.target.closest && e.target.closest('#f-delivery-list .delivery-item')) _dvDateWarnSync(e.target); });
 
 function readDeliveryRows() {
   return [...document.querySelectorAll('#f-delivery-list .delivery-item')].map(row => ({
