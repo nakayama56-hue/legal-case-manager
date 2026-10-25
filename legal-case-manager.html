@@ -3745,6 +3745,21 @@ body.cal-layout-hidden #case-calendar-wrap { display: none !important; }
 #tn-menu .it:hover { background: #fff7ed; }
 #tn-menu .it b { letter-spacing: .03em; }
 #tn-menu .it small { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
+/* 10.8.0：使わない番号を隠す ✕（行の右端）。隠した番号は CaseFlow 側（localStorage）に覚え、受け取り箱には書かない */
+#tn-menu .it .x {
+  flex-shrink: 0; width: 20px; height: 20px; line-height: 18px; text-align: center;
+  border: 1px solid transparent; border-radius: 5px; background: transparent;
+  color: var(--text-muted); font-size: 13px; cursor: pointer; padding: 0; align-self: center;
+}
+#tn-menu .it .x:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+#tn-menu .ft {
+  margin-top: 4px; padding: 6px 8px 4px; border-top: 1px solid var(--border-light, #e5e7eb);
+  font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; gap: 8px; align-items: center;
+}
+#tn-menu .ft button {
+  border: 0; background: transparent; color: var(--color-primary); cursor: pointer; font-size: 11px; padding: 2px 4px; border-radius: 4px;
+}
+#tn-menu .ft button:hover { background: #eff6ff; }
 .tn-filled { animation: tn-flash 1.4s ease-out 1; }
 @keyframes tn-flash { from { background: #fdba74; } to { background: transparent; } }
 
@@ -4192,7 +4207,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.7.9</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.0</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -15519,6 +15534,12 @@ function dvTrackReturn(btn) {
 
    ★ 一覧（#tn-menu）は body の直下に置き、position: fixed で開く。
      モーダルや右パネルの中に置くと overflow に切られる。
+
+   ★ 使わない番号は、一覧の行の ✕ で隠せる（10.8.0。2026 年 10 月 25 日）。
+     隠した番号は **CaseFlow 側の localStorage（tn_hidden_v1）に覚えるだけ**で、
+     受け取り箱には書かない（殻に書く口を作らない、という設置時の決まりはそのまま）。
+     箱から消えた番号（30 日で常駐が落とす）は、箱を読めた回に控えからも外す。
+     一覧の下の「戻す」で、隠した番号を全部もとに戻せる。
    ===================================================== */
 
 /** 5 秒おきに尋ねる。対象の欄が画面にある間だけ */
@@ -15573,9 +15594,29 @@ function _tnSavedNums() {
   return set;
 }
 
-/** 候補＝箱の番号 −（案件に入っている番号）−（いま開いている欄に入っている番号） */
+/** 隠した番号（10.8.0）。CaseFlow 側の localStorage だけ。受け取り箱には書かない */
+const TN_HIDDEN_KEY = 'tn_hidden_v1';
+function _tnHidden() {
+  try {
+    const a = JSON.parse(localStorage.getItem(TN_HIDDEN_KEY) || '[]');
+    return new Set(Array.isArray(a) ? a.map(_tnDigits).filter(Boolean) : []);
+  } catch (e) { return new Set(); }
+}
+function _tnSaveHidden(set) {
+  try { localStorage.setItem(TN_HIDDEN_KEY, JSON.stringify([...set])); } catch (e) { /* 覚え書きなので黙る */ }
+}
+/** 箱に無くなった番号（30 日で常駐が落とす）は控えからも外す。箱を読めた回にだけ呼ぶ */
+function _tnPruneHidden(items) {
+  const 隠し = _tnHidden();
+  if (隠し.size === 0) return;
+  const 箱 = new Set(items.map(it => it.num));
+  const 残り = new Set([...隠し].filter(n => 箱.has(n)));
+  if (残り.size !== 隠し.size) _tnSaveHidden(残り);
+}
+/** 候補＝箱の番号 −（案件に入っている番号）−（いま開いている欄に入っている番号）−（隠した番号） */
 function _tnCandidates() {
   const 除く = _tnSavedNums();
+  _tnHidden().forEach(n => 除く.add(n));
   document.querySelectorAll(TN_SEL).forEach(el => {
     const d = _tnDigits(el.value);
     if (d) 除く.add(d);
@@ -15626,7 +15667,10 @@ function _tnSync() {
   const 欄 = _tnTargets();
   if (欄.length === 0) { _tnCloseMenu(); return; }
   const 候補 = _tnCandidates();
-  const 中身 = 候補.length
+  // 候補が 0 でも、隠した番号が箱に残っていればボタンは出す（「戻す」に行けるように）。数字は候補の数のまま
+  const 保存済 = _tnSavedNums();
+  const 隠した = [..._tnHidden()].some(n => _tn.items.some(it => it.num === n) && !保存済.has(n));
+  const 中身 = (候補.length || 隠した)
     ? '<button type="button" class="btn btn-secondary btn-xs tn-open" title="スマホから届いた追跡番号から選ぶ"'
       + ' onclick="_tnToggleMenu(this,event)">' + TN_TRAY_SVG + '<span class="cnt">' + 候補.length + '</span></button>'
     : '';
@@ -15674,7 +15718,7 @@ async function _tnAsk() {
     const ok = !!(r && r.ok && Array.isArray(r.items));
     _tn.items = ok ? r.items.filter(it => it && /^\d{11,13}$/.test(it.num)) : [];
     // 読めなかった回は数え直し（直ったときの「0 → N」を「届いた」と見ないため）
-    if (ok) _tn.fresh = true; else { _tn.fresh = false; _tn.prevBox = null; }
+    if (ok) { _tn.fresh = true; _tnPruneHidden(_tn.items); } else { _tn.fresh = false; _tn.prevBox = null; }
   } catch (e) {
     _tn.items = [];
     _tn.fresh = false; _tn.prevBox = null;
@@ -15708,12 +15752,47 @@ function _tnMenuEl() {
 function _tnFillMenu() {
   const m = _tnMenuEl();
   const 候補 = _tnCandidates();
-  if (候補.length === 0) { _tnCloseMenu(); return; }
+  // 隠した番号のうち、いま箱にあって案件にも入っていないもの（＝戻せば候補に出るもの）の数
+  const 保存済 = _tnSavedNums();
+  const 隠した = [..._tnHidden()].filter(n => _tn.items.some(it => it.num === n) && !保存済.has(n)).length;
+  if (候補.length === 0 && 隠した === 0) { _tnCloseMenu(); return; }
   m.innerHTML = '<div class="hd">' + ico('tray-in') + ' スマホから届いた番号</div>'
-    + 候補.map((it, i) =>
-        '<div class="it" onclick="_tnPick(' + i + ')"><b>' + escHtml(_tnMitame(it.num)) + '</b>'
-        + '<small>' + escHtml(_tnWhen(it.at)) + '</small></div>').join('');
+    + (候補.length
+        ? 候補.map((it, i) =>
+            '<div class="it" onclick="_tnPick(' + i + ')"><b>' + escHtml(_tnMitame(it.num)) + '</b>'
+            + '<small>' + escHtml(_tnWhen(it.at)) + '</small>'
+            + '<button type="button" class="x" title="この番号を隠す（使わない）" aria-label="この番号を隠す"'
+            + ' onclick="_tnHide(' + i + ',event)">✕</button></div>').join('')
+        : '<div class="hd">出せる番号はありません</div>')
+    + (隠した
+        ? '<div class="ft"><span>隠した番号 ' + 隠した + ' 件</span>'
+          + '<button type="button" onclick="_tnUnhideAll(event)">戻す</button></div>'
+        : '');
   m._list = 候補;
+}
+
+/** 行の ✕：この番号を隠す（10.8.0）。CaseFlow 側の localStorage に覚えるだけで、受け取り箱には書かない */
+function _tnHide(i, ev) {
+  if (ev) ev.stopPropagation();
+  const m = document.getElementById('tn-menu');
+  const it = m && m._list && m._list[i];
+  if (!it) return;
+  const 隠し = _tnHidden();
+  隠し.add(it.num);
+  _tnSaveHidden(隠し);
+  toast(_tnMitame(it.num) + ' を隠しました（一覧の下の「戻す」で元に戻せます）', 'info');
+  _tnFillMenu();
+  if (!m._list) return;           // 一覧が閉じたときはここまで
+  setTimeout(_tnSync, 0);
+}
+
+/** 一覧の下の「戻す」：隠した番号を全部もとに戻す */
+function _tnUnhideAll(ev) {
+  if (ev) ev.stopPropagation();
+  _tnSaveHidden(new Set());
+  toast('隠していた番号を戻しました', 'info');
+  _tnFillMenu();
+  setTimeout(_tnSync, 0);
 }
 
 function _tnToggleMenu(btn, ev) {
