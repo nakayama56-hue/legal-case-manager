@@ -3752,14 +3752,8 @@ body.cal-layout-hidden #case-calendar-wrap { display: none !important; }
   color: var(--text-muted); font-size: 13px; cursor: pointer; padding: 0; align-self: center;
 }
 #tn-menu .it .x:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
-#tn-menu .ft {
-  margin-top: 4px; padding: 6px 8px 4px; border-top: 1px solid var(--border-light, #e5e7eb);
-  font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; gap: 8px; align-items: center;
-}
-#tn-menu .ft button {
-  border: 0; background: transparent; color: var(--color-primary); cursor: pointer; font-size: 11px; padding: 2px 4px; border-radius: 4px;
-}
-#tn-menu .ft button:hover { background: #eff6ff; }
+/* 10.8.1：✕ は戻せない。押す前に「消します」と分かるよう、✕ に乗せている間は行の番号に取り消し線 */
+#tn-menu .it:has(.x:hover) b { text-decoration: line-through; color: var(--text-muted); }
 .tn-filled { animation: tn-flash 1.4s ease-out 1; }
 @keyframes tn-flash { from { background: #fdba74; } to { background: transparent; } }
 
@@ -4207,7 +4201,7 @@ body.jb-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.0</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.1</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -15539,7 +15533,7 @@ function dvTrackReturn(btn) {
      隠した番号は **CaseFlow 側の localStorage（tn_hidden_v1）に覚えるだけ**で、
      受け取り箱には書かない（殻に書く口を作らない、という設置時の決まりはそのまま）。
      箱から消えた番号（30 日で常駐が落とす）は、箱を読めた回に控えからも外す。
-     一覧の下の「戻す」で、隠した番号を全部もとに戻せる。
+     **戻す手段は無い（10.8.1。ご本人の「完全に消してよい」）。** 押したらその番号は CaseFlow に二度と出ない。
    ===================================================== */
 
 /** 5 秒おきに尋ねる。対象の欄が画面にある間だけ */
@@ -15667,10 +15661,7 @@ function _tnSync() {
   const 欄 = _tnTargets();
   if (欄.length === 0) { _tnCloseMenu(); return; }
   const 候補 = _tnCandidates();
-  // 候補が 0 でも、隠した番号が箱に残っていればボタンは出す（「戻す」に行けるように）。数字は候補の数のまま
-  const 保存済 = _tnSavedNums();
-  const 隠した = [..._tnHidden()].some(n => _tn.items.some(it => it.num === n) && !保存済.has(n));
-  const 中身 = (候補.length || 隠した)
+  const 中身 = 候補.length
     ? '<button type="button" class="btn btn-secondary btn-xs tn-open" title="スマホから届いた追跡番号から選ぶ"'
       + ' onclick="_tnToggleMenu(this,event)">' + TN_TRAY_SVG + '<span class="cnt">' + 候補.length + '</span></button>'
     : '';
@@ -15752,26 +15743,18 @@ function _tnMenuEl() {
 function _tnFillMenu() {
   const m = _tnMenuEl();
   const 候補 = _tnCandidates();
-  // 隠した番号のうち、いま箱にあって案件にも入っていないもの（＝戻せば候補に出るもの）の数
-  const 保存済 = _tnSavedNums();
-  const 隠した = [..._tnHidden()].filter(n => _tn.items.some(it => it.num === n) && !保存済.has(n)).length;
-  if (候補.length === 0 && 隠した === 0) { _tnCloseMenu(); return; }
+  if (候補.length === 0) { _tnCloseMenu(); return; }
   m.innerHTML = '<div class="hd">' + ico('tray-in') + ' スマホから届いた番号</div>'
-    + (候補.length
-        ? 候補.map((it, i) =>
-            '<div class="it" onclick="_tnPick(' + i + ')"><b>' + escHtml(_tnMitame(it.num)) + '</b>'
-            + '<small>' + escHtml(_tnWhen(it.at)) + '</small>'
-            + '<button type="button" class="x" title="この番号を隠す（使わない）" aria-label="この番号を隠す"'
-            + ' onclick="_tnHide(' + i + ',event)">✕</button></div>').join('')
-        : '<div class="hd">出せる番号はありません</div>')
-    + (隠した
-        ? '<div class="ft"><span>隠した番号 ' + 隠した + ' 件</span>'
-          + '<button type="button" onclick="_tnUnhideAll(event)">戻す</button></div>'
-        : '');
+    + 候補.map((it, i) =>
+        '<div class="it" onclick="_tnPick(' + i + ')"><b>' + escHtml(_tnMitame(it.num)) + '</b>'
+        + '<small>' + escHtml(_tnWhen(it.at)) + '</small>'
+        + '<button type="button" class="x" title="この番号を消す（使わない。戻せません）" aria-label="この番号を消す"'
+        + ' onclick="_tnHide(' + i + ',event)">✕</button></div>').join('');
   m._list = 候補;
 }
 
-/** 行の ✕：この番号を隠す（10.8.0）。CaseFlow 側の localStorage に覚えるだけで、受け取り箱には書かない */
+/** 行の ✕：この番号を消す（10.8.0 で「隠す」、10.8.1 で戻せない形に）。
+    CaseFlow 側の localStorage に覚えるだけで、受け取り箱には書かない。一覧が空になれば閉じる */
 function _tnHide(i, ev) {
   if (ev) ev.stopPropagation();
   const m = document.getElementById('tn-menu');
@@ -15780,17 +15763,7 @@ function _tnHide(i, ev) {
   const 隠し = _tnHidden();
   隠し.add(it.num);
   _tnSaveHidden(隠し);
-  toast(_tnMitame(it.num) + ' を隠しました（一覧の下の「戻す」で元に戻せます）', 'info');
-  _tnFillMenu();
-  if (!m._list) return;           // 一覧が閉じたときはここまで
-  setTimeout(_tnSync, 0);
-}
-
-/** 一覧の下の「戻す」：隠した番号を全部もとに戻す */
-function _tnUnhideAll(ev) {
-  if (ev) ev.stopPropagation();
-  _tnSaveHidden(new Set());
-  toast('隠していた番号を戻しました', 'info');
+  toast(_tnMitame(it.num) + ' を消しました', 'info');
   _tnFillMenu();
   setTimeout(_tnSync, 0);
 }
