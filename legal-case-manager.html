@@ -2471,6 +2471,39 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
 /* 溢れているタイルにだけ「続きを読む」を出す（判定は refreshClamps）*/
 .is-overflowing > .clamp-more { display: inline-block; }
 
+/* 備考・メモは「見出しの行、押すと開く」（2026年10月28日、10.8.6。案C）。
+   タイル（.memo-grid／.memo-card）は 8.4.4〜10.8.5 の形。メールの要約を入れるようになって 1 件が長くなり、
+   狭いタイルに箇条書きが折り返して読みづらくなったため（ご本人の「一見して内容がわかるようにしたい」）。
+   1 件 1 行（日付・見出し・冒頭の薄い字）、押すと下に開く。いちばん新しい 1 件は最初から開く。新しい順。
+   見出しは 1 行目（自由に書いたメモは最初の文）。箇条書きは 2 行目以降をぶら下げ、「期限：」は琥珀の札、「添付：」は薄い字。
+   .memo-grid／.memo-card の CSS は面談記録のクランプと共用の都合で残してある（いまメモでは使っていない） */
+.memo-acc { border: 1px solid var(--border-light); border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.6); }
+.memo-row { border-bottom: 1px solid var(--border-light); }
+.memo-row:last-child { border-bottom: 0; }
+.memo-row-hd { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 14px; cursor: pointer; }
+.memo-row-hd:hover { background: #f3f7ff; }
+.memo-row.open > .memo-row-hd { background: #eef5ff; }
+.memo-row-t { font-size: 13.5px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.memo-row-t .ico { color: var(--color-primary); margin-right: 5px; vertical-align: -2px; }
+.memo-row-s { font-weight: 400; color: var(--text-muted); font-size: 12px; margin-left: 10px; }
+.memo-row.open .memo-row-s { display: none; }
+.memo-row-chev { font-size: 11px; color: var(--text-muted); transition: transform .15s; }
+.memo-row.open .memo-row-chev { transform: rotate(90deg); }
+.memo-row-bd { display: none; padding: 4px 14px 14px 108px; }
+.memo-row.open > .memo-row-bd { display: block; }
+.memo-row-text { font-size: 13px; line-height: 1.65; color: var(--text-primary); word-break: normal; overflow-wrap: break-word; line-break: strict; }
+.memo-row-text .li { padding-left: 1.1em; text-indent: -1.1em; margin: 1px 0; }
+.memo-row-text .due { display: inline-block; margin-top: 5px; padding: 3px 9px; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; color: #92400e; font-weight: 600; }
+.memo-row-text .att { margin-top: 4px; color: var(--text-muted); font-size: 12px; }
+.memo-row-text .free { margin: 0; white-space: pre-wrap; }
+.memo-row-text .gap { height: 6px; }
+.memo-row-ops { display: flex; gap: 4px; margin-top: 8px; }
+@media (max-width: 768px) {
+  .memo-row-hd { grid-template-columns: 76px minmax(0, 1fr) auto; padding: 8px 10px; }
+  .memo-row-bd { padding-left: 10px; padding-right: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .memo-row-chev { transition: none; } }
+
 
 /* 定型文ピッカー */
 .teikei-picker {
@@ -4309,7 +4342,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.5</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.6</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -10574,6 +10607,50 @@ function togglePin(caseId) {
 }
 
 /** メモ一覧をHTMLで返す */
+/* 備考・メモの行（10.8.6、案C）。開いている行は _memoOpen（メモの id。画面を離れても持ち続けるが、保存はしない） */
+const _memoOpen = new Set();
+/** 行に分け、行をまたぐ印（<mark>）は行の終わりで閉じて次の行で開き直す（各行がそれだけで完結した HTML になる） */
+function _memoLines(text) {
+  let open = null;
+  return String(text || '').replace(/\r\n?/g, '\n').split('\n').map(raw => {
+    let line = (open ? `<mark class="${open}">` : '') + raw;
+    for (const t of line.match(/<mark class="hl-(?:yellow|blue|green|pink)">|<\/mark>/g) || []) open = t === '</mark>' ? null : t.slice(13, -2);
+    if (open) line += '</mark>';
+    return line;
+  });
+}
+const _memoPlain = (x) => String(x || '').replace(/<\/?mark[^>]*>/g, '');
+/** 1 行目を見出しに、残りを本文に。1 行だけのメモは最初の文（。まで・30 字まで）を見出しにする。印の入った行は文で切らない。
+ *  cut：見出しを 1 行目から切り出し、その 1 行目が本文にも残っているとき（冒頭の薄い字に同じ字を出さないため） */
+function _memoSplit(text) {
+  const lines = _memoLines(text);
+  const first = lines[0] || '';
+  const p = _memoPlain(first);
+  if (lines.length > 1 && p.length <= 40) return { head: first, body: lines.slice(1), cut: false };
+  if (p === first) {
+    const k = first.indexOf('。');
+    if (k > 0 && k < 30) return { head: first.slice(0, k + 1), body: [first.slice(k + 1).trim(), ...lines.slice(1)].filter((x, i) => x || i > 0), cut: false };
+    if (first.length > 30) return { head: first.slice(0, 30) + '…', body: lines, cut: true };
+    return { head: first, body: lines.slice(1), cut: false };
+  }
+  return p.length <= 40 ? { head: first, body: lines.slice(1), cut: false } : { head: p.slice(0, 30) + '…', body: lines, cut: true };
+}
+/** 本文の行を描く（行はすでに _memoLines で完結している） */
+function _memoBodyHtml(lines) {
+  return lines.map(line => {
+    const plain = _memoPlain(line);
+    if (!plain.trim()) return '<div class="gap"></div>';
+    if (/^[・•]/.test(plain)) return `<div class="li">${renderHl(line)}</div>`;
+    if (/^期限[：:]/.test(plain)) return `<div><span class="due">⏰ ${renderHl(line)}</span></div>`;
+    if (/^添付[：:]/.test(plain)) return `<div class="att">📎 ${renderHl(line.replace(/^(<mark[^>]*>)?添付[：:]/, '$1'))}</div>`;
+    return `<p class="free">${renderHl(line)}</p>`;
+  }).join('');
+}
+function toggleMemoRow(caseId, memoId) {
+  if (_memoOpen.has(memoId)) _memoOpen.delete(memoId); else _memoOpen.add(memoId);
+  const row = document.getElementById(`memo-card-${memoId}`);
+  if (row) row.classList.toggle('open', _memoOpen.has(memoId));
+}
 function renderMemoList(c) {
   // 旧形式(c.memo文字列)を移行
   if (!c.memos) {
@@ -10583,19 +10660,31 @@ function renderMemoList(c) {
   if (c.memos.length === 0) {
     return '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">メモはありません</div>';
   }
-  // DOM に入るのはこの文字列が差し込まれたあと。溢れ判定はその後に回す
-  setTimeout(_observeClampGrids, 0);
-  return `<div class="memo-grid">` + c.memos.map((m, i) => `
-    <div class="memo-card" id="memo-card-${m.id}">
-      <div class="memo-card-header">
+  // 新しい順（同じ日付なら、あとに足したものが上）。保存の並び（古い順）は変えない
+  const list = c.memos.map((m, i) => ({ m, i })).sort((x, y) => (y.m.date || '').localeCompare(x.m.date || '') || y.i - x.i).map(x => x.m);
+  if (!list.some(m => _memoOpen.has(m.id))) _memoOpen.add(list[0].id);
+  return `<div class="memo-acc">` + list.map(m => {
+    const { head, body, cut } = _memoSplit(m.text || '');
+    const plainHead = _memoPlain(head);
+    const isMail = /からの受信メール（/.test(plainHead);
+    const preview = _memoPlain(body.slice(cut ? 1 : 0).find(l => _memoPlain(l).trim()) || '');
+    const bodyHtml = _memoBodyHtml(body);
+    return `
+    <div class="memo-row${_memoOpen.has(m.id) ? ' open' : ''}" id="memo-card-${m.id}">
+      <div class="memo-row-hd" onclick="toggleMemoRow('${c.id}','${m.id}')" title="${escHtml(plainHead)}">
         <span class="memo-card-date">${formatDate(m.date) || m.date || '日付なし'}</span>
-        <button class="btn btn-secondary btn-xs no-print" onclick="openMemoModal('${c.id}','${m.id}')" style="margin-left:auto">${ico('edit')} 編集</button>
-        <button class="btn btn-xs no-print" onclick="deleteMemoItem('${c.id}','${m.id}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#dc2626">✕</button>
+        <span class="memo-row-t">${isMail ? ico('mail') : ''}${renderHl(head)}${preview ? `<span class="memo-row-s">${escHtml(preview)}</span>` : ''}</span>
+        <span class="memo-row-chev">▶</span>
       </div>
-      <div class="memo-card-text clamp-text" id="memo-text-${m.id}">${renderHl(m.text||'')}</div>
-      <button type="button" class="clamp-more no-print" onclick="toggleClampCard(this)">続きを読む</button>
-    </div>
-  `).join('') + `</div>`;
+      <div class="memo-row-bd">
+        ${bodyHtml ? `<div class="memo-row-text" id="memo-text-${m.id}">${bodyHtml}</div>` : ''}
+        <div class="memo-row-ops no-print">
+          <button class="btn btn-secondary btn-xs" onclick="openMemoModal('${c.id}','${m.id}')">${ico('edit')} 編集</button>
+          <button class="btn btn-xs" onclick="deleteMemoItem('${c.id}','${m.id}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#dc2626">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
 }
 
 /* 6行クランプ＋「続きを読む」は、備考・メモ（.memo-card）と
@@ -10710,7 +10799,9 @@ function saveMemoModal() {
     const m = c.memos.find(m => m.id === memoId);
     if (m) { m.date = document.getElementById('f-memo-date').value || today(); m.text = text; }
   } else {
-    c.memos.push({ id: genId(), date: document.getElementById('f-memo-date').value || today(), text });
+    const nm = { id: genId(), date: document.getElementById('f-memo-date').value || today(), text };
+    c.memos.push(nm);
+    _memoOpen.add(nm.id);   // 足したメモは開いた状態で出す（10.8.6）
   }
   c.memos.sort((a, b) => (a.date||'').localeCompare(b.date||''));
   saveToStorage();
