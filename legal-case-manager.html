@@ -3861,6 +3861,55 @@ body.viewer-mode [onclick*="addJikenboLooseRow"], body.viewer-mode [onclick*="jb
 /* 事件簿の窓（?view=jikenbo）：自分を開くボタンと保存は出さない（保存は本体の窓から）。歯車は残す */
 body.jb-window #btn-header-jikenbo, body.jb-window #btn-header-backup, body.jb-window #btn-header-mail { display: none !important; }
 body.jb-window .logo-home { cursor: default; }
+/* ---- 職務上請求書（Excel の管理台帳への入力補助。10.8.4）。帯は事件簿の .jb-bar を借りる ---- */
+body.sk-window #btn-header-jikenbo, body.sk-window #btn-header-backup, body.sk-window #btn-header-mail, body.sk-window #btn-header-shokumu { display: none !important; }
+body.sk-window .logo-home { cursor: default; }
+.sk-chip { display: inline-block; border-radius: 999px; padding: 3px 11px; font-size: 12px; background: var(--bg-primary); color: var(--text-secondary); white-space: nowrap; }
+.sk-chip.on { background: #e3edf9; color: var(--color-primary); font-weight: 700; }
+.sk-chip.warn { background: #fef3c7; color: #92400e; font-weight: 700; }
+.sk-msg { margin: 10px 14px 0; padding: 8px 12px; border-radius: 8px; font-size: 12.5px; background: var(--bg-primary); color: var(--text-secondary); }
+.sk-msg.err { background: #fee2e2; color: #991b1b; }
+.sk-scroll { margin: 12px 14px 0; max-height: calc(100vh - 400px); min-height: 160px; overflow: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+.sk-table { width: 100%; min-width: 760px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 13px; }
+.sk-table th { position: sticky; top: 0; z-index: 1; background: var(--bg-primary); text-align: left; font-weight: 700; color: var(--text-secondary); padding: 7px 10px; border-bottom: 1px solid var(--border-color); font-size: 12px; cursor: default; }
+.sk-table th.no { text-align: right; }
+.sk-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sk-table td.no { color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+.sk-table tbody tr { cursor: default; }
+.sk-table tbody tr:hover { transform: none; box-shadow: none; }
+.sk-table tr.sk-next td { background: #e9f2fd; }
+.sk-table tr.sk-next td.no { color: var(--color-primary); font-weight: 700; }
+.sk-table tr.sk-empty td { color: #c4ccd6; }
+.sk-kb { display: inline-block; border-radius: 4px; padding: 1px 8px; font-size: 11.5px; border: 1px solid #cbd5e1; background: #f8fafc; color: var(--text-primary); }
+.sk-kb.j { border-color: #9fc0e8; color: var(--color-primary); background: #eaf2fc; }
+.sk-arrow { color: var(--color-primary); font-size: 12px; font-weight: 700; }
+.sk-form { padding: 12px 14px 10px; border-top: 1px solid var(--border-color); margin-top: 12px; }
+.sk-form.off { opacity: .55; pointer-events: none; }
+.sk-row { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; }
+.sk-fld label { display: block; font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; }
+.sk-inline { display: inline-flex; align-items: center; gap: 8px; }
+.sk-fld .form-control { height: 34px; padding: 0 10px; font-size: 13.5px; width: auto; }
+#sk-date { width: 150px; }
+#sk-to { width: 190px; }
+.sk-wareki { color: var(--color-primary); font-weight: 700; font-size: 13.5px; white-space: nowrap; }
+.sk-seg { display: inline-flex; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; height: 34px; background: #fff; }
+.sk-seg-btn { border: none; border-right: 1px solid #cbd5e1; background: #fff; padding: 0 12px; font-size: 13px; font-family: inherit; color: var(--text-primary); cursor: pointer; white-space: nowrap; }
+.sk-seg-btn:last-child { border-right: none; }
+.sk-seg-btn.on { background: var(--color-primary); color: #fff; font-weight: 700; }
+.sk-seg-free { border: none; outline: none; padding: 0 10px; font-size: 13px; font-family: inherit; width: 110px; background: #fff; color: var(--text-primary); }
+.sk-seg-free.on { background: #e3edf9; }
+.sk-stepper { display: inline-flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 8px; height: 34px; overflow: hidden; background: #fff; }
+.sk-stepper button { width: 30px; height: 100%; border: none; background: none; color: var(--text-secondary); cursor: pointer; font-size: 14px; font-family: inherit; }
+.sk-stepper input { width: 46px; height: 100%; border: none; outline: none; text-align: center; font-size: 15px; font-family: inherit; -moz-appearance: textfield; }
+.sk-stepper input::-webkit-outer-spin-button, .sk-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.sk-fld-btn .btn { height: 34px; padding: 0 16px; font-size: 13px; font-weight: 700; }
+.sk-preview { margin: 0 0 12px; min-height: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 12.5px; }
+.sk-preview:empty { display: none; }
+.sk-pv-what { font-weight: 700; }
+.sk-pv-what i { font-style: normal; color: var(--color-primary); }
+.sk-pv-note { color: var(--text-muted); }
+.sk-pv-warn { color: #92400e; background: #fef3c7; border-radius: 6px; padding: 4px 10px; }
+.sk-foot-note { margin-top: 10px; font-size: 11.5px; color: var(--text-muted); }
 @media print {
   /* 事件簿の紙面（printJikenbo）。A4横・1ページ10件（1件2行）。向きは @page（printJikenbo が差し込む）、余白は .jb-page の padding */
   #print-area.jb-print { padding: 0; font-size: 11pt; line-height: 1.2; color: #000; background: #fff;
@@ -3962,6 +4011,7 @@ body.jb-window .logo-home { cursor: default; }
         <span class="logo-home" onclick="showView('cases')" title="案件一覧へ戻る" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('cases');}"><svg class="app-logo-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></svg><span id="header-logo-text" class="app-logo-word">Case<span class="app-logo-flow">Flow</span></span></span></div>
       <div class="header-actions">
         <button class="btn btn-secondary" onclick="openMailWindow()" id="btn-header-mail" title="メール（MailFlow をこの中の窓で開く）" style="padding:5px 12px;font-size:12px;font-weight:700;position:relative" hidden><svg class="ico" aria-hidden="true"><use href="#i-mail"></use></svg><span class="btn-header-mail-label" style="margin-left:5px">メール</span><span id="mail-unread" class="mail-unread" hidden></span></button>
+        <button class="btn btn-secondary" onclick="openShokumuWindow()" id="btn-header-shokumu" title="職務上請求書の管理台帳（Excel）に行を書き足す" style="padding:5px 12px;font-size:12px;font-weight:700" hidden><svg class="ico" aria-hidden="true"><use href="#i-ledger"></use></svg><span class="btn-header-sk-label" style="margin-left:5px">職務上請求</span></button>
         <button class="btn btn-secondary" onclick="openJikenboWindow()" id="btn-header-jikenbo" title="事件簿（全案件の受託番号順）" style="padding:5px 12px;font-size:12px;font-weight:700"><svg class="ico" aria-hidden="true"><use href="#i-book-open"></use></svg><span class="btn-header-jb-label" style="margin-left:5px">事件簿</span></button>
         <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存" style="padding:5px 12px;font-size:12px;font-weight:700"><svg class="ico" aria-hidden="true"><use href="#i-save"></use></svg><span class="btn-header-backup-label" style="margin-left:5px">保存</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
@@ -4199,13 +4249,42 @@ body.jb-window .logo-home { cursor: default; }
         </div>
       </div>
 
+<!-- ===== 職務上請求書 VIEW（10.8.4。Excel の管理台帳への入力補助。作りは CLAUDE.md 7-12 章） ===== -->
+      <div id="view-shokumu" class="view" style="padding-bottom:40px">
+        <div class="table-container">
+          <div class="jb-bar" id="sk-bar"></div>
+          <div class="sk-msg" id="sk-msg" hidden></div>
+          <div class="sk-scroll" id="sk-scroll">
+            <table class="sk-table">
+              <colgroup><col style="width:52px"><col style="width:120px"><col style="width:220px"><col><col style="width:90px"><col style="width:130px"></colgroup>
+              <thead><tr><th class="no">№</th><th>年月日</th><th>業務の種類</th><th>請求先</th><th>区分</th><th></th></tr></thead>
+              <tbody id="sk-tbody"></tbody>
+            </table>
+          </div>
+          <div class="sk-form" id="sk-form">
+            <div class="sk-preview" id="sk-preview"></div>
+            <div class="sk-row">
+              <div class="sk-fld"><label>年月日</label><span class="sk-inline"><input type="date" class="form-control" id="sk-date" onchange="skSetDate(this.value)" oninput="skSetDate(this.value)"><span class="sk-wareki" id="sk-wareki"></span></span></div>
+              <div class="sk-fld"><label>業務の種類</label><span class="sk-seg" id="sk-types">
+                <button type="button" class="sk-seg-btn" data-v="不動産登記" onclick="skSetType('不動産登記')">不動産登記</button><button type="button" class="sk-seg-btn" data-v="法定相続情報一覧図" onclick="skSetType('法定相続情報一覧図')">法定相続情報一覧図</button><button type="button" class="sk-seg-btn" data-v="商業登記" onclick="skSetType('商業登記')">商業登記</button><button type="button" class="sk-seg-btn" data-v="裁判所提出書類作成" onclick="skSetType('裁判所提出書類作成')">裁判所提出書類作成</button><input type="text" class="sk-seg-free" id="sk-type-free" placeholder="その他…" oninput="skSetTypeFree(this.value)" onfocus="if(this.value.trim())skSetType('')">
+              </span></div>
+              <div class="sk-fld"><label>請求先</label><span class="sk-inline"><input type="text" class="form-control" id="sk-to" list="sk-to-list" placeholder="板橋区役所" oninput="skSetTo(this.value)" onchange="skSetTo(this.value)"><datalist id="sk-to-list"></datalist><button type="button" class="btn btn-secondary btn-sm" onclick="skOpenRecent(this)" title="最近使った請求先・よく使う請求先から選ぶ">↺ 最近</button></span></div>
+              <div class="sk-fld"><label>区分（○印の位置）</label><span class="sk-seg" id="sk-kubun"><button type="button" class="sk-seg-btn" data-v="戸籍" onclick="skSetKubun('戸籍')">戸籍</button><button type="button" class="sk-seg-btn" data-v="住民票" onclick="skSetKubun('住民票')">住民票</button></span></div>
+              <div class="sk-fld"><label>件数</label><span class="sk-stepper"><button type="button" onclick="skStepCount(-1)" aria-label="減らす">−</button><input type="number" id="sk-count" min="1" max="99" value="1" onchange="skSetCount(this.value)" oninput="skSetCount(this.value)"><button type="button" onclick="skStepCount(1)" aria-label="増やす">＋</button></span></div>
+              <div class="sk-fld sk-fld-btn"><label>&nbsp;</label><button type="button" class="btn btn-primary" id="sk-write" onclick="skWrite()" disabled>Excel に書き込む</button></div>
+            </div>
+            <div class="sk-foot-note">訂正・削除と、100 枚を使い切ったあとの新しい冊づくりは、これまでどおり Excel で。書く前の写しは「控え」フォルダに残ります。</div>
+          </div>
+        </div>
+      </div>
+
 <!-- ===== SETTINGS VIEW ===== -->
       <div id="view-settings" class="view">
         <!-- ★ 版の数字を書くのはここ1か所だけ（10.0.7）。
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.2</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.4</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5906,7 +5985,7 @@ function _isNativeApp() { return location.protocol === 'caseflow:'; }
    ・Chrome 版・閲覧用・事件簿の窓では出さない（口が無い）
    ===================================================== */
 function _mailNative() {
-  return _isNativeApp() && !_isJikenboWindow() && window.__caseflowMailEnabled !== false
+  return _isNativeApp() && !_isSubWindow() && window.__caseflowMailEnabled !== false
     && !!(window.CaseFlowNative && typeof window.CaseFlowNative.openMail === 'function');
 }
 function _mailButtonSetup() {
@@ -6138,6 +6217,8 @@ function renderMigratedCard() {
 
 function init() {
   if (_isJikenboWindow()) _setupJikenboWindow();
+  if (_isShokumuWindow()) _setupShokumuWindow();
+  _skButtonSetup();
   _calLayoutApply(_calLayoutGet());   // カレンダーの見せ方（10.7.5）。描く前に置き場を決める
   _setupViewerMode();
   _setupMigratedMode();
@@ -6402,6 +6483,7 @@ function deadlineBadge(dateStr, status) {
 function showView(name) {
   // 事件簿の窓（?view=jikenbo）は事件簿専用。案件一覧へ戻る道（左上のロゴ・「戻る」）は事件簿へ戻す
   if (name === 'cases' && _isJikenboWindow()) name = 'jikenbo';
+  if (name === 'cases' && _isShokumuWindow()) name = 'shokumu';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   // サイドバーの nav-item は 10.0.7 で廃止した。いまどの画面にいるかを示すのは
@@ -6425,11 +6507,11 @@ function showView(name) {
 
   const titles = {
     cases: 'CaseFlow', 'case-detail': '案件詳細',
-    settings: 'データ管理', jikenbo: '事件簿'
+    settings: 'データ管理', jikenbo: '事件簿', shokumu: '職務上請求書'
   };
   // 見出しの二色の塗り分け（前半＝青／後半＝橙）。ロゴの Case／Flow と同じ。
   // 見出しを足すときはここにも足す。無い見出しは青一色で出る
-  const titleSplit = { '案件詳細': ['案件', '詳細'], 'データ管理': ['データ', '管理'], '事件簿': ['事件', '簿'] };
+  const titleSplit = { '案件詳細': ['案件', '詳細'], 'データ管理': ['データ', '管理'], '事件簿': ['事件', '簿'], '職務上請求書': ['職務上', '請求書'] };
   const _title = titles[name] || '';
   const _logoTxt = document.getElementById('header-logo-text');
   if (_logoTxt) {
@@ -6475,6 +6557,7 @@ function showView(name) {
   }
   else if (name === 'settings') { renderSnapshotList(); renderShortcutInputs(); initAppearance(); renderTeikeiSettings(); renderIssuesCard(); }
   else if (name === 'jikenbo') { renderJikenbo(); _jbScrollToBottom(); }
+  else if (name === 'shokumu') { renderShokumu(); }
 }
 
 /* =====================================================
@@ -7759,7 +7842,7 @@ const _jp = { cache: {}, lastRun: null, lastTry: 0, lastError: null, busy: false
 // 本体は「置き場（#gcal-host）がいま画面のどこにあるか」と「隠すべきか（別の画面・モーダルの間）」を殻へ知らせるだけ。
 // 殻は本物の Google カレンダー（WKWebView）をその位置に重ねる。データのやりとりは無い
 function _gcalNative() {
-  return _isNativeApp() && !_isJikenboWindow() && !!(window.CaseFlowNative && typeof window.CaseFlowNative.gcalFrame === 'function');
+  return _isNativeApp() && !_isSubWindow() && !!(window.CaseFlowNative && typeof window.CaseFlowNative.gcalFrame === 'function');
 }
 var _gcalLast = '';
 var _gcalRaf = 0;
@@ -8087,14 +8170,14 @@ function _jpRender() {
 
 /** 起動時（init の末尾）：5 秒後に 1 回確かめ、以後 5 分ごとに「30 分たったか」を見る。事件簿の窓では確かめない */
 function _jpStart() {
-  if (!_jpNative() || _isJikenboWindow()) return;
+  if (!_jpNative() || _isSubWindow()) return;
   setTimeout(() => _jpCheck(true), 5000);
   if (!_jp.timer) _jp.timer = setInterval(() => _jpCheck(false), JP_TICK_MS);
 }
 
 /** 日本郵便に確かめる。force でなければ 30 分に 1 回まで。起動の 1 回（init の 5 秒後）までは force でしか動かない */
 async function _jpCheck(force) {
-  if (!_jpNative() || _isJikenboWindow()) return;
+  if (!_jpNative() || _isSubWindow()) return;
   _jpEnsureLoaded();
   if (_jp.busy) return;
   if (!force) {
@@ -12623,6 +12706,508 @@ function _onOtherWindowSaved(key) {
   }
   // case-detail は今までどおり描き直さない（入力中の欄が消えるため）
   console.log('[事件簿] ほかの窓の保存を読み直しました: ' + key + '（画面 ' + name + '）');
+}
+
+/* =====================================================
+   職務上請求書の管理台帳（Excel）への入力補助（10.8.4。2026年10月28日。立案・実装とも Fable）
+   ゴロウさんの「職務上請求書フォルダの Excel を事件簿のように CaseFlow に取り込み、日付・業務の種類・請求先・区分を簡単に入力したい。
+   ただしあくまでも Excel を使うので入力補助だけ」から。設計書 ~/secretary/職務上請求書_入力補助_設計書.md。作りは CLAUDE.md 7-12 章
+   ・正本は Dropbox の `職務上請求書/N_管理台帳（1号）.xlsx`（日司連の1号様式。1冊＝100行）。CaseFlow はデータを持たない。
+     開くたびに Excel を読んで一覧に出し、入力の帯で入れた行を「次の空き行」に書き込む（追加だけ。訂正・削除は Excel で）
+   ・書き方：xlsx（ZIP）の中の sheet1.xml のセルと drawing1.xml の○印（楕円）の位置だけを差し替え、ほかの部品は 1 バイトも変えずに組み直す。
+     区分の列は全行「戸籍・住民票」と印字してあり、楕円を左右に動かして選ぶ作りなので、○印の位置＝区分
+   ・歯止め：Excel で開いている間（~$ のロックファイルがある）は書かない／書く直前に読み直して次の№を確かめる／書く前に `控え/` へ写しを残す／
+     書いたあと読み直して、入ったことを確かめる／残りを超える件数は断る／最新の冊にだけ書く
+   ・Mac アプリだけ（親フォルダ「中山事務所」の取っ手が要る）。Chrome 版・閲覧用ではボタンが hidden のまま
+   ===================================================== */
+const SK_DIR = '職務上請求書';
+const SK_BACKUP_DIR = '控え';
+const SK_FILE_RE = /^(\d+)_管理台帳（1号）\.xlsx$/;
+const SK_TYPES = ['不動産登記', '法定相続情報一覧図', '商業登記', '裁判所提出書類作成'];
+const SK_KUBUN = ['戸籍', '住民票'];
+/* ○印（楕円）の横位置（EMU）。3冊の実物から：左に寄せた楕円は from 36,000〜118,000、右に寄せた楕円は 580,000〜653,000。
+   書くときはこの代表値に置く。読むときは 300,000 を境に左右を決める */
+const SK_CIRCLE = { '戸籍': { from: 63497, to: 498926 }, '住民票': { from: 598707, to: 1034136 } };
+const SK_CIRCLE_SPLIT = 300000;
+const SK_ROWS = 100;
+const _sk = { root: null, dir: null, files: [], cur: 0, book: null, books: {}, locked: new Set(), status: 'idle', msg: '', busy: false, backups: 0,
+              form: { date: '', type: SK_TYPES[0], typeFree: '', to: '', kubun: '戸籍', count: 1 }, toFreq: null };
+
+function _isShokumuWindow() {
+  try { return new URLSearchParams(location.search).get('view') === 'shokumu'; } catch (e) { return false; }
+}
+/** 事件簿の窓か職務上請求書の窓（本体の窓ではない）。控えの自動作成・Google カレンダー・メール・日本郵便はこれらの窓では動かさない */
+function _isSubWindow() { return _isJikenboWindow() || _isShokumuWindow(); }
+function _setupShokumuWindow() {
+  document.body.classList.add('sk-window');
+  document.title = '職務上請求書 - CaseFlow';
+}
+/** Mac アプリで、親フォルダの取っ手の道具（殻の FSA）と ZIP の展開・圧縮の部品があるときだけ */
+function _skNative() {
+  return _cfNative() && typeof DecompressionStream === 'function' && typeof CompressionStream === 'function';
+}
+function _skButtonSetup() {
+  const b = document.getElementById('btn-header-shokumu');
+  if (b) b.hidden = !(_skNative() && !_isSubWindow() && !window.__VIEWER_MODE__);
+}
+/** ヘッダーの「職務上請求」ボタン。事件簿と同じく、同じページを ?view=shokumu で別の窓に開く（殻がアプリの中の窓にする） */
+function openShokumuWindow() {
+  if (_isShokumuWindow()) { showView('shokumu'); return; }
+  const u = location.href.split('#')[0].split('?')[0] + '?view=shokumu';
+  let w = null;
+  try { w = window.open(u, '_blank', 'width=1180,height=900'); } catch (e) {}
+  if (w) { try { w.focus(); } catch (e) {} }
+}
+
+/* ---- 様式の位置：1冊＝100行。1ページに左右2段×25行（№1〜25 は B〜I 列の 9〜33 行、№26〜50 は J〜P 列、2ページ目は 42〜66 行）。
+   業務の種類は D:G（右段 L:N）の結合セル。○印の楕円は I 列（0始まりで col 8）／P 列（col 15）に置いてある ---- */
+function _skCell(no) {
+  const i = no - 1, page = Math.floor(i / 50), inPage = i % 50, right = inPage >= 25, r = (page ? 42 : 9) + (inPage % 25);
+  return right ? { date: 'K' + r, type: 'L' + r, to: 'O' + r, kubun: 'P' + r, ccol: 15, crow: r }
+               : { date: 'C' + r, type: 'D' + r, to: 'H' + r, kubun: 'I' + r, ccol: 8,  crow: r };
+}
+function _skNoAt(col, row) {
+  if (col !== 8 && col !== 15) return 0;
+  let base;
+  if (row >= 9 && row <= 33) base = row - 8;
+  else if (row >= 42 && row <= 66) base = row - 41 + 50;
+  else return 0;
+  return col === 15 ? base + 25 : base;
+}
+/** 令和の書き方「8・10・28」（Excel の実物に合わせる。0 は付けない） */
+function _skWareki(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return '';
+  const y = +m[1] - 2018;
+  if (y < 1) return '';
+  return `${y}・${+m[2]}・${+m[3]}`;
+}
+
+/* ---- ZIP（xlsx）の読み書き。部品ごとの圧縮済みのバイト列をそのまま持ち、差し替えた部品だけ圧縮し直す ---- */
+function _skZipRead(buf) {
+  const u8 = new Uint8Array(buf), dv = new DataView(buf), dec = new TextDecoder();
+  let e = u8.length - 22;
+  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('xlsx（ZIP）の終わりが見つかりません');
+  const n = dv.getUint16(e + 10, true), cdOff = dv.getUint32(e + 16, true);
+  const entries = [];
+  let p = cdOff;
+  for (let k = 0; k < n; k++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('xlsx（ZIP）の目次が壊れています');
+    const method = dv.getUint16(p + 10, true), time = dv.getUint16(p + 12, true), date = dv.getUint16(p + 14, true);
+    const crc = dv.getUint32(p + 16, true), csize = dv.getUint32(p + 20, true), size = dv.getUint32(p + 24, true);
+    const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+    const name = dec.decode(u8.subarray(p + 46, p + 46 + nlen));
+    if (dv.getUint32(lho, true) !== 0x04034b50) throw new Error('xlsx（ZIP）の部品の頭が壊れています: ' + name);
+    const dataOff = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true);
+    entries.push({ name, method, time, date, crc, size, comp: u8.slice(dataOff, dataOff + csize), changed: false });
+    p += 46 + nlen + xlen + clen;
+  }
+  return entries;
+}
+async function _skInflate(ent) {
+  if (ent.method === 0) return ent.comp;
+  if (ent.method !== 8) throw new Error('知らない圧縮の形です（' + ent.method + '）: ' + ent.name);
+  const out = new Response(new Blob([ent.comp]).stream().pipeThrough(new DecompressionStream('deflate-raw')));
+  return new Uint8Array(await out.arrayBuffer());
+}
+async function _skDeflate(u8) {
+  const out = new Response(new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate-raw')));
+  return new Uint8Array(await out.arrayBuffer());
+}
+async function _skEntryText(entries, name) {
+  const e = entries.find(x => x.name === name);
+  if (!e) throw new Error(name + ' が xlsx の中にありません');
+  return new TextDecoder().decode(await _skInflate(e));
+}
+async function _skEntrySetText(entries, name, text) {
+  const e = entries.find(x => x.name === name);
+  if (!e) throw new Error(name + ' が xlsx の中にありません');
+  const raw = new TextEncoder().encode(text);
+  e.size = raw.length; e.crc = _jbCrc32(raw) >>> 0; e.comp = await _skDeflate(raw); e.method = 8; e.changed = true;
+}
+function _skZipWrite(entries) {
+  const enc = new TextEncoder(), parts = [], central = [];
+  let off = 0;
+  for (const e of entries) {
+    const name = enc.encode(e.name);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0, true); lh.setUint16(8, e.method, true);
+    lh.setUint16(10, e.time, true); lh.setUint16(12, e.date, true); lh.setUint32(14, e.crc, true);
+    lh.setUint32(18, e.comp.length, true); lh.setUint32(22, e.size, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0, true); ch.setUint16(10, e.method, true);
+    ch.setUint16(12, e.time, true); ch.setUint16(14, e.date, true); ch.setUint32(16, e.crc, true);
+    ch.setUint32(20, e.comp.length, true); ch.setUint32(24, e.size, true); ch.setUint16(28, name.length, true);
+    ch.setUint16(30, 0, true); ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true); ch.setUint32(38, 0, true); ch.setUint32(42, off, true);
+    parts.push(new Uint8Array(lh.buffer), name, e.comp);
+    central.push(new Uint8Array(ch.buffer), name);
+    off += 30 + name.length + e.comp.length;
+  }
+  const cdSize = central.reduce((a, b) => a + b.length, 0);
+  const eo = new DataView(new ArrayBuffer(22));
+  eo.setUint32(0, 0x06054b50, true); eo.setUint16(4, 0, true); eo.setUint16(6, 0, true);
+  eo.setUint16(8, entries.length, true); eo.setUint16(10, entries.length, true); eo.setUint32(12, cdSize, true); eo.setUint32(16, off, true); eo.setUint16(20, 0, true);
+  return new Blob([...parts, ...central, new Uint8Array(eo.buffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+/* ---- sheet1.xml・sharedStrings.xml・drawing1.xml の読み書き（正規表現で、該当のセル・楕円だけを触る） ---- */
+function _skXmlUnesc(s) {
+  return String(s).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(+n)).replace(/&#x([0-9a-f]+);/gi, (m, n) => String.fromCodePoint(parseInt(n, 16))).replace(/&amp;/g, '&');
+}
+function _skXmlEsc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+/** 共有文字列。ふりがな（<rPh>）は字に含めない */
+function _skSharedStrings(xml) {
+  const out = [], re = /<si>([\s\S]*?)<\/si>/g;
+  let m;
+  while ((m = re.exec(xml))) {
+    const body = m[1].replace(/<rPh[\s\S]*?<\/rPh>/g, '');
+    let t = '';
+    const tr = /<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g;
+    let x;
+    while ((x = tr.exec(body))) t += _skXmlUnesc(x[1]);
+    out.push(t);
+  }
+  return out;
+}
+function _skCellRe(ref) { return new RegExp('<c r="' + ref + '"([^>]*?)(?:/>|>([\\s\\S]*?)</c>)'); }
+function _skCellValue(sheet, ref, ss) {
+  const m = sheet.match(_skCellRe(ref));
+  if (!m) return '';
+  const attrs = m[1] || '', inner = m[2] || '';
+  if (!inner) return '';
+  const t = (attrs.match(/\st="(\w+)"/) || [])[1];
+  if (t === 's') { const v = (inner.match(/<v>([^<]*)<\/v>/) || [])[1]; return (v != null && ss[+v] != null) ? ss[+v] : ''; }
+  if (t === 'inlineStr') { let s = ''; const tr = /<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g; let x; while ((x = tr.exec(inner))) s += _skXmlUnesc(x[1]); return s; }
+  const v = (inner.match(/<v>([^<]*)<\/v>/) || [])[1];
+  return v == null ? '' : _skXmlUnesc(v);
+}
+/** セルの値を inlineStr で差し替える。書式（s="…"）は残す。セルが無ければ書かずに止める（数字を作らない） */
+function _skSetCell(sheet, ref, val) {
+  const m = sheet.match(_skCellRe(ref));
+  if (!m) throw new Error('セル ' + ref + ' が見つかりません');
+  const s = ((m[1] || '').match(/\ss="\d+"/) || [''])[0];
+  return sheet.slice(0, m.index) + '<c r="' + ref + '"' + s + ' t="inlineStr"><is><t>' + _skXmlEsc(val) + '</t></is></c>' + sheet.slice(m.index + m[0].length);
+}
+/** 楕円の一覧：№ → { start, end, from, side }。同じ№に2つあれば先のもの */
+function _skCircles(drawing) {
+  const map = new Map(), re = /<xdr:twoCellAnchor[\s\S]*?<\/xdr:twoCellAnchor>/g;
+  let m;
+  while ((m = re.exec(drawing))) {
+    const f = m[0].match(/<xdr:from><xdr:col>(\d+)<\/xdr:col><xdr:colOff>(-?\d+)<\/xdr:colOff><xdr:row>(\d+)<\/xdr:row>/);
+    if (!f || !/prst="ellipse"/.test(m[0])) continue;
+    const no = _skNoAt(+f[1], +f[3] + 1);
+    if (!no || map.has(no)) continue;
+    map.set(no, { start: m.index, end: m.index + m[0].length, from: +f[2], side: +f[2] > SK_CIRCLE_SPLIT ? '住民票' : '戸籍' });
+  }
+  return map;
+}
+/** 楕円を左（戸籍）か右（住民票）に置き直した drawing1.xml。該当の楕円が無ければ null */
+function _skMoveCircle(drawing, circles, no, kubun) {
+  const c = circles.get(no);
+  if (!c) return null;
+  const pos = SK_CIRCLE[kubun];
+  let a = drawing.slice(c.start, c.end);
+  const delta = pos.from - c.from;
+  a = a.replace(/(<xdr:from><xdr:col>\d+<\/xdr:col><xdr:colOff>)(-?\d+)(<\/xdr:colOff>)/, (m, p1, p2, p3) => p1 + pos.from + p3)
+       .replace(/(<xdr:to><xdr:col>\d+<\/xdr:col><xdr:colOff>)(-?\d+)(<\/xdr:colOff>)/, (m, p1, p2, p3) => p1 + pos.to + p3)
+       .replace(/(<a:off x=")(-?\d+)(")/, (m, p1, p2, p3) => p1 + Math.max(0, +p2 + delta) + p3);
+  return drawing.slice(0, c.start) + a + drawing.slice(c.end);
+}
+
+/* ---- 冊を読む ---- */
+async function _skReadBook(handle) {
+  const f = await handle.getFile();
+  const buf = await f.arrayBuffer();
+  const entries = _skZipRead(buf);
+  let ssXml = '';
+  try { ssXml = await _skEntryText(entries, 'xl/sharedStrings.xml'); } catch (e) {}
+  const ss = _skSharedStrings(ssXml);
+  const sheet = await _skEntryText(entries, 'xl/worksheets/sheet1.xml');
+  let drawing = '';
+  try { drawing = await _skEntryText(entries, 'xl/drawings/drawing1.xml'); } catch (e) {}
+  const circles = drawing ? _skCircles(drawing) : new Map();
+  const rows = [];
+  for (let no = 1; no <= SK_ROWS; no++) {
+    const c = _skCell(no);
+    const date = _skCellValue(sheet, c.date, ss), type = _skCellValue(sheet, c.type, ss), to = _skCellValue(sheet, c.to, ss), kt = _skCellValue(sheet, c.kubun, ss);
+    const cir = circles.get(no);
+    rows.push({ no, date, type, to, kubunText: kt, kubun: cir ? cir.side : '', filled: !!(date.trim() || type.trim() || to.trim()) });
+  }
+  let last = 0;
+  rows.forEach(r => { if (r.filled) last = r.no; });
+  const gaps = rows.filter(r => !r.filled && r.no < last).map(r => r.no);
+  return { rows, last, next: last < SK_ROWS ? last + 1 : 0, gaps,
+           hakko: { from: _skCellValue(sheet, 'D7', ss), to: _skCellValue(sheet, 'H7', ss) }, member: _skCellValue(sheet, 'F4', ss),
+           entries, sheet, drawing, circles, size: buf.byteLength, mtime: f.lastModified, name: handle.name };
+}
+
+/** フォルダの一覧：N_管理台帳（1号）.xlsx を番号順に。~$ のロックファイル（Excel で開いている印）と、控えの数も見る */
+async function _skListFiles() {
+  const files = [], locked = new Set();
+  let backups = 0;
+  for await (const [name, h] of _sk.dir.entries()) {
+    if (h.kind === 'file' && name.startsWith('~$')) { locked.add(name.slice(2)); continue; }
+    const m = name.match(SK_FILE_RE);
+    if (m && h.kind === 'file') files.push({ n: +m[1], name, handle: h });
+  }
+  files.sort((a, b) => a.n - b.n);
+  try {
+    const bd = await _sk.dir.getDirectoryHandle(SK_BACKUP_DIR);
+    for await (const [name, h] of bd.entries()) if (h.kind === 'file' && /\.xlsx$/.test(name)) backups++;
+  } catch (e) {}
+  _sk.files = files; _sk.locked = locked; _sk.backups = backups;
+  return files;
+}
+
+/** 画面を開いたとき・↻ のとき。親フォルダ → 職務上請求書/ → 冊の一覧 → 最新（または選んだ）冊を読む */
+async function _skOpen(keepCur) {
+  if (_sk.busy) return;
+  _sk.busy = true; _sk.status = 'loading'; _sk.msg = ''; _skRender();
+  try {
+    if (!_skNative()) throw Object.assign(new Error('Mac アプリでだけ使えます'), { code: 'native' });
+    let root = null;
+    try { root = await _idbGet('caseFilesRoot'); } catch (e) {}
+    if (!root) throw Object.assign(new Error('親フォルダ（中山事務所）がまだ結び付いていません'), { code: 'noroot' });
+    _sk.root = root;
+    try { _sk.dir = await root.getDirectoryHandle(SK_DIR); }
+    catch (e) { throw Object.assign(new Error(`親フォルダの直下に「${SK_DIR}」フォルダが見当たりません`), { code: 'nodir' }); }
+    const files = await _skListFiles();
+    if (!files.length) throw Object.assign(new Error(`「${SK_DIR}」に N_管理台帳（1号）.xlsx が見当たりません`), { code: 'nofile' });
+    const latest = files[files.length - 1].n;
+    if (!keepCur || !files.some(f => f.n === _sk.cur)) _sk.cur = latest;
+    _sk.latest = latest;
+    const f = files.find(x => x.n === _sk.cur);
+    _sk.book = await _skReadBook(f.handle);
+    _sk.books[_sk.cur] = _sk.book;
+    _sk.status = 'ok';
+    if (!_sk.form.date) _sk.form.date = today();
+    // 請求先の候補（全冊の実績）。読めない冊は飛ばす
+    if (!_sk.toFreq) {
+      const freq = new Map();
+      for (const x of files) {
+        let b = _sk.books[x.n];
+        if (!b) { try { b = await _skReadBook(x.handle); _sk.books[x.n] = b; } catch (e) { continue; } }
+        b.rows.forEach(r => { const t = r.to.trim(); if (t) freq.set(t, (freq.get(t) || 0) + 1); });
+      }
+      _sk.toFreq = freq;
+    }
+  } catch (e) {
+    console.warn('[職務上請求書]', e);
+    _sk.status = 'error'; _sk.msg = e && e.message ? e.message : String(e); _sk.code = e && e.code || '';
+  }
+  _sk.busy = false;
+  _skRender();
+}
+function renderShokumu() { _skOpen(true); }
+function skReload() { _skOpen(true); }
+function skShiftBook(d) {
+  const i = _sk.files.findIndex(f => f.n === _sk.cur);
+  const nx = _sk.files[i + d];
+  if (!nx) return;
+  _sk.cur = nx.n; _skOpen(true);
+}
+async function skOpenExcel() {
+  const f = _sk.files.find(x => x.n === _sk.cur);
+  if (!f || !_cfNativeHandle(f.handle)) return;
+  try { await window.CaseFlowNative.openInDefaultApp(f.handle); }
+  catch (err) { toast(`Excel で開けませんでした（${err.message}）`, 'error'); }
+}
+
+/* ---- 画面 ---- */
+function _skIsLatest() { return _sk.status === 'ok' && _sk.cur === _sk.latest; }
+function _skRemaining() { return _sk.book ? (SK_ROWS - _sk.book.last) : 0; }
+function _skType() { return _sk.form.type === '' ? _sk.form.typeFree.trim() : _sk.form.type; }
+function _skRender() {
+  const bar = document.getElementById('sk-bar'), msg = document.getElementById('sk-msg'), tb = document.getElementById('sk-tbody');
+  if (!bar || !tb) return;
+  const b = _sk.book, ok = _sk.status === 'ok';
+  const i = _sk.files.findIndex(f => f.n === _sk.cur);
+  const lockedNow = ok && _sk.locked.has(_sk.files[i].name);
+  bar.innerHTML = `
+    <span class="jb-year"><button type="button" onclick="skShiftBook(-1)" title="前の冊" aria-label="前の冊" ${i <= 0 ? 'disabled' : ''}>◀</button>
+      <span class="jb-year-label">${ok ? `${_sk.cur}冊目` : '—'}</span>
+      <button type="button" onclick="skShiftBook(1)" title="次の冊" aria-label="次の冊" ${(i < 0 || i >= _sk.files.length - 1) ? 'disabled' : ''}>▶</button></span>
+    ${ok ? `<span class="sk-chip" title="${escHtml(b.name)}">発行番号 ${escHtml(b.hakko.from)}〜${escHtml(b.hakko.to)}</span>
+      <span class="sk-chip on">${b.last}／${SK_ROWS} 件</span>
+      ${b.next ? `<span class="sk-chip on">次は №${b.next}</span><span class="sk-chip">残り ${_skRemaining()} 枚</span>` : `<span class="sk-chip warn">この冊は 100 枚すべて使い切っています</span>`}
+      ${lockedNow ? `<span class="sk-chip warn" title="フォルダに ~$ のロックファイルがあります。閉じれば消えます">Excel で開いたまま</span>` : ''}
+      ${b.gaps.length ? `<span class="sk-chip warn" title="埋まっている行より前に空の行があります。書くのは最後の行の次からです">途中に空きの行 №${b.gaps.join('・')}</span>` : ''}` : ''}
+    <span class="jb-bar-right">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="skOpenExcel()" ${ok ? '' : 'disabled'} title="このファイルを Excel で開く">${ico('tray-out')} Excel で開く</button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="skReload()" title="Excel を読み直す">${ico('refresh')} 読み直す</button>
+    </span>`;
+  if (msg) {
+    if (_sk.status === 'loading') { msg.hidden = false; msg.className = 'sk-msg'; msg.textContent = 'Excel を読んでいます…'; }
+    else if (_sk.status === 'error') {
+      msg.hidden = false; msg.className = 'sk-msg err';
+      msg.textContent = _sk.msg + (_sk.code === 'noroot' ? '。案件詳細の「ファイル」で親フォルダ（中山事務所）を一度結び付けると使えます' : '');
+    } else if (ok && _sk.cur !== _sk.latest) { msg.hidden = false; msg.className = 'sk-msg'; msg.textContent = `${_sk.cur}冊目は読むだけです。書き込めるのは最新の ${_sk.latest}冊目だけです`; }
+    else msg.hidden = true;
+  }
+  _skRenderTable();
+  _skRenderForm();
+}
+function _skRenderTable() {
+  const tb = document.getElementById('sk-tbody');
+  if (!tb) return;
+  const b = _sk.book;
+  if (!b) { tb.innerHTML = ''; return; }
+  tb.innerHTML = b.rows.map(r => {
+    const next = r.no === b.next, cls = next ? 'sk-next' : (r.filled ? '' : 'sk-empty');
+    const kub = r.filled ? (r.kubun ? `<span class="sk-kb${r.kubun === '住民票' ? ' j' : ''}">${escHtml(r.kubun)}</span>` : `<span class="sk-kb" title="○印が見つかりません">？</span>`) : '';
+    return `<tr class="${cls}" data-no="${r.no}"><td class="no">${r.no}</td><td>${escHtml(r.date)}</td><td>${escHtml(r.type)}</td><td>${escHtml(r.to)}</td><td>${kub}</td><td>${next ? '<span class="sk-arrow">← 次に書く行</span>' : ''}</td></tr>`;
+  }).join('');
+  const tr = tb.querySelector('tr.sk-next') || tb.querySelector('tr:last-child');
+  if (tr) setTimeout(() => { try { tr.scrollIntoView({ block: 'center' }); } catch (e) {} }, 0);
+}
+function _skRenderForm() {
+  const f = _sk.form, can = _skIsLatest() && _sk.book.next > 0;
+  const form = document.getElementById('sk-form');
+  if (!form) return;
+  form.classList.toggle('off', !can);
+  const d = document.getElementById('sk-date');
+  if (d && d.value !== f.date && document.activeElement !== d) d.value = f.date;
+  const w = document.getElementById('sk-wareki');
+  if (w) w.textContent = f.date ? ('→ ' + (_skWareki(f.date) || '（令和より前）')) : '';
+  document.querySelectorAll('#sk-types .sk-seg-btn').forEach(el => el.classList.toggle('on', el.dataset.v === f.type));
+  const tf = document.getElementById('sk-type-free');
+  if (tf) { tf.classList.toggle('on', f.type === ''); if (document.activeElement !== tf && tf.value !== f.typeFree) tf.value = f.typeFree; }
+  const to = document.getElementById('sk-to');
+  if (to && document.activeElement !== to && to.value !== f.to) to.value = f.to;
+  document.querySelectorAll('#sk-kubun .sk-seg-btn').forEach(el => el.classList.toggle('on', el.dataset.v === f.kubun));
+  const cnt = document.getElementById('sk-count');
+  if (cnt && document.activeElement !== cnt) cnt.value = f.count;
+  // 請求先の入力補完（全冊の実績。多い順）
+  const dl = document.getElementById('sk-to-list');
+  if (dl && _sk.toFreq && dl.dataset.n !== String(_sk.toFreq.size)) {
+    dl.dataset.n = String(_sk.toFreq.size);
+    dl.innerHTML = [..._sk.toFreq.entries()].sort((x, y) => y[1] - x[1]).map(([t]) => `<option value="${escHtml(t)}"></option>`).join('');
+  }
+  _skPreview();
+}
+function _skPreview() {
+  const f = _sk.form, b = _sk.book, p = document.getElementById('sk-preview'), btn = document.getElementById('sk-write');
+  if (!p || !btn) return;
+  const can = _skIsLatest() && b.next > 0;
+  const cnt = Math.max(1, Math.min(99, parseInt(f.count, 10) || 1));
+  const type = _skType(), to = f.to.trim(), wk = _skWareki(f.date);
+  const last = b ? Math.min(SK_ROWS, b.next + cnt - 1) : 0;
+  const range = b && b.next ? (cnt > 1 ? `№${b.next}〜${last}` : `№${b.next}`) : '';
+  const over = b && b.next && cnt > _skRemaining();
+  btn.textContent = can ? `Excel に書き込む（${range}）` : 'Excel に書き込む';
+  btn.disabled = !can || !wk || !type || !to || over;
+  if (!can) { p.innerHTML = ''; return; }
+  const bits = [];
+  if (!wk) bits.push('年月日を入れてください');
+  if (!type) bits.push('業務の種類を選んでください');
+  if (!to) bits.push('請求先を入れてください');
+  if (over) bits.push(`この冊は残り ${_skRemaining()} 枚です。件数を減らすか、新しい冊を作ってください`);
+  p.innerHTML = bits.length
+    ? `<span class="sk-pv-warn">${escHtml(bits.join('／'))}</span>`
+    : `<span class="sk-pv-what">書き込む内容：<i>${range}</i>　${escHtml(wk)}　${escHtml(type)}　${escHtml(to)}　○印＝${escHtml(f.kubun)}</span>
+       <span class="sk-pv-note">書き込む直前にもう一度 Excel を読み直し、次の№が ${b.next} のままかを確かめてから書きます</span>`;
+}
+function skSetDate(v) { _sk.form.date = v || ''; _skPreview(); const w = document.getElementById('sk-wareki'); if (w) w.textContent = _sk.form.date ? ('→ ' + (_skWareki(_sk.form.date) || '（令和より前）')) : ''; }
+function skSetType(v) { _sk.form.type = v; _skRenderForm(); if (v === '') { const tf = document.getElementById('sk-type-free'); if (tf) tf.focus(); } }
+function skSetTypeFree(v) { _sk.form.typeFree = v; if (v.trim()) _sk.form.type = ''; _skRenderForm(); }
+function skSetTo(v) { _sk.form.to = v; _skPreview(); }
+function skSetKubun(v) { _sk.form.kubun = v; _skRenderForm(); }
+function skSetCount(v) { let n = parseInt(v, 10); if (!(n >= 1)) n = 1; if (n > 99) n = 99; _sk.form.count = n; _skRenderForm(); }
+function skStepCount(d) { skSetCount((parseInt(_sk.form.count, 10) || 1) + d); }
+/** 「↺ 最近」：いまの冊で最近使った請求先（新しい順）と、全冊でよく使う請求先 */
+function _skRecentItems() {
+  const out = [], seen = new Set();
+  const add = (t, note) => { t = String(t || '').trim(); if (!t || seen.has(t)) return; seen.add(t); out.push({ name: t, note }); };
+  if (_sk.book) { const rows = _sk.book.rows.filter(r => r.filled).reverse(); for (const r of rows) { if (out.length >= 6) break; add(r.to, '最近'); } }
+  if (_sk.toFreq) {
+    const top = [..._sk.toFreq.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ja'));
+    for (const [t, c] of top) { if (out.length >= 14) break; add(t, `${c} 件`); }
+  }
+  return out;
+}
+function skOpenRecent(btn) {
+  _jbOpenRecentMenu(btn, _skRecentItems(), '最近使った請求先／よく使う請求先（3冊の実績）', 'まだありません',
+    x => `<b>${escHtml(x.name)}</b><small>${escHtml(x.note)}</small>`,
+    x => { _sk.form.to = x.name; _skRenderForm(); const to = document.getElementById('sk-to'); if (to) to.focus(); });
+}
+
+/* ---- 書き込む ---- */
+async function skWrite() {
+  if (_sk.busy) return;
+  const f = _sk.form, b0 = _sk.book;
+  if (!_skIsLatest() || !b0 || !b0.next) return;
+  const cnt = Math.max(1, Math.min(99, parseInt(f.count, 10) || 1));
+  const type = _skType(), to = f.to.trim(), wk = _skWareki(f.date), kubun = SK_KUBUN.includes(f.kubun) ? f.kubun : '戸籍';
+  if (!wk || !type || !to) { toast('年月日・業務の種類・請求先をそろえてください', 'error'); return; }
+  if (cnt > _skRemaining()) { toast(`この冊は残り ${_skRemaining()} 枚です`, 'error'); return; }
+  const first = b0.next, lastNo = first + cnt - 1;
+  const range = cnt > 1 ? `№${first}〜${lastNo}` : `№${first}`;
+  if (!confirm(`${range} に次の内容を書き込みます。\n\n${wk}　${type}　${to}　○印＝${kubun}${cnt > 1 ? `\n（${cnt} 行とも同じ内容）` : ''}\n\n${_sk.files.find(x => x.n === _sk.cur).name} を書き換えます。よろしいですか？`)) return;
+  _sk.busy = true;
+  const btn = document.getElementById('sk-write');
+  if (btn) { btn.disabled = true; btn.textContent = '書き込んでいます…'; }
+  try {
+    // 1) 読み直す：ロック・次の№・最新の冊 を書く直前にもう一度確かめる
+    await _skListFiles();
+    const cur = _sk.files.find(x => x.n === _sk.cur);
+    if (!cur) throw new Error('ファイルが見当たりません。読み直してください');
+    if (_sk.files[_sk.files.length - 1].n !== _sk.cur) throw new Error(`新しい冊（${_sk.files[_sk.files.length - 1].n}冊目）が増えています。読み直してください`);
+    if (_sk.locked.has(cur.name)) throw new Error(`${cur.name} は Excel で開いたままです。Excel で閉じてから、もう一度押してください`);
+    const b = await _skReadBook(cur.handle);
+    if (b.next !== first) throw new Error(`Excel 側で行が変わっていました（次は №${b.next || '無し'}）。読み直しました`);
+    // 2) 組み立てる（セル3つ×行数 ＋ ○印）。セルが無ければここで止まり、何も書かない
+    let sheet = b.sheet, drawing = b.drawing, moved = 0, missing = [];
+    for (let no = first; no <= lastNo; no++) {
+      const c = _skCell(no);
+      sheet = _skSetCell(sheet, c.date, wk);
+      sheet = _skSetCell(sheet, c.type, type);
+      sheet = _skSetCell(sheet, c.to, to);
+      if (drawing) { const d2 = _skMoveCircle(drawing, b.circles, no, kubun); if (d2 == null) missing.push(no); else { drawing = d2; moved++; b.circles = _skCircles(drawing); } }
+      else missing.push(no);
+    }
+    await _skEntrySetText(b.entries, 'xl/worksheets/sheet1.xml', sheet);
+    if (moved) await _skEntrySetText(b.entries, 'xl/drawings/drawing1.xml', drawing);
+    const blob = _skZipWrite(b.entries);
+    // 3) 控え（書く前の写し）を 控え/ へ。殻の中のファイルどうしの写しなので中身は JS を通らない
+    let backupName = '';
+    try {
+      const bd = await _sk.dir.getDirectoryHandle(SK_BACKUP_DIR, { create: true });
+      const d = new Date(), z = n => String(n).padStart(2, '0');
+      backupName = cur.name.replace(/\.xlsx$/, '') + `_${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.xlsx`;
+      const bh = await bd.getFileHandle(backupName, { create: true });
+      const bw = await bh.createWritable();
+      await bw.write(await cur.handle.getFile());
+      await bw.close();
+      const chk = await (await bd.getFileHandle(backupName)).getFile();
+      if (chk.size !== b.size) throw new Error(`控えの大きさが合いません（${chk.size} ≠ ${b.size}）`);
+    } catch (e) { throw new Error('控えを残せなかったので書き込みをやめました（' + (e && e.message || e) + '）'); }
+    // 4) 書く（殻は一時ファイルに書いてから入れ替える）
+    const w = await cur.handle.createWritable();
+    await w.write(blob);
+    await w.close();
+    // 5) 読み直して確かめる
+    const b2 = await _skReadBook(cur.handle);
+    const bad = [];
+    for (let no = first; no <= lastNo; no++) {
+      const r = b2.rows[no - 1];
+      if (r.date !== wk || r.type !== type || r.to !== to || (!missing.includes(no) && r.kubun !== kubun)) bad.push(no);
+    }
+    _sk.book = b2; _sk.books[_sk.cur] = b2;
+    if (bad.length) throw new Error(`書いたあと読み直したところ、№${bad.join('・')} が書いたとおりになっていません。Excel で確かめてください（書く前の写し：${SK_BACKUP_DIR}/${backupName}）`);
+    // 請求先の候補にも足す
+    if (_sk.toFreq) _sk.toFreq.set(to, (_sk.toFreq.get(to) || 0) + cnt);
+    _sk.form.count = 1;
+    toast(`${range} を Excel に書き込みました（読み直して確認済み）${missing.length ? `。○印は №${missing.join('・')} に見当たらず、置けませんでした` : ''}`, missing.length ? 'info' : 'success');
+    console.log(`[職務上請求書] ${cur.name} に ${range} を書き込みました（控え ${backupName}）`);
+  } catch (e) {
+    console.warn('[職務上請求書] 書き込み', e);
+    toast(e && e.message ? e.message : String(e), 'error');
+    try { await _skListFiles(); const cur = _sk.files.find(x => x.n === _sk.cur); if (cur) { _sk.book = await _skReadBook(cur.handle); _sk.books[_sk.cur] = _sk.book; } } catch (e2) {}
+  }
+  _sk.busy = false;
+  _skRender();
 }
 
 const JB_OFFICE = '中山司法書士事務所';
@@ -17444,7 +18029,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // 日次自動バックアップは、その日の最初のユーザー操作時に実行（File System Access はユーザー操作が必須のため）。
   // 10.1.5 までは起動後の 1 回だけだった。Mac アプリは何日も開きっぱなしにできるので、日付が変わっても控えが出来なかった
   // 事件簿の窓では控えを作らない（控えは本体の窓から。二重に作らない）
-  if (localStorage.getItem('auto_backup_enabled') === '1' && !window.__VIEWER_MODE__ && !_isJikenboWindow()) {
+  if (localStorage.getItem('auto_backup_enabled') === '1' && !window.__VIEWER_MODE__ && !_isSubWindow()) {
     let _abRunning = false;   // 続けて押したときに二重に走らせない
     document.addEventListener('pointerdown', () => {
       if (_abRunning || localStorage.getItem('last_auto_backup') === today()) return;
