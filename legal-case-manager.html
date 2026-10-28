@@ -4342,7 +4342,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.6</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.7</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -8092,7 +8092,7 @@ function _gcalSync() {
       var left = Math.max(r.left, 0), right = Math.min(r.right, vw);
       if (!covered && bottom - top > 40 && right - left > 40) {
         f = { visible: true, x: Math.round(left), y: Math.round(top), w: Math.round(right - left), h: Math.round(bottom - top),
-              clipTop: Math.round(top - r.top), fullH: Math.round(r.height) };
+              clipTop: Math.round(top - r.top), fullH: Math.round(r.height), typing: f.typing };   // typing を落とさない（落とすと殻が n・j・k などを横取りする。10.8.7）
       }
     }
     // 切替の動きの最中（10.7.9）：殻は WKWebView を作り直さず、最終の置き場（target）で固定して層の拡縮で見せる
