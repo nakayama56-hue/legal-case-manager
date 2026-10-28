@@ -3758,6 +3758,31 @@ body.cal-layout-hidden #case-calendar-wrap { display: none !important; }
 /* 10.8.2：追跡番号があるのに送付日が空の送付先に、送付日の欄の下へ琥珀の注意（送付追跡パネルに出ないため） */
 .dv-date-warn { display: none; margin-top: 4px; font-size: 11px; color: #92400e; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 3px 8px; }
 .delivery-item.dv-nodate .dv-date-warn { display: block; }
+/* 10.8.5：備考・メモに「受信メールから」。Mac アプリだけ（殻の口が無ければボタンは hidden のまま）。
+   選ぶ窓 #mail-pick-modal はメモの窓（z-index 既定）の上に出す（#doc-preset-modal と同じ 260） */
+#memo-mail-btn { margin-left: auto; }
+#mail-pick-modal { z-index: 260; }
+#mail-pick-modal .modal { max-width: 760px; }
+.mp-bar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.mp-bar .form-control { flex: 1 1 260px; height: 34px; }
+.mp-note { font-size: 11px; color: var(--text-muted); margin: 6px 2px 8px; }
+.mp-list { border: 1px solid var(--border-light); border-radius: 8px; max-height: 52vh; overflow-y: auto; background: rgba(255,255,255,0.6); }
+.mp-row { display: grid; grid-template-columns: 64px 1fr auto; gap: 2px 10px; padding: 8px 12px; border-bottom: 1px solid var(--border-light); cursor: pointer; font-size: 13px; align-items: baseline; }
+.mp-row:last-child { border-bottom: none; }
+.mp-row:hover { background: #eef5ff; }
+.mp-row .d { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.mp-row .f { font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-row .m { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.mp-row .s { grid-column: 2 / 4; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-row .s .sn { color: var(--text-muted); font-weight: 400; }
+.mp-row.busy { background: #fff7ed; cursor: default; }
+.mp-row.busy .st { grid-column: 2 / 4; color: #9a3412; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+.mp-list.waiting .mp-row:not(.busy) { opacity: .45; pointer-events: none; }
+.mp-empty { padding: 18px 12px; font-size: 12px; color: var(--text-muted); text-align: center; }
+.mp-err { padding: 12px; font-size: 12px; color: #b91c1c; background: #fff0f0; border-radius: 8px; }
+@keyframes mpSpin { to { transform: rotate(360deg); } }
+.mp-spin { width: 14px; height: 14px; border: 2px solid #fdba74; border-top-color: #ea580c; border-radius: 50%; animation: mpSpin .8s linear infinite; flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) { .mp-spin { animation: none; } }
 .delivery-item.dv-nodate .dv-date { border-color: #d97706; background: #fffbeb; }
 @keyframes tn-flash { from { background: #fdba74; } to { background: transparent; } }
 
@@ -4284,7 +4309,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5037,6 +5062,7 @@ body.sk-window .logo-home { cursor: default; }
               <button type="button" class="marker-btn" style="background:#fecdd3" title="ピンクマーカー" onclick="applyMarker('f-memo-text','hl-pink')"><span style="color:#be185d">●</span></button>
               <div class="marker-sep"></div>
               <button type="button" class="marker-btn-clear" onclick="clearMarker('f-memo-text')">消去</button>
+              <button type="button" id="memo-mail-btn" class="btn btn-secondary btn-xs" hidden onclick="openMailPick()" title="Gmail に届いたメールを選んで、Claude の要約をこの欄に入れます（Mac アプリだけ）"><svg class="ico" aria-hidden="true"><use href="#i-mail"></use></svg> 受信メールから</button>
             </div>
             <textarea class="form-control" id="f-memo-text" rows="8" placeholder="特記事項・確認事項・連絡事項などを記録"></textarea>
           </div>
@@ -5046,6 +5072,30 @@ body.sk-window .logo-home { cursor: default; }
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeMemoModal()">キャンセル</button>
       <button class="btn btn-primary" onclick="saveMemoModal()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========== MAIL PICK MODAL（備考・メモに受信メールの要約。10.8.5） =========== -->
+<div id="mail-pick-modal" class="modal-overlay" style="display:none" onclick="closeMailPick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">受信メールを選ぶ</div>
+      <button class="modal-close" onclick="closeMailPick()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mp-bar">
+        <input type="text" class="form-control has-search-ico" id="mp-q" placeholder="差出人・件名・本文で検索（Gmail の検索と同じ書き方）" onkeydown="if(event.key==='Enter'){event.preventDefault();_mpSearch();}">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="_mpSearch()">検索</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="mp-client" hidden onclick="_mpSearchClient()"></button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="_mpLoad('')" title="検索を消して、新しい順に戻す">新しい順</button>
+      </div>
+      <div class="mp-note" id="mp-note"></div>
+      <div id="mp-list" class="mp-list"><div class="mp-empty">読み込んでいます…</div></div>
+    </div>
+    <div class="modal-footer">
+      <span class="mp-note" style="margin:0 auto 0 0">行を押すと、いちばん新しい受信の1通を Claude が要約します（20〜40秒）。欄に入ってから直せます</span>
+      <button class="btn btn-secondary" onclick="closeMailPick()">閉じる</button>
     </div>
   </div>
 </div>
@@ -6008,6 +6058,140 @@ window.__cfMailUnread = function (n) {
   el.textContent = n > 999 ? '999+' : String(n);
   el.hidden = false;
 };
+
+/* =====================================================
+   備考・メモに「受信メールから」（10.8.5。2026年10月28日。設計書：~/secretary/備考メモに受信メール_設計書.md）
+   ・メモの窓のボタン → 選ぶ窓（#mail-pick-modal）→ 行を押すと殻が MailFlow の裏方に頼み、Claude が要約 → 欄に入れる
+   ・本体がするのは、一覧を映す・選んだ番号を渡す・返ってきた文を欄に入れる、だけ。Gmail を読むのも Claude を呼ぶのも裏方
+   ・案件データに入るのは、今までどおり「保存」を押したとき。ここでは saveToStorage を呼ばない
+   ・Chrome 版・閲覧用・事件簿の窓では、ボタンそのものが出ない（殻の口が無い）
+   ===================================================== */
+const MP_MAX_SNIPPET = 70;
+const _mp = { caseId: '', threads: [], busyId: '', gen: 0, q: '' };
+function _mailPickNative() {
+  return _mailNative() && typeof window.CaseFlowNative.mailThreads === 'function' && typeof window.CaseFlowNative.mailSummary === 'function';
+}
+/** 依頼者名・商号から、検索に入れる字。肩書・敬称・法人の肩を外し、空白で切った最初のかたまり（姓）。
+ *  「税理士田中先生」→「田中」、「田中税理士事務所」→「田中」、「山田 太郎」→「山田」、「株式会社〇〇商事」→「〇〇商事」。
+ *  最初の版は名前をそのまま渡していたので、「税理士田中先生」の字がそのまま書かれた古いメールしか当たらなかった（ご本人の「全然新しくないぞ」） */
+const MP_TITLE_RE = /(税理士|司法書士|弁護士|行政書士|土地家屋調査士|公認会計士|社会保険労務士|不動産鑑定士|会計士|社労士|事務所|法人|株式会社|有限会社|合同会社|合資会社|合名会社|一般社団|一般財団|公益社団|公益財団|社団|財団|医療|社会福祉|特定非営利活動|㈱|㈲|先生|様|さま|殿|御中|さん)/g;
+function _mpClientQuery(c) {
+  if (!c) return '';
+  const raw = (c.category === '商業・法人登記' ? (c.company_name || c.client_name) : (c.client_name || c.company_name)) || '';
+  const cleaned = raw.replace(MP_TITLE_RE, ' ').replace(/[（(].*?[）)]/g, ' ').trim();
+  const first = cleaned.split(/[\s　・,、/／]+/).filter(Boolean)[0] || '';
+  return (first || raw.trim()).slice(0, 30);
+}
+function openMailPick() {
+  if (!_mailPickNative()) return;
+  _mp.caseId = document.getElementById('f-memo-case-id').value;
+  const c = cases.find(x => x.id === _mp.caseId);
+  const chip = document.getElementById('mp-client');
+  const cq = _mpClientQuery(c);
+  if (chip) { chip.hidden = !cq; chip.textContent = cq ? `「${cq}」で探す` : ''; chip.dataset.q = cq; }
+  const modal = document.getElementById('mail-pick-modal');
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => modal.classList.add('show'));
+  const qi = document.getElementById('mp-q'); if (qi) qi.value = '';
+  _mpLoad('');
+}
+function closeMailPick(event) {
+  if (event && event.target !== document.getElementById('mail-pick-modal')) return;
+  const modal = document.getElementById('mail-pick-modal');
+  if (_mp.busyId) _mpCancel();   // 窓を閉じたら要約も取りやめる（返ってきても欄に入れない）
+  _mp.gen++;
+  modal.classList.remove('show');
+  setTimeout(() => { modal.style.display = 'none'; }, 150);
+}
+function _mpSearch() { _mpLoad((document.getElementById('mp-q')?.value || '').trim()); }
+function _mpSearchClient() {
+  const q = document.getElementById('mp-client')?.dataset.q || '';
+  const qi = document.getElementById('mp-q'); if (qi) qi.value = q;
+  _mpLoad(q);
+}
+async function _mpLoad(q) {
+  const gen = ++_mp.gen;
+  _mp.q = q;
+  const list = document.getElementById('mp-list');
+  const note = document.getElementById('mp-note');
+  if (list) list.innerHTML = '<div class="mp-empty">読み込んでいます…</div>';
+  if (note) note.textContent = q ? `Gmail を「${q}」で検索しています` : 'Gmail の「すべてのメール」から、届いたメールを新しい順に';
+  const r = await window.CaseFlowNative.mailThreads(q);
+  if (gen !== _mp.gen) return;   // 閉じた・別の検索をした
+  if (!r || !r.ok) {
+    _mp.threads = [];
+    if (list) list.innerHTML = `<div class="mp-err">${escHtml((r && r.reason) || 'メールの一覧を読めません')}${r && r.code === 'NEED_AUTH' ? '<br>ヘッダーの「メール」から MailFlow を開き、黄色い帯から Google の許可を取り直してください' : ''}</div>`;
+    if (note) note.textContent = '';
+    return;
+  }
+  _mp.threads = r.threads || [];
+  if (note) note.textContent = q ? `「${q}」で ${_mp.threads.length} 件（新しい順・30件まで）` : `届いたメール ${_mp.threads.length} 件（新しい順・30件まで）`;
+  _mpRender();
+}
+function _mpDate(ms) {
+  if (!ms) return '';
+  const d = new Date(ms), now = new Date();
+  const same = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  if (same) return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return d.getFullYear() === now.getFullYear() ? `${d.getMonth() + 1}/${d.getDate()}` : `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+function _mpRender() {
+  const list = document.getElementById('mp-list'); if (!list) return;
+  list.classList.toggle('waiting', !!_mp.busyId);
+  if (!_mp.threads.length) { list.innerHTML = `<div class="mp-empty">${_mp.q ? '当てはまるメールがありません' : '届いたメールがありません'}</div>`; return; }
+  list.innerHTML = _mp.threads.map((t, i) => {
+    const from = (t.from && (t.from.name || t.from.email)) || '（差出人不明）';
+    const busy = t.id === _mp.busyId;
+    const marks = [t.count > 1 ? `${t.count}通` : '', t.hasAttachment ? '📎' : ''].filter(Boolean).join('　');
+    const st = busy ? `<div class="st"><span class="mp-spin"></span>要約しています…（20〜40秒）<button type="button" class="btn btn-secondary btn-xs" onclick="event.stopPropagation();_mpCancel()">取りやめ</button></div>` : '';
+    return `<div class="mp-row${busy ? ' busy' : ''}" onclick="_mpPick(${i})" title="${escHtml(t.subject || '')}">
+      <span class="d">${escHtml(_mpDate(t.date))}</span><span class="f">${escHtml(from)}</span><span class="m">${escHtml(marks)}</span>
+      <span class="s">${escHtml(t.subject || '（件名なし）')}${t.snippet ? ` <span class="sn">— ${escHtml(String(t.snippet).slice(0, MP_MAX_SNIPPET))}</span>` : ''}</span>${st}
+    </div>`;
+  }).join('');
+}
+async function _mpPick(i) {
+  if (_mp.busyId) return;
+  const t = _mp.threads[i]; if (!t) return;
+  const gen = _mp.gen;
+  _mp.busyId = t.id;
+  _mpRender();
+  const r = await window.CaseFlowNative.mailSummary(t.id);
+  if (gen !== _mp.gen || _mp.busyId !== t.id) return;   // 閉じた・取りやめた
+  _mp.busyId = '';
+  if (!r || !r.ok) {
+    _mpRender();
+    toast((r && r.reason) || '要約を受け取れません', 'error');
+    return;
+  }
+  _mpApply(r.summary);
+  closeMailPick();
+  const sec = r.summary && r.summary.elapsedSec ? `（${r.summary.elapsedSec}秒）` : '';
+  toast(`要約を欄に入れました${sec}。読んで直してから「保存」を押してください`, 'success');
+}
+async function _mpCancel() {
+  const id = _mp.busyId; if (!id) return;
+  _mp.busyId = '';
+  _mpRender();
+  try { await window.CaseFlowNative.mailSummaryCancel(id); } catch (e) {}
+}
+/** 要約を欄に入れる：欄が空なら置き換え（新しいメモなら日付もメールの日付に）、字があれば 1 行あけて末尾に足す */
+function _mpApply(sm) {
+  const ta = document.getElementById('f-memo-text'); if (!ta || !sm) return;
+  const text = String(sm.text || '').trim();
+  if (!text) return;
+  const cur = ta.value.trim();
+  if (!cur) {
+    ta.value = text;
+    const isNew = !document.getElementById('f-memo-id').value;
+    const di = document.getElementById('f-memo-date');
+    if (isNew && di && sm.dateIso && /^\d{4}-\d{2}-\d{2}$/.test(sm.dateIso)) di.value = sm.dateIso;
+  } else {
+    ta.value = ta.value.replace(/\s+$/, '') + '\n\n' + text;
+  }
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = ta.value.length;
+}
 
 function _issuesNative() {
   return _isNativeApp() && !!(window.CaseFlowNative && typeof window.CaseFlowNative.readIssues === 'function');
@@ -10495,6 +10679,9 @@ function openMemoModal(caseId, memoId) {
     document.getElementById('f-memo-date').value = today();
     document.getElementById('f-memo-text').value = '';
   }
+  // 10.8.5：Mac アプリで殻の口があるときだけ「受信メールから」を出す
+  const mb = document.getElementById('memo-mail-btn');
+  if (mb) mb.hidden = !_mailPickNative();
   modal.style.display = 'flex';
   requestAnimationFrame(() => modal.classList.add('show'));
   setTimeout(() => {
