@@ -4397,7 +4397,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.9.2</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.9.3</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7914,7 +7914,7 @@ function _trRecentItems() {
           tracking: d.tracking_return,
           label:    (d.name ? d.name + ' ' : '') + '返信',
           who:      d.name || '',
-          what:     '返信',
+          what:     '',   // 「返信待ち」の段にあるので「返信」とは書かない（10.9.3）
           caseName: c.case_name || '',
           key:      c.id + '_dvr_' + d.tracking_return,
         });
@@ -7938,7 +7938,7 @@ function _trRecentItems() {
           tracking: s.tracking_return,
           label:    (s.kankatsu || '申請') + ' 返信',
           who:      s.kankatsu || '',
-          what:     '返信',
+          what:     '',
           caseName: c.case_name || '',
           key:      c.id + '_sr_' + s.tracking_return,
         });
@@ -7969,7 +7969,7 @@ function _trRecentItems() {
               tracking: t.tracking_return,
               label:    (row.name || '相続人') + ' ' + doc + ' 返信',
               who:      row.name || '相続人',
-              what:     doc + ' 返信',
+              what:     doc,
               caseName: c.case_name || '',
               key:      c.id + '_szr_' + ridx + '_' + doc.replace(/[・ ]/g,'_'),
             });
@@ -8040,7 +8040,7 @@ function renderTrackingSummary() {
       + (rowTitle ? ' title="' + escHtml(rowTitle) + '"' : '');
     /* 左側（10.9.1）。送付先（太字）＋送付物を左、案件名を右に1行で。全文は各欄の title で読める */
     const who  = item.who || '';
-    const what = item.what || item.label || '';
+    const what = item.what != null ? item.what : (item.label || '');
     const line1 = (who ? '<span class="tr-who" title="' + escHtml(who) + '">' + escHtml(who) + '</span>' : '')
       + (what ? '<span class="tr-what' + (what.length <= 8 ? ' tr-short' : '') + '" title="' + escHtml(what) + '">' + escHtml(what) + '</span>' : '');
     const line2 = item.caseName
