@@ -799,6 +799,46 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
 
 .header-actions { display: flex; gap: 8px; align-items: center; }
 
+/* ── ヘッダーの道具（メール・職務上請求・事件簿）と保存（10.8.9、案A）────────
+   ご本人の「このあたりのボタンデザインをもっと洗練させてほしい」。見本 3 案（A 帯にまとめる／
+   B 静かな文字／C 印に色の丸）を並べて見比べ、A を選択。
+   道具の 3 つは .hd-tools の 1 本の白い帯の中に枠なしで並べ、保存だけを帯の外で単色の青にする。
+   それまでは灰色の箱 3 つ＋グラデーションの保存で、大きさ・字の太さは各ボタンのインライン style にあった。
+   ★ 大きさ・字はここ 1 か所。ボタンに style で書き戻さないこと。
+   ★ 色はテーマの --color-primary から作るので、霜・銀鼠・琥珀とも自動で追従する */
+.header-actions .btn {
+  height: 34px; padding: 0 13px; gap: 7px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+}
+.header-actions .btn .ico { width: 16px; height: 16px; }
+.hd-tools {
+  display: inline-flex; align-items: center; gap: 2px; padding: 3px;
+  background: rgba(255,255,255,0.72);
+  border: 1px solid var(--border-color); border-radius: 11px;
+  box-shadow: 0 1px 2px rgba(31,60,120,0.06);
+}
+.hd-tools .btn {
+  height: 30px; border-radius: 8px;
+  background: transparent; border: 0; box-shadow: none;
+  color: var(--text-secondary);
+}
+.hd-tools .btn:hover  { background: color-mix(in srgb, var(--color-primary) 10%, transparent); color: var(--color-primary); box-shadow: none; }
+.hd-tools .btn:active { background: color-mix(in srgb, var(--color-primary) 18%, transparent); }
+.hd-tools .btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+/* .btn の display:inline-flex が [hidden] に勝ってしまうので、帯の中は明示して隠す */
+.hd-tools .btn[hidden] { display: none !important; }
+#btn-header-mail { position: relative; }   /* 未読数の丸（.mail-unread）の基準 */
+#btn-header-backup {
+  height: 38px; border-radius: 11px;
+  background: var(--color-primary);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.18);
+}
+#btn-header-backup:hover {
+  background: var(--color-primary-dark);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 35%, transparent);
+  transform: none;
+}
+
 /* ── ヘッダー右端の丸い設定ボタン（10.0.7。サイドバーの置き換え）────
    歯車は内製のインライン SVG（線画・currentColor）。外部の読み込みはしない（4章） */
 .hdr-icon-btn {
@@ -2339,7 +2379,7 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
 
 @media (max-width: 480px) {
   .btn-header-backup-label, .btn-viewer-export-label { display: none; }
-  #btn-header-backup { padding: 5px 9px !important; }
+  #btn-header-backup { padding: 0 11px; }
   #btn-viewer-export { padding: 5px 9px !important; }
   #case-calendar, #detail-calendar, #task-calendar {
     grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -3903,8 +3943,8 @@ body.cal-layout-hidden #case-calendar-wrap { display: none !important; }
 .jb-del { width: 22px; height: 22px; padding: 0; border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 12px; border-radius: 3px; font-family: inherit; }
 .jb-del:hover { color: var(--color-danger); background: var(--bg-primary); }
 @media (max-width: 480px) {
-  .btn-header-jb-label, .btn-header-mail-label { display: none; }
-  #btn-header-jikenbo, #btn-header-mail { padding: 5px 9px !important; }
+  .btn-header-jb-label, .btn-header-mail-label, .btn-header-sk-label { display: none; }
+  .hd-tools .btn { padding: 0 9px; }
 }
 /* ヘッダーの「メール」（10.6.9）：Mac アプリで MailFlow を中の窓で開く。殻の口が無ければ hidden のまま。未読数は殻が __cfMailUnread で入れる */
 #btn-header-mail[hidden] { display: none !important; }
@@ -3921,6 +3961,7 @@ body.jb-window #btn-header-jikenbo, body.jb-window #btn-header-backup, body.jb-w
 body.jb-window .logo-home { cursor: default; }
 /* ---- 職務上請求書（Excel の管理台帳への入力補助。10.8.4）。帯は事件簿の .jb-bar を借りる ---- */
 body.sk-window #btn-header-jikenbo, body.sk-window #btn-header-backup, body.sk-window #btn-header-mail, body.sk-window #btn-header-shokumu { display: none !important; }
+body.sk-window .hd-tools { display: none !important; }   /* 中身が全部隠れる窓では帯の枠も出さない（10.8.9） */
 body.sk-window .logo-home { cursor: default; }
 .sk-chip { display: inline-block; border-radius: 999px; padding: 3px 11px; font-size: 12px; background: var(--bg-primary); color: var(--text-secondary); white-space: nowrap; }
 .sk-chip.on { background: #e3edf9; color: var(--color-primary); font-weight: 700; }
@@ -4068,10 +4109,12 @@ body.sk-window .logo-home { cursor: default; }
         キーボードでも押せるように role/tabindex と Enter・space を持たせてある -->
         <span class="logo-home" onclick="showView('cases')" title="案件一覧へ戻る" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('cases');}"><svg class="app-logo-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></svg><span id="header-logo-text" class="app-logo-word">Case<span class="app-logo-flow">Flow</span></span></span></div>
       <div class="header-actions">
-        <button class="btn btn-secondary" onclick="openMailWindow()" id="btn-header-mail" title="メール（MailFlow をこの中の窓で開く）" style="padding:5px 12px;font-size:12px;font-weight:700;position:relative" hidden><svg class="ico" aria-hidden="true"><use href="#i-mail"></use></svg><span class="btn-header-mail-label" style="margin-left:5px">メール</span><span id="mail-unread" class="mail-unread" hidden></span></button>
-        <button class="btn btn-secondary" onclick="openShokumuWindow()" id="btn-header-shokumu" title="職務上請求書の管理台帳（Excel）に行を書き足す" style="padding:5px 12px;font-size:12px;font-weight:700" hidden><svg class="ico" aria-hidden="true"><use href="#i-ledger"></use></svg><span class="btn-header-sk-label" style="margin-left:5px">職務上請求</span></button>
-        <button class="btn btn-secondary" onclick="openJikenboWindow()" id="btn-header-jikenbo" title="事件簿（全案件の受託番号順）" style="padding:5px 12px;font-size:12px;font-weight:700"><svg class="ico" aria-hidden="true"><use href="#i-book-open"></use></svg><span class="btn-header-jb-label" style="margin-left:5px">事件簿</span></button>
-        <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存" style="padding:5px 12px;font-size:12px;font-weight:700"><svg class="ico" aria-hidden="true"><use href="#i-save"></use></svg><span class="btn-header-backup-label" style="margin-left:5px">保存</span></button>
+        <div class="hd-tools"><!-- 10.8.9：道具の3つを1本の帯にまとめる（案A）。保存は帯の外で単色の青 -->
+        <button class="btn btn-secondary" onclick="openMailWindow()" id="btn-header-mail" title="メール（MailFlow をこの中の窓で開く）" hidden><svg class="ico" aria-hidden="true"><use href="#i-mail"></use></svg><span class="btn-header-mail-label">メール</span><span id="mail-unread" class="mail-unread" hidden></span></button>
+        <button class="btn btn-secondary" onclick="openShokumuWindow()" id="btn-header-shokumu" title="職務上請求書の管理台帳（Excel）に行を書き足す" hidden><svg class="ico" aria-hidden="true"><use href="#i-ledger"></use></svg><span class="btn-header-sk-label">職務上請求</span></button>
+        <button class="btn btn-secondary" onclick="openJikenboWindow()" id="btn-header-jikenbo" title="事件簿（全案件の受託番号順）"><svg class="ico" aria-hidden="true"><use href="#i-book-open"></use></svg><span class="btn-header-jb-label">事件簿</span></button>
+        </div>
+        <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存"><svg class="ico" aria-hidden="true"><use href="#i-save"></use></svg><span class="btn-header-backup-label">保存</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
         <button class="btn btn-secondary" onclick="cloudSaveWithCheck()" id="btn-cloud-save" title="クラウドへ保存" style="padding:4px 10px;font-size:12px;display:none">⬆ 保存</button>
         <!-- 10.0.7：データ管理・設定への唯一の入口。閲覧専用モードと
@@ -4342,7 +4385,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.8</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.9</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
