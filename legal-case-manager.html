@@ -678,6 +678,18 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
 .tracking-row:hover { background: #f0f7ff; }
 /* のぞき見の窓でいま見ている行（10.4.3。殻が __cfPeekAt で知らせる） */
 .tracking-row.tr-peek-on { background: #dbeafe; box-shadow: inset 3px 0 0 var(--color-primary); }
+/* 行の左側（10.9.0 で2段 → 10.9.1 で1行に戻し、案件名を右へ → 10.9.2 で右寄せをやめ、送付物のすぐ後ろに）。狭いときは案件名から先に縮む（案件名は最低7字ぶん残す） */
+.tracking-row .tr-date { flex-shrink: 0; width: 38px; font-size: 12px; font-weight: 600; color: #475569; }
+.tracking-row .tr-main { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; }
+/* 送付先・送付物・案件名を同じ並びの兄弟として縮め合わせる（入れ物で包むと短い送付物がはみ出す） */
+.tracking-row .tr-l1 { display: contents; }
+.tracking-row .tr-who { flex-shrink: 0; max-width: 11em; font-size: 13px; font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tracking-row .tr-what { min-width: 0; font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 「申請書」「返信」など短い送付物は縮めない（縮めると「申…」になる） */
+.tracking-row .tr-what.tr-short { flex-shrink: 0; }
+.tracking-row .tr-l2 { flex: 0 3 auto; min-width: 7em; margin-left: 2px; display: flex; align-items: center; gap: 4px; align-self: center; font-size: 11px; color: #6b7280; }
+.tracking-row .tr-l2 .ico { flex-shrink: 0; width: 11px; height: 11px; }
+.tracking-row .tr-case { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 日本郵便の配達状況（10.6.7。Mac アプリだけ。7-7 章） */
 .jp-chip { flex-shrink: 0; font-size: 10px; padding: 2px 7px; border-radius: 999px; background: #dcfce7; color: #166534; border: 1px solid #86efac; font-weight: 700; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
 .jp-st { flex-shrink: 0; font-size: 10px; color: #94a3b8; white-space: nowrap; }
@@ -4385,7 +4397,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.8.9</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.9.2</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7889,6 +7901,8 @@ function _trRecentItems() {
           date:     d.date || '',
           tracking: num,
           label:    [d.docs, d.name].filter(v=>v).join(' → ') || '書類送付',
+          who:      d.name || '',
+          what:     d.docs || '書類送付',
           caseName: c.case_name || '',
           key:      c.id + '_dv_' + num,
         });
@@ -7899,6 +7913,8 @@ function _trRecentItems() {
           date:     d.date || '',
           tracking: d.tracking_return,
           label:    (d.name ? d.name + ' ' : '') + '返信',
+          who:      d.name || '',
+          what:     '返信',
           caseName: c.case_name || '',
           key:      c.id + '_dvr_' + d.tracking_return,
         });
@@ -7910,6 +7926,8 @@ function _trRecentItems() {
           date:     s.shinsei,
           tracking: s.tracking,
           label:    (s.kankatsu || '申請') + ' 申請書送付',
+          who:      s.kankatsu || '',
+          what:     '申請書',
           caseName: c.case_name || '',
           key:      c.id + '_sh_' + s.tracking,
         });
@@ -7919,6 +7937,8 @@ function _trRecentItems() {
           date:     s.shinsei,
           tracking: s.tracking_return,
           label:    (s.kankatsu || '申請') + ' 返信',
+          who:      s.kankatsu || '',
+          what:     '返信',
           caseName: c.case_name || '',
           key:      c.id + '_sr_' + s.tracking_return,
         });
@@ -7937,6 +7957,8 @@ function _trRecentItems() {
               date:     goingDate,
               tracking: t.tracking,
               label:    (row.name || '相続人') + ' ' + doc + ' 送付',
+              who:      row.name || '相続人',
+              what:     doc + ' 送付',
               caseName: c.case_name || '',
               key:      c.id + '_szt_' + ridx + '_' + doc.replace(/[・ ]/g,'_'),
             });
@@ -7946,6 +7968,8 @@ function _trRecentItems() {
               date:     goingDate,
               tracking: t.tracking_return,
               label:    (row.name || '相続人') + ' ' + doc + ' 返信',
+              who:      row.name || '相続人',
+              what:     doc + ' 返信',
               caseName: c.case_name || '',
               key:      c.id + '_szr_' + ridx + '_' + doc.replace(/[・ ]/g,'_'),
             });
@@ -7996,7 +8020,7 @@ function renderTrackingSummary() {
 
   // 1行を生成する共通関数
   const buildRow = (item) => {
-    const dateStr = item.date ? item.date.slice(5) : '—';
+    const dateStr = item.date ? item.date.slice(5).replace('-', '/') : '—';
     const label   = [item.caseName, item.label].filter(v => v).join(' | ');
     const arrived = isArrivedItem(item);
     const url = 'https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=' + item.tracking + '&searchKind=S002&locale=ja';
@@ -8014,9 +8038,17 @@ function renderTrackingSummary() {
     /* Mac アプリ：マウスを乗せてスペースで追跡ページをのぞき見（10.3.6）。Chrome 版では data- が付くだけ */
     const peekAttr = ' data-peek-url="' + url + '" data-peek-title="' + escHtml(label + '　' + item.tracking) + '"'
       + (rowTitle ? ' title="' + escHtml(rowTitle) + '"' : '');
-    return '<div class="tracking-row' + (jp && jp.delivered ? ' jp-delivered' : '') + '" ' + rowClick + peekAttr + ' style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
-      + '<span style="flex-shrink:0;width:36px;font-size:11px;color:#94a3b8">' + dateStr + '</span>'
-      + '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(label) + '</span>'
+    /* 左側（10.9.1）。送付先（太字）＋送付物を左、案件名を右に1行で。全文は各欄の title で読める */
+    const who  = item.who || '';
+    const what = item.what || item.label || '';
+    const line1 = (who ? '<span class="tr-who" title="' + escHtml(who) + '">' + escHtml(who) + '</span>' : '')
+      + (what ? '<span class="tr-what' + (what.length <= 8 ? ' tr-short' : '') + '" title="' + escHtml(what) + '">' + escHtml(what) + '</span>' : '');
+    const line2 = item.caseName
+      ? '<div class="tr-l2">' + ico('folder') + '<span class="tr-case" title="' + escHtml(item.caseName) + '">' + escHtml(item.caseName) + '</span></div>'
+      : '';
+    return '<div class="tracking-row' + (jp && jp.delivered ? ' jp-delivered' : '') + '" ' + rowClick + peekAttr + ' style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
+      + '<span class="tr-date">' + dateStr + '</span>'
+      + '<div class="tr-main"><div class="tr-l1">' + line1 + '</div>' + line2 + '</div>'
       + (jp ? jp.html : '')
       + statusBtn
       + '</div>';
