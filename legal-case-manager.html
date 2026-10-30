@@ -4454,7 +4454,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.0</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.1</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7635,53 +7635,71 @@ function renderCaseTimeline() {
     <div class="shinsei-tl-dates" id="tl-dates-row" style="min-height:16px"></div>
   </div>`;
 
-  if (todayFmtPct !== null) {
-    requestAnimationFrame(() => {
-      const datesRow  = document.getElementById('tl-dates-row');
-      const headerRow = document.getElementById('tl-header-row');
-      const track = el.querySelector('.shinsei-tl-track');
-      if (!datesRow || !track) return;
+  // 今日の縦線の真上に凡例（緑）、真下に今日の日付（緑）を置く。位置はピクセルで測るので、幅が変わるたびに置き直す（11.0.1）
+  el.dataset.tlToday = todayFmtPct === null ? '' : String(todayFmtPct);
+  el.dataset.tlTodayStr = todayStr;
+  _tlAlignToday(el);
+  _tlWatchWidth(el);
+}
 
-      const trackRect  = track.getBoundingClientRect();
-      const datesRect  = datesRow.getBoundingClientRect();
-      const leftOffset = trackRect.left - datesRect.left + trackRect.width * parseFloat(todayFmtPct) / 100;
-
-      // 今日の日付（緑）
-      datesRow.innerHTML = '';
-      const dateSpan = document.createElement('span');
-      dateSpan.textContent = todayStr.slice(5);
-      dateSpan.style.cssText = `position:absolute;left:${leftOffset}px;transform:translateX(-50%);color:#22c55e;font-size:11px;font-weight:700;white-space:nowrap`;
-      datesRow.style.position = 'relative';
-      datesRow.appendChild(dateSpan);
-
-      // 凡例「申請日 ↔ 完了予定日」を「今日」の縦線の真上（タイトルの下段）に配置
-      if (headerRow) {
-        const headerRect = headerRow.getBoundingClientRect();
-        const lineX = trackRect.left - headerRect.left + trackRect.width * parseFloat(todayFmtPct) / 100;
-        const legend = document.createElement('span');
-        legend.className = 'tl-legend';
-        legend.textContent = '申請日 ↔ 完了予定日';
-        legend.style.cssText = 'position:absolute;left:0;bottom:5px;visibility:hidden;white-space:nowrap';
-        headerRow.style.minHeight = '38px';
-        headerRow.appendChild(legend);
-        requestAnimationFrame(() => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          const cs = getComputedStyle(legend);
-          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-          const prefixWidth = ctx.measureText('申請日 ').width;
-          const arrowWidth  = ctx.measureText('↔').width;
-          let left = lineX - prefixWidth - arrowWidth / 2; // 矢印を縦線の真上に
-          const legendWidth = legend.getBoundingClientRect().width;
-          const maxLeft = headerRect.width - legendWidth - 6;
-          if (left > maxLeft) left = maxLeft;
-          if (left < 6) left = 6;
-          legend.style.left = `${left}px`;
-          legend.style.visibility = '';
-        });
-      }
-    });
+// 登記申請タイムラインの緑の字（凡例「申請日 ↔ 完了予定日」と今日の日付）を、今日の縦線に合わせて置く。
+// 11.0.1 まで描いたときに 1 回だけ置いていたので、列の幅を変えると（仕切り・窓の大きさ・カレンダーの切替）ずれたままになった
+// （ご本人の「緑色の文字が幅を変えるたびにズレてしまう」）。いまは _tlWatchWidth の ResizeObserver が幅の変化のたびに呼ぶ
+function _tlAlignToday(el) {
+  el = el || document.getElementById('case-timeline');
+  if (!el || !el.dataset.tlToday) return;
+  const pct = parseFloat(el.dataset.tlToday), todayStr = el.dataset.tlTodayStr || today();
+  const datesRow  = document.getElementById('tl-dates-row');
+  const headerRow = document.getElementById('tl-header-row');
+  const track = el.querySelector('.shinsei-tl-track');
+  if (!datesRow || !track || !track.getBoundingClientRect().width) return;
+  const trackRect = track.getBoundingClientRect();
+  // 今日の日付（緑）
+  let dateSpan = datesRow.querySelector('.tl-today-date');
+  if (!dateSpan) {
+    datesRow.innerHTML = '';
+    dateSpan = document.createElement('span');
+    dateSpan.className = 'tl-today-date';
+    dateSpan.textContent = todayStr.slice(5);
+    dateSpan.style.cssText = 'position:absolute;transform:translateX(-50%);color:#22c55e;font-size:11px;font-weight:700;white-space:nowrap';
+    datesRow.style.position = 'relative';
+    datesRow.appendChild(dateSpan);
   }
+  const datesRect = datesRow.getBoundingClientRect();
+  dateSpan.style.left = (trackRect.left - datesRect.left + trackRect.width * pct / 100) + 'px';
+  // 凡例「申請日 ↔ 完了予定日」を「今日」の縦線の真上（タイトルの下段）に。矢印が縦線の上に来るように
+  if (!headerRow) return;
+  let legend = headerRow.querySelector('.tl-legend');
+  if (!legend) {
+    legend = document.createElement('span');
+    legend.className = 'tl-legend';
+    legend.textContent = '申請日 ↔ 完了予定日';
+    legend.style.cssText = 'position:absolute;left:0;bottom:5px;white-space:nowrap';
+    headerRow.style.minHeight = '38px';
+    headerRow.appendChild(legend);
+  }
+  const headerRect = headerRow.getBoundingClientRect();
+  const lineX = trackRect.left - headerRect.left + trackRect.width * pct / 100;
+  const cs = getComputedStyle(legend);
+  const ctx = (_tlAlignToday._canvas || (_tlAlignToday._canvas = document.createElement('canvas'))).getContext('2d');
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const prefixWidth = ctx.measureText('申請日 ').width;
+  const arrowWidth  = ctx.measureText('↔').width;
+  let left = lineX - prefixWidth - arrowWidth / 2;
+  const legendWidth = legend.getBoundingClientRect().width;
+  const maxLeft = headerRect.width - legendWidth - 6;
+  if (left > maxLeft) left = maxLeft;
+  if (left < 6) left = 6;
+  legend.style.left = `${left}px`;
+}
+// 幅の変化を見張る（1 回だけ登録）。観測の中で直に置き直すと「ResizeObserver loop …」が error に上がる（7-14 章）ので 1 拍おく。
+// ResizeObserver は窓が裏にあると呼ばれない（rAF と同じ）ので、幅が変わる道（_dashWidthsApply・_dbFrameSync）からも直に呼んでいる
+function _tlWatchWidth(el) {
+  if (_tlWatchWidth._ro || !el) return;
+  try {
+    _tlWatchWidth._ro = new ResizeObserver(function () { setTimeout(function () { _tlAlignToday(); }, 0); });
+    _tlWatchWidth._ro.observe(el);
+  } catch (e) {}
 }
 
 function openTrackingSection(idPrefix) {
@@ -8319,6 +8337,7 @@ function _dashWidthsGet() {
 function _dashWidthsApply(w) {
   w = w || _dashWidthsGet();
   DASH_COLS.forEach(function (p) { var col = document.getElementById(p[1]); if (col) col.style.flexGrow = String(w[p[0]]); });
+  if (typeof _tlAlignToday === 'function') _tlAlignToday();   // タイムラインの緑の字を置き直す（11.0.1）
 }
 function _dashWidthsSave(w) { try { localStorage.setItem(DASH_WIDTHS_KEY, JSON.stringify(w)); } catch (e) {} }
 function resetDashWidths() { _dashWidthsSave(Object.assign({}, DASH_WIDTHS_DEFAULT)); _dashWidthsApply(); if (typeof toast === 'function') toast('列の幅を元に戻しました'); }
@@ -8378,6 +8397,7 @@ function _dbFrameSync() {
   var top = layout.getBoundingClientRect().top + (window.scrollY || 0);
   var h = Math.floor(window.innerHeight - top - 16);
   layout.style.height = Math.max(280, h) + 'px';
+  if (typeof _tlAlignToday === 'function') _tlAlignToday();   // 幅が変わる道はここも通る（窓の大きさ・カレンダーの切替・並べ替え。11.0.1）
 }
 function toggleDashArrange(force) {
   var on = (typeof force === 'boolean') ? force : !document.body.classList.contains('dash-edit');
