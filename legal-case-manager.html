@@ -4437,7 +4437,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.9.5</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.9.6</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -8302,7 +8302,11 @@ var _dash = null;   // 運んでいる最中：{ block, ghost, dx, dy }
 // 10.9.5：mouse イベントで作り、動きと離しは document で受ける（取っ手に setPointerCapture する形は、WKWebView で動かなかった。
 // 10.9.4 は運び始めに元のパネルを display:none で隠しており、取っ手ごと消えて動きを受け取る相手がいなくなっていた）。
 // 元のパネルは隠さず、薄くしてその場で動かす（置き場の点線＝パネル自身）。影（.db-ghost）だけが指に付いてくる
+// 並べ替えモードの間だけ、マウスの出来事を記録に残す（10.9.6。Mac アプリで動かない原因を追うため。殻が console.log を CaseFlow.log に書く）
+var _dashLogN = 0;
+function _dashLog(msg) { if (!document.body.classList.contains('dash-edit')) return; try { console.log('[並べ替え] ' + msg); } catch (e) {} }
 function _dashDragStart(e) {
+  _dashLog('mousedown on 取っ手 button=' + e.button + ' edit=' + document.body.classList.contains('dash-edit') + ' type=' + e.type + ' xy=' + e.clientX + ',' + e.clientY);
   if (!document.body.classList.contains('dash-edit') || e.button !== 0) return;
   var grip = e.currentTarget, block = grip.parentElement;
   var r = block.getBoundingClientRect();
@@ -8318,6 +8322,7 @@ function _dashDragStart(e) {
 }
 function _dashDragMove(e) {
   if (!_dash) return;
+  if (_dashLogN++ % 20 === 0) _dashLog('mousemove xy=' + e.clientX + ',' + e.clientY + ' buttons=' + e.buttons + ' under=' + (function(){ var u = document.elementFromPoint(e.clientX, e.clientY); return u ? (u.id || u.className || u.tagName) : 'なし'; })());
   _dash.ghost.style.left = (e.clientX - _dash.dx) + 'px'; _dash.ghost.style.top = (e.clientY - _dash.dy) + 'px';
   var under = document.elementFromPoint(e.clientX, e.clientY);
   var col = under && under.closest ? under.closest('.db-col') : null;
@@ -8334,7 +8339,8 @@ function _dashDragMove(e) {
   if (e.clientY > cr.bottom - 40) col.scrollTop += 12; else if (e.clientY < cr.top + 40) col.scrollTop -= 12;
   e.preventDefault();
 }
-function _dashDragEnd() {
+function _dashDragEnd(e) {
+  _dashLog('end type=' + (e && e.type) + ' 運んでいた=' + !!_dash);
   if (!_dash) return;
   var d = _dash; _dash = null;
   document.removeEventListener('mousemove', _dashDragMove, true);
@@ -8346,6 +8352,10 @@ function _dashDragEnd() {
 }
 function _dashInit() {
   _dashLayoutApply();
+  // 10.9.6：並べ替えモードの間、document に届く mousedown／pointerdown も記録（取っ手に届いているかを見るため）
+  ['mousedown', 'pointerdown', 'mouseup', 'dragstart'].forEach(function (t) {
+    document.addEventListener(t, function (ev) { var tg = ev.target; _dashLog('document ' + t + ' target=' + (tg && (tg.className || tg.id || tg.tagName)) + ' onGrip=' + !!(tg && tg.closest && tg.closest('.db-grip'))); }, true);
+  });
   document.querySelectorAll('.db-grip').forEach(function (g) { g.addEventListener('mousedown', _dashDragStart); g.addEventListener('dragstart', function (ev) { ev.preventDefault(); }); });
   window.addEventListener('resize', _dbFrameSync);
   // カレンダーの帯や切替の行の高さが変わったら、列の高さを合わせ直す（月／週の切り替え、非表示・標準・全幅、Google の欄）
