@@ -3669,6 +3669,8 @@ body.dash-edit .db-block { display: block !important; }
 body.dash-edit .db-col { display: flex; }
 /* 並べ替えモードでは、動かせるパネル 1 つ 1 つに破線（10.9.9。ご本人の「ちゃんと動かせるパーツごとに破線がついたほうがいい」。10.9.4〜10.9.8 は列に付けていた） */
 body.dash-edit .db-block { outline: 2px dashed color-mix(in srgb, var(--color-primary) 55%, transparent); outline-offset: 3px; border-radius: 12px; }
+/* カレンダーは「標準」（列の中）のときだけ動かせるパネル（11.0.0）。全幅のときは取っ手も破線も出さない */
+#case-calendar-wrap:not(.db-block) > .db-grip { display: none !important; }
 body.dash-edit .db-col.db-empty::after { content: 'ここにも置けます'; display: block; text-align: center; color: var(--color-primary); font-size: 12px;
   padding: 18px; border: 2px dashed color-mix(in srgb, var(--color-primary) 40%, transparent); border-radius: 12px; }
 .db-block.db-dragging { opacity: .35; outline: 2px dashed var(--color-primary) !important; outline-offset: 3px; border-radius: 12px; }
@@ -4202,7 +4204,7 @@ body.sk-window .logo-home { cursor: default; }
           </span>
         </div>
         <!-- 統合カレンダー（10.7.4 で 2 段組みの外へ。10.7.5 から「標準」では #dashboard-left の先頭へ移る） -->
-        <div id="case-calendar-wrap" style="margin-bottom:12px">
+        <div id="case-calendar-wrap" style="margin-bottom:12px"><div class="db-grip">カレンダー</div>
           <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
             <div id="cal-nav-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <button class="btn btn-secondary btn-xs" onclick="calMove(-1)" style="padding:4px 8px;line-height:1" title="前へ"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M7 1L3 5L7 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -4452,7 +4454,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.9.9</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.0</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -8259,7 +8261,7 @@ function _gcalHostRectNow() {
 // 既定は 左：タイムライン・送付追跡・入金待ち／中：タスク一覧／右：案件一覧。描画の関数は id で入れ物を掴むだけなので、動かしても壊れない（9 章）。
 // 列は同じ高さの枠（_dbFrameSync）。動かすのは mouse イベント＋document（HTML5 の drag は使わない。取っ手からしか動かせないので、ふだんの操作で誤ってつかまない）
 const DASH_LAYOUT_KEY = 'dashboardLayout_v1';
-const DASH_BLOCKS = ['timeline', 'tracking', 'payment', 'tasks', 'cases'];
+const DASH_BLOCKS = ['timeline', 'tracking', 'payment', 'tasks', 'cases'];   // ほかに 'calendar'（標準のときだけ。11.0.0）
 const DASH_DEFAULT = { left: ['timeline', 'tracking', 'payment'], mid: ['tasks'], right: ['cases'] };
 const DASH_COLS = [['left', 'dashboard-left'], ['mid', 'dashboard-mid'], ['right', 'dashboard-right']];
 function _dashBlockEl(id) { return document.querySelector('.db-block[data-db="' + id + '"]'); }
@@ -8268,8 +8270,14 @@ function _dashLayoutGet() {
     var v = JSON.parse(localStorage.getItem(DASH_LAYOUT_KEY) || 'null');
     if (v && Array.isArray(v.left) && Array.isArray(v.mid) && Array.isArray(v.right)) {
       var all = [].concat(v.left, v.mid, v.right);
-      // 5 つが 1 回ずつ入っているときだけ信じる（知らない形は既定に読み替える。6-6 章の app_theme と同じ型）
-      if (all.length === DASH_BLOCKS.length && DASH_BLOCKS.every(function (b) { return all.indexOf(b) >= 0; })) return v;
+      // 5 つが 1 回ずつ入っているときだけ信じる（知らない形は既定に読み替える。6-6 章の app_theme と同じ型）。
+      // 'calendar'（標準のときのカレンダー。11.0.0）は任意で 1 回まで。知らない id は捨てる
+      var base = all.filter(function (b) { return DASH_BLOCKS.indexOf(b) >= 0; });
+      var cal = all.filter(function (b) { return b === 'calendar'; }).length;
+      if (base.length === DASH_BLOCKS.length && DASH_BLOCKS.every(function (b) { return base.indexOf(b) >= 0; }) && cal <= 1) {
+        var clean = {}; ['left', 'mid', 'right'].forEach(function (k) { clean[k] = v[k].filter(function (b) { return DASH_BLOCKS.indexOf(b) >= 0 || b === 'calendar'; }); });
+        return clean;
+      }
     }
   } catch (e) {}
   return DASH_DEFAULT;
@@ -8454,9 +8462,17 @@ function _calLayoutApply(mode) {
   var left = document.getElementById('dashboard-left');
   var layout = document.getElementById('dashboard-layout');
   if (!wrap || !left || !layout) return;
-  // 標準＝カレンダーの入れ物を左の列の先頭へ。それ以外＝2 段組みの上へ戻す（id はそのままなので描画は壊れない）
-  if (mode === 'std') { if (wrap.parentElement !== left) left.insertBefore(wrap, left.firstChild); }
-  else if (wrap.parentElement === left) layout.parentElement.insertBefore(wrap, layout);
+  // 標準＝カレンダーを「動かせるパネル」（.db-block[data-db=calendar]）にして、覚えてある並びの場所へ（11.0.0。無ければ左の列の先頭）。
+  // それ以外＝パネルでなくし、3 列の上へ戻す（id はそのままなので描画は壊れない）
+  if (mode === 'std') {
+    wrap.classList.add('db-block'); wrap.dataset.db = 'calendar';
+    if (typeof _dashLayoutApply === 'function') _dashLayoutApply();
+    if (!wrap.parentElement.classList.contains('db-col')) left.insertBefore(wrap, left.firstChild);
+  } else {
+    wrap.classList.remove('db-block'); delete wrap.dataset.db;
+    if (wrap.parentElement && wrap.parentElement.classList.contains('db-col')) layout.parentElement.insertBefore(wrap, layout);
+    if (typeof _dashEmptyMark === 'function') _dashEmptyMark();
+  }
   document.body.classList.toggle('cal-layout-std', mode === 'std');
   document.body.classList.toggle('cal-layout-hidden', mode === 'hidden');
   document.querySelectorAll('#cal-topbar .cal-seg button').forEach(function (b) { b.classList.toggle('on', b.dataset.cl === mode); });
