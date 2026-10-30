@@ -4483,7 +4483,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.2</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.3</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -12272,13 +12272,26 @@ function renderTaskTable() {
   }
 }
 
-// 10.9.4 から、どちらも最初から開く（中の列に余裕があるため）。閉じれば、描き直しても閉じたまま（それまでは描き直すたびに畳まれていた）
-let _taskLaterOpen = true;
-let _taskOverdueOpen = true;
+// 開閉は開き直しても覚えておく（11.0.3）。覚えが無ければ閉じた状態で始める。10.9.4〜11.0.2 は開いた状態で始め、覚えもしなかったので、再起動のたびに全部出ていた
+const TASK_LIST_OPEN_KEY = 'taskListOpen_v1';
+function _taskListOpenGet() {
+  try {
+    const o = JSON.parse(localStorage.getItem(TASK_LIST_OPEN_KEY));
+    return { later: !!(o && o.later), overdue: !!(o && o.overdue) };
+  } catch (e) { return { later: false, overdue: false }; }
+}
+function _taskListOpenSave() {
+  try {
+    localStorage.setItem(TASK_LIST_OPEN_KEY, JSON.stringify({ later: _taskLaterOpen, overdue: _taskOverdueOpen }));
+  } catch (e) {}
+}
+let _taskLaterOpen = _taskListOpenGet().later;
+let _taskOverdueOpen = _taskListOpenGet().overdue;
 
 function toggleOverdueTasks() {
   _taskOverdueOpen = !_taskOverdueOpen;
-  const btn  = document.getElementById('task-overdue-toggle-btn');
+  _taskListOpenSave();
+  const btn = document.getElementById('task-overdue-toggle-btn');
   const rows = document.querySelectorAll('#task-tbody .task-overdue-row');
   const count = rows.length;
   if (_taskOverdueOpen) {
@@ -12295,7 +12308,8 @@ function toggleOverdueTasks() {
 
 function toggleLaterTasks() {
   _taskLaterOpen = !_taskLaterOpen;
-  const btn  = document.getElementById('task-later-toggle-btn');
+  _taskListOpenSave();
+  const btn = document.getElementById('task-later-toggle-btn');
   const rows = document.querySelectorAll('#task-tbody .task-later-row');
   rows.forEach(r => {
     r.style.display = '';
