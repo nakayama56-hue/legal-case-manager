@@ -3654,11 +3654,13 @@ body[data-theme="ginnezu"] .db-col, body[data-theme="kohaku"] .db-col { backgrou
 .db-grip::before { content: '⠿'; font-size: 16px; opacity: .7; }
 .db-grip:active { cursor: grabbing; }
 body.dash-edit .db-grip { display: flex; }
+body.dash-edit .db-block:has(> .db-grip:active) { user-select: none; -webkit-user-select: none; }
 body.dash-edit .db-block { display: block !important; }
 body.dash-edit .db-col { display: flex; outline: 2px dashed color-mix(in srgb, var(--color-primary) 45%, transparent); outline-offset: -2px; }
 body.dash-edit .db-col.db-empty::after { content: 'ここにも置けます'; display: block; text-align: center; color: var(--color-primary); font-size: 12px;
   padding: 18px; border: 2px dashed color-mix(in srgb, var(--color-primary) 40%, transparent); border-radius: 12px; }
-.db-ph { flex: none; border: 2px dashed var(--color-primary); border-radius: 12px; background: color-mix(in srgb, var(--color-primary) 8%, transparent); }
+.db-block.db-dragging { opacity: .35; outline: 2px dashed var(--color-primary); outline-offset: 2px; border-radius: 12px; }
+body.dash-edit .db-block { display: block !important; }
 .db-ghost { position: fixed; z-index: 10000; pointer-events: none; opacity: .9; box-shadow: 0 18px 40px rgba(0,0,0,.28); border-radius: 12px;
   transform: rotate(1.2deg); background: #fff; overflow: hidden; }
 .db-arrange { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);
@@ -4435,7 +4437,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.9.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.9.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -8237,10 +8239,10 @@ function _gcalHostRectNow() {
   if (bottom - top <= 40 || right - left <= 40) return null;
   return { x: Math.round(left), y: Math.round(top), w: Math.round(right - left), h: Math.round(bottom - top) };
 }
-// ---- メイン画面の 3 つの列とパネルの並べ替え（10.9.4）----
+// ---- メイン画面の 3 つの列とパネルの並べ替え（10.9.4。運ぶ仕組みは 10.9.5 で mouse イベントに）----
 // 5 つのパネル（timeline／tracking／payment／tasks／cases）を 3 つの列（left／mid／right）のどこにどの順で置くかを localStorage に覚える。
 // 既定は 左：タイムライン・送付追跡・入金待ち／中：タスク一覧／右：案件一覧。描画の関数は id で入れ物を掴むだけなので、動かしても壊れない（9 章）。
-// 列は同じ高さの枠（_dbFrameSync）。動かすのは pointer イベント（HTML5 の drag は使わない。取っ手からしか動かせないので、ふだんの操作で誤ってつかまない）
+// 列は同じ高さの枠（_dbFrameSync）。動かすのは mouse イベント＋document（HTML5 の drag は使わない。取っ手からしか動かせないので、ふだんの操作で誤ってつかまない）
 const DASH_LAYOUT_KEY = 'dashboardLayout_v1';
 const DASH_BLOCKS = ['timeline', 'tracking', 'payment', 'tasks', 'cases'];
 const DASH_DEFAULT = { left: ['timeline', 'tracking', 'payment'], mid: ['tasks'], right: ['cases'] };
@@ -8296,21 +8298,22 @@ function toggleDashArrange(force) {
   _dashEmptyMark();
   _dbFrameSync();
 }
-var _dash = null;   // 運んでいる最中：{ block, ghost, ph, dx, dy }
+var _dash = null;   // 運んでいる最中：{ block, ghost, dx, dy }
+// 10.9.5：mouse イベントで作り、動きと離しは document で受ける（取っ手に setPointerCapture する形は、WKWebView で動かなかった。
+// 10.9.4 は運び始めに元のパネルを display:none で隠しており、取っ手ごと消えて動きを受け取る相手がいなくなっていた）。
+// 元のパネルは隠さず、薄くしてその場で動かす（置き場の点線＝パネル自身）。影（.db-ghost）だけが指に付いてくる
 function _dashDragStart(e) {
   if (!document.body.classList.contains('dash-edit') || e.button !== 0) return;
   var grip = e.currentTarget, block = grip.parentElement;
   var r = block.getBoundingClientRect();
-  var ghost = block.cloneNode(true); ghost.classList.add('db-ghost'); ghost.classList.remove('db-block');
+  var ghost = block.cloneNode(true); ghost.classList.add('db-ghost'); ghost.classList.remove('db-block', 'db-dragging');
   ghost.style.left = r.left + 'px'; ghost.style.top = r.top + 'px'; ghost.style.width = r.width + 'px'; ghost.style.maxHeight = '70vh';
   document.body.appendChild(ghost);
-  var ph = document.createElement('div'); ph.className = 'db-ph'; ph.style.height = Math.min(r.height, 160) + 'px';
-  block.parentElement.insertBefore(ph, block); block.style.display = 'none';
-  _dash = { block: block, ghost: ghost, ph: ph, dx: e.clientX - r.left, dy: e.clientY - r.top };
-  try { grip.setPointerCapture(e.pointerId); } catch (err) {}
-  grip.addEventListener('pointermove', _dashDragMove);
-  grip.addEventListener('pointerup', _dashDragEnd);
-  grip.addEventListener('pointercancel', _dashDragEnd);
+  block.classList.add('db-dragging');
+  _dash = { block: block, ghost: ghost, dx: e.clientX - r.left, dy: e.clientY - r.top };
+  document.addEventListener('mousemove', _dashDragMove, true);
+  document.addEventListener('mouseup', _dashDragEnd, true);
+  window.addEventListener('blur', _dashDragEnd);
   e.preventDefault();
 }
 function _dashDragMove(e) {
@@ -8319,26 +8322,31 @@ function _dashDragMove(e) {
   var under = document.elementFromPoint(e.clientX, e.clientY);
   var col = under && under.closest ? under.closest('.db-col') : null;
   if (!col) return;
-  var blocks = Array.prototype.filter.call(col.querySelectorAll(':scope > .db-block'), function (b) { return b !== _dash.block && b.style.display !== 'none'; });
+  var blocks = Array.prototype.filter.call(col.querySelectorAll(':scope > .db-block'), function (b) { return b !== _dash.block; });
   var before = null;
   for (var i = 0; i < blocks.length; i++) { var br = blocks[i].getBoundingClientRect(); if (e.clientY < br.top + br.height / 2) { before = blocks[i]; break; } }
-  col.insertBefore(_dash.ph, before);
+  if (_dash.block.parentElement !== col || _dash.block.nextElementSibling !== before) {
+    col.insertBefore(_dash.block, before);
+    _dashEmptyMark();
+  }
   // 列の端に近づいたら、列の中を少し送る（長い列の下のほうへも置けるように）
   var cr = col.getBoundingClientRect();
   if (e.clientY > cr.bottom - 40) col.scrollTop += 12; else if (e.clientY < cr.top + 40) col.scrollTop -= 12;
+  e.preventDefault();
 }
-function _dashDragEnd(e) {
+function _dashDragEnd() {
   if (!_dash) return;
   var d = _dash; _dash = null;
-  var grip = e.currentTarget;
-  grip.removeEventListener('pointermove', _dashDragMove); grip.removeEventListener('pointerup', _dashDragEnd); grip.removeEventListener('pointercancel', _dashDragEnd);
-  d.ph.parentElement.insertBefore(d.block, d.ph); d.ph.remove(); d.ghost.remove(); d.block.style.display = '';
+  document.removeEventListener('mousemove', _dashDragMove, true);
+  document.removeEventListener('mouseup', _dashDragEnd, true);
+  window.removeEventListener('blur', _dashDragEnd);
+  d.ghost.remove(); d.block.classList.remove('db-dragging');
   _dashLayoutSave();
   _dbFrameSync();
 }
 function _dashInit() {
   _dashLayoutApply();
-  document.querySelectorAll('.db-grip').forEach(function (g) { g.addEventListener('pointerdown', _dashDragStart); });
+  document.querySelectorAll('.db-grip').forEach(function (g) { g.addEventListener('mousedown', _dashDragStart); g.addEventListener('dragstart', function (ev) { ev.preventDefault(); }); });
   window.addEventListener('resize', _dbFrameSync);
   // カレンダーの帯や切替の行の高さが変わったら、列の高さを合わせ直す（月／週の切り替え、非表示・標準・全幅、Google の欄）
   try {
