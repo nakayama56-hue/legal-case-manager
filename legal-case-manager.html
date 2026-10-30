@@ -3669,6 +3669,8 @@ body[data-theme="ginnezu"] .db-col, body[data-theme="kohaku"] .db-col { backgrou
 .db-block > .db-grip:hover, .db-block > .db-grip:active { height: 20px; padding: 0 10px; gap: 6px; font-size: 11px; font-weight: 700; opacity: 1; color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 12%, #fff); box-shadow: 0 2px 8px rgba(31,60,120,.18); }
 .db-grip:active { cursor: grabbing; }
+/* Google の欄は HTML より手前に出るので、乗せて 20px に広がった取っ手の下半分が隠れて字が切れる。標準のカレンダーだけ、取っ手のぶん欄を下げる（11.0.5） */
+body.gcal-on #case-calendar-wrap.db-block { padding-top: 12px; }
 .db-ghost .db-grip { display: none !important; }
 body.viewer-mode .db-grip { display: none !important; }
 @media (hover: none) { .db-block > .db-grip { display: none; } }
@@ -4464,7 +4466,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
