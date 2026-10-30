@@ -3888,6 +3888,35 @@ body.viewer-mode .db-arrange { display: none; }
 /* 10.8.1：✕ は戻せない。押す前に「消します」と分かるよう、✕ に乗せている間は行の番号に取り消し線 */
 #tn-menu .it:has(.x:hover) b { text-decoration: line-through; color: var(--text-muted); }
 .tn-filled { animation: tn-flash 1.4s ease-out 1; }
+/* 11.0.2：日付のミニカレンダー #date-pop。<input type="date"> を押すと Mac（WebKit）が出す純正の部品には「今日」が無く、
+   中にボタンも足せないので、自前の小さなカレンダーを日付の欄すべてで純正の代わりに出す（ご本人の「『今日』というボタンがあるといい」）。
+   #tn-menu と同じく body の直下・position: fixed（モーダルの .modal-body の overflow に切られないため）。z-index も同じ 4000 */
+#date-pop {
+  position: fixed; z-index: 4000; display: none; width: 240px; padding: 8px;
+  background: var(--bg-primary, #fff); border: 1px solid var(--border-color);
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.16); font-size: 13px; user-select: none;
+}
+#date-pop.open { display: block; }
+#date-pop button { font: inherit; background: none; border: 0; cursor: pointer; color: var(--text-primary); border-radius: 6px; padding: 0; }
+#date-pop .hd { display: flex; align-items: center; gap: 2px; margin-bottom: 4px; }
+#date-pop .hd .ym { flex: 1; text-align: center; font-weight: 700; font-size: 13.5px; letter-spacing: .02em; }
+#date-pop .hd .nav { width: 26px; height: 26px; line-height: 26px; font-size: 15px; color: var(--text-secondary); }
+#date-pop .hd .nav:hover { background: var(--bg-secondary, #f1f5f9); color: var(--text-primary); }
+#date-pop .wd, #date-pop .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+#date-pop .wd span { text-align: center; font-size: 10.5px; color: var(--text-muted); padding: 2px 0 3px; }
+#date-pop .wd .sun, #date-pop .d.sun, #date-pop .d.hol { color: #dc2626; }
+#date-pop .wd .sat, #date-pop .d.sat { color: #2563eb; }
+#date-pop .d { height: 28px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+#date-pop .d:hover { background: var(--bg-secondary, #eef2ff); }
+#date-pop .d.out { opacity: .32; }
+#date-pop .d.today { box-shadow: inset 0 0 0 1.5px var(--color-primary); font-weight: 700; }
+#date-pop .d.sel, #date-pop .d.sel:hover { background: var(--color-primary); color: #fff; font-weight: 700; }
+#date-pop .ft { display: flex; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-light, var(--border-color)); }
+#date-pop .ft .today-btn { flex: 1; height: 30px; background: var(--color-primary); color: #fff; font-weight: 700; font-size: 13px; }
+#date-pop .ft .today-btn:hover { filter: brightness(1.08); }
+#date-pop .ft .today-btn small { font-weight: 500; font-size: 11px; opacity: .85; margin-left: 5px; }
+#date-pop .ft .clear-btn { height: 30px; padding: 0 12px; border: 1px solid var(--border-color); color: var(--text-secondary); font-size: 12px; }
+#date-pop .ft .clear-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
 /* 10.8.2：追跡番号があるのに送付日が空の送付先に、送付日の欄の下へ琥珀の注意（送付追跡パネルに出ないため） */
 .dv-date-warn { display: none; margin-top: 4px; font-size: 11px; color: #92400e; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 3px 8px; }
 .delivery-item.dv-nodate .dv-date-warn { display: block; }
@@ -4454,7 +4483,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.1</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.2</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5085,8 +5114,7 @@ body.sk-window .logo-home { cursor: default; }
             <div style="display:flex;gap:4px;align-items:center">
               <input class="form-control" type="text" id="f-doc-date" placeholder="例：2026-04-15" style="flex:1">
               <div style="position:relative;flex-shrink:0">
-                <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg></button>
-                <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="document.getElementById('f-doc-date').value=this.value;this.value=''">
+                <button type="button" class="btn btn-secondary btn-xs" data-dp="1" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー（「今日」ボタン付き）"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg></button>
               </div>
             </div>
           </div>
@@ -15080,8 +15108,7 @@ function addInvoiceRow(inv) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control inv-date" type="text" placeholder="例：2026-04-30" style="flex:1" value="${escHtml(d.date||'')}">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px">${ico('calendar')}</button>
-            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.closest('.form-group').querySelector('.inv-date').value=this.value;this.value=''">
+            <button type="button" class="btn btn-secondary btn-xs" data-dp="1" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー（「今日」ボタン付き）">${ico('calendar')}</button>
           </div>
         </div>
       </div>
@@ -15091,8 +15118,7 @@ function addInvoiceRow(inv) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control inv-paid" type="text" placeholder="例：2026-05-10" style="flex:1" value="${escHtml(d.paid||'')}">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px">${ico('calendar')}</button>
-            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.closest('.form-group').querySelector('.inv-paid').value=this.value;this.value=''">
+            <button type="button" class="btn btn-secondary btn-xs" data-dp="1" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー（「今日」ボタン付き）">${ico('calendar')}</button>
           </div>
         </div>
       </div>
@@ -16314,8 +16340,7 @@ function addShinseiRow(r, idx) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control sh-shinsei" type="text" placeholder="例：2026-04-15" value="${escHtml(r?.shinsei||'')}" style="flex:1">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">${ico('calendar')}</button>
-            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
+            <button type="button" class="btn btn-secondary btn-xs" data-dp="1" style="padding:0 6px;height:34px" title="カレンダー（「今日」ボタン付き）">${ico('calendar')}</button>
           </div>
         </div>
       </div>
@@ -16324,8 +16349,7 @@ function addShinseiRow(r, idx) {
         <div class="yotei-row" style="display:flex;gap:4px;align-items:center">
           <input class="form-control sh-yotei" type="text" placeholder="例：2026-05-01" value="${escHtml(r?.yotei||'')}" style="flex:1" onchange="onYoteiChange(this)">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">${ico('calendar')}</button>
-            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;onYoteiChange(this.parentElement.previousElementSibling);this.value=''">
+            <button type="button" class="btn btn-secondary btn-xs" data-dp="1" style="padding:0 6px;height:34px" title="カレンダー（「今日」ボタン付き）">${ico('calendar')}</button>
           </div>
           <a class="btn btn-secondary btn-xs yotei-ref" href="${ZENKOKU_KANRYO_URL}" target="_blank" rel="noopener noreferrer" title="全国登記完了予定日一覧を開きます（別のタブ。Macアプリではアプリ内の窓）">${ico('clipboard')}<span>完了予定日一覧</span></a>
         </div>
@@ -16336,8 +16360,7 @@ function addShinseiRow(r, idx) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control sh-kanryo" type="text" placeholder="例：2026-05-10" value="${escHtml(r?.kanryo||'')}" style="flex:1">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 6px;height:34px">${ico('calendar')}</button>
-            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
+            <button type="button" class="btn btn-secondary btn-xs" data-dp="1" style="padding:0 6px;height:34px" title="カレンダー（「今日」ボタン付き）">${ico('calendar')}</button>
           </div>
         </div>
       </div>
@@ -16600,8 +16623,7 @@ function addDeliveryRow(d, idx) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control dv-date" type="text" placeholder="例：2026-04-15、未定" value="${escHtml(d?.date||'')}" style="flex:1">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー">${ico('calendar')}</button>
-            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value='';_dvDateWarnSync(this)">
+            <button type="button" class="btn btn-secondary btn-xs" data-dp="1" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー（「今日」ボタン付き）">${ico('calendar')}</button>
           </div>
         </div>
         <div class="dv-date-warn">${ico('warn')} 追跡番号があるのに送付日が空です。このままでは送付追跡パネルに出ません</div>
@@ -16628,8 +16650,7 @@ function addDeliveryRow(d, idx) {
         <div style="display:flex;gap:4px;align-items:center">
           <input class="form-control dv-handover" type="text" placeholder="例：2026-04-20" value="${escHtml(d?.handover||'')}" style="flex:1">
           <div style="position:relative;flex-shrink:0">
-            <button type="button" class="btn btn-secondary btn-xs" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー">${ico('calendar')}</button>
-            <input type="date" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer" onchange="this.parentElement.previousElementSibling.value=this.value;this.value=''">
+            <button type="button" class="btn btn-secondary btn-xs" data-dp="1" style="padding:0 8px;height:34px;font-size:16px" title="カレンダー（「今日」ボタン付き）">${ico('calendar')}</button>
           </div>
         </div>
       </div>
@@ -16729,6 +16750,159 @@ function _dvDateWarnSync(el) {
 // 送付先の欄の入力（追跡番号・送付日・送付方法。📥 から入れたときの input イベントも通る）で注意を出し入れ
 document.addEventListener('input', (e) => { if (e.target.closest && e.target.closest('#f-delivery-list .delivery-item')) _dvDateWarnSync(e.target); });
 document.addEventListener('change', (e) => { if (e.target.closest && e.target.closest('#f-delivery-list .delivery-item')) _dvDateWarnSync(e.target); });
+
+/* ===== 日付のミニカレンダー（11.0.2） =====
+   ご本人の「日付を入力する時にミニカレンダーが出てくるが、『今日』というボタンがあるといい」。
+   出ていたのは <input type="date"> を押したときに Mac（WebKit）が出す純正の部品で、中にボタンは足せない。
+   そこで自前の小さなカレンダー（#date-pop）を作り、日付の欄すべてで純正の代わりに出す。
+   - カレンダーの印のボタン（data-dp）… 隣の文字の欄（YYYY-MM-DD）に入れる。それまでは透明な type=date を重ねていた
+   - type=date の欄 … 押した瞬間に click の既定の処理を止め（純正の部品は click の既定＝DOMActivate で開くので、開かない）、自前のものを出す。
+     字を打つ・矢印で送るは今までどおり
+   入れたあとは input と change を bubbles で投げる。inline の onchange（onYoteiChange・事件簿・職務上請求の年月日）も
+   document の聞き手（_dvDateWarnSync）も今までどおり動く。
+   ★ 中を押しても欄の focus を奪わない（mousedown の既定を止める）。タスクの期限のその場編集や相続人手配の日付は blur で欄を消すため。
+   ★ 一覧は body の直下・position: fixed（#tn-menu と同じ理由）。外を押す・Esc・スクロール・リサイズで閉じる */
+const _dp = { target: null, anchor: null, y: 0, m: 0 };
+const DP_WD = ['日','月','火','水','木','金','土'];
+function _dpEl() {
+  let el = document.getElementById('date-pop');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'date-pop';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-label', 'カレンダー');
+  el.addEventListener('mousedown', e => e.preventDefault());   // 欄の focus を奪わない
+  el.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]');
+    if (!b) return;
+    const act = b.dataset.act;
+    if (act === 'pick') _dpSet(b.dataset.d);
+    else if (act === 'today') _dpSet(today());
+    else if (act === 'clear') _dpSet('');
+    else if (act === 'pm') _dpMove(0, -1);
+    else if (act === 'nm') _dpMove(0, 1);
+    else if (act === 'py') _dpMove(-1, 0);
+    else if (act === 'ny') _dpMove(1, 0);
+  });
+  document.body.appendChild(el);
+  return el;
+}
+function _dpIsOpen() { const el = document.getElementById('date-pop'); return !!(el && el.classList.contains('open')); }
+/** 欄の値を YYYY-MM-DD に読む。2026-04-15／2026/4/15／2026.4.15／2026年4月15日 を受ける。読めなければ null */
+function _dpParse(v) {
+  const m = String(v || '').trim().match(/^(\d{4})[-\/.年](\d{1,2})[-\/.月](\d{1,2})/);
+  if (!m) return null;
+  const y = +m[1], mo = +m[2], d = +m[3];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  if (new Date(y, mo - 1, d).getMonth() !== mo - 1) return null;
+  return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+function _dpOpen(anchor, target) {
+  if (!target || target.disabled || target.readOnly) return;
+  _dp.target = target; _dp.anchor = anchor || target;
+  const cur = _dpParse(target.value) || today();
+  _dp.y = +cur.slice(0, 4); _dp.m = +cur.slice(5, 7) - 1;
+  _dpRender();
+  _dpEl().classList.add('open');
+  _dpPlace();
+}
+function _dpClose() {
+  const el = document.getElementById('date-pop');
+  if (el) el.classList.remove('open');
+  _dp.target = null; _dp.anchor = null;
+}
+function _dpMove(dy, dm) {
+  const d = new Date(_dp.y, _dp.m + dm + dy * 12, 1);
+  _dp.y = d.getFullYear(); _dp.m = d.getMonth();
+  _dpRender(); _dpPlace();
+}
+/** 欄に入れて閉じる。値が変わったときだけ input と change を投げる */
+function _dpSet(iso) {
+  const t = _dp.target;
+  _dpClose();
+  if (!t) return;
+  if (t.value === iso) return;
+  t.value = iso;
+  t.dispatchEvent(new Event('input', { bubbles: true }));
+  t.dispatchEvent(new Event('change', { bubbles: true }));
+}
+function _dpPlace() {
+  const el = _dpEl(), a = _dp.anchor;
+  if (!a) return;
+  const r = a.getBoundingClientRect();
+  el.style.left = '0px'; el.style.top = '0px';   // いったん既定に戻してから測る
+  const w = el.offsetWidth, h = el.offsetHeight;
+  let left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+  let top = r.bottom + 4;
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
+}
+function _dpRender() {
+  const el = _dpEl(), y = _dp.y, m = _dp.m;
+  const sel = _dpParse(_dp.target && _dp.target.value);
+  const td = today();
+  let hol = {};
+  try { hol = getJpHolidays(y, m) || {}; } catch (e) {}
+  const start = new Date(y, m, 1 - new Date(y, m, 1).getDay());
+  let cells = '';
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const dow = d.getDay();
+    const cls = ['d', d.getMonth() !== m ? 'out' : '', dow === 0 ? 'sun' : '', dow === 6 ? 'sat' : '',
+                 hol[iso] ? 'hol' : '', iso === td ? 'today' : '', iso === sel ? 'sel' : ''].filter(Boolean).join(' ');
+    const tt = hol[iso] ? ` title="${escHtml(hol[iso])}"` : '';
+    cells += `<button type="button" tabindex="-1" class="${cls}" data-act="pick" data-d="${iso}"${tt}>${d.getDate()}</button>`;
+  }
+  const tdd = new Date(td + 'T00:00:00');
+  el.innerHTML = `
+    <div class="hd">
+      <button type="button" tabindex="-1" class="nav" data-act="py" title="前の年">«</button>
+      <button type="button" tabindex="-1" class="nav" data-act="pm" title="前の月">‹</button>
+      <span class="ym">${y}年${m + 1}月</span>
+      <button type="button" tabindex="-1" class="nav" data-act="nm" title="次の月">›</button>
+      <button type="button" tabindex="-1" class="nav" data-act="ny" title="次の年">»</button>
+    </div>
+    <div class="wd">${DP_WD.map((w, i) => `<span class="${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${w}</span>`).join('')}</div>
+    <div class="grid">${cells}</div>
+    <div class="ft">
+      <button type="button" tabindex="-1" class="today-btn" data-act="today">今日<small>${tdd.getMonth() + 1}/${tdd.getDate()}（${DP_WD[tdd.getDay()]}）</small></button>
+      ${sel ? '<button type="button" tabindex="-1" class="clear-btn" data-act="clear" title="欄を空にする">消す</button>' : ''}
+    </div>`;
+}
+/* 開く・閉じるは document の click（捕捉）1 か所で。
+   data-dp の印のボタン → 隣の文字の欄に向けて開く（もう一度押せば閉じる）
+   type=date の欄 → 純正の部品を開かせず、自前のものを開く
+   それ以外 → 開いていれば閉じる */
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (!(t instanceof Element)) return;
+  const pop = document.getElementById('date-pop');
+  if (pop && pop.contains(t)) return;
+  const btn = t.closest('[data-dp]');
+  if (btn) {
+    const target = btn.parentElement && btn.parentElement.previousElementSibling;
+    if (_dpIsOpen() && _dp.target === target) _dpClose();
+    else _dpOpen(btn, target);
+    return;
+  }
+  if (t instanceof HTMLInputElement && t.type === 'date') {
+    e.preventDefault();
+    if (_dpIsOpen() && _dp.target === t) { _dpClose(); return; }
+    _dpOpen(t, t);
+    return;
+  }
+  if (_dpIsOpen()) _dpClose();
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && _dpIsOpen()) { _dpClose(); e.stopPropagation(); } }, true);
+document.addEventListener('scroll', e => {
+  if (!_dpIsOpen()) return;
+  const pop = document.getElementById('date-pop');
+  if (pop && e.target instanceof Node && pop.contains(e.target)) return;
+  _dpClose();
+}, true);
+window.addEventListener('resize', () => { if (_dpIsOpen()) _dpClose(); });
 
 function readDeliveryRows() {
   return [...document.querySelectorAll('#f-delivery-list .delivery-item')].map(row => ({
@@ -17400,7 +17574,7 @@ function souzokuEditDate(caseId, idx, doc, status, textEl) {
   textEl.style.display = 'none';
   input.style.display = '';
   input.focus();
-  try { input.showPicker(); } catch(e) {}
+  _dpOpen(input, input);   // 11.0.2：純正の showPicker() ではなく、「今日」付きの自前のカレンダー
 }
 
 function souzokuUpdateDate(caseId, idx, doc, status, value) {
