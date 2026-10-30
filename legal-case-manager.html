@@ -1383,6 +1383,7 @@ select.filter-select:focus { outline: none; border-color: var(--color-primary); 
 @media (max-width: 768px) {
   #dashboard-layout { flex-direction: column !important; height: auto !important; }
   .db-col { flex: none !important; width: 100% !important; height: auto !important; overflow: visible !important; }
+  .db-divider { display: none !important; }
 }
 .task-table-wrap { overflow-x: hidden; }
 
@@ -3637,11 +3638,20 @@ body.cal-layout-hidden #case-calendar-wrap { display: none !important; }
    列は同じ高さの枠（高さは _dbFrameSync が画面の下端までに合わせる）で、中身がはみ出せば列の中で送る。
    幅は flex-grow の 3：3：4（列が空で隠れたら、残りが同じ比で分け合う）。パネル（.db-block）は中身が空なら出さない（:has）。
    並べ替えモード（body.dash-edit）では取っ手（.db-grip）が出て、空の列にも「ここにも置けます」が出る */
-#dashboard-layout { display: flex; gap: 16px; align-items: stretch; }
+#dashboard-layout { display: flex; gap: 0; align-items: stretch; }
+/* 列と列の間の 16px は仕切り（10.9.8）。つかんで左右に動かすと両隣の列の幅が変わる。ふだんは見えず、乗せると青い線 */
+.db-divider { flex: 0 0 16px; position: relative; cursor: col-resize; user-select: none; -webkit-user-select: none; touch-action: none; }
+.db-divider::after { content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; border-radius: 1px; background: transparent; transition: background .15s; }
+.db-divider:hover::after, .db-divider.on::after { background: var(--color-primary); }
+.db-divider.hidden { display: none; }
+body.db-resizing { cursor: col-resize; user-select: none; -webkit-user-select: none; }
+body.db-resizing .db-col { pointer-events: none; }
+.db-edit-only { display: none; }
+body.dash-edit .db-edit-only { display: inline-flex; }
 .db-col { flex: 3 1 0; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; align-content: flex-start;
   overflow-y: auto; overflow-x: hidden; box-sizing: border-box; padding: 10px 12px; border-radius: 14px;
   background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 10px 28px rgba(38,52,74,0.10); }
-#dashboard-right { flex-grow: 4; }
+#dashboard-right { flex-grow: 4; }   /* 既定の比。実際の比は _dashWidthsApply が style に入れる（10.9.8） */
 body[data-theme="ginnezu"] .db-col, body[data-theme="kohaku"] .db-col { background: rgba(255,255,255,0.94); border-color: rgba(255,255,255,0.72); }
 .db-col.db-empty { display: none; }
 .db-col > #case-calendar-wrap { margin-bottom: 0 !important; }
@@ -4180,7 +4190,8 @@ body.sk-window .logo-home { cursor: default; }
           <span id="cal-topbar-note" style="font-size:12px;color:var(--text-muted)"></span>
           <span style="display:flex;align-items:center;gap:8px">
           <!-- パネルの並べ替え（10.9.4）。押すと各パネルに取っ手が出て、つかんで 3 つの列のどこへでも置ける -->
-          <button type="button" id="db-arrange-btn" class="db-arrange" onclick="toggleDashArrange()" title="パネルの並べ替え：押すと各パネルの上に取っ手が出ます。つかんで好きな列・位置へ">⠿ 並べ替え</button>
+          <button type="button" id="db-widths-btn" class="db-arrange db-edit-only" onclick="resetDashWidths()" title="3 つの列の幅を 3：3：4 に戻します（列と列の間の仕切りをダブルクリックしても戻ります）">幅を元に戻す</button>
+          <button type="button" id="db-arrange-btn" class="db-arrange" onclick="toggleDashArrange()" title="パネルの並べ替え：押すと各パネルの上に取っ手が出ます。つかんで好きな列・位置へ。列と列の間の仕切りをつかむと幅が変わります">⠿ 並べ替え</button>
           <span class="cal-seg" role="group" aria-label="カレンダーの見せ方">
             <button type="button" data-cl="hidden" onclick="setCalLayout('hidden')" title="カレンダーを隠す">非表示</button>
             <button type="button" data-cl="std" onclick="setCalLayout('std')" title="カレンダーを左の列の先頭に入れる">標準</button>
@@ -4255,7 +4266,9 @@ body.sk-window .logo-home { cursor: default; }
           </div>
         </div>
         </div><!-- /dashboard-left -->
+          <div class="db-divider" data-dv="1" title="つかんで左右に動かすと列の幅が変わります。ダブルクリックで元の幅に"></div>
           <div id="dashboard-mid" class="db-col"></div>
+          <div class="db-divider" data-dv="2" title="つかんで左右に動かすと列の幅が変わります。ダブルクリックで元の幅に"></div>
 
           <!-- 右の列：案件一覧 -->
           <div id="dashboard-right" class="db-col">
@@ -4437,7 +4450,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.9.7</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 10.9.8</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -8279,6 +8292,72 @@ function _dashLayoutSave() {
 }
 function _dashEmptyMark() {
   DASH_COLS.forEach(function (p) { var col = document.getElementById(p[1]); if (col) col.classList.toggle('db-empty', !col.querySelector(':scope > .db-block')); });
+  _dashDividersSync();
+}
+// ---- 列の幅（10.9.8）。flex-grow の比で持つ（既定 30：30：40）。列が空で隠れていれば、残りが同じ比で分け合う。
+// 仕切り（.db-divider）をつかんで動かすと両隣の列の幅が変わる。1 列の最小は 320px。覚える場所は localStorage dashboardWidths_v1
+const DASH_WIDTHS_KEY = 'dashboardWidths_v1';
+const DASH_WIDTHS_DEFAULT = { left: 30, mid: 30, right: 40 };
+const DASH_COL_MIN_PX = 320;
+function _dashWidthsGet() {
+  try {
+    var v = JSON.parse(localStorage.getItem(DASH_WIDTHS_KEY) || 'null');
+    if (v && ['left', 'mid', 'right'].every(function (k) { return typeof v[k] === 'number' && v[k] > 0 && v[k] < 100; })) return v;
+  } catch (e) {}
+  return Object.assign({}, DASH_WIDTHS_DEFAULT);
+}
+function _dashWidthsApply(w) {
+  w = w || _dashWidthsGet();
+  DASH_COLS.forEach(function (p) { var col = document.getElementById(p[1]); if (col) col.style.flexGrow = String(w[p[0]]); });
+}
+function _dashWidthsSave(w) { try { localStorage.setItem(DASH_WIDTHS_KEY, JSON.stringify(w)); } catch (e) {} }
+function resetDashWidths() { _dashWidthsSave(Object.assign({}, DASH_WIDTHS_DEFAULT)); _dashWidthsApply(); if (typeof toast === 'function') toast('列の幅を元に戻しました'); }
+// 仕切りの両隣（見えている列）。1 本目＝左｜中、2 本目＝中｜右（中が隠れていれば 左｜右）。両隣がそろわない仕切りは隠す
+function _dashDividerPair(dv) {
+  var vis = function (id) { var c = document.getElementById(id); return c && !c.classList.contains('db-empty') ? c : null; };
+  var L = vis('dashboard-left'), M = vis('dashboard-mid'), R = vis('dashboard-right');
+  if (dv.dataset.dv === '1') return (L && M) ? [L, M] : null;
+  if (!R) return null;
+  if (M) return [M, R];
+  return (L && !document.querySelector('.db-divider[data-dv="1"]:not(.hidden)')) ? [L, R] : null;
+}
+function _dashDividersSync() {
+  document.querySelectorAll('.db-divider').forEach(function (dv) { dv.classList.remove('hidden'); });
+  document.querySelectorAll('.db-divider').forEach(function (dv) { dv.classList.toggle('hidden', !_dashDividerPair(dv)); });
+}
+var _dashRz = null;   // 仕切りを動かしている最中：{ a, b, ka, kb, x0, wa0, wb0, ga, gb }
+function _dashDivStart(e) {
+  if (e.button !== 0) return;
+  var pair = _dashDividerPair(e.currentTarget); if (!pair) return;
+  var w = _dashWidthsGet();
+  var key = function (col) { return col.id === 'dashboard-left' ? 'left' : col.id === 'dashboard-mid' ? 'mid' : 'right'; };
+  _dashRz = { dv: e.currentTarget, a: pair[0], b: pair[1], ka: key(pair[0]), kb: key(pair[1]), x0: e.clientX,
+              wa0: pair[0].getBoundingClientRect().width, wb0: pair[1].getBoundingClientRect().width, w: w };
+  _dashRz.ga = w[_dashRz.ka]; _dashRz.gb = w[_dashRz.kb];
+  e.currentTarget.classList.add('on'); document.body.classList.add('db-resizing');
+  document.addEventListener('mousemove', _dashDivMove, true);
+  document.addEventListener('mouseup', _dashDivEnd, true);
+  window.addEventListener('blur', _dashDivEnd);
+  e.preventDefault();
+}
+function _dashDivMove(e) {
+  var r = _dashRz; if (!r) return;
+  var total = r.wa0 + r.wb0, min = Math.min(DASH_COL_MIN_PX, total / 2);
+  var wa = Math.max(min, Math.min(total - min, r.wa0 + (e.clientX - r.x0)));
+  var G = r.ga + r.gb;   // 2 列ぶんの比の合計は変えない（ほかの列の幅はそのまま）
+  r.w[r.ka] = Math.round(G * wa / total * 100) / 100; r.w[r.kb] = Math.round((G - r.w[r.ka]) * 100) / 100;
+  _dashWidthsApply(r.w);
+  if (window.__gcalSync) try { window.__gcalSync(); } catch (err) {}
+  e.preventDefault();
+}
+function _dashDivEnd() {
+  var r = _dashRz; if (!r) return; _dashRz = null;
+  document.removeEventListener('mousemove', _dashDivMove, true);
+  document.removeEventListener('mouseup', _dashDivEnd, true);
+  window.removeEventListener('blur', _dashDivEnd);
+  r.dv.classList.remove('on'); document.body.classList.remove('db-resizing');
+  _dashWidthsSave(r.w);
+  if (window.__gcalSync) try { window.__gcalSync(); } catch (err) {}
 }
 // 列の高さ＝画面の下端まで。768px 以下（縦 1 列）と、メイン画面でないときは触らない。短い窓では 280px を下限にして、あとはページが送れる
 function _dbFrameSync() {
@@ -8347,10 +8426,14 @@ function _dashDragEnd() {
 function _dashInit() {
   _dashLayoutApply();
   document.querySelectorAll('.db-grip').forEach(function (g) { g.addEventListener('mousedown', _dashDragStart); g.addEventListener('dragstart', function (ev) { ev.preventDefault(); }); });
+  _dashWidthsApply();
+  document.querySelectorAll('.db-divider').forEach(function (dv) { dv.addEventListener('mousedown', _dashDivStart); dv.addEventListener('dblclick', resetDashWidths); });
+  _dashDividersSync();
   window.addEventListener('resize', _dbFrameSync);
   // カレンダーの帯や切替の行の高さが変わったら、列の高さを合わせ直す（月／週の切り替え、非表示・標準・全幅、Google の欄）
   try {
-    var ro = new ResizeObserver(function () { _dbFrameSync(); });
+    // 1 拍おく：観測の中で直に高さを変えると「ResizeObserver loop …」が error に上がり、殻が不具合として記録してしまう
+    var ro = new ResizeObserver(function () { setTimeout(_dbFrameSync, 0); });
     ['cal-topbar', 'case-calendar-wrap'].forEach(function (id) { var el = document.getElementById(id); if (el) ro.observe(el); });
   } catch (e) {}
 }
