@@ -977,6 +977,17 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
    ===================================================== */
 .view { display: none; }
 .view.active { display: block; }
+/* メイン画面 ⇄ 案件詳細 の横スライド（11.0.9〜11.1.0。動かすのは transform だけ＝描き直しが起きない。作りは _mvRun）。動いている間だけ html に mv-go か mv-back が付く */
+::view-transition-old(root), ::view-transition-new(root) { mix-blend-mode: normal; animation: 480ms cubic-bezier(.4,0,.1,1) both; }
+html.mv-go #header, html.mv-back #header { view-transition-name: cf-header; }
+html.mv-go::view-transition-new(root) { animation-name: mvFromRight; box-shadow: -14px 0 34px rgba(0,0,0,.16); }
+html.mv-go::view-transition-old(root) { animation-name: mvToLeft; }
+html.mv-back::view-transition-old(root) { animation-name: mvToRight; z-index: 2; box-shadow: -14px 0 34px rgba(0,0,0,.16); }
+html.mv-back::view-transition-new(root) { animation-name: mvFromLeft; }
+@keyframes mvFromRight { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes mvToLeft { from { transform: none; } to { transform: translateX(-24%); } }
+@keyframes mvToRight { from { transform: none; } to { transform: translateX(100%); } }
+@keyframes mvFromLeft { from { transform: translateX(-24%); } to { transform: none; } }
 
 /* =====================================================
    Dashboard
@@ -4489,7 +4500,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.8</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.1.0</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -6880,10 +6891,43 @@ function deadlineBadge(dateStr, status) {
 /* =====================================================
    NAVIGATION
    ===================================================== */
+// ---- メイン画面 ⇄ 案件詳細 の横スライド（11.0.9〜11.1.0）----
+// View Transitions で前後の画面の絵を動かすので、本物の描画（showView の本文）はこれまでどおり。動きは CSS の mvFromRight など。
+// Google カレンダーの欄は HTML より手前の別の画面で一緒に動かせないので、動きの間は隠す（_gcalSync）。
+var _mv = { t: null, inner: false };
+function _mvWanted(name) {
+  if (typeof document.startViewTransition !== 'function' || document.hidden || _calAnimBusy) return false;
+  try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return false; } catch (e) {}
+  var from = (document.querySelector('.view.active') || {}).id;
+  return (from === 'view-cases' && name === 'case-detail') || (from === 'view-case-detail' && name === 'cases');
+}
+function _mvRun(name) {
+  var root = document.documentElement;
+  root.classList.add(name === 'case-detail' ? 'mv-go' : 'mv-back');
+  var t = document.startViewTransition(function () {
+    _mv.inner = true;
+    try { showView(name); } catch (e) { console.error(e); } finally { _mv.inner = false; }
+  });
+  _mv.t = t;
+  _gcalSync();
+  t.ready.catch(function () {});
+  t.finished.catch(function () {}).then(function () {
+    if (_mv.t === t) _mv.t = null;
+    root.classList.remove('mv-go', 'mv-back');
+    _gcalLast = '';
+    _gcalSync();
+  });
+}
+
 function showView(name) {
   // 事件簿の窓（?view=jikenbo）は事件簿専用。案件一覧へ戻る道（左上のロゴ・「戻る」）は事件簿へ戻す
   if (name === 'cases' && _isJikenboWindow()) name = 'jikenbo';
   if (name === 'cases' && _isShokumuWindow()) name = 'shokumu';
+  if (!_mv.inner) {
+    // 動いている最中に次の画面を頼まれたら、動きを打ち切ってから移る
+    if (_mv.t) { var _t = _mv.t; try { _t.skipTransition(); } catch (e) {} _t.finished.catch(function () {}).then(function () { showView(name); }); return; }
+    if (_mvWanted(name)) { _mvRun(name); return; }
+  }
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   // サイドバーの nav-item は 10.0.7 で廃止した。いまどの画面にいるかを示すのは
@@ -8324,6 +8368,8 @@ function _gcalSync() {
               clipTop: Math.round(top - r.top), fullH: Math.round(r.height), typing: f.typing };   // typing を落とさない（落とすと殻が n・j・k などを横取りする。10.8.7）
       }
     }
+    // メイン画面 ⇄ 案件詳細 の動きの間は隠す（11.0.9。欄は絵と一緒に動かせない）
+    if (_mv.t) f = { visible: false, x: 0, y: 0, w: 0, h: 0, typing: f.typing };
     // 切替の動きの最中（10.7.9）：殻は WKWebView を作り直さず、最終の置き場（target）で固定して層の拡縮で見せる
     if (_gcalAnimTarget) { f.anim = true; if (_gcalAnimTarget !== 'keep') f.target = _gcalAnimTarget; }
     var key = JSON.stringify(f);

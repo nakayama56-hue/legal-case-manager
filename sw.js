@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'legal-case-manager-';
-const CACHE_NAME = 'legal-case-manager-11-0-8';
+const CACHE_NAME = 'legal-case-manager-11-1-0';
 const HTML_URL = './legal-case-manager.html';
 
 self.addEventListener('install', event => {
