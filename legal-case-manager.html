@@ -4500,7 +4500,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.1.0</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.1.1</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -15547,12 +15547,17 @@ const ROLE_PRESETS = ['依頼者','紹介者・税理士','顧問税理士','紹
 function _fillRoleOptions() {
   const dl = document.getElementById('ct-role-list');
   if (!dl) return;
+  // 決まった言葉のほかは、2 件以上の案件で使った言葉だけ出す（1 回きりの書き込みを候補に混ぜない）
   const count = {};
-  (cases || []).forEach(c => [...(c.contacts || []), ...(c.deliveries || [])].forEach(ct => {
-    const r = String((ct && ct.role) || '').trim();
-    if (r) count[r] = (count[r] || 0) + 1;
-  }));
-  const used = Object.keys(count).filter(r => !ROLE_PRESETS.includes(r))
+  (cases || []).forEach(c => {
+    const seen = new Set();
+    [...(c.contacts || []), ...(c.deliveries || [])].forEach(ct => {
+      const r = String((ct && ct.role) || '').trim();
+      if (r) seen.add(r);
+    });
+    seen.forEach(r => { count[r] = (count[r] || 0) + 1; });
+  });
+  const used = Object.keys(count).filter(r => count[r] >= 2 && !ROLE_PRESETS.includes(r))
     .sort((a, b) => count[b] - count[a] || a.localeCompare(b, 'ja'));
   dl.innerHTML = [...ROLE_PRESETS, ...used].map(r => `<option value="${escHtml(r)}"></option>`).join('');
 }
