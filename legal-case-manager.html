@@ -823,6 +823,9 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
   font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
 }
 .header-actions .btn .ico { width: 16px; height: 16px; }
+.header-actions .btn .ico.ico-mailflow { width: 20px; height: 18px; }
+.btn-header-mail-label { color: #2461a8; }   /* 字の色も MailFlow のロゴと同じ（11.1.5） */
+.btn-header-mail-label .mf-flow { color: #eb7d2a; }
 .hd-tools {
   display: inline-flex; align-items: center; gap: 2px; padding: 3px;
   background: rgba(255,255,255,0.72);
@@ -4171,6 +4174,7 @@ body.sk-window .logo-home { cursor: default; }
   <symbol id="i-folder-open" viewBox="0 0 24 24"><path d="M3 17.5V7.2c0-1 .8-1.7 1.7-1.7h4.6l2 2.2h6.6c1 0 1.7.8 1.7 1.7v1.2"/><path d="M3 18.3l2.6-6.7c.2-.6.8-1 1.4-1h13.4c.7 0 1.2.7.9 1.4l-2.4 6.3c-.2.6-.8 1-1.4 1H4.4c-.8 0-1.6-.3-1.4-1z"/></symbol><!-- 開いたフォルダ・Finder -->
   <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6.5 2.8h7.3l4.7 4.7v12.2c0 .8-.7 1.5-1.5 1.5H6.5c-.8 0-1.5-.7-1.5-1.5V4.3c0-.8.7-1.5 1.5-1.5z"/><path d="M13.5 2.8v5h5"/><path d="M8.5 12.5h7M8.5 16h5"/></symbol><!-- 書類・一覧図 -->
   <symbol id="i-ledger" viewBox="0 0 24 24"><path d="M5 19.3V4.5c0-.9.7-1.7 1.7-1.7H19v15.4H6.7c-.9 0-1.7.7-1.7 1.6s.8 1.7 1.7 1.7H19"/><path d="M9 7.5h6M9 11h6"/></symbol><!-- 受付台帳・アドレス帳 -->
+  <symbol id="i-mailflow" viewBox="130 240 700 610"><g stroke="none"><path d="M212 476 L812 268 L616 772 L512 596 Z" fill="#2461a8"/><path d="M512 596 L812 268 L448 520 Z" fill="#8fb0d4"/><rect x="150" y="606" width="200" height="56" rx="28" fill="#eb7d2a"/><rect x="200" y="690" width="150" height="56" rx="28" fill="#8fb0d4"/><rect x="250" y="774" width="100" height="56" rx="28" fill="#2461a8"/></g></symbol><!-- ヘッダーのメール。MailFlow のロゴと同じ絵（mailer-mac/web/index.html）なので、ここだけ色を中に持つ -->
   <symbol id="i-book-open" viewBox="0 0 24 24"><path d="M12 6.3C10.2 4.9 7.6 4.3 3.5 4.5v13.4c4.1-.2 6.7.4 8.5 1.8 1.8-1.4 4.4-2 8.5-1.8V4.5c-4.1-.2-6.7.4-8.5 1.8z"/><path d="M12 6.3v13.4"/><path d="M6.3 8.6c1.4 0 2.5.2 3.4.6M6.3 11.8c1.4 0 2.5.2 3.4.6M14.3 9.2c.9-.4 2-.6 3.4-.6M14.3 12.4c.9-.4 2-.6 3.4-.6"/></symbol><!-- 事件簿（開いた帳面。10.4.9） -->
   <symbol id="i-note" viewBox="0 0 24 24"><path d="M13.5 3.5h-7c-.8 0-1.5.7-1.5 1.5v14.5c0 .8.7 1.5 1.5 1.5h11c.8 0 1.5-.7 1.5-1.5V12.5"/><path d="M8.5 9h4M8.5 12.5h3M8.5 16h6"/><path d="m15.2 11.6 5.4-5.4a1.5 1.5 0 0 0-2.1-2.1l-5.4 5.4-.6 2.7z"/></symbol><!-- 備考・メモ・面談記録 -->
   <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 2.8h12v18.4l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4z"/><path d="M9 7.5h6M9 11h6M9 14.5h3.5"/></symbol><!-- 請求情報 -->
@@ -4221,7 +4225,7 @@ body.sk-window .logo-home { cursor: default; }
         <span class="logo-home" onclick="showView('cases')" title="案件一覧へ戻る" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showView('cases');}"><svg class="app-logo-mark" viewBox="0 0 26 26" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="14" height="4.2" rx="2.1" fill="var(--color-primary)"/><rect x="6" y="10.9" width="14" height="4.2" rx="2.1" fill="var(--color-primary)" opacity="0.5"/><rect x="9.5" y="16.8" width="14" height="4.2" rx="2.1" fill="var(--color-accent)"/></svg><span id="header-logo-text" class="app-logo-word">Case<span class="app-logo-flow">Flow</span></span></span></div>
       <div class="header-actions">
         <div class="hd-tools"><!-- 10.8.9：道具の3つを1本の帯にまとめる（案A）。保存は帯の外で単色の青 -->
-        <button class="btn btn-secondary" onclick="openMailWindow()" id="btn-header-mail" title="メール（MailFlow をこの中の窓で開く）" hidden><svg class="ico" aria-hidden="true"><use href="#i-mail"></use></svg><span class="btn-header-mail-label">メール</span><span id="mail-unread" class="mail-unread" hidden></span></button>
+        <button class="btn btn-secondary" onclick="openMailWindow()" id="btn-header-mail" title="メール（MailFlow をこの中の窓で開く）" hidden><svg class="ico ico-mailflow" aria-hidden="true"><use href="#i-mailflow"></use></svg><span class="btn-header-mail-label">Mail<span class="mf-flow">Flow</span></span><span id="mail-unread" class="mail-unread" hidden></span></button>
         <button class="btn btn-secondary" onclick="openShokumuWindow()" id="btn-header-shokumu" title="職務上請求書の管理台帳（Excel）に行を書き足す" hidden><svg class="ico" aria-hidden="true"><use href="#i-ledger"></use></svg><span class="btn-header-sk-label">職務上請求</span></button>
         <button class="btn btn-secondary" onclick="openJikenboWindow()" id="btn-header-jikenbo" title="事件簿（全案件の受託番号順）"><svg class="ico" aria-hidden="true"><use href="#i-book-open"></use></svg><span class="btn-header-jb-label">事件簿</span></button>
         <span class="hd-sep" aria-hidden="true"></span><!-- 11.0.4：ここから先は外のページ -->
@@ -4500,7 +4504,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.1.2</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.1.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
