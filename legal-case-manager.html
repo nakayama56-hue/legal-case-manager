@@ -4500,7 +4500,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.1.1</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.1.2</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -6298,8 +6298,8 @@ function _mailPickNative() {
   return _mailNative() && typeof window.CaseFlowNative.mailThreads === 'function' && typeof window.CaseFlowNative.mailSummary === 'function';
 }
 /** 依頼者名・商号から、検索に入れる字。肩書・敬称・法人の肩を外し、空白で切った最初のかたまり（姓）。
- *  「税理士田中先生」→「田中」、「田中税理士事務所」→「田中」、「山田 太郎」→「山田」、「株式会社〇〇商事」→「〇〇商事」。
- *  最初の版は名前をそのまま渡していたので、「税理士田中先生」の字がそのまま書かれた古いメールしか当たらなかった（ご本人の「全然新しくないぞ」） */
+ *  「税理士甲野先生」→「甲野」、「甲野税理士事務所」→「甲野」、「山田 太郎」→「山田」、「株式会社〇〇商事」→「〇〇商事」。
+ *  最初の版は名前をそのまま渡していたので、肩書と敬称まで含めた字がそのまま書かれた古いメールしか当たらなかった（ご本人の「全然新しくないぞ」） */
 const MP_TITLE_RE = /(税理士|司法書士|弁護士|行政書士|土地家屋調査士|公認会計士|社会保険労務士|不動産鑑定士|会計士|社労士|事務所|法人|株式会社|有限会社|合同会社|合資会社|合名会社|一般社団|一般財団|公益社団|公益財団|社団|財団|医療|社会福祉|特定非営利活動|㈱|㈲|先生|様|さま|殿|御中|さん)/g;
 function _mpClientQuery(c) {
   if (!c) return '';
