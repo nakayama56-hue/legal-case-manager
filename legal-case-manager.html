@@ -2275,6 +2275,29 @@ thead th.sortable:hover { color: var(--color-primary); background: #e8f0fb; }
 .prop-table td { border:1px solid var(--border-color); padding:2px 3px; vertical-align:middle; }
 .prop-table td input { width:100%; border:none; outline:none; font-size:12px; font-family:inherit; background:transparent; padding:3px 5px; min-height:26px; }
 .prop-table td input:focus { background:#eff6ff; border-radius:2px; }
+.prop-loc { display:flex; align-items:center; gap:4px; }
+.prop-loc input { flex:1; min-width:0; }
+.prop-pdf { display:inline-flex; align-items:center; gap:3px; height:24px; padding:0 7px; font-size:11px; font-family:inherit; color:var(--color-primary); background:#fff; border:1px solid #c9d2df; border-radius:4px; cursor:pointer; white-space:nowrap; flex:none; }
+.prop-pdf:hover { background:#eff6ff; border-color:var(--color-primary); }
+.prop-pdf[hidden] { display:none; }
+#pp-modal, #pp-pick-modal { z-index: 260; }
+#pp-pick-crumb { font-size:12px; color:var(--text-secondary); margin-bottom:8px; overflow-wrap:break-word; }
+.pp-crumb { cursor:pointer; text-decoration:underline; }
+#pp-pick-list { height:min(52vh, 420px); overflow-y:auto; border:1px solid var(--border-color); border-radius:6px; }
+.pp-item { display:flex; align-items:center; gap:7px; padding:6px 10px; font-size:12px; cursor:pointer; border-bottom:1px solid var(--border-light); }
+.pp-item:last-child { border-bottom:0; }
+.pp-item:hover { background:#eff6ff; }
+.pp-ic { display:inline-flex; flex:none; font-size:15px; color:var(--color-primary); }
+.pp-item-n { min-width:0; overflow-wrap:break-word; }
+.pp-none { padding:30px; text-align:center; font-size:12px; color:var(--text-muted); }
+.pp-file { font-size:11px; color:var(--text-muted); margin-bottom:10px; overflow-wrap:break-word; }
+.pp-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.pp-row label { width:96px; flex:none; font-size:12px; font-weight:600; color:var(--text-secondary); }
+.pp-row input { flex:1; min-width:0; }
+.pp-row input.pp-gaiji { border-color:var(--color-danger); background:#fff5f5; }
+#pp-go:disabled { opacity:.45; cursor:not-allowed; }
+.pp-msg { margin-top:10px; padding:7px 10px; font-size:12px; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; }
+.pp-msg[hidden] { display:none; }
 .prop-table td.prop-num { text-align:center; width:48px; background:#f8fafc; font-weight:700; font-size:13px; color:var(--text-secondary); }
 
 /* =====================================================
@@ -4466,7 +4489,7 @@ body.sk-window .logo-home { cursor: default; }
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.5</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.0.8</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -4676,7 +4699,10 @@ body.sk-window .logo-home { cursor: default; }
           <!-- 商業・法人登記：商号・本店 -->
           <div class="form-group" id="field-company-name" style="display:none">
             <label class="form-label">商号・法人名</label>
-            <input class="form-control" id="f-company-name" placeholder="例：株式会社○○、○○合同会社">
+            <div class="prop-loc">
+              <button type="button" class="prop-pdf" id="tc-pdf" hidden onclick="corpPickPdf()" title="法人の登記情報のPDFを選んで、商号・本店・会社法人等番号・資本金をまとめて読み込みます"><svg class="ico" aria-hidden="true"><use href="#i-doc"></use></svg>PDF</button>
+              <input class="form-control" id="f-company-name" placeholder="例：株式会社○○、○○合同会社">
+            </div>
           </div>
           <div class="form-group" id="field-honten" style="display:none">
             <label class="form-label">本店所在地</label>
@@ -5120,6 +5146,39 @@ body.sk-window .logo-home { cursor: default; }
 </div>
 
 <!-- =========== INTERVIEW MODAL =========== -->
+<div id="pp-pick-modal" class="modal-overlay" style="display:none" onclick="closePpPick(event)">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div class="modal-title" id="pp-pick-title"></div>
+      <button class="modal-close" onclick="closePpPick()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="pp-pick-crumb"></div>
+      <div id="pp-pick-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="_ppListOther()">別の場所から選ぶ…</button>
+      <button type="button" class="btn btn-secondary" onclick="closePpPick()">やめる</button>
+    </div>
+  </div>
+</div>
+<div id="pp-modal" class="modal-overlay" style="display:none" onclick="closePpModal(event)" onkeydown="_ppKey(event)">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title" id="pp-title"></div>
+      <button class="modal-close" onclick="closePpModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="pp-file" id="pp-file"></div>
+      <div id="pp-fields"></div>
+      <div class="pp-msg" id="pp-msg" hidden>赤い欄の「〓」は、登記の外字で読めなかった字です。正しい字に打ち直すと入れられます。</div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closePpModal()">やめる</button>
+      <button type="button" class="btn btn-primary" id="pp-go" onclick="ppApply()">この行に入れる</button>
+    </div>
+  </div>
+</div>
 <div id="doc-preset-modal" class="modal-overlay" style="display:none" onclick="closeDocPresetModal(event)">
   <div class="modal" style="max-width:560px">
     <div class="modal-header">
@@ -12547,6 +12606,9 @@ const PROP_NUMS = Array.from({ length: 50 }, (_, i) => String.fromCodePoint(
 function renderPropertyList(c) {
   const cid = c.id;
   const props = c.properties || [];
+  const native = _ppNative();
+  const watch = native ? ' oninput="_propRowInput(this)"' : '';
+  const locInput = (p, i) => `<input value="${escHtml(p.location||'')}" onchange="updateProperty('${cid}',${i},'location',this.value)" placeholder=""${watch}>`;
 
   const rows = props.map((p, i) => `
     <tr>
@@ -12554,10 +12616,10 @@ function renderPropertyList(c) {
         <button onclick="deletePropertyRow('${cid}',${i})" title="削除" style="width:22px;height:20px;font-size:10px;padding:0;line-height:1;border:1px solid #fca5a5;background:#fff0f0;border-radius:3px;cursor:pointer;color:#dc2626">✕</button>
       </td>
       <td class="prop-num">${PROP_NUMS[i] || (i+1)}</td>
-      <td><input value="${escHtml(p.location||'')}" onchange="updateProperty('${cid}',${i},'location',this.value)" placeholder=""></td>
-      <td><input value="${escHtml(p.kaoku||'')}"    onchange="updateProperty('${cid}',${i},'kaoku',this.value)"    placeholder=""></td>
-      <td><input value="${escHtml(p.shikichi_num||'')}" onchange="updateProperty('${cid}',${i},'shikichi_num',this.value)" placeholder="" inputmode="numeric" style="text-align:center"></td>
-      <td><input value="${escHtml(p.mansion||'')}"  onchange="updateProperty('${cid}',${i},'mansion',this.value)"  placeholder=""></td>
+      <td>${native ? `<div class="prop-loc"><button type="button" class="prop-pdf" ${_propIsEmpty(p) ? '' : 'hidden'} onclick="propPickPdf('${cid}',${i})" title="登記情報のPDFを選んで、この行に読み込みます">${ico('doc')}PDF</button>${locInput(p, i)}</div>` : locInput(p, i)}</td>
+      <td><input value="${escHtml(p.kaoku||'')}"    onchange="updateProperty('${cid}',${i},'kaoku',this.value)"    placeholder=""${watch}></td>
+      <td><input value="${escHtml(p.shikichi_num||'')}" onchange="updateProperty('${cid}',${i},'shikichi_num',this.value)" placeholder="" inputmode="numeric" style="text-align:center"${watch}></td>
+      <td><input value="${escHtml(p.mansion||'')}"  onchange="updateProperty('${cid}',${i},'mansion',this.value)"  placeholder=""${watch}></td>
       <td style="width:32px;text-align:center;padding:2px"><button onclick="duplicatePropertyRow('${cid}',${i})" title="複製" style="width:24px;height:24px;font-size:13px;padding:0;line-height:1;border:1px solid #93c5fd;background:#eff6ff;border-radius:4px;cursor:pointer;color:#1d4ed8">⧉</button></td>
     </tr>`).join('');
 
@@ -12627,6 +12689,297 @@ function updateProperty(caseId, idx, field, value) {
   if (!c || !c.properties || !c.properties[idx]) return;
   c.properties[idx][field] = value;
   saveToStorage();
+}
+
+/* 登記情報PDFの文字から、不動産一覧の1行を作る（11.0.6）。
+   文字は殻が PDFKit で取り出す。罫線の字（┃│┠├）を手がかりに読む。
+   抹消の下線は文字に出ないので、変更があれば最後の塊を今の値と見なす */
+const TP_NUM = '壱弐参四五六七八九〇一二三';
+const TP_DIGIT = { 壱:'1', 弐:'2', 参:'3', 四:'4', 五:'5', 六:'6', 七:'7', 八:'8', 九:'9', 〇:'0', 一:'1', 二:'2', 三:'3' };
+const TP_GAIJI = '〓';  // 〓。私用領域の字（登記の外字）の代わりに入れる
+function _tpNorm(s) {
+  return String(s || '').normalize('NFKC').replace(/[\s　]/g, '').replace(/[-]/g, TP_GAIJI);
+}
+function _tpDigits(s) { return s.replace(/./g, c => TP_DIGIT[c] || c); }
+/* 末尾の「◯番地◯」「◯番◯の◯」だけ算用数字へ。地名の中の字（壱町畑・三番町）は触らない。丁目の前の壱弐参は一二三へ */
+const _TP_TAIL = new RegExp(`[${TP_NUM}0-9]+番地?(?:[の\\-ー−]?[${TP_NUM}0-9A-Za-z]+)*$`);
+function _tpChiban(s) {
+  return String(s || '').split('、').map(part => {
+    const m = part.match(_TP_TAIL);
+    if (m) part = part.slice(0, m.index) + _tpDigits(m[0]);
+    return part.replace(/[壱弐参]+(?=丁目)/, x => x.replace(/壱/g, '一').replace(/弐/g, '二').replace(/参/g, '三'));
+  }).join('、');
+}
+/* 専有部分の名称は「第弐〇参号」「２０７」のように番号だけのときだけ直す。名前の中の字は触らない */
+function _tpRoom(s) { return new RegExp(`^第?[${TP_NUM}0-9]+号?室?$`).test(s) ? _tpDigits(s) : s; }
+/* 見出し（所在など）の右の欄を読む。├ で区切られた塊が変更の履歴で、最後が今の値 */
+function _tpName(s) { return String(s || '').normalize('NFKC').replace(/[\uE000-\uF8FF]/g, TP_GAIJI).replace(/\s+/g, ' ').trim(); }  // 建物の名称は英字の間の空白を残す
+function _tpField(block, label, keepSpace) {
+  const m = block.match(new RegExp(`┃${label}\\s*│([\\s\\S]*?)(?=┠|┗)`));
+  if (!m) return '';
+  const parts = ('┃ │' + m[1]).split(/[├┝]─[─┼┬┴]*[┨┤]/);
+  let last = '';
+  for (const p of parts) {
+    let s = '', c;
+    const re = /┃\s*│?([^│┃]*?)\s*│/g;
+    while ((c = re.exec(p))) if (c[1].trim()) s += c[1].trim();
+    if (s) last = s;
+  }
+  return keepSpace ? _tpName(last) : _tpNorm(last);
+}
+function _tpParse(text) {
+  const head = String(text || '').split('権 利 部')[0];
+  if (!/表\s*題\s*部/.test(head) || !/┃所\s*在│/.test(head)) return null;
+  const r = { kind: '', location: '', kaoku: '', shikichi_num: '', mansion: '' };
+  if (head.includes('専有部分')) {
+    const i = head.indexOf('専有部分の建物の表示');
+    const a = i < 0 ? head : head.slice(0, i), b = i < 0 ? '' : head.slice(i);
+    r.kind = 'マンション';
+    r.location = _tpChiban(_tpField(a, '所\\s*在'));
+    r.kaoku = _tpChiban(_tpField(b, '家屋番号'));
+    const n1 = _tpField(a, '建物の名称', true), n2 = _tpField(b, '建物の名称', true);
+    r.mansion = [n1, n2 ? _tpRoom(n2) : ''].filter(Boolean).join('　');
+    const s = b.split('敷地権の表示')[1] || '';
+    const set = new Set();
+    for (const m of s.matchAll(/┠[─┼]+┨\s*┃([０-９0-9・，、]+)\s*│/g))
+      m[1].normalize('NFKC').split(/[・，、]/).forEach(x => x && set.add(x));
+    if (set.size) r.shikichi_num = String(set.size);
+  } else if (head.includes('土地の表示')) {
+    r.kind = '土地';
+    const list = [...head.matchAll(/┠[─┼]+┨\s*┃([^│┃]*?番[^│┃]*?)\s*│/g)].map(m => _tpNorm(m[1]));
+    if (!list.length) return null;
+    r.location = _tpNorm(_tpField(head, '所\\s*在')) + _tpChiban(list[list.length - 1]);
+  } else {
+    r.kind = '建物';
+    r.location = _tpChiban(_tpField(head, '所\\s*在'));
+    r.kaoku = _tpChiban(_tpField(head, '家屋番号'));
+  }
+  return r.location ? r : null;
+}
+/* 法人の登記情報PDFの文字から、案件基本情報の4項目を作る（11.0.8）。
+   商号と本店は、PDFの先頭（「現在の情報です」の次の2行）に今の値だけが出る。表の中は変更の履歴が混ざるので使わない */
+function _tcYen(s) {
+  const m = String(s || '').normalize('NFKC').replace(/[,\s]/g, '').match(/^金(?:(\d+)億)?(?:(\d+)万)?(\d+)?円$/);
+  return m && (m[1] || m[2] || m[3]) ? (+(m[1] || 0)) * 100000000 + (+(m[2] || 0)) * 10000 + (+(m[3] || 0)) : null;
+}
+function _tcParse(text) {
+  const t = String(text || '');
+  const num = t.match(/会社法人等番号\s*│?\s*([０-９0-9]{4})[－\-−ー]([０-９0-9]{2})[－\-−ー]([０-９0-9]{6})/);
+  if (!num) return null;
+  // 表の直前の2行が 本店・商号（その前に照会番号や「閉鎖された登記簿」の行が入ることがある）
+  const lines = t.split('\n').map(x => x.trim()).filter(Boolean);
+  const at = lines.findIndex(x => x.startsWith('┏') || x.startsWith('会社法人等番号'));
+  if (at < 3) return null;
+  const heads = [lines[at - 2], lines[at - 1]];
+  const r = {
+    honten: _tpNorm(heads[0]),
+    company_name: _tpName(heads[1]),
+    corp_num: [num[1], num[2], num[3]].map(x => x.normalize('NFKC')),
+    shihon: '',
+  };
+  // 資本金の額は変更の履歴が並ぶことがあるので、欄の中の最後の金額を今の値と見なす
+  const b = t.match(/┃資本(?:金の額|の総額)\s*│([\s\S]*?)(?=┣|┗|┃[^\s│┃][^│┃]*│)/);
+  if (b) {
+    const all = [...b[1].matchAll(/金[^│┃├┠]*?円/g)];
+    const yen = all.length ? _tcYen(all[all.length - 1][0]) : null;
+    if (yen != null) r.shihon = yen.toLocaleString('ja-JP');
+  }
+  return r;
+}
+/* 不動産一覧の「PDF」（Mac アプリだけ）。何も入っていない行にだけ出る */
+function _ppNative() { return _isNativeApp() && !!(window.CaseFlowNative && CaseFlowNative.pickPdf && CaseFlowNative.pdfText); }
+function _propIsEmpty(p) { return !['location', 'kaoku', 'shikichi_num', 'mansion'].some(k => String((p && p[k]) || '').trim()); }
+/* 打っている間にボタンを出し入れする。値は書き換えない（日本語入力を壊さない） */
+function _propRowInput(el) {
+  const tr = el.closest('tr'), b = tr && tr.querySelector('.prop-pdf');
+  if (b) b.hidden = [...tr.querySelectorAll('input')].some(i => i.value.trim());
+}
+/* 案件に結び付いたフォルダの取っ手。無ければ null（窓は Mac が覚えている前回の場所で開く） */
+async function _ppStartDir(caseId) {
+  try {
+    const rel = _cfMapAll()[caseId];
+    const base = await _idbGet('caseFilesRoot');
+    return base && rel ? await _cfResolve(base, rel) : null;
+  } catch (e) { return null; }
+}
+let _pp = null;  // { title, go, name, vals, fields, apply }
+/* Mac の標準の窓は階層の列が並んで見づらいので（11.0.7）、案件のフォルダがあれば、その中の PDF を
+   アプリの窓に直接並べる。フォルダが無い・PDF もフォルダも無いときは、標準の窓で任意の場所から選ぶ */
+let _ppList = null;  // { title, onFile, stack:[{name,h}], items:[{name,h,dir}] }
+function propPickPdf(caseId, idx) {
+  _ppChoose(caseId, `${PROP_NUMS[idx] || idx + 1} の行に読み込む PDF を選ぶ`, h => _ppRead(caseId, idx, h));
+}
+async function _ppChoose(caseId, title, onFile) {
+  const dir = await _ppStartDir(caseId);
+  if (dir) {
+    const items = await _ppReadDir(dir);
+    if (items && items.length) {
+      _ppList = { title, onFile, stack: [{ name: dir.name, h: dir }], items };
+      _ppListRender();
+      const m = document.getElementById('pp-pick-modal');
+      m.style.display = 'flex';
+      requestAnimationFrame(() => m.classList.add('show'));
+      return;
+    }
+  }
+  _ppFromPanel(dir, onFile);
+}
+/* フォルダの中の PDF と下位フォルダ。フォルダが先、そのあと名前順。読めなければ null */
+async function _ppReadDir(dir) {
+  try {
+    const items = [];
+    for await (const [name, h] of dir.entries()) {
+      if (name.startsWith('.')) continue;
+      if (h.kind === 'directory') items.push({ name, h, dir: true });
+      else if (/\.pdf$/i.test(name)) items.push({ name, h, dir: false });
+    }
+    return items.sort((a, b) => (b.dir - a.dir) || a.name.localeCompare(b.name, 'ja', { numeric: true }));
+  } catch (e) { return null; }
+}
+function _ppListRender() {
+  const L = _ppList;
+  document.getElementById('pp-pick-title').textContent = L.title;
+  document.getElementById('pp-pick-crumb').innerHTML = L.stack.map((d, i) => i === L.stack.length - 1
+    ? `<b>${escHtml(d.name)}</b>` : `<span class="pp-crumb" onclick="_ppListUp(${i})">${escHtml(d.name)}</span>`).join(' › ');
+  document.getElementById('pp-pick-list').innerHTML = L.items.length
+    ? L.items.map((x, i) => `<div class="pp-item" onclick="_ppListPick(${i})"><span class="pp-ic">${ico(x.dir ? 'folder' : 'doc')}</span><span class="pp-item-n">${escHtml(x.name)}</span></div>`).join('')
+    : '<div class="pp-none">このフォルダに PDF はありません</div>';
+  document.getElementById('pp-pick-list').scrollTop = 0;
+}
+async function _ppListGo(stack) {
+  const items = await _ppReadDir(stack[stack.length - 1].h);
+  if (!items) { toast('フォルダを読めませんでした', 'error'); return; }
+  _ppList.stack = stack; _ppList.items = items;
+  _ppListRender();
+}
+function _ppListUp(i) { _ppListGo(_ppList.stack.slice(0, i + 1)); }
+function _ppListPick(i) {
+  const L = _ppList, x = L.items[i];
+  if (!x) return;
+  if (x.dir) { _ppListGo([...L.stack, { name: x.name, h: x.h }]); return; }
+  closePpPick();
+  L.onFile(x.h);
+}
+function _ppListOther() {
+  const L = _ppList;
+  closePpPick();
+  _ppFromPanel(L.stack[L.stack.length - 1].h, L.onFile);
+}
+function closePpPick(e) {
+  const m = document.getElementById('pp-pick-modal');
+  if (e && e.target !== m) return;
+  m.classList.remove('show');
+  setTimeout(() => { m.style.display = 'none'; }, 150);
+}
+async function _ppFromPanel(dir, onFile) {
+  try {
+    const h = await CaseFlowNative.pickPdf(dir);
+    if (h) onFile(h);
+  } catch (e) { toast(`読めませんでした（${e.message}）`, 'error'); }
+}
+/* PDF の文字を読む。読めなければ知らせて null */
+async function _ppText(h) {
+  try {
+    const r = await CaseFlowNative.pdfText(h);
+    if (!r.ok) { toast(`読めませんでした（${r.reason}）`, 'error'); return; }
+    if (!String(r.text || '').trim()) { toast('このPDFには文字情報がありません（紙をスキャンしたものは読めません）', 'error'); return; }
+    return r.text;
+  } catch (e) { toast(`読めませんでした（${e.message}）`, 'error'); return null; }
+}
+async function _ppRead(caseId, idx, h) {
+  const text = await _ppText(h);
+  if (text == null) return;
+  const v = _tpParse(text);
+  if (!v) { toast('不動産の登記情報のPDFとして読めませんでした。行は変えていません', 'error'); return; }
+  _pp = {
+    title: `${PROP_NUMS[idx] || idx + 1} の行に読み込みます（${v.kind}）`, go: 'この行に入れる', name: h.name, vals: v, fields: PP_FIELDS,
+    apply() {
+      const c = cases.find(x => x.id === caseId);
+      const row = c && c.properties && c.properties[idx];
+      // 窓を開いている間に行が変わっていたら入れない（上書きしない）
+      if (!row || !_propIsEmpty(row)) { toast('その行に別の内容が入ったので、入れませんでした', 'error'); return; }
+      PP_FIELDS.forEach(([k]) => { const i = document.getElementById('pp-' + k); if (i && i.value.trim()) row[k] = i.value.trim(); });
+      saveToStorage();
+      refreshLedgerSection(caseId);
+    },
+  };
+  _ppOpen();
+}
+/* 案件編集の「商号・法人名」の「PDF」（11.0.8）。商号・本店・会社法人等番号・資本金の4つがすべて空のときだけ出る。
+   入れるのは編集画面の欄まで。保存は今までどおり案件の「保存」 */
+const TC_INPUTS = ['f-company-name', 'f-honten', 'f-corp-num-1', 'f-corp-num-2', 'f-corp-num-3', 'f-shihon'];
+const TC_FIELDS = [['company_name', '商号・法人名'], ['honten', '本店所在地'], ['corp_num', '会社法人等番号'], ['shihon', '資本金の額（円）']];
+function _tcIsEmpty() { return !TC_INPUTS.some(id => (document.getElementById(id)?.value || '').trim()); }
+function _tcSync() {
+  const b = document.getElementById('tc-pdf');
+  if (b) b.hidden = !(_ppNative() && _tcIsEmpty());
+}
+document.addEventListener('input', e => { if (e.target && TC_INPUTS.includes(e.target.id)) _tcSync(); });
+function corpPickPdf() {
+  _ppChoose(currentCaseId, '読み込む法人の登記情報の PDF を選ぶ', _tcRead);
+}
+async function _tcRead(h) {
+  const text = await _ppText(h);
+  if (text == null) return;
+  const v = _tcParse(text);
+  if (!v) { toast('法人の登記情報のPDFとして読めませんでした。欄は変えていません', 'error'); return; }
+  _pp = {
+    title: '案件基本情報に読み込みます', go: '欄に入れる', name: h.name, vals: { ...v, corp_num: v.corp_num.join('-') }, fields: TC_FIELDS,
+    apply() {
+      if (!_tcIsEmpty()) { toast('欄に別の内容が入ったので、入れませんでした', 'error'); return; }
+      const val = k => (document.getElementById('pp-' + k)?.value || '').trim();
+      document.getElementById('f-company-name').value = val('company_name');
+      document.getElementById('f-honten').value = val('honten');
+      const cn = val('corp_num').normalize('NFKC').split(/[^0-9]+/).filter(Boolean);
+      if (cn.length === 3) cn.forEach((x, i) => { document.getElementById('f-corp-num-' + (i + 1)).value = x; });
+      const si = document.getElementById('f-shihon');
+      si.value = val('shihon');
+      fmtMoney(si);
+      _shihonSyncClass();
+      _tcSync();
+    },
+  };
+  _ppOpen();
+}
+const PP_FIELDS = [['location', '所在／地番'], ['kaoku', '家屋番号'], ['shikichi_num', '敷地権の数'], ['mansion', 'マンション名等']];
+function _ppOpen() {
+  const v = _pp.vals;
+  document.getElementById('pp-title').textContent = _pp.title;
+  document.getElementById('pp-go').textContent = _pp.go;
+  document.getElementById('pp-file').textContent = _pp.name;
+  document.getElementById('pp-fields').innerHTML = _pp.fields.filter(([k]) => v[k]).map(([k, l]) =>
+    `<div class="pp-row"><label for="pp-${k}">${l}</label><input class="form-control" id="pp-${k}" value="${escHtml(v[k])}" oninput="_ppState()"></div>`).join('');
+  const m = document.getElementById('pp-modal');
+  m.style.display = 'flex';
+  requestAnimationFrame(() => m.classList.add('show'));
+  _ppState();
+  setTimeout(() => {
+    const g = m.querySelector('input.pp-gaiji');
+    if (g) { g.focus(); const at = g.value.indexOf(TP_GAIJI); g.setSelectionRange(at, at + 1); }
+    else document.getElementById('pp-go').focus();
+  }, 50);
+}
+function _ppState() {
+  let bad = false;
+  document.querySelectorAll('#pp-fields input').forEach(i => { const b = i.value.includes(TP_GAIJI); i.classList.toggle('pp-gaiji', b); if (b) bad = true; });
+  document.getElementById('pp-go').disabled = bad;
+  document.getElementById('pp-msg').hidden = !bad;
+}
+function _ppKey(e) {
+  if (e.isComposing) return;
+  if (e.key === 'Escape') { e.preventDefault(); closePpModal(); }
+  else if (e.key === 'Enter' && !document.getElementById('pp-go').disabled) { e.preventDefault(); ppApply(); }
+}
+function closePpModal(e) {
+  const m = document.getElementById('pp-modal');
+  if (e && e.target !== m) return;
+  m.classList.remove('show');
+  setTimeout(() => { m.style.display = 'none'; }, 150);
+}
+function ppApply() {
+  if (!_pp) return;
+  _pp.apply();
+  closePpModal();
 }
 
 function refreshLedgerSection(caseId) {
@@ -14904,6 +15257,7 @@ function openCaseModal(caseId, scrollTo) {
       }
     }
   }, 10);
+  _tcSync();
 }
 
 function closeCaseModal(event) {
