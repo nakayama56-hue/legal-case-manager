@@ -4244,6 +4244,11 @@ body[data-theme="kiri"] #payment-pending > div > div:last-child { padding: 6px 1
 body[data-theme="kiri"] #tracking-summary .tracking-row, body[data-theme="kiri"] #payment-pending .tracking-row {
   border-bottom: none !important; padding-top: 7px !important; padding-bottom: 7px !important; margin-bottom: 8px; border-radius: 12px; box-shadow: var(--kiri-raise-sm);
 }
+/* 日本郵便の状態の字。既定の薄い灰は白い地の前提で、霧の灰色の地では沈む（11.2.3） */
+body[data-theme="kiri"] .jp-st { color: #4d5668; }
+body[data-theme="kiri"] .jp-st.jp-none { color: #5d6676; }
+body[data-theme="kiri"] .jp-head { color: #4d5668; }
+body[data-theme="kiri"] .tracking-row .tr-main { overflow: hidden; }
 body[data-theme="kiri"] .tracking-row:not(.tr-peek-on):not(.jp-delivered) { background: var(--kiri-bg); }
 body[data-theme="kiri"] .tracking-row:not(.tr-peek-on):not(.jp-delivered):hover { background: #eef1f6; }
 /* タスク一覧。表の行を浮かせる（中の折りたたみの行は対象外）。縦の隙間のため collapse をやめるので、tr の左の色線は効かない → 最初の td の内側の影で出す */
@@ -4630,7 +4635,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.2.2</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.2.3</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
