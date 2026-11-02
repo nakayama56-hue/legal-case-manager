@@ -4643,7 +4643,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.2.8</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.3.1</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -7873,7 +7873,7 @@ function renderCaseTimeline() {
     // 帯の右端の位置（%）
     const rightPct = (parseFloat(leftPct) + parseFloat(widthPct)).toFixed(2);
     return `<div class="shinsei-tl-row ${isKogyo ? 'tl-cat-kogyo' : 'tl-cat-fudosan'}" onclick="showCaseDetail('${r.caseId}')" style="cursor:pointer;align-items:center">
-      <div class="shinsei-tl-label" title="${escHtml(labelMain)}">${escHtml(labelMain)}</div>
+      <div class="shinsei-tl-label">${escHtml(labelMain)}</div>
       <div class="shinsei-tl-track" style="position:relative;height:12px">
         <div style="position:absolute;left:${leftPct}%;width:${widthPct}%;height:100%;background:${barColor};border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,0.10)"></div>
         <span style="position:absolute;left:${leftPct}%;transform:translateX(calc(-100% - 4px));top:50%;margin-top:-7px;font-size:10px;font-weight:700;color:${dateColor};white-space:nowrap">${r.shinsei.slice(5)}</span>
@@ -8371,18 +8371,16 @@ function renderTrackingSummary() {
     /* 日本郵便の配達状況（10.6.7）。到着済の行と、口が無いとき・まだ確かめていない番号には何も足さない */
     const jp = (jpOn && !arrived) ? _jpRowParts(item.tracking) : null;
     if (jp && jp.delivered) jpDeliveredN++;
-    const peekTitle = _trPeekNative() ? '押すと追跡ページをのぞけます（⏎ でブラウザ窓、⌘P で印刷）' : '';
-    const rowTitle = jp ? [jp.title, peekTitle].filter(v => v).join('\n') : peekTitle;
-    /* Mac アプリ：マウスを乗せてスペースで追跡ページをのぞき見（10.3.6）。Chrome 版では data- が付くだけ */
-    const peekAttr = ' data-peek-url="' + url + '" data-peek-title="' + escHtml(label + '　' + item.tracking) + '"'
-      + (rowTitle ? ' title="' + escHtml(rowTitle) + '"' : '');
-    /* 左側（10.9.1）。送付先（太字）＋送付物を左、案件名を右に1行で。全文は各欄の title で読める */
+    /* Mac アプリ：マウスを乗せてスペースで追跡ページをのぞき見（10.3.6）。Chrome 版では data- が付くだけ。
+       行の title（日本郵便の全文と操作の案内）は 11.2.9 で外した（ご本人の「カーソルをのせると出てくる黒い説明はいらない」） */
+    const peekAttr = ' data-peek-url="' + url + '" data-peek-title="' + escHtml(label + '　' + item.tracking) + '"';
+    /* 左側（10.9.1）。送付先（太字）＋送付物を左、案件名を右に1行で。各欄の title は 11.3.1 で外した */
     const who  = item.who || '';
     const what = item.what != null ? item.what : (item.label || '');
-    const line1 = (who ? '<span class="tr-who" title="' + escHtml(who) + '">' + escHtml(who) + '</span>' : '')
-      + (what ? '<span class="tr-what' + (what.length <= 8 ? ' tr-short' : '') + '" title="' + escHtml(what) + '">' + escHtml(what) + '</span>' : '');
+    const line1 = (who ? '<span class="tr-who">' + escHtml(who) + '</span>' : '')
+      + (what ? '<span class="tr-what' + (what.length <= 8 ? ' tr-short' : '') + '">' + escHtml(what) + '</span>' : '');
     const line2 = item.caseName
-      ? '<div class="tr-l2">' + ico('folder') + '<span class="tr-case" title="' + escHtml(item.caseName) + '">' + escHtml(item.caseName) + '</span></div>'
+      ? '<div class="tr-l2">' + ico('folder') + '<span class="tr-case">' + escHtml(item.caseName) + '</span></div>'
       : '';
     return '<div class="tracking-row' + (jp && jp.delivered ? ' jp-delivered' : '') + '" ' + rowClick + peekAttr + ' style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid #ede9fe;' + opacity + 'cursor:pointer;">'
       + '<span class="tr-date">' + dateStr + '</span>'
@@ -12462,16 +12460,16 @@ function renderTaskTable() {
                    : tk.deadline === t ? 'row-today' : '';
     const isDone = tk.status === '完了';
     return `<tr class="${rowClass}" onclick="openCaseDetailFromTask('${tk.id}')">
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;${isDone?'text-decoration:line-through;color:var(--text-muted)':''}" title="${escHtml(tk.name)}">
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0;${isDone?'text-decoration:line-through;color:var(--text-muted)':''}">
         <div style="display:flex;align-items:center;gap:6px;min-width:0">
-          <button onclick="event.stopPropagation();quickComplete('${tk.id}',this)" title="${isDone?'完了済み':'完了にする'}"
+          <button onclick="event.stopPropagation();quickComplete('${tk.id}',this)"
             style="width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid ${isDone?'#10b981':'#9ca3af'};background:${isDone?'#10b981':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;padding:0">
             ${isDone?'<span style="color:#fff;font-size:11px;line-height:1">✓</span>':''}
           </button>
           <strong style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(tk.name)}</strong>
         </div>
       </td>
-      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0" title="${c ? escHtml(c.case_name) : ''}">${c ? escHtml(c.case_name) : '—'}</td>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0">${c ? escHtml(c.case_name) : '—'}</td>
       <td style="white-space:nowrap;font-size:11px;cursor:pointer" onclick="event.stopPropagation();inlineEditDeadline(this,'${tk.id}')">${deadlineBadge(tk.deadline, tk.status)}</td>
       <td class="task-op-col" style="white-space:nowrap" onclick="event.stopPropagation();">
         <button class="btn btn-secondary btn-xs" onclick="openTaskModal('${tk.id}','${tk.case_id}',null)">編集</button>
