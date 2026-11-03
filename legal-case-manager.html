@@ -4212,6 +4212,11 @@ body[data-theme="kiri"] .cal-seg button.on { background: var(--kiri-gold); color
 body[data-theme="kiri"] .db-col { background: var(--kiri-bg); border: none; box-shadow: var(--kiri-raise); border-radius: 26px; padding: 14px; }
 /* 送りの棒が列の丸い角まで伸びると、角が四角く見える。上下を丸みのぶん空ける（11.2.5） */
 body[data-theme="kiri"] .db-col::-webkit-scrollbar-track { margin: 26px 0; }
+/* つまみ（#d1d5db）が列の外の影とほぼ同じ色で、つまみのある高さだけ列の右端が 6px 内側に見えていた（段差に見える）。
+   棒を 12px にし、透明の縁 3px でつまみを端から離して、色も地に近い淡い灰にする（11.3.2、ご本人の「この段差の縦がずれている」） */
+body[data-theme="kiri"] .db-col::-webkit-scrollbar { width: 12px; }
+body[data-theme="kiri"] .db-col::-webkit-scrollbar-thumb { background: #d6dce6; border: 3px solid transparent; background-clip: padding-box; border-radius: 6px; }
+body[data-theme="kiri"] .db-col::-webkit-scrollbar-thumb:hover { background: #c3cbd8; border: 3px solid transparent; background-clip: padding-box; }
 body[data-theme="kiri"] #dashboard-layout { padding: 0 4px; }
 body[data-theme="kiri"] #case-calendar-wrap { background: var(--kiri-bg); box-shadow: var(--kiri-raise); border-radius: 26px; padding: 12px; margin-bottom: 20px !important; }
 body[data-theme="kiri"] .db-col > #case-calendar-wrap { background: transparent; box-shadow: none; border-radius: 0; padding: 0; margin-bottom: 0 !important; }
@@ -4643,7 +4648,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.3.1</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.3.2</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
