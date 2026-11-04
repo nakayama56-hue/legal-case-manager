@@ -4648,7 +4648,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.3.3</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.3.4</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -15338,6 +15338,7 @@ function _shihonSyncClass() {
 
 function openCaseModal(caseId, scrollTo) {
   currentCaseId = caseId;
+  _touhonPending = [];
   const modal = document.getElementById('case-modal');
   _fillRoleOptions();
   document.getElementById('case-modal-title').textContent = caseId ? '案件編集' : '新規案件';
@@ -16165,7 +16166,10 @@ function saveCase() {
   } else {
     const newId = genId();
     cases.push({ id: newId, created_at: today(), ...data });
-    toast('案件を追加しました');
+    // 11.3.4：保存前に「謄本」の「はい」を押していた分を、ここでタスクにする
+    _touhonPending.forEach(yotei => tasks.push(_touhonTaskOf(newId, yotei)));
+    toast(_touhonPending.length ? `案件を追加しました（タスク「謄本」${_touhonPending.length}件も）` : '案件を追加しました');
+    _touhonPending = [];
   }
 
   saveToStorage();
@@ -16873,19 +16877,21 @@ function onYoteiChange(input) {
     </div>`;
 }
 
+// 11.3.4：新規案件（まだ保存していない）で「はい」を押した分。案件を保存したときにタスクにする。
+// 案件の窓を開き直すと空に戻る（保存しなければタスクも作らない）
+let _touhonPending = [];
+function _touhonTaskOf(caseId, yotei) {
+  return { id: genId(), case_id: caseId, name: '謄本', deadline: yotei, status: '', memo: '', created_at: new Date().toISOString() };
+}
 function addTouhonTask(btn, yotei) {
   const caseId = currentCaseId;
-  if (!caseId) return;
-  const newTask = {
-    id: genId(),
-    case_id: caseId,
-    name: '謄本',
-    deadline: yotei,
-    status: '',
-    memo: '',
-    created_at: new Date().toISOString(),
-  };
-  tasks.push(newTask);
+  if (!caseId) {
+    if (!_touhonPending.includes(yotei)) _touhonPending.push(yotei);
+    btn.closest('.touhon-suggest').style.display = 'none';
+    toast(`タスク「謄本」（期限：${formatDate(yotei)}）は、案件を保存したときに追加します`, 'info');
+    return;
+  }
+  tasks.push(_touhonTaskOf(caseId, yotei));
   saveToStorage();
   btn.closest('.touhon-suggest').style.display = 'none';
   toast(`タスク「謄本」を追加しました（期限：${formatDate(yotei)}）`, 'success');
