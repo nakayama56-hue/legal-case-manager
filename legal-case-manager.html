@@ -3976,11 +3976,16 @@ body.viewer-mode .db-arrange { display: none; }
 
 /* 11.3.6：録音からメモ・タスク（2026年11月4日）。Mac アプリだけ（殻の口が無ければ受け口も帯も窓も出ない）。
    落とした先のカード（備考・メモ／面談記録）で入れ先が決まり、確認窓の上で切り替えられる。作りは 7-18 章 */
-.rk-over { outline: 2.5px dashed var(--color-primary); outline-offset: -3px; background: rgba(37,99,235,0.06) !important; }
-.rk-drop-hint { display: none; margin: 4px 12px 10px; padding: 12px; border: 1.5px dashed rgba(37,99,235,0.45); border-radius: 10px; text-align: center; font-size: 12px; color: var(--text-secondary); background: rgba(37,99,235,0.04); pointer-events: none; }
-.rk-drop-hint b { color: var(--color-primary); }
-.rk-over .rk-drop-hint { display: block; }
-.rk-over > *:not(.rk-drop-hint) { pointer-events: none; }
+.rk-over { background: rgba(37,99,235,0.04) !important; }
+/* 11.4.5：受け口は常に出す（ご本人の「見た目的にわかりづらいので、ここにドロップするっていうのがあるといい。案件のフォルダに同じようなパーツがあるけど」）。
+   形はファイル一覧の .cf-drop と同じ。右に Import（「ついでにその受け口に Import ボタンもつけたらどうか」） */
+.rk-drop { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 4px 12px 10px; padding: 10px 12px; border: 1.5px dashed rgba(37,99,235,0.45); border-radius: 10px; font-size: 11px; color: var(--text-muted); background: rgba(37,99,235,0.04); }
+.rk-drop b { color: var(--color-primary); }
+.rk-drop .btn { flex-shrink: 0; }
+.rk-over .rk-drop, .rk-drop.over { background: rgba(37,99,235,0.12); border-style: solid; }
+.rk-over > *:not(.rk-band-host) { pointer-events: none; }
+.rk-over .rk-drop { pointer-events: auto; }
+.cf-drop { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }   /* 11.4.5：中に「追加」のボタンを置くため */
 .rk-band { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 4px 12px 10px; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; background: #eef5ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
 .rk-band .rk-file { font-weight: 400; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40%; }
 .rk-band .rk-prog { flex: 1 1 120px; height: 6px; border-radius: 3px; background: #dbeafe; overflow: hidden; }
@@ -4697,7 +4702,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.4.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.4.6</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -6653,7 +6658,7 @@ function _mpApply(sm) {
    録音からメモ・面談記録・タスク（11.3.6。2026年11月4日。7-18 章）
    きっかけ：ご本人の「スマホの録音した通話記録や面談の記録が、簡単に文字起こしされて、CaseFlow のメモやタスクに落とせる機能があるといい」
    「録音ファイルをドラッグアンドドロップしたら、それらの作業が始まるみたいな機能」「面談記録に録音データを入れることもある」
-   流れ：案件詳細の 備考・メモ／面談記録 のカードに録音を落とす（または「Import」でデスクトップなどから選ぶ。11.3.7）
+   流れ：案件詳細の 備考・メモ／面談記録 のカードの受け口に録音を落とす（または受け口の「Import」でデスクトップなどから選ぶ。11.3.7・11.4.5）
         → 落とした録音は殻の一時置き場へ（案件フォルダへは「入れる」のとき。11.4.0）→ 殻が Mac の音声認識で文字にする（Mac の外へ出ない）
         → 文字起こしを裏方（MailFlow の裏方）の Claude が要約（メモ・面談記録の下書き、タスクの候補、聞き取れなかった所）
         → 確認窓で直して「入れる」。タスクはチェックしたものだけ。自動では何も入れない
@@ -6678,10 +6683,11 @@ function _rkBtnHtml(target, caseId) {
   if (!_rkNative() || _rkMuted()) return '';
   return `<button class="btn btn-secondary btn-xs no-print" onclick="_rkImport('${caseId}','${target}')" title="録音を選んで（デスクトップから開きます）文字起こし→要約→${target === 'interview' ? '面談記録' : 'メモ'}の下書き。「入れる」で録音も案件フォルダへ">${ico('tray-in')} Import</button>`;
 }
+/* 受け口（常に出る。11.4.5）。カードごと落とし先なので、受け口の上でなくても落ちる */
 function _rkHostHtml(target, caseId) {
   if (!_rkNative() || _rkMuted()) return '';
-  const what = target === 'interview' ? '面談記録' : 'メモの下書きとタスクの候補';
-  return `<div class="rk-drop-hint">🎙 録音（m4a・mp3 など）をここに落とすと、<b>文字起こし → 要約</b>して、<b>${what}</b>を出します。「入れる」を押したときに、録音も案件フォルダへ入ります</div><div class="rk-band-host no-print" data-rk-host="${target}" data-rk-case="${caseId}"></div>`;
+  const what = target === 'interview' ? '面談記録の下書き' : 'メモの下書きとタスクの候補';
+  return `<div class="rk-drop no-print"><span>🎙 録音（m4a・mp3）を<b>ここに落とす</b>と、文字起こし → 要約して <b>${what}</b></span>${_rkBtnHtml(target, caseId)}</div><div class="rk-band-host no-print" data-rk-host="${target}" data-rk-case="${caseId}"></div>`;
 }
 function _rkIsAudio(name, type) { return RK_AUDIO_RE.test(String(name || '')) || /^audio\//.test(String(type || '')); }
 function _rkDragHasAudio(dt) {
@@ -10105,7 +10111,7 @@ function renderCaseDetail(caseId) {
     <div class="info-card" style="margin-bottom:16px;border-left:4px solid #fbbf24"${_rkAttrs('memo', c.id)}>
       <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
         <span>${ico('note')} 備考・メモ</span>
-        <span style="display:flex;gap:6px">${_rkBtnHtml('memo', c.id)}<button class="btn btn-primary btn-xs no-print" onclick="addMemoItem('${c.id}')">＋ 追加</button></span>
+        <button class="btn btn-primary btn-xs no-print" onclick="addMemoItem('${c.id}')">＋ 追加</button>
       </div>
       <div id="memo-list-${c.id}" style="padding:8px 12px;min-height:36px">
         ${renderMemoList(c)}
@@ -11030,7 +11036,7 @@ function _cfRender() {
       <div class="cf-head-actions">
         ${_cf.status === 'ok' ? `
           ${_cf.path.length ? `<button class="btn btn-secondary btn-xs" onclick="cfGoto(${_cf.path.length - 2})">↑ 上へ</button>` : ''}
-          <button class="btn btn-primary btn-xs cf-write" onclick="cfAdd()">＋ 追加</button>
+
           <button class="btn btn-secondary btn-xs cf-write" onclick="cfNewFolder()">${ico('folder-open')} 新しいフォルダ</button>
           <button class="btn btn-secondary btn-xs" onclick="_cfLoad()" title="読み直す">↻</button>${_cfNative() ? `<button class="btn btn-secondary btn-xs" onclick="cfRevealHere()" title="このフォルダを Finder で開く">${ico('folder-open')} Finder</button>` : ''}` : ''}
         ${_cf.status === 'ok' || _cf.status === 'lost' ? `<button class="btn btn-secondary btn-xs" onclick="cfRebind()" title="別のフォルダに結び付け直す">${ico('link')} 選び直す</button>` : ''}
@@ -11084,7 +11090,7 @@ function _cfRender() {
           <span class="cf-sort"><span class="${_cf.sort === 'name' ? 'on' : ''}" onclick="cfSort('name')">名前</span><span class="${_cf.sort === 'type' ? 'on' : ''}" onclick="cfSort('type')">種類</span><span class="${_cf.sort === 'date' ? 'on' : ''}" onclick="cfSort('date')">更新日</span></span>
         </div>
         <div class="cf-list">${_cfListHtml()}</div>
-        <div class="cf-drop cf-write" ondragenter="cfDragOver(event)" ondragover="cfDragOver(event)" ondragleave="this.classList.remove('over')" ondrop="cfDrop(event)">ここにファイルを落とすと、<b>このフォルダに追加</b>されます</div>
+        <div class="cf-drop cf-write" ondragenter="cfDragOver(event)" ondragover="cfDragOver(event)" ondragleave="this.classList.remove('over')" ondrop="cfDrop(event)"><span>ファイルを<b>ここに落とす</b>と、このフォルダに追加されます</span><button class="btn btn-secondary btn-xs" onclick="cfAdd()" title="ファイルを選んでこのフォルダに追加">${ico('tray-in')} Import</button></div>
         <div class="cf-foot">${_cfNative()
           ? 'ファイルは Mac のアプリで開きます（元のファイルそのものです）。削除はここからはできません（Finder で）。'
           : 'PDF・画像はその場で開きます。Word などはダウンロードになります。削除はここからはできません（Dropbox か Finder で）。'}</div>`;
@@ -18849,13 +18855,13 @@ function renderInterviews(c) {
     <div class="interview-section"${_rkAttrs('interview', cid)}>
       <div class="interview-section-header">
         <span>${ico('note')} 面談記録（${interviews.length}件）</span>
-        <span style="display:flex;gap:6px">${_rkBtnHtml('interview', cid)}<button class="btn btn-primary btn-xs" onclick="openInterviewModal('${cid}', null)">＋ 追加</button></span>
+        <button class="btn btn-primary btn-xs" onclick="openInterviewModal('${cid}', null)">＋ 追加</button>
       </div>
-      ${_rkHostHtml('interview', cid)}
       ${interviews.length > 0
         ? `<div class="iv-grid">${cards}</div>`
         : '<div class="interview-empty">面談記録はまだありません</div>'}
-    </div>`;
+      ${_rkHostHtml('interview', cid)}
+    </div>`;   // 受け口は一覧の下（11.4.6。ご本人の「面談記録の受け口も下にあったほうがいい」。備考・メモと同じ位置）
 }
 
 function formatDatetime(dt) {
