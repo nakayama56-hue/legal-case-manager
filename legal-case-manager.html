@@ -3973,6 +3973,55 @@ body.viewer-mode .db-arrange { display: none; }
 .mp-spin { width: 14px; height: 14px; border: 2px solid #fdba74; border-top-color: #ea580c; border-radius: 50%; animation: mpSpin .8s linear infinite; flex-shrink: 0; }
 @media (prefers-reduced-motion: reduce) { .mp-spin { animation: none; } }
 .delivery-item.dv-nodate .dv-date { border-color: #d97706; background: #fffbeb; }
+
+/* 11.3.6：録音からメモ・タスク（2026年11月4日）。Mac アプリだけ（殻の口が無ければ受け口も帯も窓も出ない）。
+   落とした先のカード（備考・メモ／面談記録）で入れ先が決まり、確認窓の上で切り替えられる。作りは 7-18 章 */
+.rk-over { outline: 2.5px dashed var(--color-primary); outline-offset: -3px; background: rgba(37,99,235,0.06) !important; }
+.rk-drop-hint { display: none; margin: 4px 12px 10px; padding: 12px; border: 1.5px dashed rgba(37,99,235,0.45); border-radius: 10px; text-align: center; font-size: 12px; color: var(--text-secondary); background: rgba(37,99,235,0.04); pointer-events: none; }
+.rk-drop-hint b { color: var(--color-primary); }
+.rk-over .rk-drop-hint { display: block; }
+.rk-over > *:not(.rk-drop-hint) { pointer-events: none; }
+.rk-band { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 4px 12px 10px; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; background: #eef5ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
+.rk-band .rk-file { font-weight: 400; color: var(--text-secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40%; }
+.rk-band .rk-prog { flex: 1 1 120px; height: 6px; border-radius: 3px; background: #dbeafe; overflow: hidden; }
+.rk-band .rk-prog i { display: block; height: 100%; width: 30%; background: var(--color-primary); border-radius: 3px; animation: rkSlide 1.4s ease-in-out infinite alternate; }
+@keyframes rkSlide { from { margin-left: 0 } to { margin-left: 70% } }
+.rk-band .btn { margin-left: auto; }
+#rk-modal { z-index: 260; }
+#rk-modal .modal { max-width: 960px; }
+.rk-head { display: flex; gap: 8px 16px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+.rk-head b { color: var(--text-primary); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 420px; }
+.rk-target { display: inline-flex; align-items: center; gap: 8px; margin-right: 6px; }
+.rk-target .seg { display: inline-flex; border: 1px solid var(--border-light); border-radius: 8px; overflow: hidden; background: rgba(255,255,255,0.6); }
+.rk-target .seg button { border: 0; background: transparent; padding: 5px 12px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+.rk-target .seg button.on { background: var(--color-primary); color: #fff; font-weight: 700; }
+.rk-cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 760px) { .rk-cols { grid-template-columns: 1fr; } }
+.rk-lab { font-size: 12px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; display: flex; align-items: center; gap: 6px; }
+.rk-lab .sub, .rk-sub { font-weight: 400; color: var(--text-muted); font-size: 11px; }
+#rk-memo, #rk-iv-content { width: 100%; min-height: 240px; font-size: 13px; line-height: 1.6; resize: vertical; }
+#rk-iv-azukari { min-height: 48px; font-size: 13px; }
+.rk-unclear { margin-top: 10px; padding: 9px 12px; border-radius: 8px; background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; font-size: 12px; line-height: 1.55; }
+.rk-unclear b { display: block; margin-bottom: 3px; }
+.rk-unclear ol { margin: 0; padding-left: 1.3em; }
+.rk-tasks { border: 1px solid var(--border-light); border-radius: 8px; background: rgba(255,255,255,0.6); overflow: hidden; }
+/* 11.3.8：候補の字は折り返して全文読める形（ご本人の「横幅が短すぎて読めない」）。期限は字の下の行 */
+.rk-task { display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 4px 8px; align-items: start; padding: 8px 10px; border-bottom: 1px solid var(--border-light); font-size: 13px; }
+.rk-task:last-child { border-bottom: 0; }
+.rk-task input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--color-primary); margin-top: 7px; }
+.rk-task .rk-t { height: auto; min-height: 32px; font-size: 13px; line-height: 1.45; padding: 6px 8px; resize: none; overflow: hidden; word-break: normal; overflow-wrap: break-word; line-break: strict; }
+.rk-task .rk-due { grid-column: 2; display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+.rk-task input[type=date] { height: 28px; font-size: 12px; padding: 0 6px; width: 150px; }
+.rk-task.off .rk-t, .rk-task.off .rk-due { color: var(--text-muted); opacity: .7; }
+.rk-none { padding: 12px; font-size: 12px; color: var(--text-muted); text-align: center; }
+.rk-full { margin-top: 12px; }
+.rk-full summary { cursor: pointer; font-size: 12px; color: var(--color-primary); font-weight: 600; }
+.rk-full pre { margin: 8px 0 0; max-height: 180px; overflow: auto; font: 12px/1.6 -apple-system, "Hiragino Sans", sans-serif; white-space: pre-wrap; color: var(--text-secondary); background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px; }
+.rk-foot-opt { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); margin-right: auto; }
+.rk-foot-opt input { accent-color: var(--color-primary); }
+body[data-theme="kiri"] .rk-tasks, body[data-theme="kiri"] .rk-full pre { background: transparent; box-shadow: var(--kiri-press); border: none; border-radius: 12px; }
+body[data-theme="kiri"] .rk-band { box-shadow: var(--kiri-raise-sm); border: none; }
+@media (prefers-reduced-motion: reduce) { .rk-band .rk-prog i { animation: none; width: 100%; } }
 @keyframes tn-flash { from { background: #fdba74; } to { background: transparent; } }
 
 /* =====================================================
@@ -4648,7 +4697,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.3.5</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.3.9</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5474,6 +5523,35 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
     <div class="modal-footer">
       <span class="mp-note" style="margin:0 auto 0 0">行を押すと、いちばん新しい受信の1通を Claude が要約します（20〜40秒）。欄に入ってから直せます</span>
       <button class="btn btn-secondary" onclick="closeMailPick()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========== ROKUON MODAL（録音からメモ・面談記録・タスク。11.3.6） =========== -->
+<div id="rk-modal" class="modal-overlay" style="display:none" onclick="closeRkModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="rk-title">🎙 録音からメモを作る</div>
+      <button class="modal-close" onclick="closeRkModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="rk-head">
+        <div class="rk-target"><span>入れる先</span><span class="seg"><button type="button" id="rk-tg-memo" onclick="_rkSetTarget('memo')">備考・メモ</button><button type="button" id="rk-tg-iv" onclick="_rkSetTarget('interview')">面談記録</button></span></div>
+        <b id="rk-file"></b><span id="rk-meta"></span>
+      </div>
+      <div class="rk-cols">
+        <div id="rk-left"></div>
+        <div>
+          <div class="rk-lab">タスクの候補 <span class="sub">チェックしたものだけ足します。字も期限も直せます</span></div>
+          <div class="rk-tasks" id="rk-tasks"></div>
+          <details class="rk-full"><summary id="rk-full-sum">文字起こしの全文を見る</summary><pre id="rk-full"></pre></details>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <label class="rk-foot-opt" id="rk-keep-wrap"><input type="checkbox" id="rk-keep" checked> <span id="rk-keep-label">録音を案件フォルダに残す</span></label>
+      <button class="btn btn-secondary" onclick="closeRkModal()">キャンセル</button>
+      <button class="btn btn-primary" id="rk-apply" onclick="_rkApply()">メモに入れる</button>
     </div>
   </div>
 </div>
@@ -6570,6 +6648,313 @@ function _mpApply(sm) {
   ta.focus();
   ta.selectionStart = ta.selectionEnd = ta.value.length;
 }
+
+/* =====================================================
+   録音からメモ・面談記録・タスク（11.3.6。2026年11月4日。7-18 章）
+   きっかけ：ご本人の「スマホの録音した通話記録や面談の記録が、簡単に文字起こしされて、CaseFlow のメモやタスクに落とせる機能があるといい」
+   「録音ファイルをドラッグアンドドロップしたら、それらの作業が始まるみたいな機能」「面談記録に録音データを入れることもある」
+   流れ：案件詳細の 備考・メモ／面談記録 のカードに録音を落とす（または「Import」でデスクトップなどから選ぶ。11.3.7）
+        → 落とした録音は案件フォルダ（直下）へ写す → 殻が Mac の音声認識で文字にする（Mac の外へ出ない）
+        → 文字起こしを裏方（MailFlow の裏方）の Claude が要約（メモ・面談記録の下書き、タスクの候補、聞き取れなかった所）
+        → 確認窓で直して「入れる」。タスクはチェックしたものだけ。自動では何も入れない
+   Mac アプリだけ（_rkNative）。Chrome 版・閲覧用の出力は 11.3.5 と同じ（属性・ボタン・帯の置き場は口があるときだけ）
+   ===================================================== */
+const RK_AUDIO_RE = /\.(m4a|mp3|wav|aac|caf|aiff?|mp4|ogg|opus|flac|wma|amr|3gp)$/i;
+// 11.3.9：写す先は案件フォルダの直下（ご本人の「録音フォルダには入れず、そのまま案件フォルダにファイルを入れておいてほしい」。11.3.6〜11.3.8 は「録音」フォルダを作っていた）
+let _rk = { gen: 0, stage: '', caseId: '', target: 'memo', jobId: '', fileName: '', recordedAt: '', durationSec: 0, transcribeSec: 0, text: '', segments: [], copied: null, summary: null, edit: null };
+function _rkNative() {
+  return _isNativeApp() && !_isSubWindow() && !!(window.CaseFlowNative && typeof CaseFlowNative.rokuonTranscribe === 'function' && typeof CaseFlowNative.rokuonSummary === 'function');
+}
+function _rkMuted() { return document.body.classList.contains('viewer-mode') || !!document.getElementById('viewer-banner')?.classList.contains('migrated'); }
+/* 描画の部品。口が無ければ空（Chrome 版の出力を変えない） */
+function _rkAttrs(target, caseId) {
+  if (!_rkNative() || _rkMuted()) return '';
+  // ★ dragenter も止める。WebKit（Mac アプリ）は dragover だけ止めても落とし先と認めず、drop が来ない（Chrome は来る）。11.3.7 で踏んだ
+  return ` ondragenter="_rkDragOver(event)" ondragover="_rkDragOver(event)" ondragleave="_rkDragLeave(event)" ondrop="_rkDrop(event,'${caseId}','${target}')"`;
+}
+function _rkBtnHtml(target, caseId) {
+  if (!_rkNative() || _rkMuted()) return '';
+  return `<button class="btn btn-secondary btn-xs no-print" onclick="_rkImport('${caseId}','${target}')" title="録音を選んで（デスクトップから開きます）案件フォルダへ写し、文字起こし→要約→${target === 'interview' ? '面談記録' : 'メモ'}の下書き">${ico('tray-in')} Import</button>`;
+}
+function _rkHostHtml(target, caseId) {
+  if (!_rkNative() || _rkMuted()) return '';
+  const what = target === 'interview' ? '面談記録' : 'メモの下書きとタスクの候補';
+  return `<div class="rk-drop-hint">🎙 録音（m4a・mp3 など）をここに落とすと、<b>文字起こし → 要約</b>して、<b>${what}</b>を出します。録音は案件フォルダにも残します</div><div class="rk-band-host no-print" data-rk-host="${target}" data-rk-case="${caseId}"></div>`;
+}
+function _rkIsAudio(name, type) { return RK_AUDIO_RE.test(String(name || '')) || /^audio\//.test(String(type || '')); }
+function _rkDragHasAudio(dt) {
+  if (!dt) return false;
+  const items = Array.from(dt.items || []);
+  if (items.length) return items.some(it => it.kind === 'file' && (/^audio\//.test(it.type) || it.type === 'video/mp4' || it.type === ''));
+  return Array.from(dt.types || []).includes('Files');
+}
+function _rkDragOver(ev) {
+  if (!_rkNative() || !_rkDragHasAudio(ev.dataTransfer)) return;   // 音声でなければ何もしない（ふつうの落とし先の動きのまま）
+  ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy';
+  ev.currentTarget.classList.add('rk-over');
+}
+function _rkDragLeave(ev) {
+  const el = ev.currentTarget;
+  if (ev.relatedTarget && el.contains(ev.relatedTarget)) return;
+  el.classList.remove('rk-over');
+}
+async function _rkDrop(ev, caseId, target) {
+  const el = ev.currentTarget;
+  el.classList.remove('rk-over');
+  if (!_rkNative()) return;
+  const files = Array.from(ev.dataTransfer.files || []).filter(f => _rkIsAudio(f.name, f.type));
+  if (!files.length) return;   // 音声でなければ、落とし先として受け取らない（ブラウザの既定の動き）
+  ev.preventDefault(); ev.stopPropagation();
+  if (files.length > 1) toast('録音は1つずつ落としてください（最初の1つを使います）', 'info');
+  await _rkStartFile(caseId, target, files[0]);
+}
+/* 「Import」（11.3.7。ご本人の「『録音から』ではなく『Import』のほうがいい。デフォルトはデスクトップに」）：
+   Mac の標準の窓をデスクトップから開き、選んだ録音を案件フォルダの「録音」へ写してから始める（落としたときと同じ）。
+   すでに案件フォルダの中にあるファイルなら写さない。案件のフォルダが結び付いていなければ、写さずに文字起こしだけ進める */
+async function _rkImport(caseId, target) {
+  if (!_rkNative()) return;
+  if (_rk.stage) { toast('いま別の録音を文字にしています。終わるか取りやめてから', 'info'); return; }
+  let h = null;
+  try { h = await CaseFlowNative.pickAudio(null, { desktop: true }); } catch (e) { toast(`選べませんでした（${e.message}）`, 'error'); return; }
+  if (!h) return;
+  const dir = await _ppStartDir(caseId);
+  if (!dir) { toast('この案件のフォルダが結び付いていないので、録音は写さずに文字起こしだけ進めます（ファイル一覧で結び付けると案件フォルダに残せます）', 'info'); await _rkStartHandle(caseId, target, h, null); return; }
+  const inside = h._root != null && dir._root === h._root && String(h._path || '').startsWith(String(dir._path || '') + '/');
+  if (inside) { await _rkStartHandle(caseId, target, h, null); return; }
+  let file = null;
+  try { file = await h.getFile(); } catch (e) { toast(`読めませんでした（${e.message}）`, 'error'); return; }
+  await _rkStartFile(caseId, target, file);
+}
+/* 録音の日時を推す：Android の「音声 260625_105005.m4a」→ 2026-06-25T10:50、iPhone の「11-04 登記相談：…」→ 今年の 11/4（時刻はファイルの更新時刻）。
+   どちらでもなければファイルの更新時刻。確認窓で直せる */
+function _rkGuessRecorded(name, lastModified) {
+  const lm = new Date(lastModified || Date.now());
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  let m = String(name || '').match(/(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
+  if (m) { const d = new Date(2000 + +m[1], +m[2] - 1, +m[3], +m[4], +m[5]); if (!isNaN(d)) return fmt(d); }
+  m = String(name || '').match(/^(\d{1,2})-(\d{1,2})[\s　]/);
+  if (m) { const d = new Date(lm.getFullYear(), +m[1] - 1, +m[2], lm.getHours(), lm.getMinutes()); if (!isNaN(d)) return fmt(d); }
+  return fmt(lm);
+}
+/* 落とした録音を案件フォルダ（直下）に写してから始める。案件のフォルダが結び付いていなければ、ファイル一覧で結び付けてもらう */
+async function _rkStartFile(caseId, target, file) {
+  if (_rk.stage) { toast('いま別の録音を文字にしています。終わるか取りやめてから', 'info'); return; }
+  const dir = await _ppStartDir(caseId);
+  if (!dir) { toast('先に、この案件のフォルダをファイル一覧で結び付けてください（録音をそこへ残すため）', 'error'); return; }
+  let h = null, name = file.name;
+  try {
+    const sub = dir;   // 11.3.9：直下に写す（フォルダは作らない）
+    const base = name.replace(/(\.[^.]+)$/, ''), ext = (name.match(/\.[^.]+$/) || [''])[0];
+    for (let i = 2; i < 100; i++) {
+      let exists = true;
+      try { await sub.getFileHandle(name, { create: false }); } catch (e) { exists = false; }
+      if (!exists) break;
+      name = `${base}（${i}）${ext}`;
+    }
+    h = await sub.getFileHandle(name, { create: true });
+    const w = await h.createWritable(); await w.write(file); await w.close();
+    _rk.copied = { dir: sub, name };
+    if (typeof _cf === 'object' && _cf && _cf.caseId === caseId) { try { _cfLoad(); } catch (e) {} }   // ファイル一覧に写しが見えるように
+  } catch (e) {
+    toast(`録音を案件フォルダへ写せませんでした（${e.message}）`, 'error');
+    return;
+  }
+  await _rkStartHandle(caseId, target, h, file);
+}
+async function _rkStartHandle(caseId, target, h, file) {
+  if (_rk.stage) { toast('いま別の録音を文字にしています。終わるか取りやめてから', 'info'); return; }
+  const c = cases.find(x => x.id === caseId); if (!c) return;
+  const gen = ++_rk.gen;
+  let lm = file ? file.lastModified : 0;
+  if (!lm) { try { lm = (await h.getFile()).lastModified; } catch (e) {} }
+  _rk.stage = 'transcribe'; _rk.caseId = caseId; _rk.target = target; _rk.jobId = genId(); _rk.fileName = h.name;
+  _rk.recordedAt = _rkGuessRecorded(h.name, lm); _rk.durationSec = 0; _rk.transcribeSec = 0; _rk.text = ''; _rk.segments = []; _rk.summary = null; _rk.edit = null;
+  if (!file) _rk.copied = null;
+  _rkBandSync();
+  const t = await CaseFlowNative.rokuonTranscribe(h, _rk.jobId);
+  if (gen !== _rk.gen) return;
+  if (!t.ok) { _rkFail(`文字にできませんでした（${t.reason || '原因不明'}）`); return; }
+  if (!String(t.text || '').trim()) { _rkFail('声が聞き取れませんでした（文字起こしが空です）。録音を確かめてください'); return; }
+  _rk.text = t.text; _rk.segments = t.segments || []; _rk.durationSec = t.durationSec || 0; _rk.transcribeSec = t.elapsedSec || 0;
+  _rk.stage = 'summarize';
+  _rkBandSync();
+  const r = await CaseFlowNative.rokuonSummary({ jobId: _rk.jobId, kind: target, text: _rk.text, fileName: _rk.fileName, recordedAt: _rk.recordedAt, durationSec: _rk.durationSec,
+    caseName: c.case_name || '', clientName: (c.category === '商業・法人登記' ? (c.company_name || c.client_name) : (c.client_name || c.company_name)) || '' });
+  if (gen !== _rk.gen) return;
+  if (!r.ok) {
+    // 要約が駄目でも文字起こしは出来ている。下書きは空のまま、全文を見られる窓を開く
+    toast(`要約を受け取れませんでした（${r.reason || '原因不明'}）。文字起こしだけ出します`, 'error');
+    _rk.summary = { party: '', place: '', points: [], deadlines: [], tasks: [], unclear: [], azukari: '', title: '', body: '', text: '', elapsedSec: 0, failed: true };
+  } else {
+    _rk.summary = r.summary;
+  }
+  _rk.stage = '';
+  _rkBandSync();
+  _rkOpenModal();
+}
+function _rkFail(msg) {
+  _rk.stage = ''; _rkBandSync(); toast(msg, 'error');
+}
+async function _rkCancel() {
+  if (!_rk.stage) return;
+  const stage = _rk.stage, id = _rk.jobId;
+  _rk.gen++; _rk.stage = ''; _rkBandSync();
+  try { if (stage === 'transcribe') await CaseFlowNative.rokuonCancel(id); else await CaseFlowNative.rokuonSummaryCancel(id); } catch (e) {}
+  toast('取りやめました' + (_rk.copied ? '（録音は案件フォルダに残っています）' : ''), 'info');
+}
+/* 進行中の帯。いま開いている案件の、落とした先のカードにだけ出す */
+function _rkBandSync() {
+  document.querySelectorAll('[data-rk-host]').forEach(host => {
+    const mine = _rk.stage && host.dataset.rkHost === _rk.target && host.dataset.rkCase === _rk.caseId;
+    if (!mine) { host.innerHTML = ''; return; }
+    const dur = _rk.durationSec ? `（${Math.floor(_rk.durationSec / 60)}分${Math.round(_rk.durationSec % 60)}秒）` : '';
+    const label = _rk.stage === 'transcribe' ? '🎙 文字起こししています…' : '✍️ 要約しています…（20〜50秒）';
+    const sub = _rk.stage === 'transcribe' ? escHtml(_rk.fileName) : `文字起こし ${_rk.text.length.toLocaleString()}字 → Claude`;
+    host.innerHTML = `<div class="rk-band"><span>${label}</span><span class="rk-file" title="${escHtml(_rk.fileName)}">${sub}${dur}</span><span class="rk-prog"><i></i></span><button class="btn btn-secondary btn-xs" onclick="_rkCancel()">取りやめ</button></div>`;
+  });
+}
+/* ---- 確認窓 ---- */
+function _rkOpenModal() {
+  const m = document.getElementById('rk-modal');
+  _rkRenderHead();
+  _rkRenderLeft();
+  _rkRenderTasks();
+  const pre = document.getElementById('rk-full');
+  pre.textContent = (_rk.segments.length ? _rk.segments.map(s => `[${Math.floor(s.t / 60)}:${String(Math.floor(s.t % 60)).padStart(2, '0')}] ${s.text}`).join('\n') : _rk.text);
+  document.getElementById('rk-full-sum').textContent = `文字起こしの全文を見る（${_rk.text.length.toLocaleString()}字。誤変換が多く、読み合わせ用）`;
+  const kw = document.getElementById('rk-keep-wrap');
+  kw.hidden = !_rk.copied;
+  document.getElementById('rk-keep').checked = true;
+  if (_rk.copied) document.getElementById('rk-keep-label').textContent = `録音を案件フォルダに残す（${_rk.copied.name}）`;
+  m.style.display = 'flex';
+  setTimeout(() => m.classList.add('show'), 0);   // rAF は窓が裏にあると呼ばれない（10.6.2 と同じ罠）
+}
+function closeRkModal(event) {
+  if (event && event.target !== document.getElementById('rk-modal')) return;
+  const m = document.getElementById('rk-modal');
+  m.classList.remove('show');
+  setTimeout(() => { m.style.display = 'none'; }, 150);
+}
+function _rkRenderHead() {
+  const sm = _rk.summary || {};
+  document.getElementById('rk-title').textContent = _rk.target === 'interview' ? '🎙 録音から面談記録を作る' : '🎙 録音からメモを作る';
+  document.getElementById('rk-tg-memo').classList.toggle('on', _rk.target === 'memo');
+  document.getElementById('rk-tg-iv').classList.toggle('on', _rk.target === 'interview');
+  document.getElementById('rk-file').textContent = _rk.fileName;
+  const dur = _rk.durationSec ? `${Math.floor(_rk.durationSec / 60)}分${String(Math.round(_rk.durationSec % 60)).padStart(2, '0')}秒` : '';
+  const when = _rk.recordedAt ? _rk.recordedAt.replace('T', ' ').replace(/-/g, '/') : '';
+  const secs = `文字起こし ${_rk.transcribeSec || 0}秒` + (sm.elapsedSec ? `・要約 ${sm.elapsedSec}秒` : '');
+  document.getElementById('rk-meta').innerHTML = [dur, when, secs].filter(Boolean).map(escHtml).join('　');
+  _rkApplyLabel();
+}
+function _rkApplyLabel() {
+  const n = document.querySelectorAll('#rk-tasks .rk-task input[type=checkbox]:checked').length;
+  document.getElementById('rk-apply').textContent = (_rk.target === 'interview' ? '面談記録に入れる' : 'メモに入れる') + (n ? `（タスク ${n}件も足す）` : '');
+}
+/* いま欄に入っている字を覚える（入れ先を切り替えても直した字を失わないため） */
+function _rkCollect() {
+  const g = id => document.getElementById(id);
+  const e = _rk.edit || {};
+  if (_rk.target === 'memo') { if (g('rk-memo')) e.memo = g('rk-memo').value; }
+  else if (g('rk-iv-content')) { e.ivDatetime = g('rk-iv-datetime').value; e.ivPlace = g('rk-iv-place').value; e.ivParty = g('rk-iv-party').value; e.ivContent = g('rk-iv-content').value; e.ivAzukari = g('rk-iv-azukari').value; }
+  _rk.edit = e;
+}
+function _rkSetTarget(t) {
+  if (t === _rk.target) return;
+  _rkCollect();
+  _rk.target = t;
+  _rkRenderHead(); _rkRenderLeft();
+}
+function _rkUnclearHtml(sm) {
+  if (!sm.unclear || !sm.unclear.length) return '';
+  return `<div class="rk-unclear"><b>⚠ 聞き取れなかった所（読み合わせてください）</b><ol>${sm.unclear.map(u => `<li>${escHtml(u)}</li>`).join('')}</ol></div>`;
+}
+function _rkRenderLeft() {
+  const sm = _rk.summary || {}, e = _rk.edit || {};
+  const host = document.getElementById('rk-left');
+  const failNote = sm.failed ? `<div class="rk-unclear"><b>要約を受け取れませんでした</b>下の「全文」から要点を書き写してください</div>` : '';
+  if (_rk.target === 'memo') {
+    const text = e.memo != null ? e.memo : (sm.text || '');
+    host.innerHTML = `<div class="rk-lab">メモの下書き <span class="sub">そのまま直せます。日付は録音の日（${escHtml((_rk.recordedAt || '').slice(0, 10).replace(/-/g, '/'))}）</span></div>
+      <textarea class="form-control" id="rk-memo" placeholder="（要約が空です。全文から書き写してください）">${escHtml(text)}</textarea>${failNote}${_rkUnclearHtml(sm)}`;
+  } else {
+    const dt = e.ivDatetime != null ? e.ivDatetime : (_rk.recordedAt || '');
+    const place = e.ivPlace != null ? e.ivPlace : (sm.place || '');
+    const party = e.ivParty != null ? e.ivParty : (sm.party || '');
+    const content = e.ivContent != null ? e.ivContent : (sm.body || '');
+    const az = e.ivAzukari != null ? e.ivAzukari : (sm.azukari || '');
+    host.innerHTML = `<div class="form-grid" style="margin-bottom:10px">
+        <div class="form-group"><label class="form-label">日時 <span class="rk-sub">録音の日時</span></label><input class="form-control" type="datetime-local" id="rk-iv-datetime" step="600" value="${escHtml(dt)}"></div>
+        <div class="form-group"><label class="form-label">場所 <span class="rk-sub">録音から推定</span></label><input class="form-control" id="rk-iv-place" value="${escHtml(place)}" placeholder="例：事務所、依頼者宅"></div>
+        <div class="form-group full"><label class="form-label">相手（出席者） <span class="rk-sub">録音から推定</span></label><input class="form-control" id="rk-iv-party" value="${escHtml(party)}"></div>
+      </div>
+      <div class="rk-lab">面談内容 <span class="sub">そのまま直せます</span></div>
+      <textarea class="form-control" id="rk-iv-content">${escHtml(content)}</textarea>
+      <div class="form-group" style="margin-top:10px"><label class="form-label">預かったもの <span class="rk-sub">録音から拾いました。確かめてください</span></label><textarea class="form-control" id="rk-iv-azukari" rows="2">${escHtml(az)}</textarea></div>
+      ${failNote}${_rkUnclearHtml(sm)}`;
+  }
+}
+function _rkRenderTasks() {
+  const sm = _rk.summary || {};
+  const host = document.getElementById('rk-tasks');
+  const list = Array.isArray(sm.tasks) ? sm.tasks : [];
+  host.innerHTML = list.length ? list.map((t, i) => `<div class="rk-task${i < 3 ? '' : ' off'}">
+      <input type="checkbox"${i < 3 ? ' checked' : ''} onchange="this.closest('.rk-task').classList.toggle('off', !this.checked); _rkApplyLabel()">
+      <textarea class="form-control rk-t" rows="1" oninput="_rkTaskGrow(this)">${escHtml(t.title || '')}</textarea>
+      <div class="rk-due"><span>期限</span><input type="date" class="form-control" value="${escHtml(t.due || '')}"></div></div>`).join('')
+    : '<div class="rk-none">タスクの候補は見つかりませんでした</div>';
+  setTimeout(() => host.querySelectorAll('.rk-t').forEach(_rkTaskGrow), 0);   // 窓が出てから高さを合わせる（出る前は幅が無く測れない）
+  _rkApplyLabel();
+}
+/* 候補の欄を中身の高さに合わせる（折り返した全文が見えるように） */
+function _rkTaskGrow(ta) {
+  if (!ta || !ta.clientWidth) return;
+  ta.style.height = 'auto';
+  ta.style.height = Math.max(32, ta.scrollHeight + 2) + 'px';
+}
+/* 「入れる」：メモか面談記録を足し、チェックしたタスクを足し、保存して描き直す。録音を残さない指定なら写しを消す */
+async function _rkApply() {
+  const c = cases.find(x => x.id === _rk.caseId); if (!c) { closeRkModal(); return; }
+  const g = id => document.getElementById(id);
+  const dateIso = (_rk.recordedAt || '').slice(0, 10);
+  if (_rk.target === 'memo') {
+    const text = (g('rk-memo')?.value || '').trim();
+    if (!text) { toast('メモの下書きが空です', 'error'); return; }
+    if (!c.memos) c.memos = [];
+    const nm = { id: genId(), date: /^\d{4}-\d{2}-\d{2}$/.test(dateIso) ? dateIso : today(), text };
+    c.memos.push(nm); _memoOpen.add(nm.id);
+    c.memos.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  } else {
+    const datetime = g('rk-iv-datetime')?.value || '';
+    const content = (g('rk-iv-content')?.value || '').trim();
+    if (!datetime) { toast('日時は必須です', 'error'); return; }
+    if (!content) { toast('面談内容が空です', 'error'); return; }
+    if (!c.interviews) c.interviews = [];
+    c.interviews.push({ id: genId(), created_at: today(), datetime, place: (g('rk-iv-place')?.value || '').trim(), party: (g('rk-iv-party')?.value || '').trim(), content, azukari: (g('rk-iv-azukari')?.value || '').trim() });
+    c.interviews.sort((a, b) => (a.datetime || '').localeCompare(b.datetime || ''));
+  }
+  let added = 0;
+  document.querySelectorAll('#rk-tasks .rk-task').forEach(row => {
+    if (!row.querySelector('input[type=checkbox]').checked) return;
+    const name = row.querySelector('.rk-t').value.trim(); if (!name) return;
+    tasks.push({ id: genId(), created_at: today(), name, case_id: c.id, deadline: row.querySelector('input[type=date]').value || '', arranged_date: '', planned_done: '', done_at: '', next_action_date: '', memo: '' });
+    added++;
+  });
+  saveToStorage();
+  const keep = _rk.copied ? g('rk-keep').checked : true;
+  if (_rk.copied && !keep) {
+    try { await _rk.copied.dir.removeEntry(_rk.copied.name); } catch (e) { toast(`録音の写しを消せませんでした（${e.message}）`, 'error'); }
+  }
+  const target = _rk.target;
+  _rk.copied = null; _rk.summary = null; _rk.edit = null;
+  closeRkModal();
+  updateNavBadges();
+  renderCaseDetail(c.id);
+  if (typeof updateCaseTaskPanel === 'function') updateCaseTaskPanel(c.id);
+  toast(`${target === 'interview' ? '面談記録' : 'メモ'}を追加しました${added ? `（タスク ${added}件も）` : ''}`, 'success');
+}
+
 
 function _issuesNative() {
   return _isNativeApp() && !!(window.CaseFlowNative && typeof window.CaseFlowNative.readIssues === 'function');
@@ -9673,14 +10058,15 @@ function renderCaseDetail(caseId) {
     </div>
 
     <!-- 備考・メモ（全幅） -->
-    <div class="info-card" style="margin-bottom:16px;border-left:4px solid #fbbf24">
+    <div class="info-card" style="margin-bottom:16px;border-left:4px solid #fbbf24"${_rkAttrs('memo', c.id)}>
       <div class="info-card-header" style="display:flex;align-items:center;justify-content:space-between">
         <span>${ico('note')} 備考・メモ</span>
-        <button class="btn btn-primary btn-xs no-print" onclick="addMemoItem('${c.id}')">＋ 追加</button>
+        <span style="display:flex;gap:6px">${_rkBtnHtml('memo', c.id)}<button class="btn btn-primary btn-xs no-print" onclick="addMemoItem('${c.id}')">＋ 追加</button></span>
       </div>
       <div id="memo-list-${c.id}" style="padding:8px 12px;min-height:36px">
         ${renderMemoList(c)}
       </div>
+      ${_rkHostHtml('memo', c.id)}
       ${_hsBandHtml(c)}
     </div>
 
@@ -9709,6 +10095,7 @@ function renderCaseDetail(caseId) {
     <div id="case-files-host" class="no-print"></div>
     </div><!-- /cd-cols -->
   `;
+  setTimeout(_rkBandSync, 0);   // 11.3.6：録音の文字起こし中の帯（描き直しで消えないように）
 
   // タスクの右サイドパネルを更新
   const panel = document.getElementById('case-task-panel');
@@ -10653,7 +11040,7 @@ function _cfRender() {
           <span class="cf-sort"><span class="${_cf.sort === 'name' ? 'on' : ''}" onclick="cfSort('name')">名前</span><span class="${_cf.sort === 'type' ? 'on' : ''}" onclick="cfSort('type')">種類</span><span class="${_cf.sort === 'date' ? 'on' : ''}" onclick="cfSort('date')">更新日</span></span>
         </div>
         <div class="cf-list">${_cfListHtml()}</div>
-        <div class="cf-drop cf-write" ondragover="cfDragOver(event)" ondragleave="this.classList.remove('over')" ondrop="cfDrop(event)">ここにファイルを落とすと、<b>このフォルダに追加</b>されます</div>
+        <div class="cf-drop cf-write" ondragenter="cfDragOver(event)" ondragover="cfDragOver(event)" ondragleave="this.classList.remove('over')" ondrop="cfDrop(event)">ここにファイルを落とすと、<b>このフォルダに追加</b>されます</div>
         <div class="cf-foot">${_cfNative()
           ? 'ファイルは Mac のアプリで開きます（元のファイルそのものです）。削除はここからはできません（Finder で）。'
           : 'PDF・画像はその場で開きます。Word などはダウンロードになります。削除はここからはできません（Dropbox か Finder で）。'}</div>`;
@@ -13029,12 +13416,14 @@ let _ppList = null;  // { title, onFile, stack:[{name,h}], items:[{name,h,dir}] 
 function propPickPdf(caseId, idx) {
   _ppChoose(caseId, `${PROP_NUMS[idx] || idx + 1} の行に読み込む PDF を選ぶ`, h => _ppRead(caseId, idx, h));
 }
-async function _ppChoose(caseId, title, onFile) {
+async function _ppChoose(caseId, title, onFile, opts) {
+  // opts（11.3.6 から）：{ re: 名前の絞り, what: 「PDF」「録音」, pick: 標準の窓の口の名前 }。無ければ今までどおり PDF
+  const o = Object.assign({ re: /\.pdf$/i, what: 'PDF', pick: 'pickPdf' }, opts || {});
   const dir = await _ppStartDir(caseId);
   if (dir) {
-    const items = await _ppReadDir(dir);
+    const items = await _ppReadDir(dir, o.re);
     if (items && items.length) {
-      _ppList = { title, onFile, stack: [{ name: dir.name, h: dir }], items };
+      _ppList = { title, onFile, stack: [{ name: dir.name, h: dir }], items, ...o };
       _ppListRender();
       const m = document.getElementById('pp-pick-modal');
       m.style.display = 'flex';
@@ -13042,16 +13431,17 @@ async function _ppChoose(caseId, title, onFile) {
       return;
     }
   }
-  _ppFromPanel(dir, onFile);
+  _ppFromPanel(dir, onFile, o.pick);
 }
-/* フォルダの中の PDF と下位フォルダ。フォルダが先、そのあと名前順。読めなければ null */
-async function _ppReadDir(dir) {
+/* フォルダの中の PDF（re で別の種類にもできる）と下位フォルダ。フォルダが先、そのあと名前順。読めなければ null */
+async function _ppReadDir(dir, re) {
+  const test = re || /\.pdf$/i;
   try {
     const items = [];
     for await (const [name, h] of dir.entries()) {
       if (name.startsWith('.')) continue;
       if (h.kind === 'directory') items.push({ name, h, dir: true });
-      else if (/\.pdf$/i.test(name)) items.push({ name, h, dir: false });
+      else if (test.test(name)) items.push({ name, h, dir: false });
     }
     return items.sort((a, b) => (b.dir - a.dir) || a.name.localeCompare(b.name, 'ja', { numeric: true }));
   } catch (e) { return null; }
@@ -13063,11 +13453,11 @@ function _ppListRender() {
     ? `<b>${escHtml(d.name)}</b>` : `<span class="pp-crumb" onclick="_ppListUp(${i})">${escHtml(d.name)}</span>`).join(' › ');
   document.getElementById('pp-pick-list').innerHTML = L.items.length
     ? L.items.map((x, i) => `<div class="pp-item" onclick="_ppListPick(${i})"><span class="pp-ic">${ico(x.dir ? 'folder' : 'doc')}</span><span class="pp-item-n">${escHtml(x.name)}</span></div>`).join('')
-    : '<div class="pp-none">このフォルダに PDF はありません</div>';
+    : `<div class="pp-none">このフォルダに ${L.what || 'PDF'} はありません</div>`;
   document.getElementById('pp-pick-list').scrollTop = 0;
 }
 async function _ppListGo(stack) {
-  const items = await _ppReadDir(stack[stack.length - 1].h);
+  const items = await _ppReadDir(stack[stack.length - 1].h, _ppList.re);
   if (!items) { toast('フォルダを読めませんでした', 'error'); return; }
   _ppList.stack = stack; _ppList.items = items;
   _ppListRender();
@@ -13083,7 +13473,7 @@ function _ppListPick(i) {
 function _ppListOther() {
   const L = _ppList;
   closePpPick();
-  _ppFromPanel(L.stack[L.stack.length - 1].h, L.onFile);
+  _ppFromPanel(L.stack[L.stack.length - 1].h, L.onFile, L.pick);
 }
 function closePpPick(e) {
   const m = document.getElementById('pp-pick-modal');
@@ -13091,9 +13481,9 @@ function closePpPick(e) {
   m.classList.remove('show');
   setTimeout(() => { m.style.display = 'none'; }, 150);
 }
-async function _ppFromPanel(dir, onFile) {
+async function _ppFromPanel(dir, onFile, pick) {
   try {
-    const h = await CaseFlowNative.pickPdf(dir);
+    const h = await CaseFlowNative[pick || 'pickPdf'](dir);
     if (h) onFile(h);
   } catch (e) { toast(`読めませんでした（${e.message}）`, 'error'); }
 }
@@ -18412,11 +18802,12 @@ function renderInterviews(c) {
   setTimeout(_observeClampGrids, 0);
 
   return `
-    <div class="interview-section">
+    <div class="interview-section"${_rkAttrs('interview', cid)}>
       <div class="interview-section-header">
         <span>${ico('note')} 面談記録（${interviews.length}件）</span>
-        <button class="btn btn-primary btn-xs" onclick="openInterviewModal('${cid}', null)">＋ 追加</button>
+        <span style="display:flex;gap:6px">${_rkBtnHtml('interview', cid)}<button class="btn btn-primary btn-xs" onclick="openInterviewModal('${cid}', null)">＋ 追加</button></span>
       </div>
+      ${_rkHostHtml('interview', cid)}
       ${interviews.length > 0
         ? `<div class="iv-grid">${cards}</div>`
         : '<div class="interview-empty">面談記録はまだありません</div>'}
