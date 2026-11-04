@@ -3967,6 +3967,22 @@ body.viewer-mode .db-arrange { display: none; }
 .mp-row.busy { background: #fff7ed; cursor: default; }
 .mp-row.busy .st { grid-column: 2 / 4; color: #9a3412; font-size: 12px; display: flex; align-items: center; gap: 8px; }
 .mp-list.waiting .mp-row:not(.busy) { opacity: .45; pointer-events: none; }
+/* 11.4.7：やりとりの中の受信の通（押すと開く） */
+.mp-row .tw { display: inline-block; width: 12px; font-size: 9px; color: var(--text-muted); }
+.mp-row.open { background: #eef5ff; }
+.mp-msgs { background: #f7faff; border-bottom: 1px solid var(--border-light); padding: 4px 0 6px 28px; }
+.mp-msgs-h { font-size: 11px; color: var(--text-muted); padding: 4px 12px 2px; }
+.mp-msg { display: grid; grid-template-columns: 64px 1fr auto; gap: 2px 10px; padding: 7px 12px; border-left: 2px solid #c7d7f0; cursor: pointer; font-size: 12.5px; align-items: baseline; }
+.mp-msg + .mp-msg { border-top: 1px dashed var(--border-light); }
+.mp-msg:hover { background: #e3eeff; border-left-color: var(--color-primary); }
+.mp-msg .d { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.mp-msg .f { font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-msg .m { font-size: 11px; color: var(--text-muted); }
+.mp-msg .s { grid-column: 2 / 4; color: var(--text-secondary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.45; }
+.mp-latest { display: inline-block; margin-left: 6px; padding: 0 5px; font-size: 10px; font-weight: 600; color: var(--color-primary); border: 1px solid currentColor; border-radius: 4px; vertical-align: 1px; }
+.mp-msg.busy { background: #fff7ed; cursor: default; border-left-color: #ea580c; }
+.mp-msg.busy .st { grid-column: 2 / 4; color: #9a3412; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+.mp-list.waiting .mp-msg:not(.busy) { opacity: .45; pointer-events: none; }
 .mp-empty { padding: 18px 12px; font-size: 12px; color: var(--text-muted); text-align: center; }
 .mp-err { padding: 12px; font-size: 12px; color: #b91c1c; background: #fff0f0; border-radius: 8px; }
 @keyframes mpSpin { to { transform: rotate(360deg); } }
@@ -4702,7 +4718,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.4.6</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.4.7</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5526,7 +5542,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
       <div id="mp-list" class="mp-list"><div class="mp-empty">読み込んでいます…</div></div>
     </div>
     <div class="modal-footer">
-      <span class="mp-note" style="margin:0 auto 0 0">行を押すと、いちばん新しい受信の1通を Claude が要約します（20〜40秒）。欄に入ってから直せます</span>
+      <span class="mp-note" style="margin:0 auto 0 0">行を押すと Claude が要約します（20〜40秒）。▶ の付いた行は、押すと中のメールから選べます</span>
       <button class="btn btn-secondary" onclick="closeMailPick()">閉じる</button>
     </div>
   </div>
@@ -6528,7 +6544,11 @@ window.__cfMailUnread = function (n) {
    ・Chrome 版・閲覧用・事件簿の窓では、ボタンそのものが出ない（殻の口が無い）
    ===================================================== */
 const MP_MAX_SNIPPET = 70;
-const _mp = { caseId: '', threads: [], busyId: '', gen: 0, q: '' };
+const _mp = { caseId: '', threads: [], busyId: '', busyMsg: '', gen: 0, q: '', open: '', msgs: {} };
+// 11.4.7：やりとり（スレッド）の中の受信の通を選べる（ご本人の「スレッドの中の通を選択できるようにしてほしい」）。
+//   2 通以上のやりとりは、押すと下に受信の通が新しい順に開き、選んだ通を要約する。受信が 1 通なら今までどおりすぐ要約。
+//   殻か裏方が古くて口が無いときも今までどおり（いちばん新しい受信の通）。msgs[threadId] は 'loading'／{ err }／並び
+function _mpMsgNative() { return typeof window.CaseFlowNative?.mailMessages === 'function'; }
 function _mailPickNative() {
   return _mailNative() && typeof window.CaseFlowNative.mailThreads === 'function' && typeof window.CaseFlowNative.mailSummary === 'function';
 }
@@ -6586,6 +6606,7 @@ async function _mpLoad(q) {
     return;
   }
   _mp.threads = r.threads || [];
+  _mp.open = ''; _mp.msgs = {};
   if (note) note.textContent = q ? `「${q}」で ${_mp.threads.length} 件（新しい順・30件まで）` : `届いたメール ${_mp.threads.length} 件（新しい順・30件まで）`;
   _mpRender();
 }
@@ -6600,26 +6621,69 @@ function _mpRender() {
   const list = document.getElementById('mp-list'); if (!list) return;
   list.classList.toggle('waiting', !!_mp.busyId);
   if (!_mp.threads.length) { list.innerHTML = `<div class="mp-empty">${_mp.q ? '当てはまるメールがありません' : '届いたメールがありません'}</div>`; return; }
+  const stHtml = `<div class="st"><span class="mp-spin"></span>要約しています…（20〜40秒）<button type="button" class="btn btn-secondary btn-xs" onclick="event.stopPropagation();_mpCancel()">取りやめ</button></div>`;
   list.innerHTML = _mp.threads.map((t, i) => {
     const from = (t.from && (t.from.name || t.from.email)) || '（差出人不明）';
-    const busy = t.id === _mp.busyId;
+    const open = _mp.open === t.id;
+    const busy = t.id === _mp.busyId && !_mp.busyMsg;
     const marks = [t.count > 1 ? `${t.count}通` : '', t.hasAttachment ? '📎' : ''].filter(Boolean).join('　');
-    const st = busy ? `<div class="st"><span class="mp-spin"></span>要約しています…（20〜40秒）<button type="button" class="btn btn-secondary btn-xs" onclick="event.stopPropagation();_mpCancel()">取りやめ</button></div>` : '';
-    return `<div class="mp-row${busy ? ' busy' : ''}" onclick="_mpPick(${i})" title="${escHtml(t.subject || '')}">
-      <span class="d">${escHtml(_mpDate(t.date))}</span><span class="f">${escHtml(from)}</span><span class="m">${escHtml(marks)}</span>
-      <span class="s">${escHtml(t.subject || '（件名なし）')}${t.snippet ? ` <span class="sn">— ${escHtml(String(t.snippet).slice(0, MP_MAX_SNIPPET))}</span>` : ''}</span>${st}
-    </div>`;
+    const tw = (t.count > 1 && _mpMsgNative()) ? `<span class="tw">${open ? '▼' : '▶'}</span>` : '';
+    let sub = '';
+    if (open) {
+      const ms = _mp.msgs[t.id];
+      if (ms === 'loading') sub = '<div class="mp-msgs"><div class="mp-empty">やりとりの中のメールを読んでいます…</div></div>';
+      else if (ms && ms.err) sub = `<div class="mp-msgs"><div class="mp-err">${escHtml(ms.err)}</div></div>`;
+      else if (Array.isArray(ms)) sub = `<div class="mp-msgs"><div class="mp-msgs-h">要約するメールを選んでください（受け取った ${ms.length} 通・新しい順）</div>` + ms.map((m, j) => {
+        const mb = t.id === _mp.busyId && m.id === _mp.busyMsg;
+        const mf = (m.from && (m.from.name || m.from.email)) || '（差出人不明）';
+        return `<div class="mp-msg${mb ? ' busy' : ''}" onclick="_mpPickMsg(${i},${j})">
+          <span class="d">${escHtml(_mpDate(m.date))}</span><span class="f">${escHtml(mf)}${m.latest ? '<span class="mp-latest">最新</span>' : ''}</span><span class="m">${m.hasAttachment ? '📎' : ''}</span>
+          <span class="s">${escHtml(m.snippet || '（本文なし）')}</span>${mb ? stHtml : ''}
+        </div>`;
+      }).join('') + '</div>';
+    }
+    return `<div class="mp-row${busy ? ' busy' : ''}${open ? ' open' : ''}" onclick="_mpPick(${i})" title="${escHtml(t.subject || '')}">
+      <span class="d">${tw}${escHtml(_mpDate(t.date))}</span><span class="f">${escHtml(from)}</span><span class="m">${escHtml(marks)}</span>
+      <span class="s">${escHtml(t.subject || '（件名なし）')}${t.snippet ? ` <span class="sn">— ${escHtml(String(t.snippet).slice(0, MP_MAX_SNIPPET))}</span>` : ''}</span>${busy ? stHtml : ''}
+    </div>${sub}`;
   }).join('');
 }
 async function _mpPick(i) {
   if (_mp.busyId) return;
   const t = _mp.threads[i]; if (!t) return;
-  const gen = _mp.gen;
-  _mp.busyId = t.id;
+  if (!(t.count > 1 && _mpMsgNative())) return _mpSummarize(t, '');
+  if (_mp.open === t.id) { _mp.open = ''; _mpRender(); return; }   // もう一度押すと閉じる
+  _mp.open = t.id;
+  if (Array.isArray(_mp.msgs[t.id])) { _mpRender(); return; }
+  _mp.msgs[t.id] = 'loading';
   _mpRender();
-  const r = await window.CaseFlowNative.mailSummary(t.id);
+  const gen = _mp.gen;
+  const r = await window.CaseFlowNative.mailMessages(t.id);
+  if (gen !== _mp.gen) return;
+  if (!r || !r.ok) {
+    // 裏方が古く口が無い（404）なら、今までどおりいちばん新しい受信の通を要約する
+    if (r && r.status === 404) { delete _mp.msgs[t.id]; _mp.open = ''; return _mpSummarize(t, ''); }
+    _mp.msgs[t.id] = { err: (r && r.reason) || 'やりとりの中のメールを読めません' };
+    _mpRender(); return;
+  }
+  const ms = r.messages || [];
+  if (ms.length <= 1) { _mp.msgs[t.id] = ms; _mp.open = ''; return _mpSummarize(t, ms[0] ? ms[0].id : ''); }   // 受信が 1 通なら選ぶまでもない
+  _mp.msgs[t.id] = ms;
+  _mpRender();
+}
+function _mpPickMsg(i, j) {
+  if (_mp.busyId) return;
+  const t = _mp.threads[i]; const ms = t && _mp.msgs[t.id];
+  if (!Array.isArray(ms) || !ms[j]) return;
+  _mpSummarize(t, ms[j].id);
+}
+async function _mpSummarize(t, messageId) {
+  const gen = _mp.gen;
+  _mp.busyId = t.id; _mp.busyMsg = messageId || '';
+  _mpRender();
+  const r = await window.CaseFlowNative.mailSummary(t.id, messageId || '');
   if (gen !== _mp.gen || _mp.busyId !== t.id) return;   // 閉じた・取りやめた
-  _mp.busyId = '';
+  _mp.busyId = ''; _mp.busyMsg = '';
   if (!r || !r.ok) {
     _mpRender();
     toast((r && r.reason) || '要約を受け取れません', 'error');
@@ -6632,7 +6696,7 @@ async function _mpPick(i) {
 }
 async function _mpCancel() {
   const id = _mp.busyId; if (!id) return;
-  _mp.busyId = '';
+  _mp.busyId = ''; _mp.busyMsg = '';
   _mpRender();
   try { await window.CaseFlowNative.mailSummaryCancel(id); } catch (e) {}
 }
