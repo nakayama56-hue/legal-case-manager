@@ -845,6 +845,8 @@ body[data-theme="kohaku"] .case-tile-card.tile-active:hover {
 .hd-tools .btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
 /* .btn の display:inline-flex が [hidden] に勝ってしまうので、帯の中は明示して隠す */
 .hd-tools .btn[hidden] { display: none !important; }
+/* 11.5.5：干支の字は長いので2行・小さめ（ご本人の「折返しでも文字を小さくしてもよい」） */
+.btn-header-eto-label { font-size: 10.5px; line-height: 1.15; text-align: left; white-space: nowrap; }
 .hd-sep { width: 1px; height: 18px; margin: 0 3px; background: var(--border-color); flex: none; }
 #btn-header-mail { position: relative; }   /* 未読数の丸（.mail-unread）の基準 */
 #btn-header-backup {
@@ -4487,7 +4489,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
         <button class="btn btn-secondary" onclick="openShokumuWindow()" id="btn-header-shokumu" title="職務上請求書の管理台帳（Excel）に行を書き足す" hidden><svg class="ico" aria-hidden="true"><use href="#i-ledger"></use></svg><span class="btn-header-sk-label">職務上請求書</span></button>
         <button class="btn btn-secondary" onclick="openJikenboWindow()" id="btn-header-jikenbo" title="事件簿（全案件の受託番号順）"><svg class="ico" aria-hidden="true"><use href="#i-book-open"></use></svg><span class="btn-header-jb-label">事件簿</span></button>
         <span class="hd-sep" aria-hidden="true"></span><!-- 11.0.4：ここから先は外のページ -->
-        <a class="btn btn-secondary" id="btn-header-eto" href="https://1ran.hikak.com/eto/index2.php" target="_blank" rel="noopener noreferrer" title="干支・西暦・和暦・年齢の一覧表を開きます"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg><span class="btn-header-eto-label">干支一覧</span></a>
+        <a class="btn btn-secondary" id="btn-header-eto" href="https://1ran.hikak.com/eto/index2.php" target="_blank" rel="noopener noreferrer" title="干支・西暦・和暦・年齢の一覧表を開きます"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg><span class="btn-header-eto-label">干支西暦和暦<br>年齢一覧表</span></a>
         </div>
         <button class="btn btn-primary" onclick="saveAll()" id="btn-header-backup" title="バックアップと閲覧用データを保存"><svg class="ico" aria-hidden="true"><use href="#i-save"></use></svg><span class="btn-header-backup-label">保存</span></button>
         <button class="btn btn-secondary" onclick="cloudLoad()" id="btn-cloud-load" title="クラウドから読み込む" style="padding:4px 10px;font-size:12px;display:none">⬇ 読込</button>
@@ -4762,7 +4764,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.5.4</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.5.5</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
