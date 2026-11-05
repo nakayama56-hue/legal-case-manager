@@ -1863,6 +1863,18 @@ textarea.form-control { resize: vertical; min-height: 72px; }
 .contact-person-card .cp-header {
   display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;
 }
+/* 連絡先の一時コピー（11.4.8） */
+.ct-clip-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; padding: 8px 10px;
+  border: 1px solid #93c5fd; border-radius: var(--radius-md); background: #eff6ff; }
+.ct-clip-bar[hidden] { display: none; }
+.ct-clip-lbl { font-size: 11px; font-weight: 700; color: #1e40af; display: inline-flex; align-items: center; gap: 4px; margin-right: 2px; }
+.ct-clip-chip { display: inline-flex; align-items: stretch; border: 1px solid #93c5fd; border-radius: 999px; background: #fff; overflow: hidden; }
+.ct-clip-paste { border: 0; background: transparent; padding: 4px 4px 4px 12px; font: inherit; font-size: 12px; font-weight: 700; color: #1e3a8a; cursor: pointer; }
+.ct-clip-paste small { font-weight: 400; color: #64748b; margin-left: 6px; font-size: 10.5px; }
+.ct-clip-paste:hover { background: #dbeafe; }
+.ct-clip-x { border: 0; background: transparent; padding: 0 9px 0 5px; color: #94a3b8; cursor: pointer; font-size: 11px; }
+.ct-clip-x:hover { color: var(--color-danger); }
+body.viewer-mode .ct-copy { display: none !important; }
 .contact-person-card .cp-avatar {
   width: 52px; height: 52px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -4718,7 +4730,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.4.7</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.5.0</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -4995,6 +5007,8 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
         <!-- 役割・続柄の候補。中身は _fillRoleOptions() が案件モーダルを開くたびに入れる（10.1.9） -->
         <datalist id="ct-role-list"></datalist>
         <button type="button" class="contact-add-btn" onclick="addContactRow()">＋ 連絡先を追加</button>
+        <!-- 連絡先の一時コピー（11.4.8）。コピー中だけ出る。中身は _ctClipRender() -->
+        <div id="ct-clip-bar" class="ct-clip-bar" hidden></div>
       </div>
       <!-- Section 3: Dates -->
       <div class="form-section">
@@ -11355,6 +11369,21 @@ function infoRowInline(label, value) {
 }
 
 /** Build the multi-contact section for case detail view */
+/** 案件の連絡先の並び（contacts[] が無い古い案件は依頼者名などから組む）。renderContactCards とコピーで共用 */
+function _caseContactsOf(c) {
+  let contacts = (c.contacts && c.contacts.length > 0) ? c.contacts : [];
+  if (contacts.length === 0) {
+    contacts = [];
+    if (c.client_name || c.client_tel || c.client_email) {
+      contacts.push({ role: '依頼者', name: c.client_name||'', tel: c.client_tel||'', email: c.client_email||'', note: '' });
+    }
+    if (c.other_name || c.other_contact) {
+      contacts.push({ role: '関係者', name: c.other_name||'', tel: c.other_contact||'', email: '', note: '' });
+    }
+  }
+  return contacts;
+}
+
 function renderContactCards(c) {
   // Build unified contacts list: prefer new contacts[] array, fall back to legacy fields
   let contacts = (c.contacts && c.contacts.length > 0) ? c.contacts : [];
@@ -16245,6 +16274,7 @@ function renderContactRows(contacts) {
   const list = document.getElementById('f-contacts-list');
   list.innerHTML = '';
   contacts.forEach((ct, i) => addContactRow(ct, i));
+  _ctClipRender();
 }
 
 /** Add one contact row to the form (called by button or renderContactRows) */
@@ -16312,6 +16342,7 @@ function addContactRow(ct, idx) {
       <span class="contact-list-item-num">連絡先 ${i + 1}</span>
       <button type="button" class="btn btn-secondary btn-xs" onclick="openAddrBookPicker(this)" style="background:#f0fdf4;border-color:#4ade80;color:#166534">${ico('ledger')} アドレス帳</button>
       <button type="button" class="btn btn-secondary btn-xs" onclick="addToAddrBookFromForm(this)" style="background:#fefce8;border-color:#fbbf24;color:#92400e">★ アドレス帳に登録</button>
+      <button type="button" class="btn btn-secondary btn-xs ct-copy" onclick="ctCopyFromForm(this)">${ico('clipboard')} Copy</button>
       <button type="button" class="btn btn-secondary btn-xs" onclick="openKakuninFromForm(this)" style="background:#eff6ff;border-color:#93c5fd;color:#1e40af">${ico('clipboard')} 確認記録</button>
       <button type="button" class="btn btn-secondary btn-xs" onclick="openSoushuFromForm(this)" style="background:#f0fdf4;border-color:#86efac;color:#166534">${ico('mailbox')} 書類送付</button>
       <button type="button" class="btn btn-secondary btn-xs" onclick="openHenshinFromForm(this)" style="background:#fdf4ff;border-color:#d8b4fe;color:#7e22ce">${ico('mail')} 返信あり送付</button>
@@ -16525,7 +16556,13 @@ function renumberContactRows() {
 function readContactRows() {
   const rows = document.querySelectorAll('#f-contacts-list .contact-list-item');
   const contacts = [];
-  rows.forEach(row => {
+  rows.forEach(row => { const ct = _readContactRow(row); if (ct) contacts.push(ct); });
+  return contacts;
+}
+
+/** 編集画面の連絡先 1 行を読む。中身が無ければ null（11.4.8 で readContactRows から切り出し） */
+function _readContactRow(row) {
+  {
     const role     = (row.querySelector('.ct-role')?.value     || '').trim();
     const name     = (row.querySelector('.ct-name')?.value     || '').trim();
     const furigana = (row.querySelector('.ct-furigana')?.value || '').trim();
@@ -16558,11 +16595,66 @@ function readContactRows() {
     const tel   = tels[0]?.number || '';
     const fax   = faxes[0]  || '';
     const email = emails[0] || '';
-    if (name || tel || email || fax) contacts.push({ role, name, furigana, tels, faxes, emails, tel, fax, email, note,
+    if (!(name || tel || email || fax)) return null;
+    return { role, name, furigana, tels, faxes, emails, tel, fax, email, note,
       photo: (row.querySelector('.ct-photo-data')?.value || '') || undefined,
-      icon: (row.querySelector('input[name^="ct-icon-"]:checked')?.value || 'person') });
-  });
-  return contacts;
+      icon: (row.querySelector('input[name^="ct-icon-"]:checked')?.value || 'person') };
+  }
+}
+
+/* =====================================================
+   連絡先の一時コピー（11.4.8）
+   ご本人の「アドレス帳に登録するのではなく、一時的に連絡先をコピーして別の案件に貼り付けたい」。
+   置き場はメモリだけ（アプリを閉じる・⌘R で消える）。案件データにもアドレス帳にも入れない。
+   ===================================================== */
+let _ctClip = [];   // [{ct, key}]
+
+function _ctClipKey(ct) {
+  const tels = (ct.tels || []).map(t => typeof t === 'object' ? t.number : t).join(',');
+  return [ct.name || '', ct.role || '', tels, (ct.emails || []).join(',')].join('|');
+}
+function _ctClipAdd(ct) {
+  if (!ct) { toast('コピーする中身がありません', 'error'); return; }
+  const copy = JSON.parse(JSON.stringify(ct));
+  const key = _ctClipKey(copy);
+  _ctClip = _ctClip.filter(x => x.key !== key);
+  _ctClip.push({ ct: copy, key });
+  _ctClipRender();
+  toast(`「${copy.name || copy.role || '連絡先'}」をコピーしました（別の案件の編集画面で貼り付けられます）`, 'success');
+}
+/** 編集画面の連絡先の行からコピー（保存前の打ちかけも含めて、その場の値） */
+function ctCopyFromForm(btn) {
+  const row = btn.closest('.contact-list-item');
+  if (row) _ctClipAdd(_readContactRow(row));
+}
+function _ctRowEmpty(row) {
+  return !_readContactRow(row);
+}
+/** 貼り付け：連絡先の行を 1 つ足す。いちばん下の行が空ならそこを置き換える */
+function ctClipPaste(i) {
+  const it = _ctClip[i];
+  if (!it) return;
+  const list = document.getElementById('f-contacts-list');
+  if (!list) return;
+  const last = list.lastElementChild;
+  if (last && _ctRowEmpty(last)) last.remove();
+  addContactRow(JSON.parse(JSON.stringify(it.ct)));
+  renumberContactRows();
+  const added = list.lastElementChild;
+  if (added) added.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  toast(`「${it.ct.name || it.ct.role || '連絡先'}」を貼り付けました（「保存」で案件に入ります）`, 'success');
+}
+function ctClipRemove(i) {
+  _ctClip.splice(i, 1);
+  _ctClipRender();
+}
+function _ctClipRender() {
+  const box = document.getElementById('ct-clip-bar');
+  if (!box) return;
+  if (!_ctClip.length) { box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  box.innerHTML = `<span class="ct-clip-lbl">${ico('clipboard')} コピー中：押すと貼り付け</span>` +
+    _ctClip.map((x, i) => `<span class="ct-clip-chip"><button type="button" class="ct-clip-paste" onclick="ctClipPaste(${i})">${escHtml(x.ct.name || '（氏名なし）')}${x.ct.role ? `<small>${escHtml(x.ct.role)}</small>` : ''}</button><button type="button" class="ct-clip-x" title="コピーから外す" onclick="ctClipRemove(${i})">✕</button></span>`).join('');
 }
 
 function saveCase() {
