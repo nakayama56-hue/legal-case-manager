@@ -4522,7 +4522,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
           <div class="table-container">
             <div class="table-toolbar">
               <span class="toolbar-title-keep" style="font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;flex-shrink:0"><svg class="ico" aria-hidden="true"><use href="#i-clipboard"></use></svg> タスク一覧</span>
-              <button class="btn btn-primary" style="margin-left:auto" onclick="openTaskAddWithCaseSelect()">＋ タスク追加</button>
+              <button class="btn btn-primary" style="margin-left:auto" onclick="openTaskAddWithCaseSelect()">＋ タスクを追加</button>
             </div>
             <div class="table-wrap task-table-wrap">
               <table style="table-layout:fixed;width:100%">
@@ -4661,7 +4661,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
             <button type="button" class="btn btn-secondary btn-xs" onclick="setCaseFilesPlace('body')" title="一覧を本文の右列へ戻す">⇄ 本文へ</button>
           </div>
           <div class="ctp-actions">
-            <button class="btn btn-primary btn-xs" id="case-task-add-btn" onclick="">＋ タスク追加</button>
+            <button class="btn btn-primary btn-xs" id="case-task-add-btn" onclick="">＋ タスクを追加</button>
           </div>
           <div class="ctp-list" id="case-task-list"></div>
           <div id="case-files-panel-host" class="no-print"></div>
@@ -4690,8 +4690,8 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
           </div>
           <!-- 表の下に「＋ 案件なしの行を足す」（10.5.1。表が空のときも出す）。
                10.6.3：表から離し、説明を添えた。最下行の「＋ 当事者を足す」の真下にあって押し間違えが起きたため -->
-          <div class="jb-foot"><button type="button" class="jb-add-row" onclick="addJikenboLooseRow()" title="案件を作らずに、事件簿だけに1行足します">＋ 案件なしの行を足す</button>
-            <span class="jb-foot-note">案件を作らずに、事件簿だけに1行足します。行に当事者を足すときは、その行の中の「＋ 当事者を足す」です。<br>案件なしの行と同じ受託番号を案件の受付台帳に入れると、その行は案件の行に自動でまとまります。</span></div>
+          <div class="jb-foot"><button type="button" class="jb-add-row" onclick="addJikenboLooseRow()" title="案件を作らずに、事件簿だけに1行追加します">＋ 案件なしの行を追加</button>
+            <span class="jb-foot-note">案件を作らずに、事件簿だけに1行追加します。行に当事者を加えるときは、その行の中の「＋ 当事者を追加」です。<br>案件なしの行と同じ受託番号を案件の受付台帳に入れると、その行は案件の行に自動でまとまります。</span></div>
         </div>
       </div>
 
@@ -4730,7 +4730,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.5.0</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.5.1</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -4802,7 +4802,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
             <div class="label">ストレージ使用状況</div>
             <div class="desc" id="storage-desc">localStorageの使用量を表示します</div>
             <div id="storage-status" style="text-align:left;width:100%"></div>
-            <button class="btn btn-secondary btn-sm" onclick="renderStorageStatus()" style="margin-top:6px"><svg class="ico" aria-hidden="true"><use href="#i-refresh"></use></svg> 更新</button>
+            <button class="btn btn-secondary btn-sm" onclick="renderStorageStatus()" style="margin-top:6px"><svg class="ico" aria-hidden="true"><use href="#i-refresh"></use></svg> 再読み込み</button>
           </div>
           <div class="data-card">
             <div class="icon"><svg class="ico" aria-hidden="true"><use href="#i-tray-in"></use></svg></div>
@@ -5084,7 +5084,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
 <div id="case-select-modal" class="modal-overlay" style="display:none" onclick="closeCaseSelectModal(event)">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
-      <div class="modal-title">案件を選択してタスク追加</div>
+      <div class="modal-title">案件を選んでタスクを追加</div>
       <button class="modal-close" onclick="closeCaseSelectModal()">✕</button>
     </div>
     <div class="modal-body" style="padding:16px">
@@ -5099,7 +5099,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
   <div class="modal-content" style="max-width:380px;background:var(--bg-primary)" onclick="event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg> Googleカレンダー予定を編集</h3>
-      <button class="modal-close" onclick="closeGCalEditModalBtn()">×</button>
+      <button class="modal-close" onclick="closeGCalEditModalBtn()">✕</button>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
       <input type="hidden" id="gcal-edit-event-id">
@@ -5140,7 +5140,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
   <div class="modal-content" style="max-width:520px;background:var(--bg-primary)" onclick="event.stopPropagation()">
     <div class="modal-header" style="background:var(--bg-primary)">
       <h3 class="modal-title"><svg class="ico" aria-hidden="true"><use href="#i-ledger"></use></svg> アドレス帳から選択</h3>
-      <button class="modal-close" onclick="closeAddrBookModalBtn()">×</button>
+      <button class="modal-close" onclick="closeAddrBookModalBtn()">✕</button>
     </div>
     <div style="padding:10px 16px 4px;background:var(--bg-primary)">
       <input type="text" id="addrbook-search" class="form-control has-search-ico" placeholder="氏名・ふりがな・電話で検索..." oninput="renderAddrBookList()" style="margin-bottom:8px;font-size:13px">
@@ -5155,7 +5155,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
   <div id="kakunin-left" style="flex:1;overflow-y:auto;background:var(--bg-primary);border-right:2px solid #374151;position:relative">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#1f2937;position:sticky;top:0;z-index:10">
       <span style="color:white;font-weight:700;font-size:13px"><svg class="ico" aria-hidden="true"><use href="#i-folder"></use></svg> 案件詳細</span>
-      <button onclick="closeKakuninModal()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1">✕ 閉じる</button>
+      <button onclick="closeKakuninModal()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1">閉じる</button>
     </div>
     <div id="kakunin-case-content" style="padding:12px"></div>
   </div>
@@ -5172,7 +5172,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
   <div class="modal" style="max-width:480px;width:92%">
     <div class="modal-header">
       <div class="modal-title" id="touki-info-title" style="font-size:14px;line-height:1.5"></div>
-      <button class="modal-close" onclick="closeToukiInfo()">×</button>
+      <button class="modal-close" onclick="closeToukiInfo()">✕</button>
     </div>
     <div class="modal-body" style="padding:16px">
       <div id="touki-info-date" style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:10px"></div>
@@ -5191,7 +5191,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
   <div class="modal" style="max-width:360px;width:90%">
     <div class="modal-header">
       <div class="modal-title"><svg class="ico" aria-hidden="true"><use href="#i-print"></use></svg> 簡易印刷 項目設定</div>
-      <button class="modal-close" onclick="closeSimplePrintModal()">×</button>
+      <button class="modal-close" onclick="closeSimplePrintModal()">✕</button>
     </div>
     <div class="modal-body" style="padding:16px">
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">出力する項目を選択して印刷してください</div>
@@ -5234,7 +5234,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
   <div class="modal-content" style="max-width:380px;background:var(--bg-primary)" onclick="event.stopPropagation()">
     <div class="modal-header">
       <h3 class="modal-title"><svg class="ico" aria-hidden="true"><use href="#i-calendar"></use></svg> Googleカレンダーに予定を追加</h3>
-      <button class="modal-close" onclick="closeGCalEventModalBtn()">×</button>
+      <button class="modal-close" onclick="closeGCalEventModalBtn()">✕</button>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
       <div>
@@ -5277,7 +5277,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
 <div id="task-modal" class="modal-overlay" style="display:none" onclick="closeTaskModal(event)">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="task-modal-title">タスク追加</div>
+      <div class="modal-title" id="task-modal-title">タスクを追加</div>
       <button class="modal-close" onclick="closeTaskModal()">✕</button>
     </div>
     <div class="modal-body" id="task-modal-body">
@@ -5405,7 +5405,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" onclick="_ppListOther()">別の場所から選ぶ…</button>
-      <button type="button" class="btn btn-secondary" onclick="closePpPick()">やめる</button>
+      <button type="button" class="btn btn-secondary" onclick="closePpPick()">キャンセル</button>
     </div>
   </div>
 </div>
@@ -5421,7 +5421,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
       <div class="pp-msg" id="pp-msg" hidden>赤い欄の「〓」は、登記の外字で読めなかった字です。正しい字に打ち直すと入れられます。</div>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" onclick="closePpModal()">やめる</button>
+      <button type="button" class="btn btn-secondary" onclick="closePpModal()">キャンセル</button>
       <button type="button" class="btn btn-primary" id="pp-go" onclick="ppApply()">この行に入れる</button>
     </div>
   </div>
@@ -6635,7 +6635,7 @@ function _mpRender() {
   const list = document.getElementById('mp-list'); if (!list) return;
   list.classList.toggle('waiting', !!_mp.busyId);
   if (!_mp.threads.length) { list.innerHTML = `<div class="mp-empty">${_mp.q ? '当てはまるメールがありません' : '届いたメールがありません'}</div>`; return; }
-  const stHtml = `<div class="st"><span class="mp-spin"></span>要約しています…（20〜40秒）<button type="button" class="btn btn-secondary btn-xs" onclick="event.stopPropagation();_mpCancel()">取りやめ</button></div>`;
+  const stHtml = `<div class="st"><span class="mp-spin"></span>要約しています…（20〜40秒）<button type="button" class="btn btn-secondary btn-xs" onclick="event.stopPropagation();_mpCancel()">キャンセル</button></div>`;
   list.innerHTML = _mp.threads.map((t, i) => {
     const from = (t.from && (t.from.name || t.from.email)) || '（差出人不明）';
     const open = _mp.open === t.id;
@@ -6908,7 +6908,7 @@ function _rkBandSync() {
     const dur = _rk.durationSec ? `（${Math.floor(_rk.durationSec / 60)}分${Math.round(_rk.durationSec % 60)}秒）` : '';
     const label = _rk.stage === 'transcribe' ? '🎙 文字起こししています…' : '✍️ 要約しています…（20〜50秒）';
     const sub = _rk.stage === 'transcribe' ? escHtml(_rk.fileName) : `文字起こし ${_rk.text.length.toLocaleString()}字 → Claude`;
-    host.innerHTML = `<div class="rk-band"><span>${label}</span><span class="rk-file" title="${escHtml(_rk.fileName)}">${sub}${dur}</span><span class="rk-prog"><i></i></span><button class="btn btn-secondary btn-xs" onclick="_rkCancel()">取りやめ</button></div>`;
+    host.innerHTML = `<div class="rk-band"><span>${label}</span><span class="rk-file" title="${escHtml(_rk.fileName)}">${sub}${dur}</span><span class="rk-prog"><i></i></span><button class="btn btn-secondary btn-xs" onclick="_rkCancel()">キャンセル</button></div>`;
   });
 }
 /* ---- 確認窓 ---- */
@@ -7158,7 +7158,7 @@ async function renderIssuesCard() {
       <button class="btn btn-secondary btn-sm" onclick="issuesMarkAllSeen()" ${unseen ? '' : 'disabled'}>${ico('check-circle')} 確認済みにする</button>
       <button class="btn btn-secondary btn-sm" onclick="issuesCopy()" ${items.length ? '' : 'disabled'}>${ico('clipboard')} 記録をコピー</button>
       <button class="btn btn-secondary btn-sm" onclick="issuesReveal()">${ico('folder-open')} Finder で開く</button>
-      <button class="btn btn-secondary btn-sm" onclick="renderIssuesCard()">${ico('refresh')} 更新</button>
+      <button class="btn btn-secondary btn-sm" onclick="renderIssuesCard()">${ico('refresh')} 再読み込み</button>
     </div>
     <div class="issues-note">アプリの中で起きたエラーや、保存の失敗の記録です。ここに何も無ければ正常です。${r.disabled ? '（この起動のしかたでは記録しません）' : ''}</div>`;
   let body;
@@ -11116,7 +11116,7 @@ function _cfRender() {
           ${_cf.path.length ? `<button class="btn btn-secondary btn-xs" onclick="cfGoto(${_cf.path.length - 2})">↑ 上へ</button>` : ''}
 
           <button class="btn btn-secondary btn-xs cf-write" onclick="cfNewFolder()">${ico('folder-open')} 新しいフォルダ</button>
-          <button class="btn btn-secondary btn-xs" onclick="_cfLoad()" title="読み直す">↻</button>${_cfNative() ? `<button class="btn btn-secondary btn-xs" onclick="cfRevealHere()" title="このフォルダを Finder で開く">${ico('folder-open')} Finder</button>` : ''}` : ''}
+          <button class="btn btn-secondary btn-xs" onclick="_cfLoad()" title="再読み込み">↻</button>${_cfNative() ? `<button class="btn btn-secondary btn-xs" onclick="cfRevealHere()" title="このフォルダを Finder で開く">${ico('folder-open')} Finder</button>` : ''}` : ''}
         ${_cf.status === 'ok' || _cf.status === 'lost' ? `<button class="btn btn-secondary btn-xs" onclick="cfRebind()" title="別のフォルダに結び付け直す">${ico('link')} 選び直す</button>` : ''}
         ${!inPanel ? `<button class="btn btn-secondary btn-xs cf-move-to-panel" onclick="setCaseFilesPlace('panel')" title="一覧を右のパネルへ移す">⇄ 右パネルへ</button>` : ''}
       </div>
@@ -11130,7 +11130,7 @@ function _cfRender() {
     case 'perm': { const tn = _cf.permTarget ? _cf.permTarget.name : rootName; body = `<div class="cf-empty">「${escHtml(tn)}」を読むには、ブラウザの許可が要ります。<br><button class="btn btn-primary btn-sm" onclick="cfGrant()">${ico('unlock')} 許可する</button><div style="font-size:10px;margin-top:6px;line-height:1.6">Chrome の確認の窓に「今回のみ」と「毎回（今後も）許可」があれば、<b>毎回のほう</b>を選んでください。次から聞かれなくなります</div></div>`; break; }
     case 'rootcheck': {
       const pn = _cf.pendingRoot ? _cf.pendingRoot.name : '';
-      body = `<div class="cf-warn">${ico('warn')} 選んだフォルダ「${escHtml(pn)}」の中に、<b>「不動産登記案件」「商業・法人登記案件」のどちらも見当たりません。</b><br>親フォルダ（Dropbox の「中山事務所」）で合っていますか。<div class="cf-warn-btns"><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">${ico('folder-open')} 選び直す</button><button class="btn btn-secondary btn-sm" onclick="cfRootAccept()">このまま使う</button><button class="btn btn-secondary btn-sm" onclick="cfRootCancel()">やめる</button></div></div>`;
+      body = `<div class="cf-warn">${ico('warn')} 選んだフォルダ「${escHtml(pn)}」の中に、<b>「不動産登記案件」「商業・法人登記案件」のどちらも見当たりません。</b><br>親フォルダ（Dropbox の「中山事務所」）で合っていますか。<div class="cf-warn-btns"><button class="btn btn-primary btn-sm" onclick="cfConnectRoot()">${ico('folder-open')} 選び直す</button><button class="btn btn-secondary btn-sm" onclick="cfRootAccept()">このまま使う</button><button class="btn btn-secondary btn-sm" onclick="cfRootCancel()">キャンセル</button></div></div>`;
       break;
     }
     case 'seeking': body = `<div class="cf-empty">結び付けたフォルダ「${escHtml(_cf.relPath)}」が見当たりません。<br>名前を変えた先を探しています…</div>`; break;
@@ -11160,7 +11160,7 @@ function _cfRender() {
         <div class="cf-foot">行を押すと中に入ります。「これにする」か「${ico('pin')} ここにする」で結び付くと、次からは自動で出ます。<a href="#" onclick="cfConnect();return false" style="color:var(--text-muted)">一覧に無い場所を直接選ぶ</a></div>`;
       break;
     }
-    case 'error': body = `<div class="cf-empty">読めませんでした。<br><span style="font-size:10px">${escHtml(_cf.errorMsg || '')}</span><br><button class="btn btn-secondary btn-sm" onclick="_cfLoad()">↻ 読み直す</button></div>`; break;
+    case 'error': body = `<div class="cf-empty">読めませんでした。<br><span style="font-size:10px">${escHtml(_cf.errorMsg || '')}</span><br><button class="btn btn-secondary btn-sm" onclick="_cfLoad()">↻ 再読み込み</button></div>`; break;
     case 'ok': {
       body = `
         <div class="cf-tools">
@@ -11478,7 +11478,7 @@ function renderContactCards(c) {
 function renderCaseTasks(caseId) {
   const caseTasks = tasks.filter(t => t.case_id === caseId);
   if (caseTasks.length === 0) {
-    return '<div class="table-container" style="padding:30px;text-align:center;color:#9ca3af;font-size:13px">タスクがありません。「＋ タスク追加」から追加してください。</div>';
+    return '<div class="table-container" style="padding:30px;text-align:center;color:#9ca3af;font-size:13px">タスクがありません。「＋ タスクを追加」から追加してください。</div>';
   }
 
   // Sort: incomplete first, then by deadline
@@ -14817,7 +14817,7 @@ function _skRender() {
       ${b.gaps.length ? `<span class="sk-chip warn" title="埋まっている行より前に空の行があります。書くのは最後の行の次からです">途中に空きの行 №${b.gaps.join('・')}</span>` : ''}` : ''}
     <span class="jb-bar-right">
       <button type="button" class="btn btn-secondary btn-sm" onclick="skOpenExcel()" ${ok ? '' : 'disabled'} title="このファイルを Excel で開く">${ico('tray-out')} Excel で開く</button>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="skReload()" title="Excel を読み直す">${ico('refresh')} 読み直す</button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="skReload()" title="Excel を再読み込み">${ico('refresh')} 再読み込み</button>
     </span>`;
   if (msg) {
     if (_sk.status === 'loading') { msg.hidden = false; msg.className = 'sk-msg'; msg.textContent = 'Excel を読んでいます…'; }
@@ -15226,7 +15226,7 @@ function _jbRenderTable() {
     };
     return list.map((p, i) => `<div class="jb-person" data-row="${rid}" data-side="${side}">${one(p, i, 'addr')}<div class="jb-p-line">${one(p, i, 'name')}`
       + `${ro ? '' : `<button type="button" class="jb-x" title="この当事者を消す" aria-label="この当事者を消す" onclick="jbRemovePerson('${cid}','${rid}','${side}',${i})">✕</button>`}</div></div>`).join('')
-      + (ro ? '' : `<div class="jb-add-line"><button type="button" class="jb-add" onclick="jbAddPerson('${cid}','${rid}','${side}')">＋ 当事者を足す</button>`
+      + (ro ? '' : `<div class="jb-add-line"><button type="button" class="jb-add" onclick="jbAddPerson('${cid}','${rid}','${side}')">＋ 当事者を追加</button>`
         + `<button type="button" class="jb-add jb-recent" title="最近の住所・氏名から選んで入れる" onclick="jbOpenRecent(this,'${cid}','${rid}','${side}')">↺ 最近</button>`
         + `</div>`);
   };
@@ -16412,17 +16412,17 @@ function addContactRow(ct, idx) {
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">電話番号</label>
         <div class="ct-tel-list">${makeTelRows(tels)}</div>
-        <button type="button" class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addTelRow(this)">＋ 電話追加</button>
+        <button type="button" class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addTelRow(this)">＋ 電話を追加</button>
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">メールアドレス</label>
         <div class="ct-email-list">${makeEmailRows(emails)}</div>
-        <button type="button" class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addMultiRow(this,'email','mail','メールアドレス')">＋ メール追加</button>
+        <button type="button" class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addMultiRow(this,'email','mail','メールアドレス')">＋ メールを追加</button>
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">FAX番号</label>
         <div class="ct-fax-list">${makeFaxRows(faxes)}</div>
-        <button type="button" class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addMultiRow(this,'fax','fax','FAX番号')">＋ FAX追加</button>
+        <button type="button" class="btn btn-secondary btn-xs" style="margin-top:4px" onclick="addMultiRow(this,'fax','fax','FAX番号')">＋ FAXを追加</button>
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">メモ（住所・補足など）</label>
@@ -16858,7 +16858,7 @@ function openTaskModal(taskId, caseId, taskOverride) {
   currentTaskId = actualTaskId;
 
   const modal = document.getElementById('task-modal');
-  document.getElementById('task-modal-title').textContent = actualTaskId ? 'タスク編集' : 'タスク追加';
+  document.getElementById('task-modal-title').textContent = actualTaskId ? 'タスクを編集' : 'タスクを追加';
   document.getElementById('f-task-case-id').value = caseId || '';
 
   const fields = ['task-name','task-type','task-detail',
