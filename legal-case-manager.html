@@ -2577,38 +2577,61 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
 /* 溢れているタイルにだけ「続きを読む」を出す（判定は refreshClamps）*/
 .is-overflowing > .clamp-more { display: inline-block; }
 
-/* 備考・メモは「見出しの行、押すと開く」（2026年10月28日、10.8.6。案C）。
-   タイル（.memo-grid／.memo-card）は 8.4.4〜10.8.5 の形。メールの要約を入れるようになって 1 件が長くなり、
-   狭いタイルに箇条書きが折り返して読みづらくなったため（ご本人の「一見して内容がわかるようにしたい」）。
-   1 件 1 行（日付・見出し・冒頭の薄い字）、押すと下に開く。いちばん新しい 1 件は最初から開く。新しい順。
-   見出しは 1 行目（自由に書いたメモは最初の文）。箇条書きは 2 行目以降をぶら下げ、「期限：」は琥珀の札、「添付：」は薄い字。
-   .memo-grid／.memo-card の CSS は面談記録のクランプと共用の都合で残してある（いまメモでは使っていない） */
-.memo-acc { border: 1px solid var(--border-light); border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.6); }
-.memo-row { border-bottom: 1px solid var(--border-light); }
-.memo-row:last-child { border-bottom: 0; }
-.memo-row-hd { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 14px; cursor: pointer; }
-.memo-row-hd:hover { background: #f3f7ff; }
-.memo-row.open > .memo-row-hd { background: #eef5ff; }
-.memo-row-t { font-size: 13.5px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.memo-row-t .ico { color: var(--color-primary); margin-right: 5px; vertical-align: -2px; }
-.memo-row-s { font-weight: 400; color: var(--text-muted); font-size: 12px; margin-left: 10px; }
-.memo-row.open .memo-row-s { display: none; }
-.memo-row-chev { font-size: 11px; color: var(--text-muted); transition: transform .15s; }
-.memo-row.open .memo-row-chev { transform: rotate(90deg); }
-.memo-row-bd { display: none; padding: 4px 14px 14px 108px; }
-.memo-row.open > .memo-row-bd { display: block; }
+/* 備考・メモと面談記録は「種類の丸い印＋見出し＋薄い1行」の札（2026年11月5日、11.5.4。案C-2）。
+   10.8.6 の「見出しの行、押すと開く」（.memo-acc／.memo-row）を、ご本人の「もう少しグラフィカルに」で作り替えた。
+   試作 A（タイムライン）／B（日付ブロック）／C（色の帯）／D（A＋C）／C-1（左の縁に色）／C-2 から C-2（~/secretary/CaseFlowメモ面談_試作/）。
+   札（.cx）は備考・メモと面談記録で同じ部品。種類の色は .kind-*（メモ＝琥珀、メール＝青、録音＝紫、面談・電話＝緑。不動産＝青／商業＝橙の対には触れない）。
+   種類は見出しの1行目から推す（_memoKind）。開閉（_memoOpen・toggleMemoRow）、見出しの切り出し（_memoSplit）、本文の描き方（_memoBodyHtml）はそのまま。
+   面談記録は 6 行のクランプ（refreshClamps）を続けて使うので、.iv-card-content と「さらに表示」は札（.cx）の直下に置く */
+.kind-note { --k: #d97706; --k-bg: #fef3c7; --k-fg: #92400e; }
+.kind-mail { --k: #2563eb; --k-bg: #dbeafe; --k-fg: #1e40af; }
+.kind-rec  { --k: #7c3aed; --k-bg: #ede9fe; --k-fg: #5b21b6; }
+.kind-iv   { --k: #16a34a; --k-bg: #dcfce7; --k-fg: #166534; }
+.cx-list { display: flex; flex-direction: column; gap: 8px; padding: 2px 0; }
+.cx-iv { padding: 10px 14px; }
+.cx { background: color-mix(in srgb, var(--k-bg) 28%, rgba(255,255,255,0.9)); border: 1px solid rgba(30,45,75,0.08); border-radius: 12px; overflow: hidden; transition: box-shadow .15s, border-color .15s; }
+.cx:hover { box-shadow: 0 3px 12px rgba(30,64,175,0.08); }
+.cx.open { border-color: rgba(30,45,75,0.12); box-shadow: 0 2px 10px rgba(30,64,175,0.06); }
+.cx-hd { display: flex; align-items: center; gap: 12px; padding: 11px 16px 11px 14px; cursor: pointer; min-width: 0; }
+.cx-hd.static { cursor: default; align-items: flex-start; }
+.cx-ic { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 50%; background: var(--k); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px color-mix(in srgb, var(--k) 35%, transparent); }
+.cx-ic .ico { width: 15px; height: 15px; stroke-width: 2; }
+.cx-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.cx-t { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cx-time { font-weight: 600; color: var(--text-secondary); margin-left: 8px; font-size: 13px; }
+.cx-meta { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; min-width: 0; }
+.cx-meta .ico { width: 12px; height: 12px; vertical-align: -2px; }
+.cx-kind { color: var(--k-fg); font-weight: 700; }
+.cx-sep { opacity: .5; }
+.cx-s { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.cx.open .cx-s, .cx.open .cx-s + .cx-sep, .cx.open .cx-sep + .cx-s { display: none; }
+.cx-chev { color: var(--text-muted); font-size: 12px; flex: 0 0 auto; }
+.cx-chev::before { content: '▾'; }
+.cx.open .cx-chev::before { content: '▴'; }
+.cx-bd { display: none; padding: 0 16px 14px 58px; }
+.cx.open .cx-bd { display: block; }
+.cx-iv .cx { padding-bottom: 14px; }
+.cx-iv .iv-card-content { font-size: 13px; padding: 0 16px 0 58px; }
+.cx-iv .clamp-more { margin: 4px 0 0 58px; }
+.cx-azk { display: flex; gap: 8px; align-items: flex-start; margin: 10px 16px 0 58px; padding: 8px 12px; background: #fffaeb; border: 1px solid #f6e3a6; border-radius: 8px; font-size: 12px; color: #78350f; line-height: 1.6; word-break: normal; overflow-wrap: break-word; line-break: strict; }
+.cx-azk .ico { width: 15px; height: 15px; flex: 0 0 auto; margin-top: 2px; color: #b45309; }
+.cx-azk b { display: block; font-size: 10.5px; color: #b45309; letter-spacing: .04em; margin-bottom: 1px; }
+.cx .iv-card-actions { margin-left: auto; padding-top: 4px; }
 .memo-row-text { font-size: 13px; line-height: 1.65; color: var(--text-primary); word-break: normal; overflow-wrap: break-word; line-break: strict; }
 .memo-row-text .li { padding-left: 1.1em; text-indent: -1.1em; margin: 1px 0; }
-.memo-row-text .due { display: inline-block; margin-top: 5px; padding: 3px 9px; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; color: #92400e; font-weight: 600; }
+.memo-row-text .due { display: inline-block; margin-top: 5px; padding: 3px 9px; background: #fff7e0; border: 1px solid #f5d27a; border-radius: 6px; color: #92400e; font-weight: 600; }
 .memo-row-text .att { margin-top: 4px; color: var(--text-muted); font-size: 12px; }
 .memo-row-text .free { margin: 0; white-space: pre-wrap; }
 .memo-row-text .gap { height: 6px; }
 .memo-row-ops { display: flex; gap: 4px; margin-top: 8px; }
 @media (max-width: 768px) {
-  .memo-row-hd { grid-template-columns: 76px minmax(0, 1fr) auto; padding: 8px 10px; }
-  .memo-row-bd { padding-left: 10px; padding-right: 10px; }
+  .cx-hd { padding: 9px 10px; gap: 8px; }
+  .cx-bd { padding-left: 10px; padding-right: 10px; }
+  .cx-iv .iv-card-content { padding-left: 10px; padding-right: 10px; }
+  .cx-iv .clamp-more { margin-left: 10px; }
+  .cx-azk { margin-left: 10px; margin-right: 10px; }
 }
-@media (prefers-reduced-motion: reduce) { .memo-row-chev { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cx { transition: none; } }
 
 
 /* 定型文ピッカー */
@@ -4376,8 +4399,9 @@ body[data-theme="kiri"] .info-card, body[data-theme="kiri"] .souzoku-tracker, bo
 body[data-theme="kiri"] .info-card-header, body[data-theme="kiri"] .contacts-section-header, body[data-theme="kiri"] .interview-section-header { background: transparent; background-image: none; border-bottom: 1px solid var(--kiri-line); }
 body[data-theme="kiri"] .info-card-header, body[data-theme="kiri"] .info-card-header * { color: var(--text-primary); }
 body[data-theme="kiri"] .cd-status { box-shadow: var(--kiri-press); border-radius: 12px; padding: 3px; border: none; background: transparent; }
-body[data-theme="kiri"] .memo-acc { background: transparent; box-shadow: var(--kiri-press); border: none; border-radius: 14px; }
-body[data-theme="kiri"] .memo-row-hd { background: transparent; }
+body[data-theme="kiri"] .cx { background: color-mix(in srgb, var(--k-bg) 22%, var(--kiri-bg)); border-color: transparent; box-shadow: var(--kiri-raise-sm); }
+body[data-theme="kiri"] .cx:hover, body[data-theme="kiri"] .cx.open { box-shadow: var(--kiri-raise-sm); }
+body[data-theme="kiri"] .cx-ic { box-shadow: none; }
 body[data-theme="kiri"] .ctp-body { background: var(--kiri-bg); }
 /* 窓 */
 body[data-theme="kiri"] .modal { background: var(--kiri-bg); backdrop-filter: none; -webkit-backdrop-filter: none; border: none; box-shadow: 18px 18px 44px rgba(90,102,126,.45), -6px -6px 22px rgba(255,255,255,.55); border-radius: 28px; }
@@ -4738,7 +4762,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.5.3</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.5.4</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -12031,6 +12055,20 @@ function toggleMemoRow(caseId, memoId) {
   const row = document.getElementById(`memo-card-${memoId}`);
   if (row) row.classList.toggle('open', _memoOpen.has(memoId));
 }
+/* メモの種類は見出しの1行目から推す（11.5.4）。「〜からの受信メール（」＝メール（7-12 章の formatMemo）、
+   「〜との通話（／〜との面談（」＝録音（7-18 章の titleLine）、それ以外＝メモ。保存の形には何も足さない */
+function _memoKind(plainHead) {
+  if (/からの受信メール（/.test(plainHead)) return { cls: 'mail', ico: 'mail', label: 'メール' };
+  if (/との(通話|面談)（/.test(plainHead)) return { cls: 'rec', ico: 'mobile', label: '録音' };
+  return { cls: 'note', ico: 'edit', label: 'メモ' };
+}
+/* 札の日付「2026/11/4（水）」。面談記録は時刻を別に添える */
+function _cxDate(d) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || '');
+  if (!m) return escHtml(d || '日付なし');
+  const dt = new Date(+m[1], +m[2] - 1, +m[3]);
+  return `${+m[1]}/${+m[2]}/${+m[3]}（${'日月火水木金土'[dt.getDay()]}）`;
+}
 function renderMemoList(c) {
   // 旧形式(c.memo文字列)を移行
   if (!c.memos) {
@@ -12043,20 +12081,23 @@ function renderMemoList(c) {
   // 新しい順（同じ日付なら、あとに足したものが上）。保存の並び（古い順）は変えない
   const list = c.memos.map((m, i) => ({ m, i })).sort((x, y) => (y.m.date || '').localeCompare(x.m.date || '') || y.i - x.i).map(x => x.m);
   if (!list.some(m => _memoOpen.has(m.id))) _memoOpen.add(list[0].id);
-  return `<div class="memo-acc">` + list.map(m => {
+  return `<div class="cx-list">` + list.map(m => {
     const { head, body, cut } = _memoSplit(m.text || '');
     const plainHead = _memoPlain(head);
-    const isMail = /からの受信メール（/.test(plainHead);
+    const kind = _memoKind(plainHead);
     const preview = _memoPlain(body.slice(cut ? 1 : 0).find(l => _memoPlain(l).trim()) || '');
     const bodyHtml = _memoBodyHtml(body);
     return `
-    <div class="memo-row${_memoOpen.has(m.id) ? ' open' : ''}" id="memo-card-${m.id}">
-      <div class="memo-row-hd" onclick="toggleMemoRow('${c.id}','${m.id}')" title="${escHtml(plainHead)}">
-        <span class="memo-card-date">${formatDate(m.date) || m.date || '日付なし'}</span>
-        <span class="memo-row-t">${isMail ? ico('mail') : ''}${renderHl(head)}${preview ? `<span class="memo-row-s">${escHtml(preview)}</span>` : ''}</span>
-        <span class="memo-row-chev">▶</span>
+    <div class="cx kind-${kind.cls}${_memoOpen.has(m.id) ? ' open' : ''}" id="memo-card-${m.id}">
+      <div class="cx-hd" onclick="toggleMemoRow('${c.id}','${m.id}')" title="${escHtml(plainHead)}">
+        <span class="cx-ic">${ico(kind.ico)}</span>
+        <span class="cx-main">
+          <span class="cx-t">${renderHl(head)}</span>
+          <span class="cx-meta"><span class="cx-kind">${kind.label}</span><span class="cx-sep">·</span><span class="memo-card-date">${_cxDate(m.date)}</span>${preview ? `<span class="cx-sep">·</span><span class="cx-s">${escHtml(preview)}</span>` : ''}</span>
+        </span>
+        <span class="cx-chev"></span>
       </div>
-      <div class="memo-row-bd">
+      <div class="cx-bd">
         ${bodyHtml ? `<div class="memo-row-text" id="memo-text-${m.id}">${bodyHtml}</div>` : ''}
         <div class="memo-row-ops no-print">
           <button class="btn btn-secondary btn-xs" onclick="openMemoModal('${c.id}','${m.id}')">${ico('edit')} 編集</button>
@@ -12069,8 +12110,8 @@ function renderMemoList(c) {
 
 /* 6行クランプ＋「続きを読む」は、備考・メモ（.memo-card）と
    面談記録（.iv-card）で同じ仕組みを使う。二重実装しない */
-const CLAMP_GRID_SEL = '.memo-grid, .iv-grid';
-const CLAMP_CARD_SEL = '.memo-card, .iv-card';
+const CLAMP_GRID_SEL = '.memo-grid, .iv-grid, .cx-iv';
+const CLAMP_CARD_SEL = '.memo-card, .iv-card, .cx-iv .cx';
 const CLAMP_TEXT_SEL = '.memo-card-text, .iv-card-content';
 
 /** クランプで隠れているタイルにだけ「続きを読む」を出す。
@@ -19194,12 +19235,17 @@ function renderInterviews(c) {
   const cid = c.id;
   const cards = [...interviews]
     .sort((a, b) => a.datetime.localeCompare(b.datetime))
-    .map(iv => `
-      <div class="iv-card">
-        <div class="iv-card-head">
-          <span class="iv-date">${formatDatetime(iv.datetime).replace(' ', '\n')}</span>
-          ${iv.place ? `<span class="meta-badge">${ico('pin-map')} ${escHtml(iv.place)}</span>` : ''}
-          ${iv.party ? `<span class="meta-badge">${ico('users')} ${escHtml(iv.party)}</span>` : ''}
+    .map(iv => {
+      const tel = /^電話/.test(iv.place || '');
+      const t = /T(\d{2}:\d{2})/.exec(iv.datetime || '');
+      return `
+      <div class="cx kind-iv open">
+        <div class="cx-hd static">
+          <span class="cx-ic">${ico(tel ? 'phone' : 'handshake')}</span>
+          <span class="cx-main">
+            <span class="cx-t">${_cxDate(iv.datetime)}${t ? `<span class="cx-time">${t[1]}</span>` : ''}</span>
+            <span class="cx-meta"><span class="cx-kind">${tel ? '電話' : '面談'}</span>${iv.place ? `<span class="cx-sep">·</span><span>${ico('pin-map')} ${escHtml(iv.place)}</span>` : ''}${iv.party ? `<span class="cx-sep">·</span><span>${ico('users')} ${escHtml(iv.party)}</span>` : ''}</span>
+          </span>
           <div class="iv-card-actions no-print">
             <button class="btn btn-secondary btn-xs" onclick="openInterviewModal('${cid}','${iv.id}')">編集</button>
             <button class="btn btn-danger btn-xs" onclick="deleteInterview('${cid}','${iv.id}')">削除</button>
@@ -19207,8 +19253,8 @@ function renderInterviews(c) {
         </div>
         <div class="iv-card-content clamp-text">${renderHl(iv.content)}</div>
         <button type="button" class="clamp-more no-print" onclick="toggleClampCard(this)">さらに表示</button>
-        ${iv.azukari ? `<div class="iv-azukari"><span style="font-weight:700">${ico('package')} 預かったもの：</span>${escHtml(iv.azukari)}</div>` : ''}
-      </div>`).join('');
+        ${iv.azukari ? `<div class="cx-azk">${ico('package')}<span><b>預かったもの</b>${escHtml(iv.azukari)}</span></div>` : ''}
+      </div>`; }).join('');
 
   // DOM に入るのはこの文字列が差し込まれたあと。溢れ判定はその後に回す
   setTimeout(_observeClampGrids, 0);
@@ -19220,7 +19266,7 @@ function renderInterviews(c) {
         <button class="btn btn-primary btn-xs" onclick="openInterviewModal('${cid}', null)">＋ 追加</button>
       </div>
       ${interviews.length > 0
-        ? `<div class="iv-grid">${cards}</div>`
+        ? `<div class="cx-list cx-iv">${cards}</div>`
         : '<div class="interview-empty">面談記録はまだありません</div>'}
       ${_rkHostHtml('interview', cid)}
     </div>`;   // 受け口は一覧の下（11.4.6。ご本人の「面談記録の受け口も下にあったほうがいい」。備考・メモと同じ位置）
