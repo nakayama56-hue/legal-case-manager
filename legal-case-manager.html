@@ -2613,6 +2613,8 @@ body.viewer-mode [onclick*="exportCSV"] { display: none !important; }
 .cx-bd { display: none; padding: 0 16px 14px 58px; }
 .cx.open .cx-bd { display: block; }
 .cx-iv .cx { padding-bottom: 14px; }
+.cf-link { color: var(--color-primary); text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
+.cf-link:hover { text-decoration-thickness: 2px; }
 .cx-iv .iv-card-content { font-size: 13px; padding: 0 16px 0 58px; }
 .cx-iv .clamp-more { margin: 4px 0 0 58px; }
 .cx-azk { display: flex; gap: 8px; align-items: flex-start; margin: 10px 16px 0 58px; padding: 8px 12px; background: #fffaeb; border: 1px solid #f6e3a6; border-radius: 8px; font-size: 12px; color: #78350f; line-height: 1.6; word-break: normal; overflow-wrap: break-word; line-break: strict; }
@@ -3244,6 +3246,13 @@ mark.hl-pink   { background:#fecdd3; color:inherit; border-radius:2px; padding:0
 }
 .marker-btn-clear:hover { background:#fff0f0; color:#dc2626; border-color:#fca5a5; }
 .marker-sep { width:1px; height:18px; background:var(--border-color); margin:0 2px; }
+.marker-btn-link {
+  display:inline-flex; align-items:center; gap:3px;
+  font-size:11px; padding:0 8px; height:26px; border-radius:4px;
+  border:1px solid var(--border-color); background:var(--bg-primary);
+  color:var(--text-secondary); cursor:pointer; white-space:nowrap;
+}
+.marker-btn-link:hover { background:#eff6ff; color:var(--color-primary); border-color:#93c5fd; }
 @media print {
   mark.hl-yellow { background:#fef08a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   mark.hl-blue   { background:#bfdbfe !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -4767,7 +4776,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
              ヘッダーの設定ボタンの説明は起動時にこの span から読む。
              pack.py と Mac アプリの殻（main.swift）も、この「ver. X.Y.Z」を
              正規表現で拾う。この書き方を変えないこと（CLAUDE.md 3章） -->
-        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.5.9</span></div>
+        <div style="margin:-2px 0 16px 2px"><span id="app-version" style="font-size:11px;color:var(--text-secondary);letter-spacing:0.03em">ver. 11.6.1</span></div>
 
         <!-- 10.0.7：サイドバーにあったテーマの丸3つを、ここへ移した。
              setTheme() と、選ばれた丸に .active を付ける仕組みはそのまま使っている -->
@@ -5568,6 +5577,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
               <button type="button" class="marker-btn" style="background:#bbf7d0" title="緑マーカー" onclick="applyMarker('f-interview-content','hl-green')"><span style="color:#16a34a">●</span></button>
               <button type="button" class="marker-btn" style="background:#fecdd3" title="ピンクマーカー" onclick="applyMarker('f-interview-content','hl-pink')"><span style="color:#be185d">●</span></button>
               <div class="marker-sep"></div>
+              <button type="button" class="marker-btn-link" title="選んだ字にリンクを付けます" onclick="applyLink('f-interview-content')"><svg class="ico" aria-hidden="true"><use href="#i-link"></use></svg> リンク</button>
               <button type="button" class="marker-btn-clear" onclick="clearMarker('f-interview-content')">消去</button>
             </div>
             <textarea class="form-control" id="f-interview-content" rows="6" placeholder="面談の内容・決定事項・確認事項などを記録"></textarea>
@@ -5612,6 +5622,7 @@ body[data-theme="kiri"] .theme-card, body[data-theme="kiri"] .data-card { backgr
               <button type="button" class="marker-btn" style="background:#bbf7d0" title="緑マーカー" onclick="applyMarker('f-memo-text','hl-green')"><span style="color:#16a34a">●</span></button>
               <button type="button" class="marker-btn" style="background:#fecdd3" title="ピンクマーカー" onclick="applyMarker('f-memo-text','hl-pink')"><span style="color:#be185d">●</span></button>
               <div class="marker-sep"></div>
+              <button type="button" class="marker-btn-link" title="選んだ字にリンクを付けます" onclick="applyLink('f-memo-text')"><svg class="ico" aria-hidden="true"><use href="#i-link"></use></svg> リンク</button>
               <button type="button" class="marker-btn-clear" onclick="clearMarker('f-memo-text')">消去</button>
               <button type="button" id="memo-mail-btn" class="btn btn-secondary btn-xs" hidden onclick="openMailPick()" title="Gmail に届いたメールを選んで、Claude の要約をこの欄に入れます（Mac アプリだけ）"><svg class="ico" aria-hidden="true"><use href="#i-mail"></use></svg> 受信メールから</button>
             </div>
@@ -12028,7 +12039,7 @@ function _memoLines(text) {
     return line;
   });
 }
-const _memoPlain = (x) => String(x || '').replace(/<\/?mark[^>]*>/g, '');
+const _memoPlain = (x) => _mdLinkText(String(x || '').replace(/<\/?mark[^>]*>/g, ''));
 /** 1 行目を見出しに、残りを本文に。1 行だけのメモは最初の文（。まで・30 字まで）を見出しにする。印の入った行は文で切らない。
  *  cut：見出しを 1 行目から切り出し、その 1 行目が本文にも残っているとき（冒頭の薄い字に同じ字を出さないため） */
 function _memoSplit(text) {
@@ -12049,10 +12060,10 @@ function _memoBodyHtml(lines) {
   return lines.map(line => {
     const plain = _memoPlain(line);
     if (!plain.trim()) return '<div class="gap"></div>';
-    if (/^[・•]/.test(plain)) return `<div class="li">${renderHl(line)}</div>`;
-    if (/^期限[：:]/.test(plain)) return `<div><span class="due">⏰ ${renderHl(line)}</span></div>`;
-    if (/^添付[：:]/.test(plain)) return `<div class="att">📎 ${renderHl(line.replace(/^(<mark[^>]*>)?添付[：:]/, '$1'))}</div>`;
-    return `<p class="free">${renderHl(line)}</p>`;
+    if (/^[・•]/.test(plain)) return `<div class="li">${_linkifyHtml(renderHl(line))}</div>`;
+    if (/^期限[：:]/.test(plain)) return `<div><span class="due">⏰ ${_linkifyHtml(renderHl(line))}</span></div>`;
+    if (/^添付[：:]/.test(plain)) return `<div class="att">📎 ${_linkifyHtml(renderHl(line.replace(/^(<mark[^>]*>)?添付[：:]/, '$1')))}</div>`;
+    return `<p class="free">${_linkifyHtml(renderHl(line))}</p>`;
   }).join('');
 }
 function toggleMemoRow(caseId, memoId) {
@@ -12097,7 +12108,7 @@ function renderMemoList(c) {
       <div class="cx-hd" onclick="toggleMemoRow('${c.id}','${m.id}')" title="${escHtml(plainHead)}">
         <span class="cx-ic">${ico(kind.ico)}</span>
         <span class="cx-main">
-          <span class="cx-t">${renderHl(head)}</span>
+          <span class="cx-t">${_linkifyHtml(renderHl(head))}</span>
           <span class="cx-meta"><span class="cx-kind">${kind.label}</span><span class="cx-sep">·</span><span class="memo-card-date">${_cxDate(m.date)}</span>${preview ? `<span class="cx-sep">·</span><span class="cx-s">${escHtml(preview)}</span>` : ''}</span>
         </span>
         <span class="cx-chev"></span>
@@ -12259,6 +12270,7 @@ function editMemoItem(caseId, memoId) {
       <button type="button" class="marker-btn" style="background:#bbf7d0" onclick="applyMarker('memo-text-edit-${memoId}','hl-green')"><span style="color:#16a34a">●</span></button>
       <button type="button" class="marker-btn" style="background:#fecdd3" onclick="applyMarker('memo-text-edit-${memoId}','hl-pink')"><span style="color:#be185d">●</span></button>
       <div class="marker-sep"></div>
+      <button type="button" class="marker-btn-link" title="選んだ字にリンクを付けます" onclick="applyLink('memo-text-edit-${memoId}')">${ico('link')} リンク</button>
       <button type="button" class="marker-btn-clear" onclick="clearMarker('memo-text-edit-${memoId}')">消去</button>
     </div>
     <textarea class="memo-card-edit-area" id="memo-text-edit-${memoId}">${escHtml(m.text||'')}</textarea>
@@ -14407,7 +14419,7 @@ function _doPrintSimple(caseId) {
     ${show('bureau') ? row('管轄法務局', escHtml(bureaus.filter(b=>b).join('、')||'—')) : ''}
     ${show('received') ? row('受付日', escHtml(formatDate(c.received_date)||'—')) : ''}
     ${shinseiRows}
-    ${show('memo') && c.memos && c.memos.length > 0 ? row('備考・メモ', c.memos.map(m=>renderHl(m.text||'')).join('<br>')) : ''}
+    ${show('memo') && c.memos && c.memos.length > 0 ? row('備考・メモ', c.memos.map(m=>renderHl(_mdLinkPrint(m.text||''))).join('<br>')) : ''}
   </table>
   <div class="print-date">印刷日：${new Date().toLocaleDateString('ja-JP')}</div>
   <div class="hint">※ ヘッダー・フッターを消す場合は印刷設定で「ヘッダーとフッター」をオフにしてください</div>
@@ -14532,7 +14544,7 @@ function printCaseDetail(caseId) {
   const memos = (c.memos && c.memos.length) ? c.memos : (c.memo ? [{ date: '', text: c.memo }] : []);
   const memoT = table([
     { h: '日付', w: '20mm', cls: 'nw', get: m => m.date || '' },
-    { h: '内容', keep: true, raw: true, cls: 'pre', get: m => renderHl(m.text || '') },
+    { h: '内容', keep: true, raw: true, cls: 'pre', get: m => renderHl(_mdLinkPrint(m.text || '')) },
   ], memos);
 
   /* ===== 連絡先：1人1行 ===== */
@@ -14606,7 +14618,7 @@ function printCaseDetail(caseId) {
   const ivs = [...(c.interviews || [])].sort((a, b) => a.datetime.localeCompare(b.datetime));
   const ivH = ivs.map(iv => `<div class="pd-iv"><div class="pd-iv-head"><span class="pd-iv-date">${escHtml(formatDatetime(iv.datetime))}</span>
     ${iv.place ? `<span class="pd-iv-meta">${escHtml(iv.place)}</span>` : ''}${iv.party ? `<span class="pd-iv-meta">${escHtml(iv.party)}</span>` : ''}</div>
-    <div class="pd-iv-body">${renderHl(iv.content || '')}</div>
+    <div class="pd-iv-body">${renderHl(_mdLinkPrint(iv.content || ''))}</div>
     ${iv.azukari ? `<div class="pd-iv-azukari"><b>預かったもの：</b>${escHtml(iv.azukari)}</div>` : ''}</div>`).join('');
 
   /* ===== 書類送付先：1件1行 ===== */
@@ -19261,7 +19273,7 @@ function renderInterviews(c) {
             <button class="btn btn-danger btn-xs" onclick="deleteInterview('${cid}','${iv.id}')">削除</button>
           </div>
         </div>
-        <div class="iv-card-content clamp-text">${renderHl(iv.content)}</div>
+        <div class="iv-card-content clamp-text">${_linkifyHtml(renderHl(iv.content))}</div>
         <button type="button" class="clamp-more no-print" onclick="toggleClampCard(this)">さらに表示</button>
         ${iv.azukari ? `<div class="cx-azk">${ico('package')}<span><b>預かったもの</b>${escHtml(iv.azukari)}</span></div>` : ''}
       </div>`; }).join('');
@@ -20052,6 +20064,51 @@ function renderHl(html) {
     }).join('');
   }
   return escHtml(html);
+}
+/* 本文の中の URL を押せるリンクにする（11.6.0。ご本人の「メモや面談記録にハイパーリンクを貼り付けられないのか」）。
+   renderHl を通したあとの HTML（字は逃がし済み・<mark> だけ残る）を受け取り、タグの外の字だけを見る。保存の形は変えない。
+   URL は http(s):// から、空白・< > " ' と全角の字の手前まで。末尾の句読点・閉じ括弧はリンクに含めない。
+   押すとメモの行の開閉を走らせない（stopPropagation）。Mac アプリでは殻がアプリ内のブラウザ窓で開く */
+/* 字にリンクを付けた形 [字](URL)（11.6.1。ご本人の「本文に直接リンクをつけることはできないか」）。
+   入力欄では字を選んで「リンク」（applyLink）で付く。字の中に [ ] と改行は入れない。保存はこの文字列のまま */
+const MD_LINK_RE = /\[([^\[\]\n]+)\]\((https?:\/\/[^\s()<>"]+)\)/g;
+const _mdLinkText = (x) => String(x || '').replace(MD_LINK_RE, '$1');
+const _mdLinkPrint = (x) => String(x || '').replace(MD_LINK_RE, '$1（$2）');
+function _linkifyHtml(html) {
+  if (!html || !/https?:\/\//i.test(html)) return html;
+  html = html.replace(MD_LINK_RE, (m, t, url) =>
+    `<a class="cf-link" href="${url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="${url}">${t}</a>`);
+  let inA = 0;
+  return html.split(/(<[^>]+>)/).map(p => {
+    if (p && p[0] === '<') { if (/^<a[\s>]/i.test(p)) inA++; else if (/^<\/a>/i.test(p)) inA = Math.max(0, inA - 1); return p; }
+    if (!p || inA) return p;
+    return p.replace(/https?:\/\/[^\s<>"'\u3000-\u30ff\u4e00-\u9fff\uff00-\uffef]+/gi, m => {
+      const cut = m.search(/&(?:quot|#0?39|lt|gt);/);
+      let url = cut >= 0 ? m.slice(0, cut) : m, tail = cut >= 0 ? m.slice(cut) : '';
+      while (/[.,;:!?)\]]$/.test(url) && !/&amp;$|&lt;$|&gt;$/.test(url)) { tail = url.slice(-1) + tail; url = url.slice(0, -1); }
+      if (!/^https?:\/\/[^/]/i.test(url)) return m;
+      return `<a class="cf-link" href="${url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${url}</a>${tail}`;
+    });
+  }).join('');
+}
+function applyLink(textareaId) {
+  const ta = document.getElementById(textareaId);
+  if (!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  if (start === end) { toast('リンクにする字を選択してからボタンを押してください', 'error'); return; }
+  let text = ta.value.slice(start, end).replace(/<mark class="hl-(?:yellow|blue|green|pink)">/g, '').replace(/<\/mark>/g, '');
+  let oldUrl = '';
+  const one = /^\[([^\[\]\n]+)\]\((https?:\/\/[^\s()<>"]+)\)$/.exec(text);
+  if (one) { text = one[1]; oldUrl = one[2]; }
+  if (!text.trim()) { toast('リンクにする字を選択してください', 'error'); return; }
+  if (/[\[\]\n]/.test(text)) { toast('改行や [ ] を含む範囲にはリンクを付けられません', 'error'); return; }
+  const url = (window.prompt('リンク先の URL を入れてください', oldUrl || 'https://') || '').trim();
+  if (!url || url === 'https://') { ta.focus(); return; }
+  if (!/^https?:\/\/[^\s()<>"]+$/.test(url)) { toast('URL は https:// か http:// で始まる形で入れてください（空白・括弧は使えません）', 'error'); ta.focus(); return; }
+  const wrapped = `[${text}](${url})`;
+  ta.value = ta.value.slice(0, start) + wrapped + ta.value.slice(end);
+  ta.setSelectionRange(start + wrapped.length, start + wrapped.length);
+  ta.focus();
 }
 function applyMarker(textareaId, cls) {
   const ta = document.getElementById(textareaId);
